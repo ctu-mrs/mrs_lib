@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   std_msgs
   nav_msgs
+  mrs_msgs
   tf
   )
 
@@ -26,9 +27,9 @@ set(Eigen_LIBRARIES ${EIGEN3_LIBRARIES})
 
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs
+  CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs mrs_msgs
   DEPENDS Eigen
-  LIBRARIES Lkf Ukf ConvexPolygon
+  LIBRARIES Lkf Ukf ConvexPolygon Profiler
   )
 
 ###########
@@ -45,20 +46,25 @@ include_directories(
   )
 
 add_library(Lkf src/lkf/lkf.cpp)
-add_library(Ukf src/ukf/ukf.cpp)
-add_library(ConvexPolygon src/convex_polygon/convex_polygon.cpp)
-
 target_link_libraries(Lkf
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
 
+add_library(Ukf src/ukf/ukf.cpp)
 target_link_libraries(Ukf
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
 
+add_library(ConvexPolygon src/convex_polygon/convex_polygon.cpp)
 target_link_libraries(ConvexPolygon
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_library(Profiler src/profiler/profiler.cpp)
+target_link_libraries(Profiler
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )

@@ -11,8 +11,8 @@ using namespace std;
 namespace mrs_lib
 {
 
-Ukf::Ukf(const int n, const int m, const int p, const double alpha, const double k, const double beta, const Eigen::MatrixXd &R,
-                         const Eigen::MatrixXd &Q, const Eigen::MatrixXd &H, model modelIteration) {
+Ukf::Ukf(const int n, const int m, const int p, const double alpha, const double k, const double beta, const Eigen::MatrixXd &R, const Eigen::MatrixXd &Q,
+         const Eigen::MatrixXd &H, model modelIteration) {
 
   this->n = n;
   this->m = m;
