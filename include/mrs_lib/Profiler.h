@@ -22,7 +22,7 @@ public:
   void end(void);
 
 private:
-  std::string name;
+  std::string routine_name;
   std::string node_name;
 
   std::mutex *    mutex;

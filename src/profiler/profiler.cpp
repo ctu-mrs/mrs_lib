@@ -35,7 +35,7 @@ Routine *Profiler::registerRoutine(std::string name, int expected_rate, double t
 // constructor
 Routine::Routine(std::string name, std::string node_name, int expected_rate, double threshold, std::mutex &mutex, ros::Publisher &publisher) {
 
-  this->name           = name;
+  this->routine_name   = name;
   this->node_name      = node_name;
   this->is_periodic_   = true;
   this->threshold_     = threshold;
@@ -47,7 +47,7 @@ Routine::Routine(std::string name, std::string node_name, int expected_rate, dou
 // constructor
 Routine::Routine(std::string name, std::string node_name, std::mutex &mutex, ros::Publisher &publisher) {
 
-  this->name           = name;
+  this->routine_name   = name;
   this->node_name      = node_name;
   this->is_periodic_   = false;
   this->expected_rate_ = 0;
@@ -72,11 +72,12 @@ void Routine::end(void) {
 
   mrs_msgs::ProfilerUpdate new_update;
 
-  new_update.stamp       = ros::Time::now();
-  new_update.duration    = (execution_end - execution_start).toSec();
-  new_update.is_periodic = this->is_periodic_;
-  new_update.name        = this->name;
-  new_update.iteration   = this->iteration++;
+  new_update.stamp        = ros::Time::now();
+  new_update.duration     = (execution_end - execution_start).toSec();
+  new_update.is_periodic  = this->is_periodic_;
+  new_update.node_name    = this->node_name;
+  new_update.routine_name = this->routine_name;
+  new_update.iteration    = this->iteration++;
   if (this->is_periodic_) {
     new_update.expected_start = this->expected_start.toSec();
     new_update.real_start     = this->real_start.toSec();
