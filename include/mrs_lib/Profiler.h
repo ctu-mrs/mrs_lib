@@ -14,6 +14,7 @@ namespace mrs_lib
 class Routine {
 
 public:
+  Routine();
   Routine(std::string name, std::string node_name, std::mutex &mutex, ros::Publisher &publisher);
   Routine(std::string name, std::string node_name, int expected_rate, double threshold, std::mutex &mutex, ros::Publisher &publisher);
 
@@ -45,9 +46,10 @@ private:
 class Profiler {
 
 public:
+  Profiler();
   Profiler(ros::NodeHandle &nh_, std::string node_name);
-  Routine *registerRoutine(std::string name, int expected_rate, double threshold);
-  Routine *registerRoutine(std::string name);
+  Routine * registerRoutine(std::string name, int expected_rate, double threshold);
+  Routine * registerRoutine(std::string name);
 
 private:
   ros::Publisher publisher;

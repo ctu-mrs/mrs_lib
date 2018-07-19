@@ -3,6 +3,8 @@
 namespace mrs_lib
 {
 
+Profiler::Profiler() {}
+
 Profiler::Profiler(ros::NodeHandle &nh_, std::string node_name) {
 
   publisher = nh_.advertise<mrs_msgs::ProfilerUpdate>("profiler", 100, false);
@@ -14,25 +16,26 @@ Profiler::Profiler(ros::NodeHandle &nh_, std::string node_name) {
   ROS_INFO("[%s]: profiler initialized", node_name.c_str());
 }
 
-Routine *Profiler::registerRoutine(std::string name) {
-
-  Routine *new_routine = new Routine(name, this->node_name, mutex_publisher, publisher);
+Routine * Profiler::registerRoutine(std::string name) {
 
   ROS_INFO("[%s]: new profiler routine registered (%s)", node_name.c_str(), name.c_str());
 
-  return new_routine;
+  Routine * new_routine = new Routine(name, this->node_name, mutex_publisher, publisher);
+
+  return new_routine; 
 }
 
-Routine *Profiler::registerRoutine(std::string name, int expected_rate, double threshold) {
-
-  Routine *new_routine = new Routine(name, this->node_name, expected_rate, threshold, mutex_publisher, publisher);
+Routine * Profiler::registerRoutine(std::string name, int expected_rate, double threshold) {
 
   ROS_INFO("[%s]: new profiler routine registered (%s)", node_name.c_str(), name.c_str());
 
-  return new_routine;
+  Routine * new_routine = new Routine(name, this->node_name, expected_rate, threshold, mutex_publisher, publisher);
+
+  return new_routine; 
 }
 
-// constructor
+Routine::Routine() {};
+
 Routine::Routine(std::string name, std::string node_name, int expected_rate, double threshold, std::mutex &mutex, ros::Publisher &publisher) {
 
   this->routine_name   = name;
