@@ -8,15 +8,12 @@
 namespace mrs_lib
 {
 
-/* typedef boost::shared_ptr<std::mutex> shared_mutex; */
-/* typedef boost::shared_ptr<ros::Publisher> shared_publisher; */
-
 class Routine {
 
 public:
   Routine();
-  Routine(std::string name, std::string node_name, std::mutex &mutex, ros::Publisher &publisher);
-  Routine(std::string name, std::string node_name, int expected_rate, double threshold, std::mutex &mutex, ros::Publisher &publisher);
+  Routine(std::string name, std::string node_name, ros::Publisher &publisher, std::mutex &mutex_publisher);
+  Routine(std::string name, std::string node_name, int expected_rate, double threshold, ros::Publisher &publisher, std::mutex &mutex_publisher);
 
   void start(const ros::TimerEvent &event);
   void start(void);
@@ -26,8 +23,8 @@ private:
   std::string routine_name;
   std::string node_name;
 
-  std::mutex *    mutex;
   ros::Publisher *publisher;
+  std::mutex *    mutex_publisher;
 
   // if periodic, those are the stats from the trigger event
   bool   is_periodic_ = false;
@@ -48,8 +45,8 @@ class Profiler {
 public:
   Profiler();
   Profiler(ros::NodeHandle &nh_, std::string node_name);
-  Routine * registerRoutine(std::string name, int expected_rate, double threshold);
-  Routine * registerRoutine(std::string name);
+  Routine *registerRoutine(std::string name, int expected_rate, double threshold);
+  Routine *registerRoutine(std::string name);
 
 private:
   ros::Publisher publisher;
