@@ -95,7 +95,13 @@ void Routine::end(void) {
   }
 
   mutex_publisher->lock();
-  { publisher->publish(new_update); }
+  {
+    try {
+      publisher->publish(mrs_msgs::ProfilerUpdateConstPtr(new mrs_msgs::ProfilerUpdate(new_update)));
+    } catch (...) {
+      ROS_ERROR("Exception caught during publishing topic %s.", publisher->getTopic().c_str());
+    }
+  }
   mutex_publisher->unlock();
 }
 }
