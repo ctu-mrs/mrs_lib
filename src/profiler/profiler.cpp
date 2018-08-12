@@ -69,8 +69,7 @@ void Routine::start(const ros::TimerEvent &event) {
   double dt = (real_start - expected_start).toSec();
 
   if (dt > threshold_) {
-    ROS_WARN_THROTTLE(1.0, "[%s]: routine '%s' was lauched late by %1.3f s!", node_name.c_str(), routine_name.c_str(),
-                      dt + threshold_);
+    ROS_WARN_THROTTLE(1.0, "[%s]: routine '%s' was lauched late by %1.3f s!", node_name.c_str(), routine_name.c_str(), dt + threshold_);
   }
 
   this->execution_start = ros::Time::now();
@@ -98,10 +97,11 @@ void Routine::end(void) {
   {
     try {
       publisher->publish(mrs_msgs::ProfilerUpdateConstPtr(new mrs_msgs::ProfilerUpdate(new_update)));
-    } catch (...) {
+    }
+    catch (...) {
       ROS_ERROR("Exception caught during publishing topic %s.", publisher->getTopic().c_str());
     }
   }
   mutex_publisher->unlock();
 }
-}
+}  // namespace mrs_lib

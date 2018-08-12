@@ -25,7 +25,7 @@ ConvexPolygon::ConvexPolygon(const MatrixXd& in) {
 
   n = in.rows() + 1;
 
-  vert = MatrixXd::Zero(n, 2);
+  vert                             = MatrixXd::Zero(n, 2);
   this->vert.block(0, 0, n - 1, 2) = in;
 
   // repeat the last point as the first on
@@ -101,4 +101,4 @@ bool ConvexPolygon::isConvex(void) {
 
   return true;
 }
-}
+}  // namespace mrs_lib

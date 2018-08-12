@@ -56,6 +56,6 @@ private:
 private:
   std::vector<Routine> routine_list;
 };
-}
+}  // namespace mrs_lib
 
 #endif

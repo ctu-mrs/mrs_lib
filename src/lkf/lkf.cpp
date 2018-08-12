@@ -206,4 +206,4 @@ Eigen::VectorXd Lkf::doCorrection(void) {
 
   return temp;
 }
-}
+}  // namespace mrs_lib
