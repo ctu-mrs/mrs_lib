@@ -58,6 +58,17 @@ void Lkf::setCovariance(const MatrixXd &cov) {
   lkf_mutex.unlock();
 }
 
+MatrixXd Lkf::getA(void) {
+
+  MatrixXd temp = MatrixXd::Zero(n, n);
+
+  lkf_mutex.lock();
+  { temp = this->A; }
+  lkf_mutex.unlock();
+
+  return temp;
+}
+
 void Lkf::setA(const MatrixXd &A) {
 
   lkf_mutex.lock();

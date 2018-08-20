@@ -37,6 +37,9 @@ public:
   // get the covariance matrix
   Eigen::MatrixXd getCovariance(void);
 
+  // get main matrix
+  Eigen::MatrixXd getA(void);
+
   // set main matrix
   void setA(const Eigen::MatrixXd &A);
 
