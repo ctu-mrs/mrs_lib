@@ -38,8 +38,9 @@ private:
   {
 
     std::stringstream strstr;
-    const Eigen::IOFormat fmt(4, 0, ", ", "\n", "\t\t[", "]");
-    strstr << value.format(fmt);
+    /* const Eigen::IOFormat fmt(4, 0, ", ", "\n", "\t\t[", "]"); */
+    /* strstr << value.format(fmt); */
+    strstr << value;
     if (m_node_name.empty())
       std::cout << "\t" << name << ":\t" << std::endl << strstr.str() << std::endl;
     else
@@ -118,6 +119,48 @@ private:
   };
   //}
 
+  /* load helper function //{ */
+  // This function tries to load a parameter with name 'name' and a default value.
+  // You can use the flag 'optional' to not throw a ROS_ERROR when the parameter
+  // cannot be loaded and the flag 'print_values' to set whether the loaded
+  // value and name of the parameter should be printed to cout.
+  // If 'optional' is set to false and the parameter could not be loaded,
+  // the flag 'load_successful' is set to false and a ROS_ERROR message
+  // is printer.
+  template <typename T>
+  T load(const std::string& name, const T& default_value, bool optional = true)
+  {
+    T loaded = default_value;
+    // try to load the parameter
+    bool success = m_nh.getParam(name, loaded);
+    if (success)
+    {
+      // if successfully loaded, everything is in order
+      if (m_print_values)  // optionally, print its name and value
+        print_value(name, loaded);
+    } else
+    {
+      // if it was not loaded, set the default value
+      loaded = default_value;
+      if (!optional)
+      {
+        // if the parameter was compulsory, alert the user and set the flag
+        if (m_node_name.empty())
+          ROS_ERROR("Could not load non-optional parameter %s", name.c_str());
+        else
+          ROS_ERROR("[%s]: Could not load non-optional parameter %s", m_node_name.c_str(), name.c_str());
+        m_load_successful = false;
+      } else
+      {
+        // otherwise everything is fine and just print the name and value
+        print_value(name, loaded);
+      }
+    }
+    // finally, return the resulting value
+    return loaded;
+  };
+  //}
+
 public:
   // Default constructor
   ParamLoader(const ros::NodeHandle& nh, bool print_values = true, std::string node_name = std::string())
@@ -151,72 +194,56 @@ public:
     return m_load_successful;
   };
 
-  /* load_param function //{ */
-  // This function tries to load a parameter with name 'name' and a default value.
-  // You can use the flag 'optional' to not throw a ROS_ERROR when the parameter
-  // cannot be loaded and the flag 'print_values' to set whether the loaded
-  // value and name of the parameter should be printed to cout.
-  // If 'optional' is set to false and the parameter could not be loaded,
-  // the global flag 'load_successful' is set to false and a ROS_ERROR message
-  // is printer.
-  template <typename T>
-  T load_param(const std::string& name, const T& default_value, bool optional = true)
-  {
-    T loaded = default_value;
-    // try to load the parameter
-    bool success = m_nh.getParam(name, loaded);
-    if (success)
-    {
-      // if successfully loaded, everything is in order
-      if (m_print_values)  // optionally, print its name and value
-        print_value(name, loaded);
-    } else
-    {
-      // if it was not loaded, set the default value
-      loaded = default_value;
-      if (!optional)
-      {
-        // if the parameter was compulsory, alert the user and set the flag
-        if (m_node_name.empty())
-          ROS_ERROR("Could not load non-optional parameter %s", name.c_str());
-        else
-          ROS_ERROR("[%s]: Could not load non-optional parameter %s", m_node_name.c_str(), name.c_str());
-        m_load_successful = false;
-      } else
-      {
-        // otherwise everything is fine and just print the name and value
-        print_value(name, loaded);
-      }
-    }
-    // finally, return the resulting value
-    return loaded;
-  };
-  //}
-
-  /* load_param_optional function //{ */
+  /* load_param function for optional parameters //{ */
   // A convenience wrapper to enable writing commands like double param = pr.load_param_optional("param_name", 2.0);
   template <typename T>
-  T load_param_optional(const std::string& name, const T& default_value)
+  T load_param(const std::string& name, const T& default_value)
   {
-    return load_param(name, default_value, true);
+    return load(name, default_value, true);
+  };
+  template <typename T>
+  T load_param(const char* name, const T& default_value)
+  {
+    return load_param<T>(std::string(name), default_value);
   };
   //}
 
-  /* load_param_compulsory function //{ */
+  /* load_param function for compulsory parameters //{ */
   // This is just a convenience wrapper function which works like 'load_param' with 'optional' flag set to false.
   template <typename T>
-  T load_param_compulsory(const std::string& name)
+  T load_param(const std::string& name)
   {
-    return load_param(name, T(), false);
+    return load(name, T(), false);
+  };
+  template <typename T>
+  T load_param(const char* name)
+  {
+    return load_param<T>(std::string(name));
   };
   //}
   
   // load_param function overload for Eigen::MatrixXd type //{
-  Eigen::MatrixXd load_param(const std::string& name, const Eigen::MatrixXd& default_value, bool optional = true)
+  Eigen::MatrixXd load_param(const std::string& name, const Eigen::MatrixXd& default_value)
   {
-    Eigen::MatrixXd loaded = default_value;
     int rows = default_value.rows();
     int cols = default_value.cols();
+    return load_matrix_static(name, default_value, rows, cols, true);
+  }
+  Eigen::MatrixXd load_param(const std::string& name)
+  {
+    if (m_node_name.empty())
+      ROS_ERROR("You must specify matrix dimensions for parameter %s (use load_matrix_static?)", name.c_str());
+    else
+      ROS_ERROR("[%s]: You must specify matrix dimensions for parameter %s (use load_matrix_static?)", m_node_name.c_str(), name.c_str());
+    m_load_successful = false;
+    return Eigen::MatrixXd();
+  }
+  //}
+  
+  // load_matrix_static function for loading of Eigen::MatrixXd with known dimensions //{
+  Eigen::MatrixXd load_matrix_static(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols, bool optional = true)
+  {
+    Eigen::MatrixXd loaded = default_value;
     // first, check that at least one dimension is set
     if (rows <= 0 || cols <= 0)
     {
@@ -232,6 +259,10 @@ public:
     if (m_print_values && m_load_successful)
       print_value(name, loaded);
     return loaded;
+  }
+  Eigen::MatrixXd load_matrix_static(const std::string& name, int rows, int cols)
+  {
+    return load_matrix_static(name, Eigen::MatrixXd(), rows, cols, false);
   }
   //}
   
@@ -260,7 +291,12 @@ public:
     }
     loaded = load_MatrixXd(name, default_value, rows, cols, optional);
     if (swap)
+    {
       loaded.transposeInPlace();
+      Eigen::Map<Eigen::MatrixXd> tmp(loaded.data(), loaded.cols(), loaded.rows());
+      loaded = tmp;
+      loaded.transposeInPlace();
+    }
     if (m_print_values && m_load_successful)
       print_value(name, loaded);
     return loaded;
@@ -338,7 +374,7 @@ private:
   // method for printing names and values of new received parameters (prints only the changed ones)
   void print_changed_params(const ConfigType& new_config)
   {
-    // Note that this part of the API is still unstable and may change! It was tested with ROS Kinetic.
+    // Note that this part of the API is still unstable and may change! It was tested with ROS Kinetic and Melodic.
     std::vector<typename ConfigType::AbstractParamDescriptionConstPtr> descrs = new_config.__getParamDescriptions__();
     for (auto& descr : descrs)
     {
