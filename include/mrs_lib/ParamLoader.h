@@ -40,7 +40,8 @@ private:
     std::stringstream strstr;
     /* const Eigen::IOFormat fmt(4, 0, ", ", "\n", "\t\t[", "]"); */
     /* strstr << value.format(fmt); */
-    strstr << value;
+    const Eigen::IOFormat fmt;
+    strstr << value.format(fmt);
     if (m_node_name.empty())
       std::cout << "\t" << name << ":\t" << std::endl << strstr.str() << std::endl;
     else
@@ -49,7 +50,7 @@ private:
   //}
 
   // load_MatrixXd helper function for loading Eigen::MatrixXd matrices //{
-  Eigen::MatrixXd load_MatrixXd(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols = -1, bool optional = true)
+  Eigen::MatrixXd load_MatrixXd(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols = -1, bool optional = true, bool swap = false)
   {
     Eigen::MatrixXd loaded = default_value;
     // this function only accepts dynamic columns (you can always transpose the matrix afterward)
@@ -83,15 +84,13 @@ private:
       // transform the vector to the matrix
       if (cols <= 0)
         cols = tmp_vec.size()/rows;
-      loaded.resize(rows, cols);
-      size_t tmp_it = 0;
-      for (int row_it = 0; row_it < rows; row_it++)
+      if (swap)
       {
-        for (int col_it = 0; col_it < cols; col_it++)
-        {
-          loaded(row_it, col_it) = tmp_vec[tmp_it++];
-        }
+        int tmp = cols;
+        cols = rows;
+        rows = tmp;
       }
+      loaded = Eigen::Map<Eigen::Matrix<double, -1, -1, Eigen::RowMajor>, Eigen::Unaligned>(tmp_vec.data(), rows, cols);
     } else
     {
       if (!correct_size)
@@ -255,9 +254,7 @@ public:
       return loaded;
     }
 
-    loaded = load_MatrixXd(name, default_value, rows, cols, optional);
-    if (m_print_values && m_load_successful)
-      print_value(name, loaded);
+    loaded = load_matrix_dynamic(name, default_value, rows, cols, optional);
     return loaded;
   }
   Eigen::MatrixXd load_matrix_static(const std::string& name, int rows, int cols)
@@ -289,14 +286,7 @@ public:
       cols = tmp;
       swap = true;
     }
-    loaded = load_MatrixXd(name, default_value, rows, cols, optional);
-    if (swap)
-    {
-      loaded.transposeInPlace();
-      Eigen::Map<Eigen::MatrixXd> tmp(loaded.data(), loaded.cols(), loaded.rows());
-      loaded = tmp;
-      loaded.transposeInPlace();
-    }
+    loaded = load_MatrixXd(name, default_value, rows, cols, optional, swap);
     if (m_print_values && m_load_successful)
       print_value(name, loaded);
     return loaded;
