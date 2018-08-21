@@ -12,6 +12,7 @@
 #include <string>
 #include <iostream>
 #include <boost/any.hpp>
+#include <Eigen/Dense>
 
 namespace mrs_lib
 {
@@ -23,6 +24,99 @@ private:
   bool m_load_successful, m_print_values;
   std::string m_node_name;
   const ros::NodeHandle& m_nh;
+
+  /* print_value function and overloads //{ */
+  template <typename T>
+  void print_value(const std::string& name, const T& value)
+  {
+    if (m_node_name.empty())
+      std::cout << "\t" << name << ":\t" << value << std::endl;
+    else
+      ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << name << "':\t" << value);
+  };
+  void print_value(const std::string& name, const Eigen::MatrixXd& value)
+  {
+
+    std::stringstream strstr;
+    const Eigen::IOFormat fmt(4, 0, ", ", "\n", "\t\t[", "]");
+    strstr << value.format(fmt);
+    if (m_node_name.empty())
+      std::cout << "\t" << name << ":\t" << std::endl << strstr.str() << std::endl;
+    else
+      ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << name << "':" << std::endl << strstr.str());
+  };
+  //}
+
+  // load_MatrixXd helper function for loading Eigen::MatrixXd matrices //{
+  Eigen::MatrixXd load_MatrixXd(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols = -1, bool optional = true)
+  {
+    Eigen::MatrixXd loaded = default_value;
+    // this function only accepts dynamic columns (you can always transpose the matrix afterward)
+    if (rows <= 0)
+    {
+      // if the parameter was compulsory, alert the user and set the flag
+      if (m_node_name.empty())
+        ROS_ERROR("Invalid expected matrix dimensions for parameter %s", name.c_str());
+      else
+        ROS_ERROR("[%s]: Invalid expected matrix dimensions for parameter %s", m_node_name.c_str(), name.c_str());
+      m_load_successful = false;
+      return loaded;
+    }
+    
+    bool check_size_exact = true;
+    if (cols <= 0) // this means that the cols dimension is dynamic
+      check_size_exact = false;
+
+    std::vector<double> tmp_vec;
+    // try to load the parameter
+    bool success = m_nh.getParam(name, tmp_vec);
+    // check if the loaded vector has correct length
+    bool correct_size = (int)tmp_vec.size() == rows*cols;
+    if (!check_size_exact)
+      correct_size = (int)tmp_vec.size()%rows == 0; // if the cols dimension is dynamic, the size just has to be divisable by rows
+    
+    success = success && correct_size;
+    if (success)
+    {
+      // if successfully loaded, everything is in order
+      // transform the vector to the matrix
+      if (cols <= 0)
+        cols = tmp_vec.size()/rows;
+      loaded.resize(rows, cols);
+      size_t tmp_it = 0;
+      for (int row_it = 0; row_it < rows; row_it++)
+      {
+        for (int col_it = 0; col_it < cols; col_it++)
+        {
+          loaded(row_it, col_it) = tmp_vec[tmp_it++];
+        }
+      }
+    } else
+    {
+      if (!correct_size)
+      {
+        // warn the user that this parameter was not successfully loaded because of wrong vector length (might be an oversight)
+        if (m_node_name.empty())
+          ROS_WARN("Matrix parameter %s could not be loaded because the vector has a wrong length!", name.c_str());
+        else
+          ROS_WARN("[%s]: Matrix parameter %s could not be loaded because the vector has a wrong length!", m_node_name.c_str(), name.c_str());
+      }
+      // if it was not loaded, set the default value
+      loaded = default_value;
+      if (!optional)
+      {
+        // if the parameter was compulsory, alert the user and set the flag
+        if (m_node_name.empty())
+          ROS_ERROR("Could not load non-optional parameter %s", name.c_str());
+        else
+          ROS_ERROR("[%s]: Could not load non-optional parameter %s", m_node_name.c_str(), name.c_str());
+        m_load_successful = false;
+      }
+    }
+    // finally, return the resulting value
+    return loaded;
+  };
+  //}
 
 public:
   // Default constructor
@@ -57,6 +151,7 @@ public:
     return m_load_successful;
   };
 
+  /* load_param function //{ */
   // This function tries to load a parameter with name 'name' and a default value.
   // You can use the flag 'optional' to not throw a ROS_ERROR when the parameter
   // cannot be loaded and the flag 'print_values' to set whether the loaded
@@ -73,14 +168,8 @@ public:
     if (success)
     {
       // if successfully loaded, everything is in order
-      if (m_print_values)
-      {
-        // optionally, print its name and value
-        if (m_node_name.empty())
-          std::cout << "\t" << name << ":\t" << loaded << std::endl;
-        else
-          ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << name << "':\t" << loaded);
-      }
+      if (m_print_values)  // optionally, print its name and value
+        print_value(name, loaded);
     } else
     {
       // if it was not loaded, set the default value
@@ -96,29 +185,92 @@ public:
       } else
       {
         // otherwise everything is fine and just print the name and value
-        if (m_node_name.empty())
-          std::cout << "\t" << name << ":\t" << loaded << std::endl;
-        else
-          ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << name << "':\t" << loaded);
+        print_value(name, loaded);
       }
     }
     // finally, return the resulting value
     return loaded;
   };
+  //}
 
+  /* load_param_optional function //{ */
   // A convenience wrapper to enable writing commands like double param = pr.load_param_optional("param_name", 2.0);
   template <typename T>
   T load_param_optional(const std::string& name, const T& default_value)
   {
     return load_param(name, default_value, true);
   };
+  //}
 
+  /* load_param_compulsory function //{ */
   // This is just a convenience wrapper function which works like 'load_param' with 'optional' flag set to false.
   template <typename T>
   T load_param_compulsory(const std::string& name)
   {
     return load_param(name, T(), false);
   };
+  //}
+  
+  // load_param function overload for Eigen::MatrixXd type //{
+  Eigen::MatrixXd load_param(const std::string& name, const Eigen::MatrixXd& default_value, bool optional = true)
+  {
+    Eigen::MatrixXd loaded = default_value;
+    int rows = default_value.rows();
+    int cols = default_value.cols();
+    // first, check that at least one dimension is set
+    if (rows <= 0 || cols <= 0)
+    {
+      if (m_node_name.empty())
+        ROS_ERROR("Invalid expected matrix dimensions for parameter %s (use load_matrix_dynamic?)", name.c_str());
+      else
+        ROS_ERROR("[%s]: Invalid expected matrix dimensions for parameter %s (use load_matrix_dynamic?)", m_node_name.c_str(), name.c_str());
+      m_load_successful = false;
+      return loaded;
+    }
+
+    loaded = load_MatrixXd(name, default_value, rows, cols, optional);
+    if (m_print_values && m_load_successful)
+      print_value(name, loaded);
+    return loaded;
+  }
+  //}
+  
+  // load_matrix_dynamic function for half-dynamic loading of Eigen::MatrixXd //{
+  Eigen::MatrixXd load_matrix_dynamic(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols, bool optional = true)
+  {
+    Eigen::MatrixXd loaded = default_value;
+    // first, check that at least one dimension is set
+    if (rows <= 0 && cols <= 0)
+    {
+      if (m_node_name.empty())
+        ROS_ERROR("Invalid expected matrix dimensions for parameter %s", name.c_str());
+      else
+        ROS_ERROR("[%s]: Invalid expected matrix dimensions for parameter %s", m_node_name.c_str(), name.c_str());
+      m_load_successful = false;
+      return loaded;
+    }
+
+    bool swap = false;
+    if (rows <= 0)
+    {
+      int tmp = rows;
+      rows = cols;
+      cols = tmp;
+      swap = true;
+    }
+    loaded = load_MatrixXd(name, default_value, rows, cols, optional);
+    if (swap)
+      loaded.transposeInPlace();
+    if (m_print_values && m_load_successful)
+      print_value(name, loaded);
+    return loaded;
+  }
+  Eigen::MatrixXd load_matrix_dynamic(const std::string& name, int rows, int cols)
+  {
+    return load_matrix_dynamic(name, Eigen::MatrixXd(), rows, cols, false);
+  }
+  //}
+  
 };
 //}
 
