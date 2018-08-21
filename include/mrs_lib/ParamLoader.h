@@ -25,6 +25,21 @@ private:
   std::string m_node_name;
   const ros::NodeHandle& m_nh;
 
+  void print_error(const std::string str)
+  {
+    if (m_node_name.empty())
+      ROS_ERROR("%s", str.c_str());
+    else
+      ROS_ERROR("[%s]: %s", m_node_name.c_str(), str.c_str());
+  }
+  void print_warning(const std::string str)
+  {
+    if (m_node_name.empty())
+      ROS_WARN("%s", str.c_str());
+    else
+      ROS_WARN("[%s]: %s", m_node_name.c_str(), str.c_str());
+  }
+
   /* print_value function and overloads //{ */
   template <typename T>
   void print_value(const std::string& name, const T& value)
@@ -57,10 +72,7 @@ private:
     if (rows <= 0)
     {
       // if the parameter was compulsory, alert the user and set the flag
-      if (m_node_name.empty())
-        ROS_ERROR("Invalid expected matrix dimensions for parameter %s", name.c_str());
-      else
-        ROS_ERROR("[%s]: Invalid expected matrix dimensions for parameter %s", m_node_name.c_str(), name.c_str());
+      print_error(std::string("Invalid expected matrix dimensions for parameter ") + name);
       m_load_successful = false;
       return loaded;
     }
@@ -96,20 +108,14 @@ private:
       if (!correct_size)
       {
         // warn the user that this parameter was not successfully loaded because of wrong vector length (might be an oversight)
-        if (m_node_name.empty())
-          ROS_WARN("Matrix parameter %s could not be loaded because the vector has a wrong length!", name.c_str());
-        else
-          ROS_WARN("[%s]: Matrix parameter %s could not be loaded because the vector has a wrong length!", m_node_name.c_str(), name.c_str());
+        print_warning(std::string("Matrix parameter ") + name + std::string(" could not be loaded because the vector has a wrong length!"));
       }
       // if it was not loaded, set the default value
       loaded = default_value;
       if (!optional)
       {
         // if the parameter was compulsory, alert the user and set the flag
-        if (m_node_name.empty())
-          ROS_ERROR("Could not load non-optional parameter %s", name.c_str());
-        else
-          ROS_ERROR("[%s]: Could not load non-optional parameter %s", m_node_name.c_str(), name.c_str());
+        print_error(std::string("Could not load non-optional parameter ") + name);
         m_load_successful = false;
       }
     }
@@ -144,10 +150,7 @@ private:
       if (!optional)
       {
         // if the parameter was compulsory, alert the user and set the flag
-        if (m_node_name.empty())
-          ROS_ERROR("Could not load non-optional parameter %s", name.c_str());
-        else
-          ROS_ERROR("[%s]: Could not load non-optional parameter %s", m_node_name.c_str(), name.c_str());
+        print_error(std::string("Could not load non-optional parameter ") + name);
         m_load_successful = false;
       } else
       {
@@ -230,10 +233,7 @@ public:
   }
   Eigen::MatrixXd load_param(const std::string& name)
   {
-    if (m_node_name.empty())
-      ROS_ERROR("You must specify matrix dimensions for parameter %s (use load_matrix_static?)", name.c_str());
-    else
-      ROS_ERROR("[%s]: You must specify matrix dimensions for parameter %s (use load_matrix_static?)", m_node_name.c_str(), name.c_str());
+    print_error(std::string("You must specify matrix dimensions for parameter ") + name + std::string(" (use load_matrix_static?)"));
     m_load_successful = false;
     return Eigen::MatrixXd();
   }
@@ -246,15 +246,14 @@ public:
     // first, check that at least one dimension is set
     if (rows <= 0 || cols <= 0)
     {
-      if (m_node_name.empty())
-        ROS_ERROR("Invalid expected matrix dimensions for parameter %s (use load_matrix_dynamic?)", name.c_str());
-      else
-        ROS_ERROR("[%s]: Invalid expected matrix dimensions for parameter %s (use load_matrix_dynamic?)", m_node_name.c_str(), name.c_str());
+      print_error(std::string("Invalid expected matrix dimensions for parameter ") + name + std::string(" (use load_matrix_dynamic?)"));
       m_load_successful = false;
       return loaded;
     }
 
-    loaded = load_matrix_dynamic(name, default_value, rows, cols, optional);
+    loaded = load_MatrixXd(name, default_value, rows, cols, optional, false);
+    if (m_print_values && m_load_successful)
+      print_value(name, loaded);
     return loaded;
   }
   Eigen::MatrixXd load_matrix_static(const std::string& name, int rows, int cols)
@@ -270,10 +269,7 @@ public:
     // first, check that at least one dimension is set
     if (rows <= 0 && cols <= 0)
     {
-      if (m_node_name.empty())
-        ROS_ERROR("Invalid expected matrix dimensions for parameter %s", name.c_str());
-      else
-        ROS_ERROR("[%s]: Invalid expected matrix dimensions for parameter %s", m_node_name.c_str(), name.c_str());
+      print_error(std::string("Invalid expected matrix dimensions for parameter ") + name + std::string(" (at least one dimension must be specified)"));
       m_load_successful = false;
       return loaded;
     }
