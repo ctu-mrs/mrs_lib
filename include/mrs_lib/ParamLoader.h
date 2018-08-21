@@ -49,7 +49,26 @@ private:
     else
       ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << name << "':\t" << value);
   };
-  void print_value(const std::string& name, const Eigen::MatrixXd& value)
+  template <typename T>
+  void print_value(const std::string& name, const std::vector<T>& value)
+  {
+    std::stringstream strstr;
+    if (m_node_name.empty())
+      strstr << "\t";
+    strstr << name << ":\t ";
+    for (size_t it = 0; it < value.size(); it++)
+    {
+      const T& elem = value.at(it);
+      strstr << elem;
+      if (it < value.size()-1)
+        strstr  << ", ";
+    }
+    if (m_node_name.empty())
+      std::cout << strstr.str() << std::endl;
+    else
+      ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << strstr.str());
+  };
+   void print_value(const std::string& name, const Eigen::MatrixXd& value)
   {
 
     std::stringstream strstr;
