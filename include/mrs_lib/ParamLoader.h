@@ -268,12 +268,12 @@ public:
   template <typename T>
   void load_param(const std::string& name, T& out_value, const T& default_value)
   {
-    out_value = load_param2(name, default_value);
+    out_value = load_param2<T>(name, default_value);
   };
   template <typename T>
   T load_param2(const std::string& name, const T& default_value)
   {
-    return load(name, default_value, true);
+    return load<T>(name, default_value, true);
   };
   //}
 
@@ -282,12 +282,12 @@ public:
   template <typename T>
   void load_param(const std::string& name, T& out_value)
   {
-    out_value = load_param2(name);
+    out_value = load_param2<T>(name);
   };
   template <typename T>
   T load_param2(const std::string& name)
   {
-    return load(name, T(), false);
+    return load<T>(name, T(), false);
   };
   //}
 
