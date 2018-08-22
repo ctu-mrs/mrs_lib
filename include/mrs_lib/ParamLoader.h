@@ -10,6 +10,7 @@
 #include <ros/ros.h>
 #include <dynamic_reconfigure/server.h>
 #include <string>
+#include <map>
 #include <iostream>
 #include <boost/any.hpp>
 #include <Eigen/Dense>
@@ -58,13 +59,34 @@ private:
     std::stringstream strstr;
     if (m_node_name.empty())
       strstr << "\t";
-    strstr << name << ":\t ";
-    for (size_t it = 0; it < value.size(); it++)
+    strstr << name << ":\t";
+    size_t it = 0;
+    for (const auto& elem : value)
     {
-      const T& elem = value.at(it);
       strstr << elem;
       if (it < value.size() - 1)
         strstr << ", ";
+      it++;
+    }
+    if (m_node_name.empty())
+      std::cout << strstr.str() << std::endl;
+    else
+      ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << strstr.str());
+  };
+  template <typename T1, typename T2>
+  void print_value(const std::string& name, const std::map<T1, T2>& value)
+  {
+    std::stringstream strstr;
+    if (m_node_name.empty())
+      strstr << "\t";
+    strstr << name << ":" << std::endl;
+    size_t it = 0;
+    for (const auto& pair : value)
+    {
+      strstr << pair.first << " = " << pair.second;
+      if (it < value.size() - 1)
+        strstr << std::endl;
+      it++;
     }
     if (m_node_name.empty())
       std::cout << strstr.str() << std::endl;
