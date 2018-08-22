@@ -313,7 +313,7 @@ public:
   {
     return load_matrix_dynamic(name, Eigen::MatrixXd(), rows, cols, false);
   }
-  void load_matrix_dynamic(const std::string& name, Eigen::MatrixXd& mat ,  int rows, int cols)
+  void load_matrix_dynamic2(const std::string& name, Eigen::MatrixXd& mat ,  int rows, int cols)
   {
     mat = load_matrix_dynamic(name, Eigen::MatrixXd(), rows, cols, false);
   }
