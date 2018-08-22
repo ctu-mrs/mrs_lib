@@ -216,16 +216,15 @@ public:
   };
 
   /* load_param function for optional parameters //{ */
-  // A convenience wrapper to enable writing commands like double param = pr.load_param_optional("param_name", 2.0);
   template <typename T>
   T load_param(const std::string& name, const T& default_value)
   {
     return load(name, default_value, true);
   };
   template <typename T>
-  T load_param(const char* name, const T& default_value)
+  void load_param2(const std::string& name, T& out_value, const T& default_value)
   {
-    return load_param<T>(std::string(name), default_value);
+    out_value = load(name, default_value, true);
   };
   //}
 
@@ -237,9 +236,9 @@ public:
     return load(name, T(), false);
   };
   template <typename T>
-  T load_param(const char* name)
+  void load_param2(const std::string& name, T& out_value)
   {
-    return load_param<T>(std::string(name));
+    out_value = load(name, T(), false);
   };
   //}
   
@@ -279,6 +278,10 @@ public:
   {
     return load_matrix_static(name, Eigen::MatrixXd(), rows, cols, false);
   }
+  void load_matrix_static2(const std::string& name, Eigen::MatrixXd& mat, int rows, int cols)
+  {
+    mat = load_matrix_static(name, Eigen::MatrixXd(), rows, cols, false);
+  }
   //}
   
   // load_matrix_dynamic function for half-dynamic loading of Eigen::MatrixXd //{
@@ -309,6 +312,10 @@ public:
   Eigen::MatrixXd load_matrix_dynamic(const std::string& name, int rows, int cols)
   {
     return load_matrix_dynamic(name, Eigen::MatrixXd(), rows, cols, false);
+  }
+  void load_matrix_dynamic(const std::string& name, Eigen::MatrixXd& mat ,  int rows, int cols)
+  {
+    mat = load_matrix_dynamic(name, Eigen::MatrixXd(), rows, cols, false);
   }
   //}
   
