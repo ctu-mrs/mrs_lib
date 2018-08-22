@@ -25,6 +25,8 @@ private:
   std::string m_node_name;
   const ros::NodeHandle& m_nh;
 
+  /* printing helper functions //{ */
+  /* print_error and print_warning functions //{*/
   void print_error(const std::string str)
   {
     if (m_node_name.empty())
@@ -39,6 +41,7 @@ private:
     else
       ROS_WARN("[%s]: %s", m_node_name.c_str(), str.c_str());
   }
+  //}
 
   /* print_value function and overloads //{ */
   template <typename T>
@@ -60,15 +63,15 @@ private:
     {
       const T& elem = value.at(it);
       strstr << elem;
-      if (it < value.size()-1)
-        strstr  << ", ";
+      if (it < value.size() - 1)
+        strstr << ", ";
     }
     if (m_node_name.empty())
       std::cout << strstr.str() << std::endl;
     else
       ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << strstr.str());
   };
-   void print_value(const std::string& name, const Eigen::MatrixXd& value)
+  void print_value(const std::string& name, const Eigen::MatrixXd& value)
   {
 
     std::stringstream strstr;
@@ -82,7 +85,9 @@ private:
       ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << name << "':" << std::endl << strstr.str());
   };
   //}
+  //}
 
+  /* helper functions for loading Eigen::MatrixXd matrices //{ */
   // load_MatrixXd helper function for loading Eigen::MatrixXd matrices //{
   Eigen::MatrixXd load_MatrixXd(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols = -1, bool optional = true, bool swap = false)
   {
@@ -95,26 +100,26 @@ private:
       m_load_successful = false;
       return loaded;
     }
-    
+
     bool check_size_exact = true;
-    if (cols <= 0) // this means that the cols dimension is dynamic
+    if (cols <= 0)  // this means that the cols dimension is dynamic
       check_size_exact = false;
 
     std::vector<double> tmp_vec;
     // try to load the parameter
     bool success = m_nh.getParam(name, tmp_vec);
     // check if the loaded vector has correct length
-    bool correct_size = (int)tmp_vec.size() == rows*cols;
+    bool correct_size = (int)tmp_vec.size() == rows * cols;
     if (!check_size_exact)
-      correct_size = (int)tmp_vec.size()%rows == 0; // if the cols dimension is dynamic, the size just has to be divisable by rows
-    
+      correct_size = (int)tmp_vec.size() % rows == 0;  // if the cols dimension is dynamic, the size just has to be divisable by rows
+
     success = success && correct_size;
     if (success)
     {
       // if successfully loaded, everything is in order
       // transform the vector to the matrix
       if (cols <= 0)
-        cols = tmp_vec.size()/rows;
+        cols = tmp_vec.size() / rows;
       if (swap)
       {
         int tmp = cols;
@@ -143,7 +148,54 @@ private:
   };
   //}
 
-  /* load helper function //{ */
+  /* load_matrix_static_internal helper function for loading static Eigen matrices //{ */
+  Eigen::MatrixXd load_matrix_static_internal(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols, bool optional)
+  {
+    Eigen::MatrixXd loaded = default_value;
+    // first, check that at least one dimension is set
+    if (rows <= 0 || cols <= 0)
+    {
+      print_error(std::string("Invalid expected matrix dimensions for parameter ") + name + std::string(" (use load_matrix_dynamic?)"));
+      m_load_successful = false;
+      return loaded;
+    }
+
+    loaded = load_MatrixXd(name, default_value, rows, cols, optional, false);
+    if (m_print_values && m_load_successful)
+      print_value(name, loaded);
+    return loaded;
+  }
+  //}
+
+  /* load_matrix_dynamic_internal helper function for loading Eigen matrices with one dynamic (unspecified) dimension //{ */
+  Eigen::MatrixXd load_matrix_dynamic_internal(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols, bool optional)
+  {
+    Eigen::MatrixXd loaded = default_value;
+    // first, check that at least one dimension is set
+    if (rows <= 0 && cols <= 0)
+    {
+      print_error(std::string("Invalid expected matrix dimensions for parameter ") + name + std::string(" (at least one dimension must be specified)"));
+      m_load_successful = false;
+      return loaded;
+    }
+
+    bool swap = false;
+    if (rows <= 0)
+    {
+      int tmp = rows;
+      rows = cols;
+      cols = tmp;
+      swap = true;
+    }
+    loaded = load_MatrixXd(name, default_value, rows, cols, optional, swap);
+    if (m_print_values && m_load_successful)
+      print_value(name, loaded);
+    return loaded;
+  }
+  //}
+  //}
+
+  /* load helper function for generic types //{ */
   // This function tries to load a parameter with name 'name' and a default value.
   // You can use the flag 'optional' to not throw a ROS_ERROR when the parameter
   // cannot be loaded and the flag 'print_values' to set whether the loaded
@@ -188,23 +240,20 @@ public:
       : m_load_successful(true),
         m_print_values(print_values),
         m_node_name(node_name),
-        m_nh(nh)
-  {
+        m_nh(nh){
             /* std::cout << "Initialized1 ParamLoader for node " << node_name << std::endl; */
-  };
+        };
   /* Constructor overloads //{ */
   // Convenience overload to enable writing ParamLoader pr(nh, node_name);
   ParamLoader(const ros::NodeHandle& nh, std::string node_name)
-      : ParamLoader(nh, true, node_name)
-  {
+      : ParamLoader(nh, true, node_name){
             /* std::cout << "Initialized2 ParamLoader for node " << node_name << std::endl; */
-  };
+        };
   // Convenience overload to enable writing ParamLoader pr(nh, "node_name");
   ParamLoader(const ros::NodeHandle& nh, const char* node_name)
-      : ParamLoader(nh, std::string(node_name))
-  {
+      : ParamLoader(nh, std::string(node_name)){
             /* std::cout << "Initialized3 ParamLoader for node " << node_name << std::endl; */
-  };
+        };
   //}
 
 
@@ -216,102 +265,96 @@ public:
   };
 
   /* load_param function for optional parameters //{ */
-  // A convenience wrapper to enable writing commands like double param = pr.load_param_optional("param_name", 2.0);
   template <typename T>
-  T load_param(const std::string& name, const T& default_value)
+  void load_param(const std::string& name, T& out_value, const T& default_value)
   {
-    return load(name, default_value, true);
+    out_value = load_param2<T>(name, default_value);
   };
   template <typename T>
-  T load_param(const char* name, const T& default_value)
+  T load_param2(const std::string& name, const T& default_value)
   {
-    return load_param<T>(std::string(name), default_value);
+    return load<T>(name, default_value, true);
   };
   //}
 
   /* load_param function for compulsory parameters //{ */
   // This is just a convenience wrapper function which works like 'load_param' with 'optional' flag set to false.
   template <typename T>
-  T load_param(const std::string& name)
+  void load_param(const std::string& name, T& out_value)
   {
-    return load(name, T(), false);
+    out_value = load_param2<T>(name);
   };
   template <typename T>
-  T load_param(const char* name)
+  T load_param2(const std::string& name)
   {
-    return load_param<T>(std::string(name));
+    return load<T>(name, T(), false);
   };
   //}
-  
+
+  /* load_param spetializations and convenience functions for Eigen::MatrixXd type //{ */
   // load_param function overload for Eigen::MatrixXd type //{
-  Eigen::MatrixXd load_param(const std::string& name, const Eigen::MatrixXd& default_value)
+  void load_param(const std::string& name, Eigen::MatrixXd& mat, const Eigen::MatrixXd& default_value)
+  {
+    mat = load_param2(name, default_value);
+  }
+  void load_param(const std::string& name, Eigen::MatrixXd& mat)
+  {
+    mat = load_param2(name);
+  }
+  Eigen::MatrixXd load_param2(const std::string& name, const Eigen::MatrixXd& default_value)
   {
     int rows = default_value.rows();
     int cols = default_value.cols();
-    return load_matrix_static(name, default_value, rows, cols, true);
+    Eigen::MatrixXd loaded;
+    load_matrix_static(name, loaded, default_value, rows, cols);
+    return loaded;
   }
-  Eigen::MatrixXd load_param(const std::string& name)
+  Eigen::MatrixXd load_param2(const std::string& name)
   {
     print_error(std::string("You must specify matrix dimensions for parameter ") + name + std::string(" (use load_matrix_static?)"));
     m_load_successful = false;
     return Eigen::MatrixXd();
   }
   //}
-  
+
   // load_matrix_static function for loading of Eigen::MatrixXd with known dimensions //{
-  Eigen::MatrixXd load_matrix_static(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols, bool optional = true)
+  void load_matrix_static(const std::string& name, Eigen::MatrixXd& mat, int rows, int cols)
   {
-    Eigen::MatrixXd loaded = default_value;
-    // first, check that at least one dimension is set
-    if (rows <= 0 || cols <= 0)
-    {
-      print_error(std::string("Invalid expected matrix dimensions for parameter ") + name + std::string(" (use load_matrix_dynamic?)"));
-      m_load_successful = false;
-      return loaded;
-    }
-
-    loaded = load_MatrixXd(name, default_value, rows, cols, optional, false);
-    if (m_print_values && m_load_successful)
-      print_value(name, loaded);
-    return loaded;
+    mat = load_matrix_static2(name, rows, cols);
   }
-  Eigen::MatrixXd load_matrix_static(const std::string& name, int rows, int cols)
+  void load_matrix_static(const std::string& name, Eigen::MatrixXd& mat, const Eigen::MatrixXd& default_value, int rows, int cols)
   {
-    return load_matrix_static(name, Eigen::MatrixXd(), rows, cols, false);
+    mat = load_matrix_static2(name, default_value, rows, cols);
+  }
+  Eigen::MatrixXd load_matrix_static2(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols)
+  {
+    return load_matrix_static_internal(name, default_value, rows, cols, true);
+  }
+  Eigen::MatrixXd load_matrix_static2(const std::string& name, int rows, int cols)
+  {
+    return load_matrix_static_internal(name, Eigen::MatrixXd(), rows, cols, false);
   }
   //}
-  
+
   // load_matrix_dynamic function for half-dynamic loading of Eigen::MatrixXd //{
-  Eigen::MatrixXd load_matrix_dynamic(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols, bool optional = true)
+  void load_matrix_dynamic(const std::string& name, Eigen::MatrixXd& mat, int rows, int cols)
   {
-    Eigen::MatrixXd loaded = default_value;
-    // first, check that at least one dimension is set
-    if (rows <= 0 && cols <= 0)
-    {
-      print_error(std::string("Invalid expected matrix dimensions for parameter ") + name + std::string(" (at least one dimension must be specified)"));
-      m_load_successful = false;
-      return loaded;
-    }
-
-    bool swap = false;
-    if (rows <= 0)
-    {
-      int tmp = rows;
-      rows = cols;
-      cols = tmp;
-      swap = true;
-    }
-    loaded = load_MatrixXd(name, default_value, rows, cols, optional, swap);
-    if (m_print_values && m_load_successful)
-      print_value(name, loaded);
-    return loaded;
+    mat = load_matrix_dynamic2(name, rows, cols);
   }
-  Eigen::MatrixXd load_matrix_dynamic(const std::string& name, int rows, int cols)
+  void load_matrix_dynamic(const std::string& name, Eigen::MatrixXd& mat, const Eigen::MatrixXd& default_value, int rows, int cols)
   {
-    return load_matrix_dynamic(name, Eigen::MatrixXd(), rows, cols, false);
+    mat = load_matrix_dynamic2(name, default_value, rows, cols);
+  }
+  Eigen::MatrixXd load_matrix_dynamic2(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols)
+  {
+    return load_matrix_dynamic_internal(name, default_value, rows, cols, true);
+  }
+  Eigen::MatrixXd load_matrix_dynamic2(const std::string& name, int rows, int cols)
+  {
+    return load_matrix_dynamic_internal(name, Eigen::MatrixXd(), rows, cols, false);
   }
   //}
-  
+  //}
 };
 //}
 
