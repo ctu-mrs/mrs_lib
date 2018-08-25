@@ -68,7 +68,7 @@ void Routine::start(const ros::TimerEvent &event) {
 
   double dt = (real_start - expected_start).toSec();
 
-  if (dt > threshold_) {
+  if (dt > 0.01) {
     ROS_WARN_THROTTLE(1.0, "[%s]: routine '%s' was lauched late by %1.3f s!", node_name.c_str(), routine_name.c_str(), dt + threshold_);
   }
 
