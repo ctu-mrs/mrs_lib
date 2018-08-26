@@ -27,17 +27,14 @@ private:
   std::mutex *    mutex_publisher;
 
   // if periodic, those are the stats from the trigger event
-  bool   is_periodic_ = false;
   double threshold_;
-  int    expected_rate_ = 0;
-  long   iteration      = 0;
-
-  ros::Time expected_start;
-  ros::Time real_start;
+  long   iteration = 0;
 
   // those are the stats from the execution of the routine
   ros::Time execution_start;
-  ros::Time execution_end;
+
+  // this will be published
+  mrs_msgs::ProfilerUpdate msg_out;
 };
 
 class Profiler {
