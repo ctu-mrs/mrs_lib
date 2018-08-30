@@ -1,5 +1,7 @@
 #include <mrs_lib/Profiler.h>
 
+#define DISABLED 1
+
 namespace mrs_lib
 {
 
@@ -13,6 +15,10 @@ Routine::Routine(){};
 /* Profiler() constructor //{ */
 
 Profiler::Profiler(ros::NodeHandle &nh_, std::string node_name) {
+
+#ifdef DISABLED
+  return;
+#endif
 
   publisher = nh_.advertise<mrs_msgs::ProfilerUpdate>("profiler", 100, false);
 
@@ -100,13 +106,17 @@ Routine::Routine(std::string name, std::string node_name, ros::Publisher &publis
 
 void Routine::start(const ros::TimerEvent &event) {
 
+#ifdef DISABLED
+  return;
+#endif
+
   msg_out.expected_start = event.current_expected.toSec();
   msg_out.real_start     = event.current_real.toSec();
 
   msg_out.stamp     = ros::Time::now();
   msg_out.duration  = 0;
   msg_out.iteration = this->iteration++;
-  msg_out.event    = mrs_msgs::ProfilerUpdate::START;
+  msg_out.event     = mrs_msgs::ProfilerUpdate::START;
 
   execution_start = ros::Time::now();
 
@@ -134,10 +144,14 @@ void Routine::start(const ros::TimerEvent &event) {
 
 void Routine::start(void) {
 
+#ifdef DISABLED
+  return;
+#endif
+
   msg_out.stamp     = ros::Time::now();
   msg_out.duration  = 0;
   msg_out.iteration = this->iteration++;
-  msg_out.event    = mrs_msgs::ProfilerUpdate::START;
+  msg_out.event     = mrs_msgs::ProfilerUpdate::START;
 
   execution_start = ros::Time::now();
 
@@ -159,12 +173,16 @@ void Routine::start(void) {
 
 void Routine::end(void) {
 
+#ifdef DISABLED
+  return;
+#endif
+
   ros::Time execution_end = ros::Time::now();
 
   msg_out.stamp    = ros::Time::now();
   msg_out.duration = (execution_end - execution_start).toSec();
 
-  msg_out.event    = mrs_msgs::ProfilerUpdate::END;
+  msg_out.event = mrs_msgs::ProfilerUpdate::END;
 
   mutex_publisher->lock();
   {
