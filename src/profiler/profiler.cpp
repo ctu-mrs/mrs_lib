@@ -1,7 +1,5 @@
 #include <mrs_lib/Profiler.h>
 
-#define DISABLED 1
-
 namespace mrs_lib
 {
 
@@ -14,15 +12,15 @@ Routine::Routine(){};
 
 /* Profiler() constructor //{ */
 
-Profiler::Profiler(ros::NodeHandle &nh_, std::string node_name) {
-
-#ifdef DISABLED
-  return;
-#endif
-
-  publisher = nh_.advertise<mrs_msgs::ProfilerUpdate>("profiler", 100, false);
+Profiler::Profiler(ros::NodeHandle &nh_, std::string node_name, bool profiler_enabled) {
 
   this->node_name = node_name;
+
+  this->profiler_enabled_ = profiler_enabled;
+
+  if (profiler_enabled) {
+    publisher = nh_.advertise<mrs_msgs::ProfilerUpdate>("profiler", 100, false);
+  }
 
   ROS_INFO("[%s]: profiler initialized", node_name.c_str());
 }
@@ -35,7 +33,7 @@ Routine *Profiler::registerRoutine(std::string name, int expected_rate, double t
 
   ROS_INFO("[%s]: new profiler routine registered (%s)", node_name.c_str(), name.c_str());
 
-  Routine *new_routine = new Routine(name, this->node_name, expected_rate, threshold, publisher, mutex_publisher);
+  Routine *new_routine = new Routine(name, this->node_name, expected_rate, threshold, publisher, mutex_publisher, profiler_enabled_);
 
   return new_routine;
 }
@@ -48,7 +46,7 @@ Routine *Profiler::registerRoutine(std::string name) {
 
   ROS_INFO("[%s]: new profiler routine registered (%s)", node_name.c_str(), name.c_str());
 
-  Routine *new_routine = new Routine(name, this->node_name, publisher, mutex_publisher);
+  Routine *new_routine = new Routine(name, this->node_name, publisher, mutex_publisher, profiler_enabled_);
 
   return new_routine;
 }
@@ -59,7 +57,8 @@ Routine *Profiler::registerRoutine(std::string name) {
 
 /* Routine constructor for periodic //{ */
 
-Routine::Routine(std::string name, std::string node_name, int expected_rate, double threshold, ros::Publisher &publisher, std::mutex &mutex_publisher) {
+Routine::Routine(std::string name, std::string node_name, int expected_rate, double threshold, ros::Publisher &publisher, std::mutex &mutex_publisher,
+                 bool profiler_enabled) {
 
   threshold_            = threshold;
   this->publisher       = &publisher;
@@ -67,6 +66,8 @@ Routine::Routine(std::string name, std::string node_name, int expected_rate, dou
 
   this->routine_name = name;
   this->node_name    = node_name;
+
+  this->profiler_enabled_ = profiler_enabled;
 
   msg_out.node_name    = node_name;
   msg_out.routine_name = name;
@@ -82,13 +83,15 @@ Routine::Routine(std::string name, std::string node_name, int expected_rate, dou
 
 /* Routine constructor for normal //{ */
 
-Routine::Routine(std::string name, std::string node_name, ros::Publisher &publisher, std::mutex &mutex_publisher) {
+Routine::Routine(std::string name, std::string node_name, ros::Publisher &publisher, std::mutex &mutex_publisher, bool profiler_enabled) {
 
   this->publisher       = &publisher;
   this->mutex_publisher = &mutex_publisher;
 
   this->routine_name = name;
   this->node_name    = node_name;
+
+  this->profiler_enabled_ = profiler_enabled;
 
   msg_out.node_name    = node_name;
   msg_out.routine_name = name;
@@ -106,9 +109,9 @@ Routine::Routine(std::string name, std::string node_name, ros::Publisher &publis
 
 void Routine::start(const ros::TimerEvent &event) {
 
-#ifdef DISABLED
-  return;
-#endif
+  if (!profiler_enabled_) {
+    return;
+  }
 
   msg_out.expected_start = event.current_expected.toSec();
   msg_out.real_start     = event.current_real.toSec();
@@ -144,9 +147,9 @@ void Routine::start(const ros::TimerEvent &event) {
 
 void Routine::start(void) {
 
-#ifdef DISABLED
-  return;
-#endif
+  if (!profiler_enabled_) {
+    return;
+  }
 
   msg_out.stamp     = ros::Time::now();
   msg_out.duration  = 0;
@@ -173,9 +176,9 @@ void Routine::start(void) {
 
 void Routine::end(void) {
 
-#ifdef DISABLED
-  return;
-#endif
+  if (!profiler_enabled_) {
+    return;
+  }
 
   ros::Time execution_end = ros::Time::now();
 
