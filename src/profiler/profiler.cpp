@@ -31,8 +31,6 @@ Profiler::Profiler(ros::NodeHandle &nh_, std::string node_name, bool profiler_en
 
 Routine Profiler::createRoutine(std::string name, int expected_rate, double threshold, ros::TimerEvent event) {
 
-  /* ROS_INFO("[%s]: new profiler routine registered (%s)", node_name.c_str(), name.c_str()); */
-
   return Routine(name, this->node_name, expected_rate, threshold, publisher, mutex_publisher, profiler_enabled_, event);
 }
 
@@ -41,8 +39,6 @@ Routine Profiler::createRoutine(std::string name, int expected_rate, double thre
 /* Profiler::registerRoutine() normal //{ */
 
 Routine Profiler::createRoutine(std::string name) {
-
-  /* ROS_INFO("[%s]: new profiler routine registered (%s)", node_name.c_str(), name.c_str()); */
 
   return Routine(name, this->node_name, publisher, mutex_publisher, profiler_enabled_);
 }
@@ -55,6 +51,10 @@ Routine Profiler::createRoutine(std::string name) {
 
 Routine::Routine(std::string name, std::string node_name, int expected_rate, double threshold, ros::Publisher &publisher, std::mutex &mutex_publisher,
                  bool profiler_enabled, ros::TimerEvent event) {
+
+  if (!profiler_enabled) {
+    return; 
+  }
 
   threshold_ = threshold;
 
@@ -105,6 +105,10 @@ Routine::Routine(std::string name, std::string node_name, int expected_rate, dou
 /* Routine constructor for normal //{ */
 
 Routine::Routine(std::string name, std::string node_name, ros::Publisher &publisher, std::mutex &mutex_publisher, bool profiler_enabled) {
+
+  if (!profiler_enabled) {
+    return; 
+  }
 
   this->publisher       = &publisher;
   this->mutex_publisher = &mutex_publisher;
