@@ -3,14 +3,14 @@
 namespace mrs_lib
 {
 
-  ContextUnset::ContextUnset(bool &in) : variable(in) {
-  
-    variable = true;
-  }
+ScopeUnset::ScopeUnset(bool &in) : variable(in) {
 
-  ContextUnset::~ContextUnset() {
+  variable = true;
+}
 
-    variable = false;
-  }
+ScopeUnset::~ScopeUnset() {
+
+  variable = false;
+}
 
 }  // namespace mrs_lib

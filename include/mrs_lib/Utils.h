@@ -5,12 +5,12 @@ namespace mrs_lib
 {
 
 // | - context solution for automatically unsetting a variable  |
-class ContextUnset {
+class ScopeUnset {
 
 public:
-  ContextUnset();
-  ContextUnset(bool &in);
-  ~ContextUnset();
+  ScopeUnset();
+  ScopeUnset(bool &in);
+  ~ScopeUnset();
 
 private:
   bool &variable;
