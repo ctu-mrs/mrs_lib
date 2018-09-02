@@ -1,3 +1,4 @@
+// clang: MatousFormat
 /**
  * This header defines several convenience functions for loading of ROS parameters
  * both static (e.g. from yaml files) and dynamic (using dynamic_reconfigure).
@@ -110,7 +111,7 @@ private:
   };
   //}
   //}
-  
+
   /* check_duplicit_loading checks whether the parameter was already loaded - returns true if yes //{ */
   bool check_duplicit_loading(const std::string& name)
   {
@@ -175,14 +176,14 @@ private:
       if (success && !correct_size)
       {
         // warn the user that this parameter was not successfully loaded because of wrong vector length (might be an oversight)
-        std::string warning = std::string("Matrix parameter ") + name
-                            + std::string(" could not be loaded because the vector has a wrong length "
-                            + std::to_string(tmp_vec.size()) + " instead of expected ");
+        std::string warning =
+            std::string("Matrix parameter ") + name
+            + std::string(" could not be loaded because the vector has a wrong length " + std::to_string(tmp_vec.size()) + " instead of expected ");
         // process the message correctly based on whether the loaded matrix should be dynamic or static
-        if (cols <= 0) // for dynamic matrices
+        if (cols <= 0)  // for dynamic matrices
           warning = warning + std::string("number divisible by ") + std::to_string(rows);
-        else // for static matrices
-          warning = warning + std::to_string(rows*cols);
+        else  // for static matrices
+          warning = warning + std::to_string(rows * cols);
         print_warning(warning);
       }
       // if it was not loaded, set the default value
