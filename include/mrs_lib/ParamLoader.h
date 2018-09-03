@@ -1,3 +1,4 @@
+// clang: MatousFormat
 /**
  * This header defines several convenience functions for loading of ROS parameters
  * both static (e.g. from yaml files) and dynamic (using dynamic_reconfigure).
@@ -110,7 +111,7 @@ private:
   };
   //}
   //}
-  
+
   /* check_duplicit_loading checks whether the parameter was already loaded - returns true if yes //{ */
   bool check_duplicit_loading(const std::string& name)
   {
@@ -157,8 +158,7 @@ private:
     if (!check_size_exact)
       correct_size = (int)tmp_vec.size() % rows == 0;  // if the cols dimension is dynamic, the size just has to be divisable by rows
 
-    success = success && correct_size;
-    if (success)
+    if (success && correct_size)
     {
       // if successfully loaded, everything is in order
       // transform the vector to the matrix
@@ -173,10 +173,18 @@ private:
       loaded = Eigen::Map<Eigen::Matrix<double, -1, -1, Eigen::RowMajor>, Eigen::Unaligned>(tmp_vec.data(), rows, cols);
     } else
     {
-      if (!correct_size)
+      if (success && !correct_size)
       {
         // warn the user that this parameter was not successfully loaded because of wrong vector length (might be an oversight)
-        print_warning(std::string("Matrix parameter ") + name + std::string(" could not be loaded because the vector has a wrong length!"));
+        std::string warning =
+            std::string("Matrix parameter ") + name
+            + std::string(" could not be loaded because the vector has a wrong length " + std::to_string(tmp_vec.size()) + " instead of expected ");
+        // process the message correctly based on whether the loaded matrix should be dynamic or static
+        if (cols <= 0)  // for dynamic matrices
+          warning = warning + std::string("number divisible by ") + std::to_string(rows);
+        else  // for static matrices
+          warning = warning + std::to_string(rows * cols);
+        print_warning(warning);
       }
       // if it was not loaded, set the default value
       loaded = default_value;
