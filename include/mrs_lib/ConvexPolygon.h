@@ -31,7 +31,7 @@ public:
   // checks if the counter-clockwise-defined polygon is convex
   bool isConvex(void);
 
-  bool isPointIn(double px, double py);
+  bool isPointIn(const double px, const double py);
 
 public:
   // exceptions

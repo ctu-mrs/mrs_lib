@@ -50,7 +50,7 @@ double ConvexPolygon::triangleArea(const Eigen::VectorXd a, const Eigen::VectorX
 
 /* isPointIn() //{ */
 
-bool ConvexPolygon::isPointIn(double px, double py) {
+bool ConvexPolygon::isPointIn(const double px, const double py) {
 
   double area = 0;
 
