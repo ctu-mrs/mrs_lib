@@ -470,7 +470,7 @@ private:
   typename dynamic_reconfigure::Server<ConfigType>::CallbackType m_cbf;
 
   // the callback itself
-  void dynamic_reconfigure_callback(ConfigType& new_config, uint32_t level)
+  void dynamic_reconfigure_callback(ConfigType& new_config, [[maybe_unused]] uint32_t level)
   {
     if (m_node_name.empty())
       ROS_INFO("Dynamic reconfigure request received:");

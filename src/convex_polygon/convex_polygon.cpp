@@ -9,7 +9,9 @@ using namespace Eigen;
 namespace mrs_lib
 {
 
-ConvexPolygon::ConvexPolygon(const MatrixXd& in) {
+/* constructor //{ */
+
+ConvexPolygon::ConvexPolygon(const MatrixXd in) {
 
   if (in.cols() != 2) {
     ROS_WARN("The supplied polygon has to have 2 cols. It has %lu.", in.cols());
@@ -35,10 +37,18 @@ ConvexPolygon::ConvexPolygon(const MatrixXd& in) {
   total_area = convexPolygonArea();
 }
 
-double ConvexPolygon::triangleArea(const Eigen::VectorXd& a, const Eigen::VectorXd& b, const Eigen::VectorXd& c) {
+//}
+
+/* triangleArea() //{ */
+
+double ConvexPolygon::triangleArea(const Eigen::VectorXd a, const Eigen::VectorXd b, const Eigen::VectorXd c) {
 
   return fabs((a(0) * b(1) + b(0) * c(1) + c(0) * a(1) - a(1) * b(0) - b(1) * c(0) - c(1) * a(0)) / 2.0);
 }
+
+//}
+
+/* isPointIn() //{ */
 
 bool ConvexPolygon::isPointIn(double px, double py) {
 
@@ -56,6 +66,10 @@ bool ConvexPolygon::isPointIn(double px, double py) {
   else
     return true;
 }
+
+//}
+
+/* convexPolygonArea() //{ */
 
 double ConvexPolygon::convexPolygonArea(void) {
 
@@ -87,6 +101,10 @@ double ConvexPolygon::convexPolygonArea(void) {
   return area;
 }
 
+//}
+
+/* isConvex() //{ */
+
 bool ConvexPolygon::isConvex(void) {
 
   for (int i = 2; i < n; i++) {
@@ -101,4 +119,6 @@ bool ConvexPolygon::isConvex(void) {
 
   return true;
 }
+
+//}
 }  // namespace mrs_lib

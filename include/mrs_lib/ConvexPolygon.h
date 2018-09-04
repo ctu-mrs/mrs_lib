@@ -13,7 +13,7 @@ namespace mrs_lib
 class ConvexPolygon {
 
 public:
-  ConvexPolygon(const Eigen::MatrixXd& vert);
+  ConvexPolygon(const Eigen::MatrixXd vert);
 
 private:
   int    n;  // number of vertices
@@ -24,7 +24,7 @@ private:
   std::mutex polygon_mutex;
 
 private:
-  double triangleArea(const Eigen::VectorXd& a, const Eigen::VectorXd& b, const Eigen::VectorXd& c);
+  double triangleArea(const Eigen::VectorXd a, const Eigen::VectorXd b, const Eigen::VectorXd c);
   double convexPolygonArea(void);
 
 public:
