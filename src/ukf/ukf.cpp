@@ -6,13 +6,14 @@
 #include <unsupported/Eigen/MatrixFunctions>
 
 using namespace Eigen;
-using namespace std;
 
 namespace mrs_lib
 {
 
-Ukf::Ukf(const int n, const int m, const int p, const double alpha, const double k, const double beta, const Eigen::MatrixXd &R, const Eigen::MatrixXd &Q,
-         const Eigen::MatrixXd &H, model modelIteration) {
+/* constructor //{ */
+
+Ukf::Ukf(const int n, const int m, const int p, const double alpha, const double k, const double beta, const Eigen::MatrixXd R, const Eigen::MatrixXd Q,
+         const Eigen::MatrixXd H, model modelIteration) {
 
   this->n = n;
   this->m = m;
@@ -43,6 +44,10 @@ Ukf::Ukf(const int n, const int m, const int p, const double alpha, const double
   this->modelIteration = modelIteration;
 }
 
+//}
+
+/* computeWeights() //{ */
+
 void Ukf::computeWeights(void) {
 
   // initialize lambda
@@ -59,31 +64,39 @@ void Ukf::computeWeights(void) {
   }
 }
 
+//}
+
+/* setQ() //{ */
+
 // set the measurement covariance
 void Ukf::setQ(const Eigen::MatrixXd in) {
 
-  ukf_mutex.lock();
+  std::scoped_lock lock(ukf_mutex);
 
   this->Q = in;
-
-  ukf_mutex.unlock();
 }
+
+//}
+
+/* setR() //{ */
 
 // set the process covariance
 void Ukf::setR(const Eigen::MatrixXd in) {
 
-  ukf_mutex.lock();
+  std::scoped_lock lock(ukf_mutex);
 
   this->R = in;
-
-  ukf_mutex.unlock();
 }
+
+//}
+
+/* setCovarianceSubmatrix() //{ */
 
 // set subblock of covariance matrix
 // x, y are coordinates of the left-up corner of the submatrix
 void Ukf::setCovarianceSubmatrix(const Eigen::MatrixXd in, int x, int y) {
 
-  ukf_mutex.lock();
+  std::scoped_lock lock(ukf_mutex);
 
   // check the dimensions
   if ((x + in.cols()) <= n) {
@@ -94,121 +107,118 @@ void Ukf::setCovarianceSubmatrix(const Eigen::MatrixXd in, int x, int y) {
 
     ROS_ERROR_THROTTLE(1, "UKF error, setCovarianceSubmatrix out of bounds!");
   }
-
-  ukf_mutex.unlock();
 }
+
+//}
+
+/* setConstants() //{ */
 
 // update the UKF constants
 void Ukf::setConstants(double alpha, double k, double beta) {
 
-  ukf_mutex.lock();
+  std::scoped_lock lock(ukf_mutex);
 
   this->alpha = alpha;
   this->k     = k;
   this->beta  = beta;
 
   computeWeights();
-
-  ukf_mutex.unlock();
 }
+
+//}
+
+/* getStates() //{ */
 
 // get the state vector
 VectorXd Ukf::getStates(void) {
 
-  ukf_mutex.lock();
+  std::scoped_lock lock(ukf_mutex);
 
-  VectorXd tempVector = VectorXd::Zero(n);
-
-  tempVector = this->x;
-
-  ukf_mutex.unlock();
-
-  return tempVector;
-  ;
+  return this->x;
 }
+
+//}
+
+/* getCovariance() //{ */
 
 // get the covariance matrix
 MatrixXd Ukf::getCovariance(void) {
 
-  ukf_mutex.lock();
+  std::scoped_lock lock(ukf_mutex);
 
-  MatrixXd tempMatrix = MatrixXd::Zero(n, n);
-
-  tempMatrix = this->P;
-
-  ukf_mutex.unlock();
-
-  return tempMatrix;
+  return this->P;
 }
 
 // get element of covariance matrix
 double Ukf::getCovariance(int idx) {
 
-  ukf_mutex.lock();
+  std::scoped_lock lock(ukf_mutex);
 
-  double tempValue = P(idx);
-
-  ukf_mutex.unlock();
-
-  return tempValue;
+  return P(idx);
 }
 
-// reset the filter with particular new states
-void Ukf::reset(const MatrixXd &newX) {
+//}
 
-  ukf_mutex.lock();
+/* reset() //{ */
+
+// reset the filter with particular new states
+void Ukf::reset(const MatrixXd newX) {
+
+  std::scoped_lock lock(ukf_mutex);
 
   x = newX;
   P = MatrixXd::Identity(n, n);
-
-  ukf_mutex.unlock();
 }
 
 // reset the filter with zero states
 void Ukf::reset() {
 
-  ukf_mutex.lock();
+  std::scoped_lock lock(ukf_mutex);
 
   x = VectorXd::Zero(n);
   P = MatrixXd::Identity(n, n);
-
-  ukf_mutex.unlock();
 }
+
+//}
+
+/* getState() //{ */
 
 // return n-th states of the estimate state vector
 double Ukf::getState(const int num) {
 
-  ukf_mutex.lock();
-  double temp_value = x(num);
-  ukf_mutex.unlock();
+  std::scoped_lock lock(ukf_mutex);
 
-  return temp_value;
+  return x(num);
 }
 
 // set n-th states of the estimate state vector
 void Ukf::setState(const int num, const double value) {
 
-  ukf_mutex.lock();
+  std::scoped_lock lock(ukf_mutex);
 
   x[num] = value;
-
-  ukf_mutex.unlock();
 }
+
+//}
+
+/* setCovariance() //{ */
 
 // set element of covariance matrix
 void Ukf::setCovariance(const int x, const int y, const double value) {
 
-  ukf_mutex.lock();
+  std::scoped_lock lock(ukf_mutex);
 
   P(x, y) = value;
-
-  ukf_mutex.unlock();
 }
+
+//}
+
+/* predictionUpdate() //{ */
 
 // do iteration of the filter
 Eigen::VectorXd Ukf::predictionUpdate(const double dt) {
 
-  ukf_mutex.lock();
+  std::scoped_lock lock(ukf_mutex);
 
   // calculate the square root of the covariance matrix
   P_temp = (double(n) + lambda) * P;
@@ -224,7 +234,6 @@ Eigen::VectorXd Ukf::predictionUpdate(const double dt) {
     if (es.eigenvalues().col(0)[i].real() <= 0) {
 
       ROS_ERROR("UKF: Eigen values of P_temp are <= 0!");
-      ukf_mutex.unlock();
       throw SquareRootException();
     }
   }
@@ -239,7 +248,6 @@ Eigen::VectorXd Ukf::predictionUpdate(const double dt) {
   catch (...) {
 
     ROS_WARN("UKF: squaring of covariance in prediction update failed.");
-    ukf_mutex.unlock();
     throw SquareRootException();
   }
 
@@ -251,7 +259,6 @@ Eigen::VectorXd Ukf::predictionUpdate(const double dt) {
 
         ROS_WARN("UKF: squaring of covariance in prediction update produced NANs!!! Fix your covariances (the measurement's is probably to low..)");
         ROS_INFO_STREAM(pes);
-        ukf_mutex.unlock();  // important, unlock the mutex before throwing up
         throw SquareRootException();
       }
     }
@@ -301,15 +308,17 @@ Eigen::VectorXd Ukf::predictionUpdate(const double dt) {
     y_exp = y_exp + Wm(i) * Y_exp.col(i);
   }
 
-  ukf_mutex.unlock();
-
   return x;
 }
+
+//}
+
+/* correctionUpdate() //{ */
 
 // iterate without correction
 Eigen::VectorXd Ukf::correctionUpdate(const Eigen::VectorXd measurement) {
 
-  ukf_mutex.lock();
+  std::scoped_lock lock(ukf_mutex);
 
   // compute the expected measurement
   MatrixXd Pyy = MatrixXd::Zero(p, p);
@@ -335,9 +344,6 @@ Eigen::VectorXd Ukf::correctionUpdate(const Eigen::VectorXd measurement) {
       if (!isfinite(K(i, j))) {
 
         ROS_ERROR("UKF: inverting of Pyy in correction update produced NANs!!! Fix your covariances (the measurement's is probably to low..)");
-
-        ukf_mutex.unlock();  // important, unlock the mutex before throwing up
-
         throw InverseException();
       }
     }
@@ -347,8 +353,8 @@ Eigen::VectorXd Ukf::correctionUpdate(const Eigen::VectorXd measurement) {
   x = x + K * (measurement - y_exp);
   P = P - K * Pyy * K.transpose();
 
-  ukf_mutex.unlock();
-
   return x;
 }
+
+//}
 }  // namespace mrs_lib

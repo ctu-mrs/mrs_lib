@@ -3,105 +3,177 @@
 namespace mrs_lib
 {
 
-Profiler::Profiler() {
-}
+// | ------------------------ Profiler ------------------------ |
 
-Profiler::Profiler(ros::NodeHandle &nh_, std::string node_name) {
+/* Profiler constructor //{ */
 
-  publisher = nh_.advertise<mrs_msgs::ProfilerUpdate>("profiler", 100, false);
+Profiler::Profiler(ros::NodeHandle &nh_, std::string node_name, bool profiler_enabled) {
 
   this->node_name = node_name;
+
+  this->profiler_enabled_ = profiler_enabled;
+
+  if (profiler_enabled) {
+    mutex_publisher = std::make_shared<std::mutex>();
+    publisher = std::make_shared<ros::Publisher>(nh_.advertise<mrs_msgs::ProfilerUpdate>("profiler", 100, false));
+  }
 
   ROS_INFO("[%s]: profiler initialized", node_name.c_str());
 }
 
-Routine *Profiler::registerRoutine(std::string name) {
+//}
 
-  ROS_INFO("[%s]: new profiler routine registered (%s)", node_name.c_str(), name.c_str());
+/* Profiler::registerRoutine() for periodic //{ */
 
-  Routine *new_routine = new Routine(name, this->node_name, publisher, mutex_publisher);
+Routine Profiler::createRoutine(std::string name, int expected_rate, double threshold, ros::TimerEvent event) {
 
-  return new_routine;
+  return Routine(name, this->node_name, expected_rate, threshold, publisher, mutex_publisher, profiler_enabled_, event);
 }
 
-Routine *Profiler::registerRoutine(std::string name, int expected_rate, double threshold) {
+//}
 
-  ROS_INFO("[%s]: new profiler routine registered (%s)", node_name.c_str(), name.c_str());
+/* Profiler::registerRoutine() normal //{ */
 
-  Routine *new_routine = new Routine(name, this->node_name, expected_rate, threshold, publisher, mutex_publisher);
+Routine Profiler::createRoutine(std::string name) {
 
-  return new_routine;
+  return Routine(name, this->node_name, publisher, mutex_publisher, profiler_enabled_);
 }
 
-Routine::Routine(){};
+//}
 
-Routine::Routine(std::string name, std::string node_name, int expected_rate, double threshold, ros::Publisher &publisher, std::mutex &mutex_publisher) {
+// | ------------------------- Routine ------------------------ |
 
-  this->routine_name    = name;
-  this->node_name       = node_name;
-  this->is_periodic_    = true;
-  this->threshold_      = threshold;
-  this->expected_rate_  = expected_rate;
-  this->publisher       = &publisher;
-  this->mutex_publisher = &mutex_publisher;
-}
+/* Routine constructor for periodic //{ */
 
-// constructor
-Routine::Routine(std::string name, std::string node_name, ros::Publisher &publisher, std::mutex &mutex_publisher) {
+Routine::Routine(std::string name, std::string node_name, int expected_rate, double threshold, std::shared_ptr<ros::Publisher> publisher,
+                 std::shared_ptr<std::mutex> mutex_publisher, bool profiler_enabled, ros::TimerEvent event) {
 
-  this->routine_name    = name;
-  this->node_name       = node_name;
-  this->is_periodic_    = false;
-  this->expected_rate_  = 0;
-  this->publisher       = &publisher;
-  this->mutex_publisher = &mutex_publisher;
-}
+  if (!profiler_enabled) {
+    return;
+  }
 
-void Routine::start(void) {
-  this->execution_start = ros::Time::now();
-}
+  threshold_ = threshold;
 
-void Routine::start(const ros::TimerEvent &event) {
+  this->publisher       = publisher;
+  this->mutex_publisher = mutex_publisher;
 
-  this->expected_start = event.current_expected;
-  this->real_start     = event.current_real;
+  this->routine_name   = name;
+  msg_out.routine_name = name;
 
-  double dt = (real_start - expected_start).toSec();
+  this->node_name   = node_name;
+  msg_out.node_name = node_name;
 
-  if (dt > threshold_) {
+  this->profiler_enabled_ = profiler_enabled;
+
+  msg_out.is_periodic   = true;
+  msg_out.expected_rate = expected_rate;
+
+  msg_out.expected_start = event.current_expected.toSec();
+  msg_out.real_start     = event.current_real.toSec();
+
+  msg_out.stamp     = ros::Time::now();
+  msg_out.duration  = 0;
+  msg_out.iteration = this->iteration++;
+  msg_out.event     = mrs_msgs::ProfilerUpdate::START;
+
+  execution_start = ros::Time::now();
+
+  double dt = msg_out.real_start - msg_out.expected_start;
+
+  if (dt > 0.01) {
     ROS_WARN_THROTTLE(1.0, "[%s]: routine '%s' was lauched late by %1.3f s!", node_name.c_str(), routine_name.c_str(), dt + threshold_);
   }
 
-  this->execution_start = ros::Time::now();
-}
-
-void Routine::end(void) {
-  this->execution_end = ros::Time::now();
-
-  mrs_msgs::ProfilerUpdate new_update;
-
-  new_update.stamp        = ros::Time::now();
-  new_update.duration     = (execution_end - execution_start).toSec();
-  new_update.is_periodic  = this->is_periodic_;
-  new_update.node_name    = this->node_name;
-  new_update.routine_name = this->routine_name;
-  new_update.iteration    = this->iteration++;
-
-  if (this->is_periodic_) {
-    new_update.expected_start = this->expected_start.toSec();
-    new_update.real_start     = this->real_start.toSec();
-    new_update.expected_rate  = this->expected_rate_;
-  }
-
-  mutex_publisher->lock();
   {
+    std::scoped_lock lock(*mutex_publisher);
+
     try {
-      publisher->publish(mrs_msgs::ProfilerUpdateConstPtr(new mrs_msgs::ProfilerUpdate(new_update)));
+      publisher->publish(mrs_msgs::ProfilerUpdateConstPtr(new mrs_msgs::ProfilerUpdate(msg_out)));
     }
     catch (...) {
       ROS_ERROR("Exception caught during publishing topic %s.", publisher->getTopic().c_str());
     }
   }
-  mutex_publisher->unlock();
 }
+
+//}
+
+/* Routine constructor for normal //{ */
+
+Routine::Routine(std::string name, std::string node_name, std::shared_ptr<ros::Publisher> publisher, std::shared_ptr<std::mutex> mutex_publisher, bool profiler_enabled) {
+
+  if (!profiler_enabled) {
+    return;
+  }
+
+  this->publisher       = publisher;
+  this->mutex_publisher = mutex_publisher;
+
+  this->routine_name   = name;
+  msg_out.routine_name = name;
+
+  this->node_name   = node_name;
+  msg_out.node_name = node_name;
+
+  this->profiler_enabled_ = profiler_enabled;
+
+  msg_out.is_periodic   = false;
+  msg_out.expected_rate = 0;
+
+  msg_out.stamp      = ros::Time::now();
+  msg_out.duration   = 0;
+  msg_out.iteration  = this->iteration++;
+  msg_out.event      = mrs_msgs::ProfilerUpdate::START;
+  msg_out.real_start = msg_out.stamp.toSec();
+
+  execution_start = ros::Time::now();
+
+  {
+    std::scoped_lock lock(*mutex_publisher);
+
+    try {
+      publisher->publish(mrs_msgs::ProfilerUpdateConstPtr(new mrs_msgs::ProfilerUpdate(msg_out)));
+    }
+    catch (...) {
+      ROS_ERROR("Exception caught during publishing topic %s.", publisher->getTopic().c_str());
+    }
+  }
+}
+
+//}
+
+/* end() //{ */
+
+void Routine::end(void) {
+
+  if (!profiler_enabled_) {
+    return;
+  }
+
+  ros::Time execution_end = ros::Time::now();
+
+  msg_out.stamp    = ros::Time::now();
+  msg_out.duration = (execution_end - execution_start).toSec();
+
+  msg_out.event = mrs_msgs::ProfilerUpdate::END;
+
+  {
+    std::scoped_lock lock(*mutex_publisher);
+
+    try {
+      publisher->publish(mrs_msgs::ProfilerUpdateConstPtr(new mrs_msgs::ProfilerUpdate(msg_out)));
+    }
+    catch (...) {
+      ROS_ERROR("Exception caught during publishing topic %s.", publisher->getTopic().c_str());
+    }
+  }
+}
+
+//}
+
+Routine::~Routine() {
+
+  this->end();
+}
+
 }  // namespace mrs_lib

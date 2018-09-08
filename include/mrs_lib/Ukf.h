@@ -16,14 +16,14 @@ typedef boost::function<Eigen::VectorXd(Eigen::VectorXd, Eigen::VectorXd, double
 class Ukf {
 
 public:
-  Ukf(const int n, const int m, const int p, const double alpha, const double k, const double beta, const Eigen::MatrixXd &R, const Eigen::MatrixXd &Q,
-      const Eigen::MatrixXd &H, model modelIteration);
+  Ukf(const int n, const int m, const int p, const double alpha, const double k, const double beta, const Eigen::MatrixXd R, const Eigen::MatrixXd Q,
+      const Eigen::MatrixXd H, model modelIteration);
 
   // return estimated states
   Eigen::VectorXd getStates(void);
 
   // reset the filter (with new particular state vector)
-  void reset(const Eigen::MatrixXd &newX);
+  void reset(const Eigen::MatrixXd newX);
 
   // reset UKF with zero states
   void reset();
