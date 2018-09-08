@@ -1,3 +1,4 @@
+// clang: MatousFormat
 /**
  * This header defines several convenience functions for loading of ROS parameters
  * both static (e.g. from yaml files) and dynamic (using dynamic_reconfigure).
@@ -11,6 +12,7 @@
 #include <dynamic_reconfigure/server.h>
 #include <string>
 #include <map>
+#include <unordered_set>
 #include <iostream>
 #include <boost/any.hpp>
 #include <Eigen/Dense>
@@ -25,6 +27,7 @@ private:
   bool m_load_successful, m_print_values;
   std::string m_node_name;
   const ros::NodeHandle& m_nh;
+  std::unordered_set<std::string> loaded_params;
 
   /* printing helper functions //{ */
   /* print_error and print_warning functions //{*/
@@ -109,11 +112,30 @@ private:
   //}
   //}
 
+  /* check_duplicit_loading checks whether the parameter was already loaded - returns true if yes //{ */
+  bool check_duplicit_loading(const std::string& name)
+  {
+    if (loaded_params.count(name))
+    {
+      print_error(std::string("Tried to load parameter ") + name + std::string(" twice"));
+      m_load_successful = false;
+      return true;
+    } else
+    {
+      return false;
+    }
+  }
+  //}
+
   /* helper functions for loading Eigen::MatrixXd matrices //{ */
   // load_MatrixXd helper function for loading Eigen::MatrixXd matrices //{
   Eigen::MatrixXd load_MatrixXd(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols = -1, bool optional = true, bool swap = false)
   {
     Eigen::MatrixXd loaded = default_value;
+    // first, check if the user already tried to load this parameter
+    if (check_duplicit_loading(name))
+      return loaded;
+
     // this function only accepts dynamic columns (you can always transpose the matrix afterward)
     if (rows <= 0)
     {
@@ -123,6 +145,7 @@ private:
       return loaded;
     }
 
+    bool cur_load_successful = true;
     bool check_size_exact = true;
     if (cols <= 0)  // this means that the cols dimension is dynamic
       check_size_exact = false;
@@ -135,8 +158,7 @@ private:
     if (!check_size_exact)
       correct_size = (int)tmp_vec.size() % rows == 0;  // if the cols dimension is dynamic, the size just has to be divisable by rows
 
-    success = success && correct_size;
-    if (success)
+    if (success && correct_size)
     {
       // if successfully loaded, everything is in order
       // transform the vector to the matrix
@@ -151,10 +173,18 @@ private:
       loaded = Eigen::Map<Eigen::Matrix<double, -1, -1, Eigen::RowMajor>, Eigen::Unaligned>(tmp_vec.data(), rows, cols);
     } else
     {
-      if (!correct_size)
+      if (success && !correct_size)
       {
         // warn the user that this parameter was not successfully loaded because of wrong vector length (might be an oversight)
-        print_warning(std::string("Matrix parameter ") + name + std::string(" could not be loaded because the vector has a wrong length!"));
+        std::string warning =
+            std::string("Matrix parameter ") + name
+            + std::string(" could not be loaded because the vector has a wrong length " + std::to_string(tmp_vec.size()) + " instead of expected ");
+        // process the message correctly based on whether the loaded matrix should be dynamic or static
+        if (cols <= 0)  // for dynamic matrices
+          warning = warning + std::string("number divisible by ") + std::to_string(rows);
+        else  // for static matrices
+          warning = warning + std::to_string(rows * cols);
+        print_warning(warning);
       }
       // if it was not loaded, set the default value
       loaded = default_value;
@@ -162,8 +192,19 @@ private:
       {
         // if the parameter was compulsory, alert the user and set the flag
         print_error(std::string("Could not load non-optional parameter ") + name);
-        m_load_successful = false;
+        cur_load_successful = false;
       }
+    }
+
+    // check if load was a success
+    if (cur_load_successful)
+    {
+      if (m_print_values)
+        print_value(name, loaded);
+      loaded_params.insert(name);
+    } else
+    {
+      m_load_successful = false;
     }
     // finally, return the resulting value
     return loaded;
@@ -182,10 +223,7 @@ private:
       return loaded;
     }
 
-    loaded = load_MatrixXd(name, default_value, rows, cols, optional, false);
-    if (m_print_values && m_load_successful)
-      print_value(name, loaded);
-    return loaded;
+    return load_MatrixXd(name, default_value, rows, cols, optional, false);
   }
   //}
 
@@ -193,7 +231,8 @@ private:
   Eigen::MatrixXd load_matrix_dynamic_internal(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols, bool optional)
   {
     Eigen::MatrixXd loaded = default_value;
-    // first, check that at least one dimension is set
+
+    // next, check that at least one dimension is set
     if (rows <= 0 && cols <= 0)
     {
       print_error(std::string("Invalid expected matrix dimensions for parameter ") + name + std::string(" (at least one dimension must be specified)"));
@@ -209,10 +248,7 @@ private:
       cols = tmp;
       swap = true;
     }
-    loaded = load_MatrixXd(name, default_value, rows, cols, optional, swap);
-    if (m_print_values && m_load_successful)
-      print_value(name, loaded);
-    return loaded;
+    return load_MatrixXd(name, default_value, rows, cols, optional, swap);
   }
   //}
   //}
@@ -229,14 +265,13 @@ private:
   T load(const std::string& name, const T& default_value, bool optional = true)
   {
     T loaded = default_value;
+    if (check_duplicit_loading(name))
+      return loaded;
+
+    bool cur_load_successful = true;
     // try to load the parameter
     bool success = m_nh.getParam(name, loaded);
-    if (success)
-    {
-      // if successfully loaded, everything is in order
-      if (m_print_values)  // optionally, print its name and value
-        print_value(name, loaded);
-    } else
+    if (!success)
     {
       // if it was not loaded, set the default value
       loaded = default_value;
@@ -244,12 +279,20 @@ private:
       {
         // if the parameter was compulsory, alert the user and set the flag
         print_error(std::string("Could not load non-optional parameter ") + name);
-        m_load_successful = false;
-      } else
-      {
-        // otherwise everything is fine and just print the name and value
-        print_value(name, loaded);
+        cur_load_successful = false;
       }
+    }
+
+    if (cur_load_successful)
+    {
+      // everything is fine and just print the name and value if required
+      if (m_print_values)
+        print_value(name, loaded);
+      // mark the param name as successfully loaded
+      loaded_params.insert(name);
+    } else
+    {
+      m_load_successful = false;
     }
     // finally, return the resulting value
     return loaded;
@@ -427,7 +470,7 @@ private:
   typename dynamic_reconfigure::Server<ConfigType>::CallbackType m_cbf;
 
   // the callback itself
-  void dynamic_reconfigure_callback(ConfigType& new_config, uint32_t level)
+  void dynamic_reconfigure_callback(ConfigType& new_config, [[maybe_unused]] uint32_t level)
   {
     if (m_node_name.empty())
       ROS_INFO("Dynamic reconfigure request received:");

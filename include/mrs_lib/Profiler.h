@@ -8,54 +8,59 @@
 namespace mrs_lib
 {
 
+/* class Routine //{ */
+
 class Routine {
 
 public:
-  Routine();
-  Routine(std::string name, std::string node_name, ros::Publisher &publisher, std::mutex &mutex_publisher);
-  Routine(std::string name, std::string node_name, int expected_rate, double threshold, ros::Publisher &publisher, std::mutex &mutex_publisher);
+  Routine(std::string name, std::string node_name, std::shared_ptr<ros::Publisher> publisher, std::shared_ptr<std::mutex> mutex_publisher,
+          bool profiler_enabled);
+  Routine(std::string name, std::string node_name, int expected_rate, double threshold, std::shared_ptr<ros::Publisher> publisher,
+          std::shared_ptr<std::mutex> mutex_publisher, bool profiler_enabled, ros::TimerEvent event);
+  ~Routine();
 
-  void start(const ros::TimerEvent &event);
-  void start(void);
   void end(void);
 
 private:
   std::string routine_name;
   std::string node_name;
 
-  ros::Publisher *publisher;
-  std::mutex *    mutex_publisher;
+  std::shared_ptr<ros::Publisher> publisher;
+  std::shared_ptr<std::mutex>     mutex_publisher;
 
   // if periodic, those are the stats from the trigger event
-  bool   is_periodic_ = false;
   double threshold_;
-  int    expected_rate_ = 0;
-  long   iteration      = 0;
+  long   iteration = 0;
 
-  ros::Time expected_start;
-  ros::Time real_start;
+  bool profiler_enabled_ = false;
 
   // those are the stats from the execution of the routine
   ros::Time execution_start;
-  ros::Time execution_end;
+
+  // this will be published
+  mrs_msgs::ProfilerUpdate msg_out;
 };
+
+//}
+
+/* class Profiler //{ */
 
 class Profiler {
 
 public:
-  Profiler();
-  Profiler(ros::NodeHandle &nh_, std::string node_name);
-  Routine *registerRoutine(std::string name, int expected_rate, double threshold);
-  Routine *registerRoutine(std::string name);
+  Profiler(ros::NodeHandle &nh_, std::string node_name, bool profiler_enabled);
+
+  Routine createRoutine(std::string name, int expected_rate, double threshold, ros::TimerEvent event);
+  Routine createRoutine(std::string name);
 
 private:
-  ros::Publisher publisher;
-  std::mutex     mutex_publisher;
-  std::string    node_name;
-
-private:
-  std::vector<Routine> routine_list;
+  std::shared_ptr<ros::Publisher> publisher;
+  std::shared_ptr<std::mutex>     mutex_publisher;
+  std::string                     node_name;
+  bool                            profiler_enabled_ = false;
 };
+
+//}
 }  // namespace mrs_lib
 
 #endif
