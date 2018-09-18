@@ -23,6 +23,22 @@ namespace mrs_lib
 /** ParamLoader CLASS //{ **/
 class ParamLoader
 {
+public:
+  enum unique_t
+  {
+    UNIQUE = true,
+    REUSABLE = false
+  };
+  enum optional_t
+  {
+    OPTIONAL = true,
+    COMPULSORY = false
+  };
+  enum swap_t
+  {
+    SWAP = true,
+    NO_SWAP = false
+  };
 private:
   bool m_load_successful, m_print_values;
   std::string m_node_name;
@@ -129,11 +145,11 @@ private:
 
   /* helper functions for loading Eigen::MatrixXd matrices //{ */
   // load_MatrixXd helper function for loading Eigen::MatrixXd matrices //{
-  Eigen::MatrixXd load_MatrixXd(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols = -1, bool optional = true, bool swap = false)
+  Eigen::MatrixXd load_MatrixXd(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols = -1, optional_t optional = OPTIONAL, unique_t unique = UNIQUE, swap_t swap = NO_SWAP)
   {
     Eigen::MatrixXd loaded = default_value;
     // first, check if the user already tried to load this parameter
-    if (check_duplicit_loading(name))
+    if (unique && check_duplicit_loading(name))
       return loaded;
 
     // this function only accepts dynamic columns (you can always transpose the matrix afterward)
@@ -212,7 +228,7 @@ private:
   //}
 
   /* load_matrix_static_internal helper function for loading static Eigen matrices //{ */
-  Eigen::MatrixXd load_matrix_static_internal(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols, bool optional)
+  Eigen::MatrixXd load_matrix_static_internal(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols, optional_t optional, unique_t unique)
   {
     Eigen::MatrixXd loaded = default_value;
     // first, check that at least one dimension is set
@@ -223,12 +239,12 @@ private:
       return loaded;
     }
 
-    return load_MatrixXd(name, default_value, rows, cols, optional, false);
+    return load_MatrixXd(name, default_value, rows, cols, optional, unique, NO_SWAP);
   }
   //}
 
   /* load_matrix_dynamic_internal helper function for loading Eigen matrices with one dynamic (unspecified) dimension //{ */
-  Eigen::MatrixXd load_matrix_dynamic_internal(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols, bool optional)
+  Eigen::MatrixXd load_matrix_dynamic_internal(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols, optional_t optional, unique_t unique)
   {
     Eigen::MatrixXd loaded = default_value;
 
@@ -240,15 +256,15 @@ private:
       return loaded;
     }
 
-    bool swap = false;
+    swap_t swap = NO_SWAP;
     if (rows <= 0)
     {
       int tmp = rows;
       rows = cols;
       cols = tmp;
-      swap = true;
+      swap = SWAP;
     }
-    return load_MatrixXd(name, default_value, rows, cols, optional, swap);
+    return load_MatrixXd(name, default_value, rows, cols, optional, unique, swap);
   }
   //}
   //}
@@ -261,11 +277,13 @@ private:
   // If 'optional' is set to false and the parameter could not be loaded,
   // the flag 'load_successful' is set to false and a ROS_ERROR message
   // is printer.
+  // If 'unique' flag is set to false then the parameter is not checked
+  // for being loaded twice
   template <typename T>
-  T load(const std::string& name, const T& default_value, bool optional = true)
+  T load(const std::string& name, const T& default_value, optional_t optional = OPTIONAL, unique_t unique = UNIQUE)
   {
     T loaded = default_value;
-    if (check_duplicit_loading(name))
+    if (unique && check_duplicit_loading(name))
       return loaded;
 
     bool cur_load_successful = true;
@@ -338,7 +356,12 @@ public:
   template <typename T>
   T load_param2(const std::string& name, const T& default_value)
   {
-    return load<T>(name, default_value, true);
+    return load<T>(name, default_value, OPTIONAL, UNIQUE);
+  };
+  template <typename T>
+  T load_param_reusable(const std::string& name, const T& default_value)
+  {
+    return load<T>(name, default_value, OPTIONAL, REUSABLE);
   };
   //}
 
@@ -352,7 +375,12 @@ public:
   template <typename T>
   T load_param2(const std::string& name)
   {
-    return load<T>(name, T(), false);
+    return load<T>(name, T(), COMPULSORY, UNIQUE);
+  };
+  template <typename T>
+  T load_param_reusable(const std::string& name)
+  {
+    return load<T>(name, COMPULSORY, REUSABLE);
   };
   //}
 
@@ -393,11 +421,11 @@ public:
   }
   Eigen::MatrixXd load_matrix_static2(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols)
   {
-    return load_matrix_static_internal(name, default_value, rows, cols, true);
+    return load_matrix_static_internal(name, default_value, rows, cols, OPTIONAL, UNIQUE);
   }
   Eigen::MatrixXd load_matrix_static2(const std::string& name, int rows, int cols)
   {
-    return load_matrix_static_internal(name, Eigen::MatrixXd(), rows, cols, false);
+    return load_matrix_static_internal(name, Eigen::MatrixXd(), rows, cols, COMPULSORY, UNIQUE);
   }
   //}
 
@@ -412,11 +440,11 @@ public:
   }
   Eigen::MatrixXd load_matrix_dynamic2(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols)
   {
-    return load_matrix_dynamic_internal(name, default_value, rows, cols, true);
+    return load_matrix_dynamic_internal(name, default_value, rows, cols, OPTIONAL, UNIQUE);
   }
   Eigen::MatrixXd load_matrix_dynamic2(const std::string& name, int rows, int cols)
   {
-    return load_matrix_dynamic_internal(name, Eigen::MatrixXd(), rows, cols, false);
+    return load_matrix_dynamic_internal(name, Eigen::MatrixXd(), rows, cols, COMPULSORY, UNIQUE);
   }
   //}
   //}
