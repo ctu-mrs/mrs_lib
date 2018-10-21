@@ -2,24 +2,6 @@
 
 using namespace mrs_lib;
 
-template <typename MessageType>
-SubscribeHandler_base<MessageType>::SubscribeHandler_base(
-    ros::NodeHandle& nh,
-    ros::Duration no_message_timeout,
-    const std::string& topic_name,
-    const std::string& node_name
-    )
-  : m_no_message_timeout(no_message_timeout),
-    m_topic_name(topic_name),
-    m_node_name(node_name),
-    m_got_data(false),
-    m_new_data(false),
-    m_last_msg_received(ros::Time::now())
-{
-  if (no_message_timeout != mrs_lib::no_timeout)
-    m_timeout_check_timer = nh.createTimer(no_message_timeout, &SubscribeHandler_base::check_timeout, this);
-}
-
 // --------------------------------------------------------------
 // |                    SubscribeHandler_impl                   |
 // --------------------------------------------------------------
@@ -59,6 +41,9 @@ SubscribeHandler_impl<MessageType>::SubscribeHandler_impl(
       ROS_ERROR_STREAM("[" << m_node_name << "]: " << error_msg);
     m_ok = false;
   }
+
+  if (no_message_timeout != mrs_lib::no_timeout)
+    m_timeout_check_timer = nh.createTimer(no_message_timeout, &SubscribeHandler_impl::check_timeout, this);
 }
 
 template <typename MessageType>

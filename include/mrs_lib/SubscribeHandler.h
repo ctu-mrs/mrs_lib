@@ -7,17 +7,108 @@
 
 namespace mrs_lib
 {
-  template <typename MessageType>
-  class SubscribeHandler_impl;
-  template <typename MessageType>
-  class SubscribeHandler_threadsafe;
-  template <typename MessageType>
-  class SubscribeHandler;
-  template <typename MessageType>
-  using SubscribeHandlerPtr = std::shared_ptr<SubscribeHandler<MessageType>>;
 
   static const ros::Duration no_timeout = ros::Duration(0);
 
+  /* SubscribeHandler class //{ */
+  // adds the get_data templated method - this is the class the user should use
+  // for pointers etc.
+  template <typename MessageType>
+  class SubscribeHandler
+  {
+    public:
+      virtual bool ok() = 0;
+      virtual bool has_data() = 0;
+      virtual bool new_data() = 0;
+      virtual bool used_data() = 0;
+      virtual MessageType get_data() = 0;
+
+    protected:
+      SubscribeHandler() {};
+  };
+  //}
+
+  /* SubscribeHandler_impl class //{ */
+  // implements the constructor, get_data() method and data_callback method (non-thread-safe)
+  template <typename MessageType>
+  class SubscribeHandler_impl : public SubscribeHandler<MessageType>
+  {
+    public:
+      SubscribeHandler_impl(
+          ros::NodeHandle& nh,
+          const std::string& topic_name,
+          uint32_t queue_size,
+          const ros::TransportHints& transport_hints = ros::TransportHints(),
+          ros::Duration no_message_timeout = SubscribeHandler<MessageType>::no_timeout,
+          const std::string& node_name = std::string()
+          );
+
+      virtual bool ok();
+      virtual bool has_data();
+      virtual bool new_data();
+      virtual bool used_data();
+      virtual MessageType get_data();
+
+    private:
+      ros::Subscriber m_sub;
+
+    private:
+      ros::Duration m_no_message_timeout;
+      std::string m_topic_name;
+      std::string m_node_name;
+  
+    private:
+      bool m_got_data; // whether any data was received
+      bool m_new_data; // whether new data was received since last call to get_data
+
+    private:
+      bool m_ok;
+      std::mutex m_last_msg_received_mtx;
+      ros::Time m_last_msg_received;
+      ros::Timer m_timeout_check_timer;
+      void check_timeout([[maybe_unused]] const ros::TimerEvent& evt);
+
+    private:
+      MessageType m_latest_message;
+
+    protected:
+      virtual void data_callback(const MessageType& msg);
+
+  };
+  //}
+
+  /* SubscribeHandler_threadsafe class //{ */
+  template <typename MessageType>
+  class SubscribeHandler_threadsafe : public SubscribeHandler_impl<MessageType>
+  {
+    public:
+      SubscribeHandler_threadsafe(
+          ros::NodeHandle& nh,
+          const std::string& topic_name,
+          uint32_t queue_size,
+          const ros::TransportHints& transport_hints = ros::TransportHints(),
+          ros::Duration no_message_timeout = SubscribeHandler_impl<MessageType>::no_timeout,
+          const std::string& node_name = std::string()
+          );
+
+      virtual bool ok();
+      virtual bool has_data();
+      virtual bool new_data();
+      virtual bool used_data();
+      virtual MessageType get_data();
+
+    protected:
+      virtual void data_callback(const MessageType& msg);
+
+    private:
+      std::mutex m_mtx;
+  };
+  //}
+
+  template <typename MessageType>
+  using SubscribeHandlerPtr = std::shared_ptr<SubscribeHandler<MessageType>>;
+
+  //{
   class SubscribeMgr
   {
     public:
@@ -78,111 +169,7 @@ namespace mrs_lib
       bool m_load_successful;
   
   };
-
-  // this namespace contains the implementations and should not be accessed by the user
-  namespace impl
-  {
-    /* SubscribeHandler_base class //{ */
-    // contains non-templated functions, which are pre-compiled as part of the library
-    class SubscribeHandler_base
-    {
-      public:
-        virtual bool ok();
-        virtual bool has_data();
-        virtual bool new_data();
-        virtual bool used_data();
-
-      protected:
-        ros::Subscriber m_sub;
-
-      private:
-        ros::Duration m_no_message_timeout;
-        std::string m_topic_name;
-        std::string m_node_name;
-    
-      private:
-        bool m_got_data; // whether any data was received
-        bool m_new_data; // whether new data was received since last call to get_data
-
-      private:
-        bool m_ok;
-        std::mutex m_last_msg_received_mtx;
-        ros::Time m_last_msg_received;
-        ros::Timer m_timeout_check_timer;
-        void check_timeout([[maybe_unused]] const ros::TimerEvent& evt);
-
-      private:
-        SubscribeHandler_base();
-    };
-    //}
-
-    /* SubscribeHandler class //{ */
-    // adds the get_data templated method - this is the class the user should use
-    // for pointers etc.
-    template <typename MessageType>
-    class SubscribeHandler
-    {
-      public:
-        virtual MessageType get_data() = 0;
-      private:
-        SubscribeHandler();
-    };
-    //}
-
-    /* SubscribeHandler_impl class //{ */
-    // implements the constructor, get_data() method and data_callback method (non-thread-safe)
-    template <typename MessageType>
-    class SubscribeHandler_impl : public SubscribeHandler<MessageType>
-    {
-      public:
-        SubscribeHandler_impl(
-            ros::NodeHandle& nh,
-            const std::string& topic_name,
-            uint32_t queue_size,
-            const ros::TransportHints& transport_hints = ros::TransportHints(),
-            ros::Duration no_message_timeout = SubscribeHandler<MessageType>::no_timeout,
-            const std::string& node_name = std::string()
-            );
-
-        virtual MessageType get_data();
-
-      private:
-        MessageType m_latest_message;
-
-      protected:
-        virtual void data_callback(const MessageType& msg);
-
-    };
-    //}
-
-    /* SubscribeHandler_threadsafe class //{ */
-    template <typename MessageType>
-    class SubscribeHandler_threadsafe : public SubscribeHandler_impl<MessageType>
-    {
-      public:
-        SubscribeHandler_threadsafe(
-            ros::NodeHandle& nh,
-            const std::string& topic_name,
-            uint32_t queue_size,
-            const ros::TransportHints& transport_hints = ros::TransportHints(),
-            ros::Duration no_message_timeout = SubscribeHandler_impl<MessageType>::no_timeout,
-            const std::string& node_name = std::string()
-            );
-
-        virtual bool ok();
-        virtual bool has_data();
-        virtual bool new_data();
-        virtual bool used_data();
-        virtual MessageType get_data();
-
-      protected:
-        virtual void data_callback(const MessageType& msg);
-
-      private:
-        std::mutex m_mtx;
-    };
-    //}
-  }
+  //}
 }
 
 #include "SubscribeHandler.tpp"
