@@ -27,15 +27,20 @@ SubscribeHandler_base<MessageType>::SubscribeHandler_base(
 {
   try
   {
-    nh.subscribe(topic_name, queue_size, &SubscribeHandler_base::data_callback, this, transport_hints);
+    m_sub = nh.subscribe(topic_name, queue_size, &SubscribeHandler_base::data_callback, this, transport_hints);
     m_ok = true;
+    const std::string msg = "Subscribed to topic " + topic_name;
+    if (m_node_name.empty())
+      ROS_INFO_STREAM(msg);
+    else
+      ROS_INFO_STREAM("[" << m_node_name << "]: " << msg);
   } catch (ros::Exception e)
   {
     const std::string error_msg = "Could not subscribe topic '" + topic_name + "':" + std::string(e.what());
     if (m_node_name.empty())
       ROS_ERROR_STREAM(error_msg);
     else
-      ROS_ERROR_STREAM("[" << m_node_name << "]" << error_msg);
+      ROS_ERROR_STREAM("[" << m_node_name << "]: " << error_msg);
     m_ok = false;
   }
 }
@@ -69,7 +74,7 @@ MessageType SubscribeHandler_base<MessageType>::get_data_reset()
 template <typename MessageType>
 void SubscribeHandler_base<MessageType>::data_callback(const MessageType& msg)
 {
-  ROS_ERROR("[SubscribeHandler_base]: ORIGINAL METHOD CALLED");
+  /* ROS_ERROR("[SubscribeHandler_base]: ORIGINAL METHOD CALLED"); */
   m_latest_message = msg;
   m_new_data_ready = true;
   m_last_msg_received = ros::Time::now();
@@ -122,7 +127,7 @@ template <typename MessageType>
 void SubscribeHandler_threadsafe<MessageType>::data_callback(const MessageType& msg)
 {
   std::lock_guard<std::mutex> lck(m_mtx);
-  ROS_ERROR("[SubscribeHandler_threadsafe]: OVERRIDE METHOD CALLED");
+  /* ROS_ERROR("[SubscribeHandler_threadsafe]: OVERRIDE METHOD CALLED"); */
   return SubscribeHandler_base<MessageType>::data_callback(msg);
 }
 
