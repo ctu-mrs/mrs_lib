@@ -17,7 +17,7 @@ public:
       const Eigen::MatrixXd P);
 
   // return estimated states
-  Eigen::VectorXd getStates(void);
+  Eigen::VectorXd getStates(void) const;
 
   // reset the filter (with new particular state vector)
   void reset(const Eigen::MatrixXd newX);
@@ -32,13 +32,13 @@ public:
   void setInput(const Eigen::VectorXd newInput);
 
   // return n-th states of the estimate state vector
-  double getState(const int num);
+  double getState(const int num) const;
 
   // get the covariance matrix
-  Eigen::MatrixXd getCovariance(void);
+  Eigen::MatrixXd getCovariance(void) const;
 
   // get main matrix
-  Eigen::MatrixXd getA(void);
+  Eigen::MatrixXd getA(void) const;
 
   // set main matrix
   void setA(const Eigen::MatrixXd A);
@@ -54,6 +54,9 @@ public:
 
   // set n-th states of the estimate state vector
   void setState(const int num, const double value);
+
+  // set all states of the estimate state vector
+  void setStates(const Eigen::VectorXd states);
 
   // do iteration of the filter
   Eigen::VectorXd iterate(void);
@@ -83,7 +86,7 @@ private:
 
   Eigen::VectorXd input;  // system input vector
 
-  std::mutex lkf_mutex;
+  mutable std::mutex lkf_mutex;
 };
 
 }  // namespace mrs_lib

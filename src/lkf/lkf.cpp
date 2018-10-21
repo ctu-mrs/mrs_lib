@@ -34,7 +34,7 @@ Lkf::Lkf(const int n, const int m, const int p, const MatrixXd A, const MatrixXd
 /* getStates() //{ */
 
 // get the state vector
-VectorXd Lkf::getStates(void) {
+VectorXd Lkf::getStates(void) const {
 
   std::scoped_lock lock(lkf_mutex);
 
@@ -46,7 +46,7 @@ VectorXd Lkf::getStates(void) {
 /* getCovariance() //{ */
 
 // get the covariance matrix
-MatrixXd Lkf::getCovariance(void) {
+MatrixXd Lkf::getCovariance(void) const {
 
   std::scoped_lock lock(lkf_mutex);
 
@@ -68,7 +68,7 @@ void Lkf::setCovariance(const MatrixXd cov) {
 
 /* getA() //{ */
 
-MatrixXd Lkf::getA(void) {
+MatrixXd Lkf::getA(void) const {
 
   std::scoped_lock lock(lkf_mutex);
 
@@ -159,7 +159,7 @@ void Lkf::setInput(const Eigen::VectorXd newInput) {
 /* getState() //{ */
 
 // return n-th states of the estimate state vector
-double Lkf::getState(const int num) {
+double Lkf::getState(const int num) const {
 
   std::scoped_lock lock(lkf_mutex);
 
@@ -176,6 +176,18 @@ void Lkf::setState(const int num, const double value) {
   std::scoped_lock lock(lkf_mutex);
 
   x[num] = value;
+}
+
+//}
+
+/* setStates() //{ */
+
+// set all states of the estimate state vector
+void Lkf::setStates(const Eigen::VectorXd states) {
+
+  std::scoped_lock lock(lkf_mutex);
+
+  x = states;
 }
 
 //}
