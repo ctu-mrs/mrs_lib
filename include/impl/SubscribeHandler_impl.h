@@ -15,13 +15,10 @@ namespace mrs_lib
     class SubscribeHandler_base
     {
       public:
-        SubscribeHandler_base() {
-    ROS_ERROR("[%s]: INCORRECT constructor", ros::this_node::getName().c_str());
-        };
-        virtual bool ok();
-        virtual bool has_data();
-        virtual bool new_data();
-        virtual bool used_data();
+        virtual bool ok() const;
+        virtual bool has_data() const;
+        virtual bool new_data() const;
+        virtual bool used_data() const;
 
       protected:
         SubscribeHandler_base(
@@ -133,22 +130,22 @@ namespace mrs_lib
         {
         }
 
-        virtual bool ok()
+        virtual bool ok() const
         {
           std::lock_guard<std::mutex> lck(m_mtx);
           return SubscribeHandler_impl<MessageType>::ok();
         }
-        virtual bool has_data()
+        virtual bool has_data() const
         {
           std::lock_guard<std::mutex> lck(m_mtx);
           return SubscribeHandler_impl<MessageType>::has_data();
         }
-        virtual bool new_data()
+        virtual bool new_data() const
         {
           std::lock_guard<std::mutex> lck(m_mtx);
           return SubscribeHandler_impl<MessageType>::new_data();
         }
-        virtual bool used_data()
+        virtual bool used_data() const
         {
           std::lock_guard<std::mutex> lck(m_mtx);
           return SubscribeHandler_impl<MessageType>::used_data();
@@ -168,7 +165,7 @@ namespace mrs_lib
         }
 
       private:
-        std::mutex m_mtx;
+        mutable std::mutex m_mtx;
     };
     //}
 
