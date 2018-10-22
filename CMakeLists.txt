@@ -74,3 +74,9 @@ target_link_libraries(Utils
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
+
+add_library(SubscribeHandler src/subscribe_handler/SubscribeHandler.cpp)
+target_link_libraries(SubscribeHandler
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
