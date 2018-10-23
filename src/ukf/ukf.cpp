@@ -252,16 +252,11 @@ Eigen::VectorXd Ukf::predictionUpdate(const double dt) {
   }
 
   // check whether the square root produced valid numbers
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < n; j++) {
+  if (!isfinite(P_temp.array()).all()) {
 
-      if (!isfinite(P_temp(i, j))) {
-
-        ROS_WARN("UKF: squaring of covariance in prediction update produced NANs!!! Fix your covariances (the measurement's is probably to low..)");
-        ROS_INFO_STREAM(pes);
-        throw SquareRootException();
-      }
-    }
+    ROS_WARN("UKF: squaring of covariance in prediction update produced NANs!!! Fix your covariances (the measurement's is probably to low..)");
+    ROS_INFO_STREAM(pes);
+    throw SquareRootException();
   }
 
   // if now exception is thrown, copy the temp value
@@ -338,15 +333,10 @@ Eigen::VectorXd Ukf::correctionUpdate(const Eigen::VectorXd measurement) {
   K          = Pxy * Pyy.inverse();
 
   // check whether the inverse produced valid numbers
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < p; j++) {
+  if (!isfinite(K.array()).all()) {
 
-      if (!isfinite(K(i, j))) {
-
-        ROS_ERROR("UKF: inverting of Pyy in correction update produced NANs!!! Fix your covariances (the measurement's is probably to low..)");
-        throw InverseException();
-      }
-    }
+    ROS_ERROR("UKF: inverting of Pyy in correction update produced NANs!!! Fix your covariances (the measurement's is probably too low...)");
+    throw InverseException();
   }
 
   // correct

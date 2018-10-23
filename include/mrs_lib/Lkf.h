@@ -70,6 +70,13 @@ public:
   // do just the correction
   virtual Eigen::VectorXd doCorrection(void);
 
+  struct InverseException : public std::exception
+  {
+    const char *what() const throw() {
+      return "LKF: could not compute matrix inversion in correction update!!!";
+    }
+  };
+
 private:
   int n;  // number of states
   int m;  // number of inputs
@@ -90,6 +97,9 @@ private:
   Eigen::VectorXd input;  // system input vector
 
   mutable std::mutex lkf_mutex;
+
+  void predictionImpl();
+  void correctionImpl();
 };
 
 }  // namespace mrs_lib

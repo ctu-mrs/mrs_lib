@@ -210,19 +210,8 @@ Eigen::VectorXd Lkf::iterate(void) {
 
   std::scoped_lock lock(lkf_mutex);
 
-  // the prediction phase
-  if (m > 0) {
-    x = A * x + B * input;
-  } else {
-    x = A * x;
-  }
-
-  cov = A * cov * A.transpose() + R;
-
-  // the correction phase
-  MatrixXd K = cov * P.transpose() * (P * cov * P.transpose() + Q).inverse();
-  x          = x + K * (mes - (P * x));
-  cov        = (MatrixXd::Identity(n, n) - (K * P)) * cov;
+  predictionImpl();
+  correctionImpl();
 
   return x;
 }
@@ -236,14 +225,7 @@ Eigen::VectorXd Lkf::iterateWithoutCorrection(void) {
 
   std::scoped_lock lock(lkf_mutex);
 
-  // the prediction phase
-  if (m > 0) {
-    x = A * x + B * input;
-  } else {
-    x = A * x;
-  }
-
-  cov = A * cov * A.transpose() + R;
+  predictionImpl();
 
   return x;
 }
@@ -257,13 +239,63 @@ Eigen::VectorXd Lkf::doCorrection(void) {
 
   std::scoped_lock lock(lkf_mutex);
 
-  // the correction phase
-  MatrixXd K = cov * P.transpose() * (P * cov * P.transpose() + Q).inverse();
-  x          = x + K * (mes - (P * x));
-  cov        = (MatrixXd::Identity(n, n) - (K * P)) * cov;
+  correctionImpl();
 
   return x;
 }
 
 //}
+
+/* predictionImpl() //{ */
+
+// implementation of the prediction step
+void Lkf::predictionImpl(void) {
+
+  // the prediction phase
+  if (m > 0) {
+    x = A * x + B * input;
+  } else {
+    x = A * x;
+  }
+
+  cov = A * cov * A.transpose() + R;
+
+}
+
+//}
+
+/* correctionImpl() //{ */
+
+// implementation of the correction step
+void Lkf::correctionImpl(void) {
+
+  // the correction phase
+  MatrixXd tmp = P * cov * P.transpose() + Q;
+
+  ColPivHouseholderQR<MatrixXd> qr(tmp);
+  if (!qr.isInvertible())
+  {
+    // add some stuff to the tmp matrix diagonal to make it invertible
+    MatrixXd ident(tmp.rows(), tmp.cols());
+    ident.setIdentity();
+    tmp += 1e-9*ident;
+    qr.compute(tmp);
+    if (!qr.isInvertible())
+    {
+      // never managed to make this happen except for explicitly putting NaNs in the input
+      ROS_ERROR("LKF: could not compute matrix inversion!!! Fix your covariances (the measurement's is probably too low...)");
+      throw InverseException();
+    }
+    ROS_WARN("LKF: artificially inflating matrix for inverse computation! Check your covariances (the measurement's might be too low...)");
+  }
+  tmp = qr.inverse();
+
+  MatrixXd K = cov * P.transpose() * tmp;
+  x          = x + K * (mes - (P * x));
+  cov        = (MatrixXd::Identity(n, n) - (K * P)) * cov;
+
+}
+
+//}
+
 }  // namespace mrs_lib
