@@ -29,7 +29,7 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs mrs_msgs
   DEPENDS Eigen
-  LIBRARIES Lkf Ukf ConvexPolygon Profiler Utils SubscribeHandler
+  LIBRARIES Lkf Ukf ConvexPolygon Profiler Utils ParamLoader SubscribeHandler
   )
 
 ###########
@@ -71,6 +71,12 @@ target_link_libraries(Profiler
 
 add_library(Utils src/utils/utils.cpp)
 target_link_libraries(Utils
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_library(ParamLoader src/param_loader/ParamLoader.cpp)
+target_link_libraries(ParamLoader
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )

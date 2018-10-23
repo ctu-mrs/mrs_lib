@@ -49,6 +49,9 @@ public:
   // set measurement mapping matrix
   void setP(const Eigen::MatrixXd P);
 
+  // set process noise
+  void setR(const Eigen::MatrixXd R);
+
   // set covariance
   void setCovariance(const Eigen::MatrixXd cov);
 
@@ -65,7 +68,7 @@ public:
   Eigen::VectorXd iterateWithoutCorrection(void);
 
   // do just the correction
-  Eigen::VectorXd doCorrection(void);
+  virtual Eigen::VectorXd doCorrection(void);
 
 private:
   int n;  // number of states

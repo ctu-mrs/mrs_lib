@@ -99,13 +99,24 @@ void Lkf::setB(const MatrixXd B) {
 
 //}
 
-/* setP //{ */
+/* setP() //{ */
 
 void Lkf::setP(const MatrixXd P) {
 
   std::scoped_lock lock(lkf_mutex);
 
   this->P = P;
+}
+
+//}
+
+/* setR() //{ */
+
+void Lkf::setR(const MatrixXd R) {
+
+  std::scoped_lock lock(lkf_mutex);
+
+  this->R = R;
 }
 
 //}
