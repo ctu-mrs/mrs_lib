@@ -77,6 +77,13 @@ public:
     }
   };
 
+  /* /1* methods for performance comparison (unused in release) //{ *1/ */
+  /* void correctionImpl(); */
+  /* void correctionImpl2(); */
+  /* void correctionImpl3(); */
+  /* void correctionImpl4(); */
+  /* //} */
+
 private:
   int n;  // number of states
   int m;  // number of inputs

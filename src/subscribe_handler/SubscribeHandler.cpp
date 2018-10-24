@@ -25,6 +25,7 @@ namespace mrs_lib
     void SubscribeHandler_base::check_timeout([[maybe_unused]] const ros::TimerEvent& evt)
     {
       ros::Duration since_msg = (ros::Time::now() - m_last_msg_received);
+      /* ROS_ERROR("Checking topic %s, delay: %.2f", m_sub.getTopic().c_str(), since_msg.toSec()); */
       std::lock_guard<std::mutex> lck(m_last_msg_received_mtx);
       if (since_msg > m_no_message_timeout)
       {

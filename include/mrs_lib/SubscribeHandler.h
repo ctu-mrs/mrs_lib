@@ -44,11 +44,10 @@ namespace mrs_lib
   class SubscribeMgr
   {
     public:
-      SubscribeMgr() : m_load_successful(true) {};
+      SubscribeMgr(ros::NodeHandle& nh) : m_nh(nh), m_load_successful(true) {};
 
       template <typename MessageType>
       SubscribeHandlerPtr<MessageType> create_handler(
-          ros::NodeHandle& nh,
           const std::string& topic_name,
           uint32_t queue_size,
           const ros::TransportHints& transport_hints = ros::TransportHints(),
@@ -58,7 +57,7 @@ namespace mrs_lib
       {
         SubscribeHandlerPtr<MessageType> ptr = std::make_shared<impl::SubscribeHandler_impl<MessageType> >
           (
-            nh,
+            m_nh,
             topic_name,
             queue_size,
             transport_hints,
@@ -71,7 +70,6 @@ namespace mrs_lib
   
       template <typename MessageType>
       SubscribeHandlerPtr<MessageType> create_handler_threadsafe(
-          ros::NodeHandle& nh,
           const std::string& topic_name,
           uint32_t queue_size,
           const ros::TransportHints& transport_hints = ros::TransportHints(),
@@ -81,7 +79,7 @@ namespace mrs_lib
       {
         SubscribeHandlerPtr<MessageType> ptr = std::make_shared<impl::SubscribeHandler_threadsafe<MessageType> >
           (
-            nh,
+            m_nh,
             topic_name,
             queue_size,
             transport_hints,
@@ -98,6 +96,7 @@ namespace mrs_lib
       }
 
     private:
+      ros::NodeHandle m_nh;
       bool m_load_successful;
   
   };

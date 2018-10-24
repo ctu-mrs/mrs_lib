@@ -75,14 +75,14 @@ namespace mrs_lib
           {
             SubscribeHandler_base::m_sub = nh.subscribe(topic_name, queue_size, &SubscribeHandler_impl::data_callback, this, transport_hints);
             SubscribeHandler_base::m_ok = true;
-            const std::string msg = "Subscribed to topic '" + topic_name + "'";
+            const std::string msg = "Subscribed to topic '" + SubscribeHandler_base::m_sub.getTopic() + "'";
             if (SubscribeHandler_base::m_node_name.empty())
               ROS_INFO_STREAM(msg);
             else
               ROS_INFO_STREAM("[" << SubscribeHandler_base::m_node_name << "]: " << msg);
           } catch (ros::Exception e)
           {
-            const std::string error_msg = "Could not subscribe topic '" + topic_name + "':" + std::string(e.what());
+            const std::string error_msg = "Could not subscribe topic '" + SubscribeHandler_base::m_sub.getTopic() + "':" + std::string(e.what());
             if (SubscribeHandler_base::m_node_name.empty())
               ROS_ERROR_STREAM(error_msg);
             else

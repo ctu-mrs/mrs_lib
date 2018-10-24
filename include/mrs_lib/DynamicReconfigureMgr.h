@@ -119,7 +119,12 @@ private:
   void load_defaults(const ConfigType& new_config)
   {
     if (m_print_values)
-      ROS_INFO("[%s]: Loading default values of dynamically reconfigurable variables", ros::this_node::getName().c_str());
+    {
+      if (m_node_name.empty())
+        ROS_INFO("Loading default values of dynamically reconfigurable variables");
+      else
+        ROS_INFO("[%s]: Loading default values of dynamically reconfigurable variables", m_node_name.c_str());
+    }
     // Note that this part of the API is still unstable and may change! It was tested with ROS Kinetic and Melodic.
     std::vector<typename ConfigType::AbstractParamDescriptionConstPtr> descrs = new_config.__getParamDescriptions__();
     for (auto& descr : descrs)
@@ -155,7 +160,12 @@ private:
     if (m_pl.loaded_successfully())
     {
       if (m_print_values)
-        ROS_INFO("[%s]: default values loaded", ros::this_node::getName().c_str());
+      {
+        if (m_node_name.empty())
+          ROS_INFO("Default values loaded");
+        else
+          ROS_INFO("[%s]: Default values loaded", m_node_name.c_str());
+      }
       m_server.updateConfig(new_config);
       m_defaults_loaded = true;
     }
