@@ -44,15 +44,14 @@ namespace mrs_lib
   class SubscribeMgr
   {
     public:
-      SubscribeMgr(ros::NodeHandle& nh) : m_nh(nh), m_load_successful(true) {};
+      SubscribeMgr(ros::NodeHandle& nh, std::string node_name = std::string()) : m_nh(nh), m_node_name(node_name), m_load_successful(true) {};
 
       template <typename MessageType>
       SubscribeHandlerPtr<MessageType> create_handler(
           const std::string& topic_name,
           uint32_t queue_size,
           const ros::TransportHints& transport_hints = ros::TransportHints(),
-          ros::Duration no_message_timeout = SubscribeHandler<MessageType>::no_timeout,
-          const std::string& node_name = std::string()
+          ros::Duration no_message_timeout = SubscribeHandler<MessageType>::no_timeout
           )
       {
         SubscribeHandlerPtr<MessageType> ptr = std::make_shared<impl::SubscribeHandler_impl<MessageType> >
@@ -62,7 +61,7 @@ namespace mrs_lib
             queue_size,
             transport_hints,
             no_message_timeout,
-            node_name
+            m_node_name
           );
         m_load_successful = m_load_successful && ptr->ok();
         return ptr;
@@ -73,8 +72,7 @@ namespace mrs_lib
           const std::string& topic_name,
           uint32_t queue_size,
           const ros::TransportHints& transport_hints = ros::TransportHints(),
-          ros::Duration no_message_timeout = SubscribeHandler<MessageType>::no_timeout,
-          const std::string& node_name = std::string()
+          ros::Duration no_message_timeout = SubscribeHandler<MessageType>::no_timeout
           )
       {
         SubscribeHandlerPtr<MessageType> ptr = std::make_shared<impl::SubscribeHandler_threadsafe<MessageType> >
@@ -84,7 +82,7 @@ namespace mrs_lib
             queue_size,
             transport_hints,
             no_message_timeout,
-            node_name
+            m_node_name
           );
         m_load_successful = m_load_successful && ptr->ok();
         return ptr;
@@ -97,6 +95,7 @@ namespace mrs_lib
 
     private:
       ros::NodeHandle m_nh;
+      std::string m_node_name;
       bool m_load_successful;
   
   };
