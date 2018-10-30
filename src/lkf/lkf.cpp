@@ -34,7 +34,7 @@ Lkf::Lkf(const int n, const int m, const int p, const MatrixXd A, const MatrixXd
 /* getStates() //{ */
 
 // get the state vector
-VectorXd Lkf::getStates(void) {
+VectorXd Lkf::getStates(void) const {
 
   std::scoped_lock lock(lkf_mutex);
 
@@ -46,7 +46,7 @@ VectorXd Lkf::getStates(void) {
 /* getCovariance() //{ */
 
 // get the covariance matrix
-MatrixXd Lkf::getCovariance(void) {
+MatrixXd Lkf::getCovariance(void) const {
 
   std::scoped_lock lock(lkf_mutex);
 
@@ -68,7 +68,7 @@ void Lkf::setCovariance(const MatrixXd cov) {
 
 /* getA() //{ */
 
-MatrixXd Lkf::getA(void) {
+MatrixXd Lkf::getA(void) const {
 
   std::scoped_lock lock(lkf_mutex);
 
@@ -99,13 +99,24 @@ void Lkf::setB(const MatrixXd B) {
 
 //}
 
-/* setP //{ */
+/* setP() //{ */
 
 void Lkf::setP(const MatrixXd P) {
 
   std::scoped_lock lock(lkf_mutex);
 
   this->P = P;
+}
+
+//}
+
+/* setR() //{ */
+
+void Lkf::setR(const MatrixXd R) {
+
+  std::scoped_lock lock(lkf_mutex);
+
+  this->R = R;
 }
 
 //}
@@ -159,7 +170,7 @@ void Lkf::setInput(const Eigen::VectorXd newInput) {
 /* getState() //{ */
 
 // return n-th states of the estimate state vector
-double Lkf::getState(const int num) {
+double Lkf::getState(const int num) const {
 
   std::scoped_lock lock(lkf_mutex);
 
@@ -180,6 +191,18 @@ void Lkf::setState(const int num, const double value) {
 
 //}
 
+/* setStates() //{ */
+
+// set all states of the estimate state vector
+void Lkf::setStates(const Eigen::VectorXd states) {
+
+  std::scoped_lock lock(lkf_mutex);
+
+  x = states;
+}
+
+//}
+
 /* iterate() //{ */
 
 // do iteration of the filter
@@ -187,19 +210,8 @@ Eigen::VectorXd Lkf::iterate(void) {
 
   std::scoped_lock lock(lkf_mutex);
 
-  // the prediction phase
-  if (m > 0) {
-    x = A * x + B * input;
-  } else {
-    x = A * x;
-  }
-
-  cov = A * cov * A.transpose() + R;
-
-  // the correction phase
-  MatrixXd K = cov * P.transpose() * (P * cov * P.transpose() + Q).inverse();
-  x          = x + K * (mes - (P * x));
-  cov        = (MatrixXd::Identity(n, n) - (K * P)) * cov;
+  predictionImpl();
+  correctionImpl();
 
   return x;
 }
@@ -213,14 +225,7 @@ Eigen::VectorXd Lkf::iterateWithoutCorrection(void) {
 
   std::scoped_lock lock(lkf_mutex);
 
-  // the prediction phase
-  if (m > 0) {
-    x = A * x + B * input;
-  } else {
-    x = A * x;
-  }
-
-  cov = A * cov * A.transpose() + R;
+  predictionImpl();
 
   return x;
 }
@@ -234,13 +239,142 @@ Eigen::VectorXd Lkf::doCorrection(void) {
 
   std::scoped_lock lock(lkf_mutex);
 
-  // the correction phase
-  MatrixXd K = cov * P.transpose() * (P * cov * P.transpose() + Q).inverse();
-  x          = x + K * (mes - (P * x));
-  cov        = (MatrixXd::Identity(n, n) - (K * P)) * cov;
+  correctionImpl();
 
   return x;
 }
 
 //}
+
+/* predictionImpl() //{ */
+
+// implementation of the prediction step
+void Lkf::predictionImpl(void) {
+
+  // the prediction phase
+  if (m > 0) {
+    x = A * x + B * input;
+  } else {
+    x = A * x;
+  }
+
+  cov = A * cov * A.transpose() + R;
+
+}
+
+//}
+
+/* correctionImpl() //{ */
+
+// implementation of the correction step
+void Lkf::correctionImpl(void) {
+
+  // the correction phase
+  MatrixXd tmp = P * cov * P.transpose() + Q;
+
+  ColPivHouseholderQR<MatrixXd> qr(tmp);
+  if (!qr.isInvertible())
+  {
+    // add some stuff to the tmp matrix diagonal to make it invertible
+    MatrixXd ident(tmp.rows(), tmp.cols());
+    ident.setIdentity();
+    tmp += 1e-9*ident;
+    qr.compute(tmp);
+    if (!qr.isInvertible())
+    {
+      // never managed to make this happen except for explicitly putting NaNs in the input
+      ROS_ERROR("LKF: could not compute matrix inversion!!! Fix your covariances (the measurement's is probably too low...)");
+      throw InverseException();
+    }
+    ROS_WARN("LKF: artificially inflating matrix for inverse computation! Check your covariances (the measurement's might be too low...)");
+  }
+  tmp = qr.inverse();
+
+  MatrixXd K = cov * P.transpose() * tmp;
+  x          = x + K * (mes - (P * x));
+  cov        = (MatrixXd::Identity(n, n) - (K * P)) * cov;
+
+}
+
+//}
+
+/* /1* correctionImpl2() - for performance comparison (unused in release) //{ *1/ */
+
+/* // implementation of the correction step */
+/* void Lkf::correctionImpl2(void) { */
+
+/*   // the correction phase */
+/*   MatrixXd K = cov * P.transpose() * (P * cov * P.transpose() + Q).inverse(); */
+/*   x          = x + K * (mes - (P * x)); */
+/*   cov        = (MatrixXd::Identity(n, n) - (K * P)) * cov; */
+
+/* } */
+
+/* //} */
+
+/* /1* correctionImpl3() - for performance comparison (unused in release) //{ *1/ */
+
+/* // implementation of the correction step */
+/* void Lkf::correctionImpl3(void) { */
+
+/*   // the correction phase */
+/*   MatrixXd to_invert = P * cov * P.transpose() + Q; */
+/*   MatrixXd inverted = to_invert.inverse(); */
+/*   if (!isfinite(inverted.array()).all()) */
+/*   { */
+/*     // add some stuff to the tmp matrix diagonal to make it invertible */
+/*     MatrixXd ident(to_invert.rows(), to_invert.cols()); */
+/*     ident.setIdentity(); */
+/*     to_invert = P * cov * P.transpose() + Q + 1e-9*ident; */
+/*     inverted = to_invert.inverse(); */
+/*     if (!isfinite(inverted.array()).all()) */
+/*     { */
+/*       // never managed to make this happen except for explicitly putting NaNs in the input */
+/*       ROS_ERROR("LKF: could not compute matrix inversion!!! Fix your covariances (the measurement's is probably too low...)"); */
+/*       throw InverseException(); */
+/*     } */
+/*     ROS_WARN("LKF: artificially inflating matrix for inverse computation! Check your covariances (the measurement's might be too low...)"); */
+/*   } */
+
+/*   MatrixXd K = cov * P.transpose() * inverted; */
+/*   x          = x + K * (mes - (P * x)); */
+/*   cov        = (MatrixXd::Identity(n, n) - (K * P)) * cov; */
+
+/* } */
+
+/* //} */
+
+/* /1* correctionImpl4() - for performance comparison (unused in release) //{ *1/ */
+
+/* // implementation of the correction step */
+/* void Lkf::correctionImpl4(void) { */
+
+/*   // the correction phase */
+/*   MatrixXd to_invert = P * cov * P.transpose() + Q; */
+/*   MatrixXd inverted = to_invert.llt().solve(MatrixXd::Zero(to_invert.rows(), to_invert.cols())); */
+/*   if (!isfinite(inverted.array()).all()) */
+/*   { */
+/*     TODO */
+/*     // add some stuff to the tmp matrix diagonal to make it invertible */
+/*     MatrixXd ident(to_invert.rows(), to_invert.cols()); */
+/*     ident.setIdentity(); */
+/*     to_invert = P * cov * P.transpose() + Q + 1e-9*ident; */
+/*     inverted = to_invert.inverse(); */
+/*     if (!isfinite(inverted.array()).all()) */
+/*     { */
+/*       // never managed to make this happen except for explicitly putting NaNs in the input */
+/*       ROS_ERROR("LKF: could not compute matrix inversion!!! Fix your covariances (the measurement's is probably too low...)"); */
+/*       throw InverseException(); */
+/*     } */
+/*     ROS_WARN("LKF: artificially inflating matrix for inverse computation! Check your covariances (the measurement's might be too low...)"); */
+/*   } */
+
+/*   MatrixXd K = cov * P.transpose() * inverted; */
+/*   x          = x + K * (mes - (P * x)); */
+/*   cov        = (MatrixXd::Identity(n, n) - (K * P)) * cov; */
+
+/* } */
+
+/* //} */
+
 }  // namespace mrs_lib
