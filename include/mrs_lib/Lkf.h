@@ -13,8 +13,10 @@ namespace mrs_lib
 class Lkf {
 
 public:
-  Lkf(const int n, const int m, const int p, const Eigen::MatrixXd A, const Eigen::MatrixXd B, const Eigen::MatrixXd R, const Eigen::MatrixXd Q,
-      const Eigen::MatrixXd P);
+  Lkf(const int n, const int m, const int p, const Eigen::MatrixXd& A, const Eigen::MatrixXd& B, const Eigen::MatrixXd& R, const Eigen::MatrixXd& Q,
+      const Eigen::MatrixXd& P);
+
+  Lkf(const Lkf& lkf);
 
   // return estimated states
   Eigen::VectorXd getStates(void) const;

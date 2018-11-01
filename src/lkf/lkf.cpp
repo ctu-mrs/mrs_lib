@@ -11,7 +11,7 @@ namespace mrs_lib
 
 /* constructor //{ */
 
-Lkf::Lkf(const int n, const int m, const int p, const MatrixXd A, const MatrixXd B, const MatrixXd R, const MatrixXd Q, const MatrixXd P) {
+Lkf::Lkf(const int n, const int m, const int p, const MatrixXd& A, const MatrixXd& B, const MatrixXd& R, const MatrixXd& Q, const MatrixXd& P) {
 
   this->n = n;
   this->m = m;
@@ -30,6 +30,25 @@ Lkf::Lkf(const int n, const int m, const int p, const MatrixXd A, const MatrixXd
 }
 
 //}
+
+Lkf::Lkf(const Lkf& lkf) {
+
+  n = lkf.n;
+  m = lkf.m;
+  p = lkf.p;
+
+  A = lkf.A;
+  B = lkf.B;
+  R = lkf.R;
+  Q = lkf.Q;
+  P = lkf.P;
+
+  x = lkf.x;
+  cov = lkf.cov;
+  mes = lkf.mes;
+  mesCovariance = lkf.mesCovariance;
+  input = lkf.input;
+};
 
 /* getStates() //{ */
 
