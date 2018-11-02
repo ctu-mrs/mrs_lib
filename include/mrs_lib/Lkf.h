@@ -17,7 +17,7 @@ public:
       const Eigen::MatrixXd P);
 
   // return estimated states
-  Eigen::VectorXd getStates(void);
+  Eigen::VectorXd getStates(void) const;
 
   // reset the filter (with new particular state vector)
   void reset(const Eigen::MatrixXd newX);
@@ -32,13 +32,13 @@ public:
   void setInput(const Eigen::VectorXd newInput);
 
   // return n-th states of the estimate state vector
-  double getState(const int num);
+  double getState(const int num) const;
 
   // get the covariance matrix
-  Eigen::MatrixXd getCovariance(void);
+  Eigen::MatrixXd getCovariance(void) const;
 
   // get main matrix
-  Eigen::MatrixXd getA(void);
+  Eigen::MatrixXd getA(void) const;
 
   // set main matrix
   void setA(const Eigen::MatrixXd A);
@@ -49,11 +49,17 @@ public:
   // set measurement mapping matrix
   void setP(const Eigen::MatrixXd P);
 
+  // set process noise
+  void setR(const Eigen::MatrixXd R);
+
   // set covariance
   void setCovariance(const Eigen::MatrixXd cov);
 
   // set n-th states of the estimate state vector
   void setState(const int num, const double value);
+
+  // set all states of the estimate state vector
+  void setStates(const Eigen::VectorXd states);
 
   // do iteration of the filter
   Eigen::VectorXd iterate(void);
@@ -62,7 +68,21 @@ public:
   Eigen::VectorXd iterateWithoutCorrection(void);
 
   // do just the correction
-  Eigen::VectorXd doCorrection(void);
+  virtual Eigen::VectorXd doCorrection(void);
+
+  struct InverseException : public std::exception
+  {
+    const char *what() const throw() {
+      return "LKF: could not compute matrix inversion in correction update!!!";
+    }
+  };
+
+  /* /1* methods for performance comparison (unused in release) //{ *1/ */
+  /* void correctionImpl(); */
+  /* void correctionImpl2(); */
+  /* void correctionImpl3(); */
+  /* void correctionImpl4(); */
+  /* //} */
 
 private:
   int n;  // number of states
@@ -83,7 +103,10 @@ private:
 
   Eigen::VectorXd input;  // system input vector
 
-  std::mutex lkf_mutex;
+  mutable std::mutex lkf_mutex;
+
+  void predictionImpl();
+  void correctionImpl();
 };
 
 }  // namespace mrs_lib
