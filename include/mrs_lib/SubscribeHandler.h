@@ -74,14 +74,70 @@ namespace mrs_lib
       int get_closest(ros::Time stamp, MessageWithHeaderType& closest_out)
       {
         std::lock_guard<std::mutex> lck(m_mtx);
-        
+        return get_closest_impl(stamp, closest_out);
+      }
+      //}
+
+    protected:
+      mutable std::mutex m_mtx;
+      std::list<MessageWithHeaderType> m_bfr;
+      const size_t m_bfr_max;
+
+    protected:
+      /* data_callback() method //{ */
+      virtual void data_callback(const MessageWithHeaderType& msg)
+      {
+        std::lock_guard<std::mutex> lck(m_mtx);
+      
+        return data_callback_impl(msg);
+      }
+      //}
+
+    private:
+      /* get_closest_impl() method for pointer messages //{ */
+      template <typename T>
+      int get_closest_impl(ros::Time stamp, boost::shared_ptr<T>& closest_out)
+      {
         // if no message in the buffer is newer
         // than the requested stamp, the user is requesting
         // a too new message
         int result = -1;
         bool first_elem = true;
       
-        for (const auto& msg : m_bfr)
+        for (const boost::shared_ptr<T>& msg : m_bfr)
+        {
+          double cur_diff = (msg->header.stamp - stamp).toSec();
+      
+          if (cur_diff >= 0)
+          { // take advantage of the list being inherently sorted
+            closest_out = msg;
+            // if this is the oldest element in the buffer
+            // and the stamp is older, the user is requesting
+            // a too old message
+            if (first_elem)
+              result = 1;
+            else
+              result = 0;
+            break;
+          }
+
+          first_elem = false;
+        }
+        return result;
+      }
+      //}
+
+      /* get_closest_impl() method for regular messages //{ */
+      template <typename T>
+      int get_closest_impl(ros::Time stamp, T& closest_out)
+      {
+        // if no message in the buffer is newer
+        // than the requested stamp, the user is requesting
+        // a too new message
+        int result = -1;
+        bool first_elem = true;
+      
+        for (const T& msg : m_bfr)
         {
           double cur_diff = (msg.header.stamp - stamp).toSec();
       
@@ -104,14 +160,11 @@ namespace mrs_lib
       }
       //}
 
-    protected:
-
-      /* data_callback() method //{ */
-      virtual void data_callback(const MessageWithHeaderType& msg)
+      /* data_callback_impl() method for pointer messages //{ */
+      template <typename T>
+      void data_callback_impl(const boost::shared_ptr<T>& msg)
       {
-        std::lock_guard<std::mutex> lck(m_mtx);
-      
-        if (msg.header.stamp > m_bfr.back().header.stamp)
+        if (!m_bfr.empty() && msg->header.stamp < m_bfr.back()->header.stamp)
         {
           ROS_ERROR("[%s]: New message is older than latest message in the buffer, skipping it.", impl::SubscribeHandler_base::m_node_name.c_str());
           return;
@@ -125,10 +178,24 @@ namespace mrs_lib
       }
       //}
 
-    protected:
-      mutable std::mutex m_mtx;
-      std::list<MessageWithHeaderType> m_bfr;
-      const size_t m_bfr_max;
+      /* data_callback_impl() method for regular messages//{ */
+      template <typename T>
+      void data_callback_impl(const T& msg)
+      {
+        if (!m_bfr.empty() && msg.header.stamp < m_bfr.back().header.stamp)
+        {
+          ROS_ERROR("[%s]: New message is older than latest message in the buffer, skipping it.", impl::SubscribeHandler_base::m_node_name.c_str());
+          return;
+        }
+      
+        m_bfr.push_back(msg);
+        if (m_bfr.size() > m_bfr_max)
+          m_bfr.pop_front();
+      
+        impl::SubscribeHandler_impl<MessageWithHeaderType>::data_callback(msg);
+      }
+      //}
+
   };
   //}
 
