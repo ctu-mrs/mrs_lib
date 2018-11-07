@@ -46,6 +46,7 @@ namespace mrs_lib
   template <typename MessageWithHeaderType>
   class SubscribeBuffer : public impl::SubscribeHandler_impl<MessageWithHeaderType>
   {
+    using iterator_t = typename std::list<MessageWithHeaderType>::iterator;
     public:
       SubscribeBuffer(
           ros::NodeHandle& nh,
@@ -64,7 +65,8 @@ namespace mrs_lib
             no_message_timeout,
             node_name
           ),
-          m_bfr_max(buffer_size)
+          m_bfr_max(buffer_size),
+          m_bfr_pos(m_bfr.end())
       {};
 
       /* get_closest() method //{ */
@@ -74,7 +76,23 @@ namespace mrs_lib
       int get_closest(ros::Time stamp, MessageWithHeaderType& closest_out)
       {
         std::lock_guard<std::mutex> lck(m_mtx);
-        return get_closest_impl(stamp, closest_out);
+        iterator_t cl_it;
+        int ret = get_closest_impl(stamp, cl_it);
+        closest_out = *cl_it;
+        return ret;
+      }
+      //}
+
+      /* set_buffer_position_closest_to() method //{ */
+      // returns -1 if requested message would be newer than newest message in buffer
+      // returns 1 if requested message would be older than oldest message in buffer
+      // returns 0 otherwise
+      int set_buffer_position_closest_to(ros::Time stamp)
+      {
+        std::lock_guard<std::mutex> lck(m_mtx);
+        iterator_t cl_it;
+        int ret = get_closest_impl(stamp, cl_it);
+        return ret;
       }
       //}
 
@@ -82,6 +100,7 @@ namespace mrs_lib
       mutable std::mutex m_mtx;
       std::list<MessageWithHeaderType> m_bfr;
       const size_t m_bfr_max;
+      iterator_t m_bfr_pos;
 
     protected:
       /* data_callback() method //{ */
@@ -94,9 +113,8 @@ namespace mrs_lib
       //}
 
     private:
-      /* get_closest_impl() method for pointer messages //{ */
-      template <typename T>
-      int get_closest_impl(ros::Time stamp, boost::shared_ptr<T>& closest_out)
+      /* get_closest_impl() method //{ */
+      int get_closest_impl(ros::Time stamp, iterator_t& closest_it)
       {
         // if no message in the buffer is newer
         // than the requested stamp, the user is requesting
@@ -104,13 +122,15 @@ namespace mrs_lib
         int result = -1;
         bool first_elem = true;
       
-        for (const boost::shared_ptr<T>& msg : m_bfr)
+        for (iterator_t it = m_bfr.begin(); it != m_bfr.end(); it++)
         {
-          double cur_diff = (msg->header.stamp - stamp).toSec();
+          const MessageWithHeaderType& msg = *it;
+          double cur_diff = (get_header(msg).stamp - stamp).toSec();
       
           if (cur_diff >= 0)
           { // take advantage of the list being inherently sorted
-            closest_out = msg;
+            /* closest_out = msg; */
+            closest_it = it;
             // if this is the oldest element in the buffer
             // and the stamp is older, the user is requesting
             // a too old message
@@ -127,62 +147,25 @@ namespace mrs_lib
       }
       //}
 
-      /* get_closest_impl() method for regular messages //{ */
+      /* get_header() method //{ */
       template <typename T>
-      int get_closest_impl(ros::Time stamp, T& closest_out)
+      std_msgs::Header get_header(const T& msg)
       {
-        // if no message in the buffer is newer
-        // than the requested stamp, the user is requesting
-        // a too new message
-        int result = -1;
-        bool first_elem = true;
-      
-        for (const T& msg : m_bfr)
-        {
-          double cur_diff = (msg.header.stamp - stamp).toSec();
-      
-          if (cur_diff >= 0)
-          { // take advantage of the list being inherently sorted
-            closest_out = msg;
-            // if this is the oldest element in the buffer
-            // and the stamp is older, the user is requesting
-            // a too old message
-            if (first_elem)
-              result = 1;
-            else
-              result = 0;
-            break;
-          }
+        return msg.header;
+      }
 
-          first_elem = false;
-        }
-        return result;
+      template <typename T>
+      std_msgs::Header get_header(const boost::shared_ptr<T>& msg)
+      {
+        return msg->header;
       }
       //}
 
-      /* data_callback_impl() method for pointer messages //{ */
-      template <typename T>
-      void data_callback_impl(const boost::shared_ptr<T>& msg)
-      {
-        if (!m_bfr.empty() && msg->header.stamp < m_bfr.back()->header.stamp)
-        {
-          ROS_ERROR("[%s]: New message is older than latest message in the buffer, skipping it.", impl::SubscribeHandler_base::m_node_name.c_str());
-          return;
-        }
-      
-        m_bfr.push_back(msg);
-        if (m_bfr.size() > m_bfr_max)
-          m_bfr.pop_front();
-      
-        impl::SubscribeHandler_impl<MessageWithHeaderType>::data_callback(msg);
-      }
-      //}
-
-      /* data_callback_impl() method for regular messages//{ */
+      /* data_callback_impl() method for messages//{ */
       template <typename T>
       void data_callback_impl(const T& msg)
       {
-        if (!m_bfr.empty() && msg.header.stamp < m_bfr.back().header.stamp)
+        if (!m_bfr.empty() && get_header(msg).stamp < get_header(m_bfr.back()).stamp)
         {
           ROS_ERROR("[%s]: New message is older than latest message in the buffer, skipping it.", impl::SubscribeHandler_base::m_node_name.c_str());
           return;
@@ -197,6 +180,7 @@ namespace mrs_lib
       //}
 
   };
+
   //}
 
   template <typename MessageType>
