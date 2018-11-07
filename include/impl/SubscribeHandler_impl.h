@@ -94,6 +94,8 @@ namespace mrs_lib
         virtual MessageType get_data()
         {
           SubscribeHandler_base::m_new_data = false;
+          if (!SubscribeHandler_base::m_got_data)
+            ROS_ERROR("[%s]: No data received yet from topic '%s' (forgot to check has_data()?)! Returning empty message.", SubscribeHandler_base::m_node_name.c_str(), SubscribeHandler_base::m_sub.getTopic().c_str());
           return m_latest_message;
         }
 

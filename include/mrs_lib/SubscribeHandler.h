@@ -69,6 +69,20 @@ namespace mrs_lib
           m_bfr_pos(m_bfr.end())
       {};
 
+      /* get_data() method //{ */
+      virtual MessageWithHeaderType get_data()
+      {
+        std::lock_guard<std::mutex> lck(m_mtx);
+        if (m_bfr_pos == m_bfr.end()) // if no data was received yet, just return the default values
+        {
+          return impl::SubscribeHandler_impl<MessageWithHeaderType>::get_data();
+        }
+        MessageWithHeaderType ret = *m_bfr_pos;
+        m_bfr_pos++;
+        return ret;
+      }
+      //}
+
       /* get_closest() method //{ */
       // returns -1 if requested message would be newer than newest message in buffer
       // returns 1 if requested message would be older than oldest message in buffer
@@ -172,8 +186,15 @@ namespace mrs_lib
         }
       
         m_bfr.push_back(msg);
+        if (m_bfr_pos == m_bfr.end())
+          m_bfr_pos--; // hopefully this should set the iterator to pint at the last element now
+
         if (m_bfr.size() > m_bfr_max)
+        {
+          if (m_bfr_pos == m_bfr.begin())
+            m_bfr_pos++; // to keep the iterator valid
           m_bfr.pop_front();
+        }
       
         impl::SubscribeHandler_impl<MessageWithHeaderType>::data_callback(msg);
       }
