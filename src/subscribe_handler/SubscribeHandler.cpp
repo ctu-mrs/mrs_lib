@@ -35,9 +35,9 @@ namespace mrs_lib
                               + "s (" + std::to_string(m_sub.getNumPublishers()) + " publishers on this topic)";
 
         if (m_node_name.empty())
-          ROS_ERROR_STREAM(msg);
+          ROS_WARN_STREAM(msg);
         else
-          ROS_ERROR_STREAM("[" << m_node_name << "]: " << msg);
+          ROS_WARN_STREAM("[" << m_node_name << "]: " << msg);
       }
     }
 
