@@ -11,7 +11,7 @@ namespace mrs_lib
 
 /* constructor //{ */
 
-Lkf::Lkf(const int n, const int m, const int p, const MatrixXd A, const MatrixXd B, const MatrixXd R, const MatrixXd Q, const MatrixXd P) {
+Lkf::Lkf(const int n, const int m, const int p, const MatrixXd& A, const MatrixXd& B, const MatrixXd& R, const MatrixXd& Q, const MatrixXd& P) {
 
   this->n = n;
   this->m = m;
@@ -29,6 +29,57 @@ Lkf::Lkf(const int n, const int m, const int p, const MatrixXd A, const MatrixXd
   mes   = VectorXd::Zero(p);
 }
 
+//}
+
+/* copy constructor //{ */
+Lkf::Lkf(const Lkf& lkf) {
+
+  std::scoped_lock<std::mutex> lck (lkf.lkf_mutex);
+
+  n = lkf.n;
+  m = lkf.m;
+  p = lkf.p;
+
+  A = lkf.A;
+  B = lkf.B;
+  R = lkf.R;
+  Q = lkf.Q;
+  P = lkf.P;
+
+  x = lkf.x;
+  cov = lkf.cov;
+  mes = lkf.mes;
+  mesCovariance = lkf.mesCovariance;
+  input = lkf.input;
+};
+//}
+
+/* copy assignment operator //{ */
+Lkf& Lkf::operator=(const Lkf& lkf) {
+
+  if (this == &lkf) return *this;
+
+  std::scoped_lock<std::mutex> lck (lkf.lkf_mutex);
+
+  n = lkf.n;
+  m = lkf.m;
+  p = lkf.p;
+
+  A = lkf.A;
+  B = lkf.B;
+  R = lkf.R;
+  Q = lkf.Q;
+  P = lkf.P;
+
+  x = lkf.x;
+  cov = lkf.cov;
+  mes = lkf.mes;
+  mesCovariance = lkf.mesCovariance;
+  input = lkf.input;
+
+  return *this;
+
+};
 //}
 
 /* getStates() //{ */
@@ -57,7 +108,7 @@ MatrixXd Lkf::getCovariance(void) const {
 
 /* setCovariance() //{ */
 
-void Lkf::setCovariance(const MatrixXd cov) {
+void Lkf::setCovariance(const MatrixXd& cov) {
 
   std::scoped_lock lock(lkf_mutex);
 
@@ -79,7 +130,7 @@ MatrixXd Lkf::getA(void) const {
 
 /* setA() //{ */
 
-void Lkf::setA(const MatrixXd A) {
+void Lkf::setA(const MatrixXd& A) {
 
   std::scoped_lock lock(lkf_mutex);
 
@@ -90,7 +141,7 @@ void Lkf::setA(const MatrixXd A) {
 
 /* setB() //{ */
 
-void Lkf::setB(const MatrixXd B) {
+void Lkf::setB(const MatrixXd& B) {
 
   std::scoped_lock lock(lkf_mutex);
 
@@ -101,7 +152,7 @@ void Lkf::setB(const MatrixXd B) {
 
 /* setP() //{ */
 
-void Lkf::setP(const MatrixXd P) {
+void Lkf::setP(const MatrixXd& P) {
 
   std::scoped_lock lock(lkf_mutex);
 
@@ -112,7 +163,7 @@ void Lkf::setP(const MatrixXd P) {
 
 /* setR() //{ */
 
-void Lkf::setR(const MatrixXd R) {
+void Lkf::setR(const MatrixXd& R) {
 
   std::scoped_lock lock(lkf_mutex);
 
@@ -124,7 +175,7 @@ void Lkf::setR(const MatrixXd R) {
 /* reset() //{ */
 
 // reset the filter with particular new states
-void Lkf::reset(const MatrixXd newX) {
+void Lkf::reset(const MatrixXd& newX) {
 
   std::scoped_lock lock(lkf_mutex);
 
@@ -137,7 +188,7 @@ void Lkf::reset(const MatrixXd newX) {
 /* setMeaurement() //{ */
 
 // set new measurement and its covariance
-void Lkf::setMeasurement(const Eigen::VectorXd newMes, const Eigen::MatrixXd newCov) {
+void Lkf::setMeasurement(const Eigen::VectorXd& newMes, const Eigen::MatrixXd& newCov) {
 
   std::scoped_lock lock(lkf_mutex);
 
@@ -146,7 +197,7 @@ void Lkf::setMeasurement(const Eigen::VectorXd newMes, const Eigen::MatrixXd new
 }
 
 // set new measurement
-void Lkf::setMeasurement(const Eigen::VectorXd newMes) {
+void Lkf::setMeasurement(const Eigen::VectorXd& newMes) {
 
   std::scoped_lock lock(lkf_mutex);
 
@@ -158,7 +209,7 @@ void Lkf::setMeasurement(const Eigen::VectorXd newMes) {
 /* setInput() //{ */
 
 // set new input vector
-void Lkf::setInput(const Eigen::VectorXd newInput) {
+void Lkf::setInput(const Eigen::VectorXd& newInput) {
 
   std::scoped_lock lock(lkf_mutex);
 
@@ -194,7 +245,7 @@ void Lkf::setState(const int num, const double value) {
 /* setStates() //{ */
 
 // set all states of the estimate state vector
-void Lkf::setStates(const Eigen::VectorXd states) {
+void Lkf::setStates(const Eigen::VectorXd& states) {
 
   std::scoped_lock lock(lkf_mutex);
 

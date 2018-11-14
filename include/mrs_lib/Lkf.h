@@ -13,23 +13,27 @@ namespace mrs_lib
 class Lkf {
 
 public:
-  Lkf(const int n, const int m, const int p, const Eigen::MatrixXd A, const Eigen::MatrixXd B, const Eigen::MatrixXd R, const Eigen::MatrixXd Q,
-      const Eigen::MatrixXd P);
+  Lkf(const int n, const int m, const int p, const Eigen::MatrixXd& A, const Eigen::MatrixXd& B, const Eigen::MatrixXd& R, const Eigen::MatrixXd& Q,
+      const Eigen::MatrixXd& P);
+
+  Lkf(const Lkf& lkf); // copy constructor
+
+  Lkf& operator=(const Lkf& lkf);
 
   // return estimated states
   Eigen::VectorXd getStates(void) const;
 
   // reset the filter (with new particular state vector)
-  void reset(const Eigen::MatrixXd newX);
+  void reset(const Eigen::MatrixXd& newX);
 
   // set new measurement and its covariance
-  void setMeasurement(const Eigen::VectorXd newMes, const Eigen::MatrixXd newCov);
+  void setMeasurement(const Eigen::VectorXd& newMes, const Eigen::MatrixXd& newCov);
 
   // set new measurement
-  void setMeasurement(const Eigen::VectorXd newMes);
+  void setMeasurement(const Eigen::VectorXd& newMes);
 
   // set new input vector
-  void setInput(const Eigen::VectorXd newInput);
+  void setInput(const Eigen::VectorXd& newInput);
 
   // return n-th states of the estimate state vector
   double getState(const int num) const;
@@ -41,25 +45,25 @@ public:
   Eigen::MatrixXd getA(void) const;
 
   // set main matrix
-  void setA(const Eigen::MatrixXd A);
+  void setA(const Eigen::MatrixXd& A);
 
   // set input matrix
-  void setB(const Eigen::MatrixXd B);
+  void setB(const Eigen::MatrixXd& B);
 
   // set measurement mapping matrix
-  void setP(const Eigen::MatrixXd P);
+  void setP(const Eigen::MatrixXd& P);
 
   // set process noise
-  void setR(const Eigen::MatrixXd R);
+  void setR(const Eigen::MatrixXd& R);
 
   // set covariance
-  void setCovariance(const Eigen::MatrixXd cov);
+  void setCovariance(const Eigen::MatrixXd& cov);
 
   // set n-th states of the estimate state vector
   void setState(const int num, const double value);
 
   // set all states of the estimate state vector
-  void setStates(const Eigen::VectorXd states);
+  void setStates(const Eigen::VectorXd& states);
 
   // do iteration of the filter
   Eigen::VectorXd iterate(void);
@@ -68,7 +72,7 @@ public:
   Eigen::VectorXd iterateWithoutCorrection(void);
 
   // do just the correction
-  virtual Eigen::VectorXd doCorrection(void);
+  Eigen::VectorXd doCorrection(void);
 
   struct InverseException : public std::exception
   {

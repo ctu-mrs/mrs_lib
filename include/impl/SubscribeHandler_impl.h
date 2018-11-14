@@ -57,12 +57,12 @@ namespace mrs_lib
     {
       public:
         SubscribeHandler_impl(
-            ros::NodeHandle& nh,
-            const std::string& topic_name,
-            uint32_t queue_size,
-            const ros::TransportHints& transport_hints = ros::TransportHints(),
-            ros::Duration no_message_timeout = SubscribeHandler<MessageType>::no_timeout,
-            const std::string& node_name = std::string()
+              ros::NodeHandle& nh,
+              const std::string& topic_name,
+              uint32_t queue_size,
+              const ros::TransportHints& transport_hints = ros::TransportHints(),
+              ros::Duration no_message_timeout = mrs_lib::no_timeout,
+              const std::string& node_name = std::string()
             )
           : SubscribeHandler<MessageType>(
               nh,
@@ -94,6 +94,8 @@ namespace mrs_lib
         virtual MessageType get_data()
         {
           SubscribeHandler_base::m_new_data = false;
+          if (!SubscribeHandler_base::m_got_data)
+            ROS_ERROR("[%s]: No data received yet from topic '%s' (forgot to check has_data()?)! Returning empty message.", SubscribeHandler_base::m_node_name.c_str(), SubscribeHandler_base::m_sub.getTopic().c_str());
           return m_latest_message;
         }
 
@@ -103,7 +105,6 @@ namespace mrs_lib
       protected:
         virtual void data_callback(const MessageType& msg)
         {
-          /* ROS_ERROR("[SubscribeHandler_impl]: ORIGINAL METHOD CALLED"); */
           m_latest_message = msg;
           SubscribeHandler_base::m_new_data = true;
           SubscribeHandler_base::m_got_data = true;
@@ -119,12 +120,12 @@ namespace mrs_lib
     {
       public:
         SubscribeHandler_threadsafe(
-            ros::NodeHandle& nh,
-            const std::string& topic_name,
-            uint32_t queue_size,
-            const ros::TransportHints& transport_hints = ros::TransportHints(),
-            ros::Duration no_message_timeout = SubscribeHandler_impl<MessageType>::no_timeout,
-            const std::string& node_name = std::string()
+              ros::NodeHandle& nh,
+              const std::string& topic_name,
+              uint32_t queue_size,
+              const ros::TransportHints& transport_hints = ros::TransportHints(),
+              ros::Duration no_message_timeout = mrs_lib::no_timeout,
+              const std::string& node_name = std::string()
             )
           : SubscribeHandler_impl<MessageType>::SubscribeHandler_impl(nh, topic_name, queue_size, transport_hints, no_message_timeout, node_name)
         {
@@ -168,6 +169,7 @@ namespace mrs_lib
         mutable std::mutex m_mtx;
     };
     //}
+
 
   } // namespace impl
 
