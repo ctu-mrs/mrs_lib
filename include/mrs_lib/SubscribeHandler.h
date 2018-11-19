@@ -65,21 +65,14 @@ namespace mrs_lib
             no_message_timeout,
             node_name
           ),
-          m_bfr_max(buffer_size),
-          m_bfr_pos(m_bfr.end())
+          m_bfr_max(buffer_size)
       {};
 
       /* get_data() method //{ */
       virtual MessageWithHeaderType get_data()
       {
         std::lock_guard<std::mutex> lck(m_mtx);
-        if (m_bfr_pos == m_bfr.end()) // if no data was received yet, just return the default values
-        {
-          return impl::SubscribeHandler_impl<MessageWithHeaderType>::get_data();
-        }
-        MessageWithHeaderType ret = *m_bfr_pos;
-        m_bfr_pos++;
-        return ret;
+        return impl::SubscribeHandler_impl<MessageWithHeaderType>::get_data();
       }
       //}
 
@@ -97,24 +90,10 @@ namespace mrs_lib
       }
       //}
 
-      /* set_buffer_position_closest_to() method //{ */
-      // returns -1 if requested message would be newer than newest message in buffer
-      // returns 1 if requested message would be older than oldest message in buffer
-      // returns 0 otherwise
-      int set_buffer_position_closest_to(ros::Time stamp)
-      {
-        std::lock_guard<std::mutex> lck(m_mtx);
-        iterator_t cl_it;
-        int ret = get_closest_impl(stamp, cl_it);
-        return ret;
-      }
-      //}
-
     protected:
       mutable std::mutex m_mtx;
       std::list<MessageWithHeaderType> m_bfr;
       const size_t m_bfr_max;
-      iterator_t m_bfr_pos;
 
     protected:
       /* data_callback() method //{ */
@@ -186,15 +165,9 @@ namespace mrs_lib
         }
       
         m_bfr.push_back(msg);
-        if (m_bfr_pos == m_bfr.end())
-          m_bfr_pos--; // hopefully this should set the iterator to pint at the last element now
 
         if (m_bfr.size() > m_bfr_max)
-        {
-          if (m_bfr_pos == m_bfr.begin())
-            m_bfr_pos++; // to keep the iterator valid
           m_bfr.pop_front();
-        }
       
         impl::SubscribeHandler_impl<MessageWithHeaderType>::data_callback(msg);
       }
