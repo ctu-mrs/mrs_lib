@@ -30,7 +30,7 @@ namespace mrs_lib
       if (since_msg > m_no_message_timeout)
       {
         m_ok = false;
-        const std::string msg = "Did not receive any message from topic '" + m_sub.getTopic()
+        const std::string msg = "Did not receive any message from topic '" + resolved_topic_name()
                               + "' for " + std::to_string(since_msg.toSec())
                               + "s (" + std::to_string(m_sub.getNumPublishers()) + " publishers on this topic)";
 
@@ -39,6 +39,14 @@ namespace mrs_lib
         else
           ROS_WARN_STREAM("[" << m_node_name << "]: " << msg);
       }
+    }
+
+    std::string SubscribeHandler_base::resolved_topic_name()
+    {
+      std::string ret = m_sub.getTopic();
+      if (ret.empty())
+        ret = m_topic_name;
+      return ret;
     }
 
     bool SubscribeHandler_base::ok() const

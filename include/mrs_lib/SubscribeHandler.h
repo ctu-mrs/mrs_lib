@@ -46,8 +46,8 @@ namespace mrs_lib
   template <typename MessageWithHeaderType>
   class SubscribeBuffer : public impl::SubscribeHandler_impl<MessageWithHeaderType>
   {
-    using iterator_t = typename std::list<MessageWithHeaderType>::iterator;
     public:
+      using iterator_t = typename std::list<MessageWithHeaderType>::iterator;
       SubscribeBuffer(
           ros::NodeHandle& nh,
           const std::string& topic_name,
@@ -77,6 +77,7 @@ namespace mrs_lib
       //}
 
       /* get_closest() method //{ */
+      // Finds the closest message in the buffer to the time stamp.
       // returns -1 if requested message would be newer than newest message in buffer
       // returns 1 if requested message would be older than oldest message in buffer
       // returns 0 otherwise
@@ -84,8 +85,36 @@ namespace mrs_lib
       {
         std::lock_guard<std::mutex> lck(m_mtx);
         iterator_t cl_it;
+        const int ret = get_closest_impl(stamp, cl_it);
+        if (ret >= 0)
+          closest_out = *cl_it;
+        return ret;
+      }
+      //}
+
+      /* get_next_closest() method //{ */
+      // Finds the first message after the closest message in the buffer to the time stamp.
+      // returns -1 if requested message would be newer than newest message in buffer
+      // returns 1 if requested message would be older than oldest message in buffer
+      // returns 0 otherwise
+      int get_next_closest(ros::Time stamp, MessageWithHeaderType& next_out)
+      {
+        std::lock_guard<std::mutex> lck(m_mtx);
+        iterator_t cl_it;
         int ret = get_closest_impl(stamp, cl_it);
-        closest_out = *cl_it;
+        if (ret >= 0)
+        {
+          iterator_t nx_it = cl_it;
+          nx_it++;
+          if (nx_it == m_bfr.end())
+          {
+            next_out = *cl_it;
+            ret = -1;
+          } else
+          {
+            next_out = *nx_it;
+          }
+        }
         return ret;
       }
       //}
@@ -114,11 +143,12 @@ namespace mrs_lib
         // a too new message
         int result = -1;
         bool first_elem = true;
+        closest_it = m_bfr.end();
       
         for (iterator_t it = m_bfr.begin(); it != m_bfr.end(); it++)
         {
           const MessageWithHeaderType& msg = *it;
-          double cur_diff = (get_header(msg).stamp - stamp).toSec();
+          const double cur_diff = (get_header(msg).stamp - stamp).toSec();
       
           if (cur_diff >= 0)
           { // take advantage of the list being inherently sorted
@@ -140,6 +170,7 @@ namespace mrs_lib
       }
       //}
 
+    protected:
       /* get_header() method //{ */
       template <typename T>
       std_msgs::Header get_header(const T& msg)
@@ -155,14 +186,13 @@ namespace mrs_lib
       //}
 
       /* data_callback_impl() method for messages//{ */
-      template <typename T>
-      void data_callback_impl(const T& msg)
+      virtual void data_callback_impl(const MessageWithHeaderType& msg)
       {
-        if (!m_bfr.empty() && get_header(msg).stamp < get_header(m_bfr.back()).stamp)
-        {
-          ROS_ERROR("[%s]: New message is older than latest message in the buffer, skipping it.", impl::SubscribeHandler_base::m_node_name.c_str());
-          return;
-        }
+        /* if (!m_bfr.empty() && get_header(msg).stamp < get_header(m_bfr.back()).stamp) */
+        /* { */
+        /*   ROS_WARN("[%s]: New message is older than latest message in the buffer, skipping it.", impl::SubscribeHandler_base::m_node_name.c_str()); */
+        /*   return; */
+        /* } */
       
         m_bfr.push_back(msg);
 

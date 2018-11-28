@@ -46,6 +46,7 @@ namespace mrs_lib
         ros::Time m_last_msg_received;
         ros::Timer m_timeout_check_timer;
         void check_timeout([[maybe_unused]] const ros::TimerEvent& evt);
+        std::string resolved_topic_name();
 
     };
     //}
@@ -75,14 +76,14 @@ namespace mrs_lib
           {
             SubscribeHandler_base::m_sub = nh.subscribe(topic_name, queue_size, &SubscribeHandler_impl::data_callback, this, transport_hints);
             SubscribeHandler_base::m_ok = true;
-            const std::string msg = "Subscribed to topic '" + SubscribeHandler_base::m_sub.getTopic() + "'";
+            const std::string msg = "Subscribed to topic '" + SubscribeHandler_base::m_topic_name + "' -> '" + SubscribeHandler_base::resolved_topic_name() + "'";
             if (SubscribeHandler_base::m_node_name.empty())
               ROS_INFO_STREAM(msg);
             else
               ROS_INFO_STREAM("[" << SubscribeHandler_base::m_node_name << "]: " << msg);
           } catch (ros::Exception e)
           {
-            const std::string error_msg = "Could not subscribe topic '" + SubscribeHandler_base::m_sub.getTopic() + "':" + std::string(e.what());
+            const std::string error_msg = "Could not subscribe topic '" + SubscribeHandler_base::resolved_topic_name() + "': " + std::string(e.what());
             if (SubscribeHandler_base::m_node_name.empty())
               ROS_ERROR_STREAM(error_msg);
             else
@@ -95,7 +96,7 @@ namespace mrs_lib
         {
           SubscribeHandler_base::m_new_data = false;
           if (!SubscribeHandler_base::m_got_data)
-            ROS_ERROR("[%s]: No data received yet from topic '%s' (forgot to check has_data()?)! Returning empty message.", SubscribeHandler_base::m_node_name.c_str(), SubscribeHandler_base::m_sub.getTopic().c_str());
+            ROS_ERROR("[%s]: No data received yet from topic '%s' (forgot to check has_data()?)! Returning empty message.", SubscribeHandler_base::m_node_name.c_str(), SubscribeHandler_base::resolved_topic_name().c_str());
           return m_latest_message;
         }
 

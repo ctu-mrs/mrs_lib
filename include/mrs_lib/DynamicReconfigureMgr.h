@@ -139,21 +139,34 @@ private:
       bool* boolval;
       std::string* stringval;
 
+      // replace occurences of "__" in the variable names with "/"
+      std::string name = descr->name;
+      {
+        static const std::string what = "__";
+        static const std::string with = "/";
+        size_t pos, last_replace = 0;
+        while ((pos = name.find(what, last_replace)) != name.npos)
+        {
+          name.replace(pos, what.size(), with);
+          last_replace = pos - what.size() + with.size();
+        }
+      }
+
       if (try_cast(val, intval))
       {
-        m_pl.load_param(descr->name, *intval);
+        m_pl.load_param(name, *intval);
       } else if (try_cast(val, doubleval))
       {
-        m_pl.load_param(descr->name, *doubleval);
+        m_pl.load_param(name, *doubleval);
       } else if (try_cast(val, boolval))
       {
-        m_pl.load_param(descr->name, *boolval);
+        m_pl.load_param(name, *boolval);
       } else if (try_cast(val, stringval))
       {
-        m_pl.load_param(descr->name, *stringval);
+        m_pl.load_param(name, *stringval);
       } else
       {
-        print_value(descr->name, std::string("unknown dynamic reconfigure type"));
+        print_value(name, std::string("unknown dynamic reconfigure type"));
       }
     }
 
