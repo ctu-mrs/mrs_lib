@@ -47,6 +47,9 @@ namespace mrs_lib
   template <typename MessageWithHeaderType>
   class SubscribeBuffer : public impl::SubscribeHandler_impl<MessageWithHeaderType>
   {
+    private:
+      using impl_class_t = impl::SubscribeHandler_impl<MessageWithHeaderType>;
+
     public:
       using buffer_t = typename boost::circular_buffer<MessageWithHeaderType>;
       using iterator_t = typename buffer_t::iterator;
@@ -59,7 +62,7 @@ namespace mrs_lib
           ros::Duration no_message_timeout = mrs_lib::no_timeout,
           const std::string& node_name = std::string()
         )
-        : impl::SubscribeHandler_impl<MessageWithHeaderType>(
+        : impl_class_t(
             nh,
             topic_name,
             queue_size,
@@ -74,7 +77,7 @@ namespace mrs_lib
       virtual MessageWithHeaderType get_data()
       {
         std::lock_guard<std::mutex> lck(m_mtx);
-        return impl::SubscribeHandler_impl<MessageWithHeaderType>::get_data();
+        return impl_class_t::get_data();
       }
       //}
 
@@ -150,7 +153,7 @@ namespace mrs_lib
         for (iterator_t it = m_bfr.begin(); it != m_bfr.end(); it++)
         {
           const MessageWithHeaderType& msg = *it;
-          const double cur_diff = (get_header(msg).stamp - stamp).toSec();
+          const double cur_diff = (impl_class_t::get_header(msg).stamp - stamp).toSec();
       
           if (cur_diff >= 0)
           { // take advantage of the list being inherently sorted
@@ -173,32 +176,18 @@ namespace mrs_lib
       //}
 
     protected:
-      /* get_header() method //{ */
-      template <typename T>
-      std_msgs::Header get_header(const T& msg)
-      {
-        return msg.header;
-      }
-
-      template <typename T>
-      std_msgs::Header get_header(const boost::shared_ptr<T>& msg)
-      {
-        return msg->header;
-      }
-      //}
-
       /* data_callback_impl() method for messages//{ */
       virtual void data_callback_impl(const MessageWithHeaderType& msg)
       {
-        if (!m_bfr.empty() && get_header(msg).stamp < get_header(m_bfr.back()).stamp)
+        if (!m_bfr.empty()
+         && impl_class_t::get_header(msg).stamp < impl_class_t::get_header(m_bfr.back()).stamp)
         {
-          ROS_WARN("[%s]: New message is older than latest message in the buffer, skipping it.", impl::SubscribeHandler_base::m_node_name.c_str());
-          return;
+          ROS_WARN("[%s]: New message from topic '%s' is older than the latest message in the buffer, skipping it.", impl::SubscribeHandler_base::m_node_name.c_str(), impl::SubscribeHandler_base::resolved_topic_name().c_str());
+        } else
+        {
+          m_bfr.push_back(msg);
+          impl_class_t::data_callback(msg);
         }
-      
-        m_bfr.push_back(msg);
-
-        impl::SubscribeHandler_impl<MessageWithHeaderType>::data_callback(msg);
       }
       //}
 
@@ -218,7 +207,7 @@ namespace mrs_lib
       SubscribeMgr(ros::NodeHandle& nh, std::string node_name = std::string()) : m_nh(nh), m_node_name(node_name), m_load_successful(true) {};
 
       /* create_handler() method //{ */
-      template <typename MessageType>
+      template <typename MessageType, bool time_consistent=false>
       SubscribeHandlerPtr<MessageType> create_handler(
             const std::string& topic_name,
             uint32_t queue_size,
@@ -226,7 +215,7 @@ namespace mrs_lib
             ros::Duration no_message_timeout = mrs_lib::no_timeout
           )
       {
-        SubscribeHandlerPtr<MessageType> ptr = std::make_shared<impl::SubscribeHandler_impl<MessageType> >
+        SubscribeHandlerPtr<MessageType> ptr = std::make_shared<impl::SubscribeHandler_impl<MessageType, time_consistent> >
           (
             m_nh,
             topic_name,
@@ -241,7 +230,7 @@ namespace mrs_lib
       //}
 
       /* create_handler_threadsafe() method //{ */
-      template <typename MessageType>
+      template <typename MessageType, bool time_consistent=false>
       SubscribeHandlerPtr<MessageType> create_handler_threadsafe(
             const std::string& topic_name,
             uint32_t queue_size,
@@ -249,7 +238,7 @@ namespace mrs_lib
             ros::Duration no_message_timeout = mrs_lib::no_timeout
           )
       {
-        SubscribeHandlerPtr<MessageType> ptr = std::make_shared<impl::SubscribeHandler_threadsafe<MessageType> >
+        SubscribeHandlerPtr<MessageType> ptr = std::make_shared<impl::SubscribeHandler_threadsafe<MessageType, time_consistent> >
           (
             m_nh,
             topic_name,
@@ -297,7 +286,7 @@ namespace mrs_lib
       ros::NodeHandle m_nh;
       std::string m_node_name;
       bool m_load_successful;
-  
+
   };
   //}
 

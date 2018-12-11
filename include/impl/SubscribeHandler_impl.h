@@ -53,7 +53,7 @@ namespace mrs_lib
     
     /* SubscribeHandler_impl class //{ */
     // implements the constructor, get_data() method and data_callback method (non-thread-safe)
-    template <typename MessageType>
+    template <typename MessageType, bool time_consistent=false>
     class SubscribeHandler_impl : public SubscribeHandler<MessageType>
     {
       public:
@@ -106,19 +106,59 @@ namespace mrs_lib
       protected:
         virtual void data_callback(const MessageType& msg)
         {
+          data_callback_impl(msg);
+        }
+
+        /* get_header() method //{ */
+        template <typename T>
+        std_msgs::Header get_header(const T& msg)
+        {
+          return msg.header;
+        }
+
+        template <typename T>
+        std_msgs::Header get_header(const boost::shared_ptr<T>& msg)
+        {
+          return msg->header;
+        }
+        //}
+
+        // no time consistency check variant
+        template<bool check=time_consistent>
+        typename std::enable_if<!check>::type data_callback_impl(const MessageType& msg)
+        {
           m_latest_message = msg;
           SubscribeHandler_base::m_new_data = true;
           SubscribeHandler_base::m_got_data = true;
           SubscribeHandler_base::m_last_msg_received = ros::Time::now();
         }
 
+        // variant with time consistency check
+        template<bool check=time_consistent>
+        typename std::enable_if<check>::type data_callback_impl(const MessageType& msg)
+        {
+          SubscribeHandler_base::m_last_msg_received = ros::Time::now();
+          if (SubscribeHandler_base::m_got_data && get_header(msg).stamp < get_header(m_latest_message).stamp)
+          {
+            ROS_WARN("[%s]: New message from topic '%s' is older than the latest message, skipping it.", impl::SubscribeHandler_base::m_node_name.c_str(), SubscribeHandler_base::resolved_topic_name().c_str());
+          } else
+          {
+            m_latest_message = msg;
+            SubscribeHandler_base::m_new_data = true;
+            SubscribeHandler_base::m_got_data = true;
+          }
+        }
+
     };
     //}
 
     /* SubscribeHandler_threadsafe class //{ */
-    template <typename MessageType>
-    class SubscribeHandler_threadsafe : public SubscribeHandler_impl<MessageType>
+    template <typename MessageType, bool time_consistent=false>
+    class SubscribeHandler_threadsafe : public SubscribeHandler_impl<MessageType, time_consistent>
     {
+    private:
+      using impl_class_t = impl::SubscribeHandler_impl<MessageType, time_consistent>;
+
       public:
         SubscribeHandler_threadsafe(
               ros::NodeHandle& nh,
@@ -128,49 +168,47 @@ namespace mrs_lib
               ros::Duration no_message_timeout = mrs_lib::no_timeout,
               const std::string& node_name = std::string()
             )
-          : SubscribeHandler_impl<MessageType>::SubscribeHandler_impl(nh, topic_name, queue_size, transport_hints, no_message_timeout, node_name)
+          : impl_class_t::SubscribeHandler_impl(nh, topic_name, queue_size, transport_hints, no_message_timeout, node_name)
         {
         }
 
         virtual bool ok() const
         {
           std::lock_guard<std::mutex> lck(m_mtx);
-          return SubscribeHandler_impl<MessageType>::ok();
+          return impl_class_t::ok();
         }
         virtual bool has_data() const
         {
           std::lock_guard<std::mutex> lck(m_mtx);
-          return SubscribeHandler_impl<MessageType>::has_data();
+          return impl_class_t::has_data();
         }
         virtual bool new_data() const
         {
           std::lock_guard<std::mutex> lck(m_mtx);
-          return SubscribeHandler_impl<MessageType>::new_data();
+          return impl_class_t::new_data();
         }
         virtual bool used_data() const
         {
           std::lock_guard<std::mutex> lck(m_mtx);
-          return SubscribeHandler_impl<MessageType>::used_data();
+          return impl_class_t::used_data();
         }
         virtual MessageType get_data()
         {
           std::lock_guard<std::mutex> lck(m_mtx);
-          return SubscribeHandler_impl<MessageType>::get_data();
+          return impl_class_t::get_data();
         }
 
       protected:
         virtual void data_callback(const MessageType& msg)
         {
           std::lock_guard<std::mutex> lck(m_mtx);
-          /* ROS_ERROR("[SubscribeHandler_threadsafe]: OVERRIDE METHOD CALLED"); */
-          return SubscribeHandler_impl<MessageType>::data_callback(msg);
+          return impl_class_t::data_callback(msg);
         }
 
       private:
         mutable std::mutex m_mtx;
     };
     //}
-
 
   } // namespace impl
 
