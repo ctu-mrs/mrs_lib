@@ -88,7 +88,7 @@ public:
   std::vector<std::string> to_init()
   {
     std::vector<std::string> ret;
-    ret.resize(m_to_init.size());
+    ret.reserve(m_to_init.size());
     for (const auto& key : m_to_init)
       ret.push_back(key);
     return ret;
