@@ -4,6 +4,7 @@
 #include <ros/ros.h>
 #include <string>
 #include <mutex>
+#include <boost/circular_buffer.hpp>
 
 #include <nav_msgs/Odometry.h>
 
@@ -47,7 +48,8 @@ namespace mrs_lib
   class SubscribeBuffer : public impl::SubscribeHandler_impl<MessageWithHeaderType>
   {
     public:
-      using iterator_t = typename std::list<MessageWithHeaderType>::iterator;
+      using buffer_t = typename boost::circular_buffer<MessageWithHeaderType>;
+      using iterator_t = typename buffer_t::iterator;
       SubscribeBuffer(
           ros::NodeHandle& nh,
           const std::string& topic_name,
@@ -65,7 +67,7 @@ namespace mrs_lib
             no_message_timeout,
             node_name
           ),
-          m_bfr_max(buffer_size)
+          m_bfr(buffer_size)
       {};
 
       /* get_data() method //{ */
@@ -121,8 +123,8 @@ namespace mrs_lib
 
     protected:
       mutable std::mutex m_mtx;
-      std::list<MessageWithHeaderType> m_bfr;
-      const size_t m_bfr_max;
+      buffer_t m_bfr;
+      /* const size_t m_bfr_max; */
 
     protected:
       /* data_callback() method //{ */
@@ -188,17 +190,14 @@ namespace mrs_lib
       /* data_callback_impl() method for messages//{ */
       virtual void data_callback_impl(const MessageWithHeaderType& msg)
       {
-        /* if (!m_bfr.empty() && get_header(msg).stamp < get_header(m_bfr.back()).stamp) */
-        /* { */
-        /*   ROS_WARN("[%s]: New message is older than latest message in the buffer, skipping it.", impl::SubscribeHandler_base::m_node_name.c_str()); */
-        /*   return; */
-        /* } */
+        if (!m_bfr.empty() && get_header(msg).stamp < get_header(m_bfr.back()).stamp)
+        {
+          ROS_WARN("[%s]: New message is older than latest message in the buffer, skipping it.", impl::SubscribeHandler_base::m_node_name.c_str());
+          return;
+        }
       
         m_bfr.push_back(msg);
 
-        if (m_bfr.size() > m_bfr_max)
-          m_bfr.pop_front();
-      
         impl::SubscribeHandler_impl<MessageWithHeaderType>::data_callback(msg);
       }
       //}
