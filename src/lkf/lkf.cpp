@@ -128,6 +128,17 @@ MatrixXd Lkf::getA(void) const {
 
 //}
 
+/* getP() //{ */
+
+MatrixXd Lkf::getP(void) const {
+
+  std::scoped_lock lock(lkf_mutex);
+
+  return this->P;
+}
+
+//}
+
 /* setA() //{ */
 
 void Lkf::setA(const MatrixXd& A) {
