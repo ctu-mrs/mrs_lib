@@ -10,7 +10,7 @@ class MedianFilter {
 
 public:
   MedianFilter(int buffer_size, double max_valid_value, double min_valid_value, double max_difference);
-  bool                isValid(double input);
+  bool isValid(double input);
 
 private:
   std::vector<double> buffer;

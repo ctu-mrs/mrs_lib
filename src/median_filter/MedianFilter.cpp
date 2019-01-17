@@ -39,7 +39,7 @@ bool MedianFilter::isValid(double input) {
   }
 
   // check if new value is valid
-  if (input>max_valid_value || input<min_valid_value) {
+  if (input > max_valid_value || input < min_valid_value) {
     return false;
   }
 
@@ -47,7 +47,7 @@ bool MedianFilter::isValid(double input) {
   int    best_med_value = 9999;
   int    zero_counter   = 0;
   double median         = 0;
-  bool valid            = true;
+  bool   valid          = true;
 
   // calculate the median from the filter buffer
   for (int i = 0; i < buffer_size; i++) {
