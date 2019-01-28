@@ -46,7 +46,6 @@ public:
   // initialize some stuff in the constructor
   DynamicReconfigureMgr(const ros::NodeHandle& nh = ros::NodeHandle("~"), bool print_values = true, std::string node_name = std::string())
       : m_not_initialized(true),
-       m_defaults_loaded(false),
        m_print_values(print_values),
        m_node_name(node_name),
        m_server(m_server_mtx, nh),
@@ -76,15 +75,28 @@ public:
   {
     m_server.updateConfig(config);
   }
-
+  template <typename T>
+  void load_param(const std::string& name, T& value)
+  {
+    m_pl.load_param(name, value);
+    m_to_init.erase(name);
+  }
   bool loaded_successfully()
   {
-    return m_defaults_loaded;
+    return !m_not_initialized && m_to_init.empty() && m_pl.loaded_successfully();
+  }
+  std::vector<std::string> to_init()
+  {
+    std::vector<std::string> ret;
+    ret.reserve(m_to_init.size());
+    for (const auto& key : m_to_init)
+      ret.push_back(key);
+    return ret;
   }
 
 
 private:
-  bool m_not_initialized, m_defaults_loaded, m_print_values;
+  bool m_not_initialized, m_print_values;
   std::string m_node_name;
   // dynamic_reconfigure server variables
   boost::recursive_mutex m_server_mtx;
@@ -92,6 +104,7 @@ private:
   typename dynamic_reconfigure::Server<ConfigType>::CallbackType m_cbf;
 
   ParamLoader m_pl;
+  std::unordered_set<std::string> m_to_init;
 
   // the callback itself
   void dynamic_reconfigure_callback(ConfigType& new_config, [[maybe_unused]] uint32_t level)
@@ -106,71 +119,31 @@ private:
 
     if (m_not_initialized)
     {
-      load_defaults(new_config);
-      m_not_initialized = false;
-    } else if (m_print_values)
+      check_initialized(new_config);
+    }
+    if (m_print_values)
     {
       print_changed_params(new_config);
     }
+    m_not_initialized = false;
     config = new_config;
   };
   
-  /* load_defaults() method //{ */
-  void load_defaults(const ConfigType& new_config)
+  void check_initialized(const ConfigType& new_config)
   {
-    if (m_print_values)
-    {
-      if (m_node_name.empty())
-        ROS_INFO("Loading default values of dynamically reconfigurable variables");
-      else
-        ROS_INFO("[%s]: Loading default values of dynamically reconfigurable variables", m_node_name.c_str());
-    }
     // Note that this part of the API is still unstable and may change! It was tested with ROS Kinetic and Melodic.
     std::vector<typename ConfigType::AbstractParamDescriptionConstPtr> descrs = new_config.__getParamDescriptions__();
     for (auto& descr : descrs)
     {
-      boost::any val, old_val;
-      descr->getValue(new_config, val);
-      descr->getValue(config, old_val);
-
-      // try to guess the correct type of the parameter (these should be the only ones supported)
-      int* intval;
-      double* doubleval;
-      bool* boolval;
-      std::string* stringval;
-
-      if (try_cast(val, intval))
+      std::string name = descr->name;
+      const size_t pos = name.find("__");
+      if (pos != name.npos)
       {
-        m_pl.load_param(descr->name, *intval);
-      } else if (try_cast(val, doubleval))
-      {
-        m_pl.load_param(descr->name, *doubleval);
-      } else if (try_cast(val, boolval))
-      {
-        m_pl.load_param(descr->name, *boolval);
-      } else if (try_cast(val, stringval))
-      {
-        m_pl.load_param(descr->name, *stringval);
-      } else
-      {
-        print_value(descr->name, std::string("unknown dynamic reconfigure type"));
+        name.replace(pos, 2, "/");
+        m_to_init.emplace(name);
       }
-    }
-
-    if (m_pl.loaded_successfully())
-    {
-      if (m_print_values)
-      {
-        if (m_node_name.empty())
-          ROS_INFO("Default values loaded");
-        else
-          ROS_INFO("[%s]: Default values loaded", m_node_name.c_str());
-      }
-      m_server.updateConfig(new_config);
-      m_defaults_loaded = true;
     }
   }
-  //}
 
   // method for printing names and values of new received parameters (prints only the changed ones) //{
   void print_changed_params(const ConfigType& new_config)
@@ -182,6 +155,18 @@ private:
       boost::any val, old_val;
       descr->getValue(new_config, val);
       descr->getValue(config, old_val);
+      std::string name = descr->name;
+      const size_t pos = name.find("__");
+      if (pos != name.npos)
+      {
+        if (m_not_initialized)
+        {
+          continue;
+        } else
+        {
+          name.replace(pos, 2, "/");
+        }
+      }
 
       // try to guess the correct type of the parameter (these should be the only ones supported)
       int* intval;
@@ -192,22 +177,22 @@ private:
       if (try_cast(val, intval))
       {
         if (!try_compare(old_val, intval) || m_not_initialized)
-          print_value(descr->name, *intval);
+          print_value(name, *intval);
       } else if (try_cast(val, doubleval))
       {
         if (!try_compare(old_val, doubleval) || m_not_initialized)
-          print_value(descr->name, *doubleval);
+          print_value(name, *doubleval);
       } else if (try_cast(val, boolval))
       {
         if (!try_compare(old_val, boolval) || m_not_initialized)
-          print_value(descr->name, *boolval);
+          print_value(name, *boolval);
       } else if (try_cast(val, stringval))
       {
         if (!try_compare(old_val, stringval) || m_not_initialized)
-          print_value(descr->name, *stringval);
+          print_value(name, *stringval);
       } else
       {
-        print_value(descr->name, std::string("unknown dynamic reconfigure type"));
+        print_value(name, std::string("unknown dynamic reconfigure type"));
       }
     }
   }

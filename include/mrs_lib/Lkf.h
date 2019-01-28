@@ -44,6 +44,9 @@ public:
   // get main matrix
   Eigen::MatrixXd getA(void) const;
 
+  // get state to measurement mapping matrix
+  Eigen::MatrixXd getP(void) const;
+
   // set main matrix
   void setA(const Eigen::MatrixXd& A);
 
