@@ -21,6 +21,7 @@ set(CMAKE_CXX_FLAGS "-std=c++17 -fno-diagnostics-color")
 find_package(Eigen3 REQUIRED)
 set(Eigen_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIRS})
 set(Eigen_LIBRARIES ${EIGEN3_LIBRARIES})
+
 ###################################
 ## catkin specific configuration ##
 ###################################
