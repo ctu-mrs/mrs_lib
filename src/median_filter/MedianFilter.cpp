@@ -6,6 +6,8 @@
 
 MedianFilter::MedianFilter(int buffer_size, double max_valid_value, double min_valid_value, double max_difference) {
 
+  is_filled = false;
+
   // maximum value that is considered valid
   this->max_valid_value = max_valid_value;
 
@@ -36,6 +38,7 @@ bool MedianFilter::isValid(double input) {
 
   if (next == buffer_size) {
     next = 0;
+    is_filled = true;
   }
 
   // check if new value is valid
@@ -104,6 +107,10 @@ bool MedianFilter::isValid(double input) {
     ROS_WARN_THROTTLE(1.0, "[MedianFilter]: received value is not a finite number!");
     return false;
   }
+}
+
+bool MedianFilter::isFilled() {
+  return is_filled;
 }
 
 //}
