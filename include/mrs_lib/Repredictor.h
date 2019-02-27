@@ -13,7 +13,7 @@ namespace mrs_lib
   {
   public:
     /* Helper classes and structs defines //{ */
-    /* LKF definitions (typedefs, constants etc) //{ */
+    /* states, inputs etc. definitions (typedefs, constants etc) //{ */
     static const unsigned n = n_states;
     static const unsigned m = n_inputs;
     static const unsigned p = n_measurements;
@@ -107,6 +107,32 @@ namespace mrs_lib
     //}
 
     using hist_t = boost::circular_buffer<Hist_point>;
+    //}
+
+    /* apply_new_measurement() method //{ */
+    void apply_new_measurement(const z_t& z, const R_t& R, const ros::Time& stamp, const Model* model)
+    {
+      info_t info;
+      info.type = info_t::type_t::MEASUREMENT;
+      info.z = z;
+      info.R = R;
+      info.u = u_t();
+      info.stamp = stamp;
+      apply_new_info(info, model);
+    }
+    //}
+
+    /* apply_new_input() method //{ */
+    void apply_new_input(const u_t& u, const ros::Time& stamp, const Model* model)
+    {
+      info_t info;
+      info.type = info_t::type_t::INPUT;
+      info.z = z_t();
+      info.R = R_t();
+      info.u = u;
+      info.stamp = stamp;
+      apply_new_info(info, model);
+    }
     //}
 
     /* apply_new_info() method //{ */
