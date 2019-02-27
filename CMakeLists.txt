@@ -15,7 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   )
 
-set(CMAKE_CXX_FLAGS "-std=c++17 -fno-diagnostics-color")
+set(CMAKE_CXX_FLAGS "-std=c++17")
 
 # include Eigen3
 find_package(Eigen3 REQUIRED)
@@ -44,6 +44,12 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${Eigen_INCLUDE_DIRS}
+  )
+
+add_library(Repredictor src/repredictor/Repredictor.cpp)
+target_link_libraries(Repredictor
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
   )
 
 add_library(Lkf src/lkf/lkf.cpp)
