@@ -47,7 +47,7 @@ bool MedianFilter::isValid(double input) {
   }
 
   int    current_value  = 0;
-  int    best_med_value = 9999;
+  int    best_med_value = std::numeric_limits<int>::max();
   int    zero_counter   = 0;
   double median         = 0;
   bool   valid          = true;
