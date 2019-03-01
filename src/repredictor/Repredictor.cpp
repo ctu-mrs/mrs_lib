@@ -9,6 +9,5 @@ namespace mrs_lib
   template
   class Repredictor<mrsrep_n_states, mrsrep_n_inputs, mrsrep_n_measurements>;
   using MRSRepredictor = Repredictor<mrsrep_n_states, mrsrep_n_inputs, mrsrep_n_measurements>;
-  template
-  class Model_lkf_dt<mrsrep_n_states, mrsrep_n_inputs, mrsrep_n_measurements>;
+  class Model_mrs_odom;
 }

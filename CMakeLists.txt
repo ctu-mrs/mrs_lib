@@ -15,7 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   )
 
-set(CMAKE_CXX_FLAGS "-std=c++17")
+set(CMAKE_CXX_FLAGS "-std=c++17 -Wall -O3")
 
 # include Eigen3
 find_package(Eigen3 REQUIRED)
@@ -30,7 +30,7 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs mrs_msgs
   DEPENDS Eigen
-  LIBRARIES Lkf Ukf ConvexPolygon Profiler Utils ParamLoader SubscribeHandler MedianFilter
+  LIBRARIES Lkf Ukf ConvexPolygon Profiler Utils ParamLoader SubscribeHandler MedianFilter Repredictor
   )
 
 ###########
@@ -46,7 +46,7 @@ include_directories(
   ${Eigen_INCLUDE_DIRS}
   )
 
-add_library(Repredictor src/repredictor/Repredictor.cpp)
+add_library(Repredictor src/repredictor/Repredictor.cpp src/repredictor/MRS_odom_repredictor.cpp)
 target_link_libraries(Repredictor
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}

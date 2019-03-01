@@ -4,6 +4,7 @@
 #include <Eigen/Dense>
 #include <boost/circular_buffer.hpp>
 #include <std_msgs/Time.h>
+#include <functional>
 #include "mrs_lib/Utils.h"
 
 namespace mrs_lib
@@ -14,9 +15,9 @@ namespace mrs_lib
   public:
     /* Helper classes and structs defines //{ */
     /* states, inputs etc. definitions (typedefs, constants etc) //{ */
-    static const unsigned n = n_states;
-    static const unsigned m = n_inputs;
-    static const unsigned p = n_measurements;
+    static const int n = n_states;
+    static const int m = n_inputs;
+    static const int p = n_measurements;
 
     typedef Eigen::Matrix<double, n, 1> x_t;  // state vector n*1
     typedef Eigen::Matrix<double, m, 1> u_t;  // input vector m*1
@@ -24,6 +25,7 @@ namespace mrs_lib
 
     typedef Eigen::Matrix<double, n, n> P_t;  // state covariance n*n
     typedef Eigen::Matrix<double, p, p> R_t;  // measurement covariance p*p
+
     //}
 
     /* statecov_t struct //{ */
@@ -45,6 +47,7 @@ namespace mrs_lib
       z_t z;
       R_t R;
       u_t u;
+      int param;
       ros::Time stamp;
     };
     //}
@@ -53,8 +56,8 @@ namespace mrs_lib
     class Model
     {
       public:
-        virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R) const = 0;
-        virtual statecov_t predict(const statecov_t& sc, const u_t& u, double dt) const = 0;
+        virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, int param) const = 0;
+        virtual statecov_t predict(const statecov_t& sc, const u_t& u, double dt, int param) const = 0;
     };
     //}
 
@@ -64,27 +67,26 @@ namespace mrs_lib
     {
       private:
         info_t info;
-        const Model* model;
         statecov_t statecov;
 
       public:
-        Hist_point(const info_t& info, const Model* model)
-          : info(info), model(model)
+        Hist_point(const info_t& info)
+          : info(info)
         {};
 
         /* predict_to() method //{ */
-        statecov_t predict_to(const ros::Time& stamp)
+        statecov_t predict_to(const ros::Time& stamp, const Model& model)
         {
           double dt = (stamp - info.stamp).toSec();
-          return model->predict(statecov, info.u, dt);
+          return model.predict(statecov, info.u, dt, info.param);
         }
         //}
 
         /* update() method //{ */
-        void update(const statecov_t& sc)
+        void update(const statecov_t& sc, const Model& model)
         {
           if (info.type == info_t::type_t::MEASUREMENT)
-            statecov = model->correct(sc, info.z, info.R);
+            statecov = model.correct(sc, info.z, info.R, info.param);
           else
             statecov = sc;
         }
@@ -110,33 +112,35 @@ namespace mrs_lib
     //}
 
     /* apply_new_measurement() method //{ */
-    void apply_new_measurement(const z_t& z, const R_t& R, const ros::Time& stamp, const Model* model)
+    void apply_new_measurement(const z_t& z, const R_t& R, const ros::Time& stamp, int param = 0)
     {
       info_t info;
       info.type = info_t::type_t::MEASUREMENT;
       info.z = z;
       info.R = R;
       info.u = u_t();
+      info.param = param;
       info.stamp = stamp;
-      apply_new_info(info, model);
+      apply_new_info(info);
     }
     //}
 
     /* apply_new_input() method //{ */
-    void apply_new_input(const u_t& u, const ros::Time& stamp, const Model* model)
+    void apply_new_input(const u_t& u, const ros::Time& stamp, int param = 0)
     {
       info_t info;
       info.type = info_t::type_t::INPUT;
       info.z = z_t();
       info.R = R_t();
       info.u = u;
+      info.param = param;
       info.stamp = stamp;
-      apply_new_info(info, model);
+      apply_new_info(info);
     }
     //}
 
     /* apply_new_info() method //{ */
-    void apply_new_info(info_t info, const Model* model)
+    void apply_new_info(info_t info)
     {
       // there must already be at least one history point in the buffer (which should be true)
       const typename hist_t::iterator histpt_prev_it = remove_const(find_prev(info.stamp, m_hist), m_hist);
@@ -147,10 +151,10 @@ namespace mrs_lib
       if (info.type == info_t::type_t::MEASUREMENT)
         info.u = histpt_prev_it->get_info().u;
       // create the new history point
-      Hist_point histpt_n(info, model);
+      Hist_point histpt_n(info);
       // initialize it with states from the previous history point
-      statecov_t sc = histpt_prev_it->predict_to(histpt_n.get_stamp());
-      histpt_n.update(sc);
+      statecov_t sc = histpt_prev_it->predict_to(histpt_n.get_stamp(), *m_model_ptr);
+      histpt_n.update(sc, *m_model_ptr);
       // insert the new history point into the history buffer (potentially kicking out the oldest
       // point at the beginning of the buffer)
       const typename hist_t::iterator histpt_new_it = m_hist.insert(histpt_next_it, histpt_n);
@@ -160,11 +164,13 @@ namespace mrs_lib
     //}
 
   public:
-    Repredictor()
+    Repredictor(std::shared_ptr<Model> model_ptr)
+      : m_model_ptr(model_ptr)
     {};
 
   private:
     hist_t m_hist;
+    std::shared_ptr<Model> m_model_ptr;
 
   private:
     /* find_prev() method and helpers //{ */
@@ -220,8 +226,8 @@ namespace mrs_lib
 
       while (next_it != m_hist.end())
       {
-        statecov_t sc = cur_it->predict_to(next_it->get_stamp());
-        next_it->update(sc);
+        statecov_t sc = cur_it->predict_to(next_it->get_stamp(), *m_model_ptr);
+        next_it->update(sc, *m_model_ptr);
 
         cur_it++;
         next_it++;
