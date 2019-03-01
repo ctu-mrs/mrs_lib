@@ -6,6 +6,7 @@
 #include <std_msgs/Time.h>
 #include <functional>
 #include "mrs_lib/Utils.h"
+#include "mrs_lib/SystemModel.h"
 
 namespace mrs_lib
 {
@@ -19,21 +20,14 @@ namespace mrs_lib
     static const int m = n_inputs;
     static const int p = n_measurements;
 
-    typedef Eigen::Matrix<double, n, 1> x_t;  // state vector n*1
-    typedef Eigen::Matrix<double, m, 1> u_t;  // input vector m*1
-    typedef Eigen::Matrix<double, p, 1> z_t;  // measurement vector p*1
+    using Model = SystemModel<n, m, p>;
+    using statecov_t = typename Model::statecov_t;
+    using x_t = typename Model::x_t;  // state vector n*1
+    using u_t = typename Model::u_t;  // input vector m*1
+    using z_t = typename Model::z_t;  // measurement vector p*1
 
-    typedef Eigen::Matrix<double, n, n> P_t;  // state covariance n*n
-    typedef Eigen::Matrix<double, p, p> R_t;  // measurement covariance p*p
-
-    //}
-
-    /* statecov_t struct //{ */
-    struct statecov_t
-    {
-      x_t x;
-      P_t P;
-    };
+    using P_t = typename Model::P_t;  // state covariance n*n
+    using R_t = typename Model::R_t;  // measurement covariance p*p
     //}
 
     /* info_t struct //{ */
@@ -49,15 +43,6 @@ namespace mrs_lib
       u_t u;
       int param;
       ros::Time stamp;
-    };
-    //}
-
-    /* Model virtual class //{ */
-    class Model
-    {
-      public:
-        virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, int param) const = 0;
-        virtual statecov_t predict(const statecov_t& sc, const u_t& u, double dt, int param) const = 0;
     };
     //}
 

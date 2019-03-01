@@ -1,28 +1,28 @@
 #ifndef LKFREPREDICTOR_H
 #define LKFREPREDICTOR_H
 
-#include "mrs_lib/Repredictor.h"
+#include "mrs_lib/SystemModel.h"
 
 namespace mrs_lib
 {
 
   /* class Model_lkf //{ */
   template <int n_states, int n_inputs, int n_measurements>
-  class Model_lkf : public Repredictor<n_states, n_inputs, n_measurements>::Model
+  class Model_lkf : public SystemModel<n_states, n_inputs, n_measurements>
   {
   public:
     /* LKF definitions (typedefs, constants etc) //{ */
     static const int n = n_states;
     static const int m = n_inputs;
     static const int p = n_measurements;
-    using Repr = Repredictor<n, m, p>;
+    using Base_class = SystemModel<n, m, p>;
 
-    using x_t = typename Repr::x_t;                // state vector n*1
-    using u_t = typename Repr::u_t;                // input vector m*1
-    using z_t = typename Repr::z_t;                // measurement vector p*1
-    using P_t = typename Repr::P_t;                // state covariance n*n
-    using R_t = typename Repr::R_t;                // measurement covariance p*p
-    using statecov_t = typename Repr::statecov_t;  // helper struct for state and covariance
+    using x_t = typename Base_class::x_t;                // state vector n*1
+    using u_t = typename Base_class::u_t;                // input vector m*1
+    using z_t = typename Base_class::z_t;                // measurement vector p*1
+    using P_t = typename Base_class::P_t;                // state covariance n*n
+    using R_t = typename Base_class::R_t;                // measurement covariance p*p
+    using statecov_t = typename Base_class::statecov_t;  // helper struct for state and covariance
 
     typedef Eigen::Matrix<double, n, n> A_t;  // system matrix n*n
     typedef Eigen::Matrix<double, n, m> B_t;  // input matrix n*m
