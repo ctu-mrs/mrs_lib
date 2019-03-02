@@ -47,6 +47,7 @@ namespace mrs_lib
     /* correct() method //{ */
     virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, [[maybe_unused]] int param) const override
     {
+      /* return correct_optimized(sc, z, R, H); */
       return correction_impl(sc, z, R, H);
     };
     //}
@@ -119,6 +120,20 @@ namespace mrs_lib
       return ret;
     }
     //}
+
+    // NOT USED METHODS
+    /* /1* correct_optimized() method //{ *1/ */
+    /* // No notable performance gain was observed for the matrix sizes we use, so this is not used. */
+    /* static statecov_t correct_optimized(const statecov_t& sc, const z_t& z, const R_t& R, const H_t& H) */
+    /* { */
+    /*   statecov_t ret; */
+    /*   const H_t B = H*sc.P.transpose(); */
+    /*   const K_t K = (B*H.transpose() + R).ldlt().solve(B).transpose(); */
+    /*   ret.x = sc.x + K*(z - H*sc.x); */
+    /*   ret.P = sc.P - K*H*sc.P; */
+    /*   return ret; */
+    /* } */
+    /* //} */
   };
   //}
 
@@ -310,21 +325,6 @@ namespace mrs_lib
 
     x_t state_predict_optimized(const x_t& x_prev, const u_t& u, double dt) const;
     P_t covariance_predict_optimized(const P_t& P, const Q_t& Q, double dt) const;
-
-  public:
-    // NOT USED METHODS
-    /* /1* correct_optimized() method //{ *1/ */
-    /* // No notable performance gain was observed for the matrix sizes we use, so this is not used. */
-    /* static statecov_t correct_optimized(const statecov_t& sc, const z_t& z, const R_t& R, const H_t& H) */
-    /* { */
-    /*   statecov_t ret; */
-    /*   const H_t B = H*sc.P.transpose(); */
-    /*   const K_t K = (B*H.transpose() + R).ldlt().solve(B).transpose(); */
-    /*   ret.x = sc.x + K*(z - H*sc.x); */
-    /*   ret.P = sc.P - K*H*sc.P; */
-    /*   return ret; */
-    /* } */
-    /* //} */
   };
   //}
 
