@@ -6,11 +6,10 @@
 #include <std_msgs/Time.h>
 #include <functional>
 #include "mrs_lib/Utils.h"
-#include "mrs_lib/SystemModel.h"
 
 namespace mrs_lib
 {
-  template <int n_states, int n_inputs, int n_measurements>
+  template <int n_states, int n_inputs, int n_measurements, class Model>
   class Repredictor
   {
   public:
@@ -20,7 +19,6 @@ namespace mrs_lib
     static const int m = n_inputs;
     static const int p = n_measurements;
 
-    using Model = SystemModel<n, m, p>;
     using statecov_t = typename Model::statecov_t;
     using x_t = typename Model::x_t;  // state vector n*1
     using u_t = typename Model::u_t;  // input vector m*1
@@ -138,8 +136,8 @@ namespace mrs_lib
       // create the new history point
       Hist_point histpt_n(info);
       // initialize it with states from the previous history point
-      statecov_t sc = histpt_prev_it->predict_to(histpt_n.get_stamp(), *m_model_ptr);
-      histpt_n.update(sc, *m_model_ptr);
+      statecov_t sc = histpt_prev_it->predict_to(histpt_n.get_stamp(), m_model);
+      histpt_n.update(sc, m_model);
       // insert the new history point into the history buffer (potentially kicking out the oldest
       // point at the beginning of the buffer)
       const typename hist_t::iterator histpt_new_it = m_hist.insert(histpt_next_it, histpt_n);
@@ -149,13 +147,13 @@ namespace mrs_lib
     //}
 
   public:
-    Repredictor(std::shared_ptr<Model> model_ptr)
-      : m_model_ptr(model_ptr)
+    Repredictor(const Model& model)
+      : m_model(model)
     {};
 
   private:
     hist_t m_hist;
-    std::shared_ptr<Model> m_model_ptr;
+    Model m_model;
 
   private:
     /* find_prev() method and helpers //{ */
@@ -211,8 +209,8 @@ namespace mrs_lib
 
       while (next_it != m_hist.end())
       {
-        statecov_t sc = cur_it->predict_to(next_it->get_stamp(), *m_model_ptr);
-        next_it->update(sc, *m_model_ptr);
+        statecov_t sc = cur_it->predict_to(next_it->get_stamp(), m_model);
+        next_it->update(sc, m_model);
 
         cur_it++;
         next_it++;

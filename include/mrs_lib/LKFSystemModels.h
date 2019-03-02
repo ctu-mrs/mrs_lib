@@ -1,5 +1,5 @@
-#ifndef LKFREPREDICTOR_H
-#define LKFREPREDICTOR_H
+#ifndef LKFSYSTEMMODELS_H
+#define LKFSYSTEMMODELS_H
 
 #include "mrs_lib/SystemModel.h"
 
@@ -330,5 +330,4 @@ namespace mrs_lib
 
 }  // namespace mrs_lib
 
-#endif  // LKFREPREDICTOR_H
-
+#endif // LKFSYSTEMMODELS_H
