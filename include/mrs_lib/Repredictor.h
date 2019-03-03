@@ -60,28 +60,28 @@ namespace mrs_lib
     class Hist_point
     {
       private:
-        info_t info;
-        statecov_t statecov;
+        info_t m_info;
+        statecov_t m_statecov;
 
       public:
         Hist_point(const info_t& info)
-          : info(info)
+          : m_info(info)
         {};
 
         /* predict_to() method //{ */
         statecov_t predict_to(const ros::Time& stamp, const Model& model)
         {
           statecov_t ret;
-          double dt = (stamp - info.stamp).toSec();
-          switch (info.type)
+          double dt = (stamp - m_info.stamp).toSec();
+          switch (m_info.type)
           {
             case info_t::type_t::INPUT:
             case info_t::type_t::BOTH:
-                ret = model.predict(statecov, info.u, dt, info.param);
+                ret = model.predict(m_statecov, m_info.u, dt, m_info.param);
                 break;
             case info_t::type_t::MEASUREMENT:
             case info_t::type_t::NONE:
-                ret = model.predict(statecov, u_t(), dt, info.param);
+                ret = model.predict(m_statecov, u_t(), dt, m_info.param);
           }
           return ret;
         }
@@ -90,15 +90,15 @@ namespace mrs_lib
         /* update() method //{ */
         void update(const statecov_t& sc, const Model& model)
         {
-          switch (info.type)
+          switch (m_info.type)
           {
             case info_t::type_t::MEASUREMENT:
             case info_t::type_t::BOTH:
-              statecov = model.correct(sc, info.z, info.R, info.param);
+              m_statecov = model.correct(sc, m_info.z, m_info.R, m_info.param);
               break;
             case info_t::type_t::INPUT:
             case info_t::type_t::NONE:
-              statecov = sc;
+              m_statecov = sc;
               break;
           }
         }
@@ -107,28 +107,28 @@ namespace mrs_lib
         /* get_statecov_stamped() method //{ */
         statecov_stamped_t get_statecov_stamped() const
         {
-          return {statecov, info.stamp};
+          return {m_statecov, m_info.stamp};
         }
         //}
 
         /* get_statecov() method //{ */
         statecov_t get_statecov() const
         {
-          return statecov;
+          return m_statecov;
         }
         //}
 
         /* get_stamp() method //{ */
         ros::Time get_stamp() const
         {
-          return info.stamp;
+          return m_info.stamp;
         }
         //}
 
         /* get_info() method //{ */
         info_t get_info() const
         {
-          return info;
+          return m_info;
         }
         //}
     };
