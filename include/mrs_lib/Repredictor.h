@@ -11,6 +11,7 @@ namespace mrs_lib
 {
   template <int n_states, int n_inputs, int n_measurements, class Model>
   class Repredictor
+  // TODO: initialization!
   {
   public:
     /* Helper classes and structs defines //{ */
@@ -34,12 +35,22 @@ namespace mrs_lib
       enum type_t
       {
         MEASUREMENT,
-        INPUT
+        INPUT,
+        BOTH,
+        NONE
       } type;
       z_t z;
       R_t R;
       u_t u;
       int param;
+      ros::Time stamp;
+    };
+    //}
+
+    /* statecov_stamped_t struct //{ */
+    struct statecov_stamped_t
+    {
+      statecov_t statecov;
       ros::Time stamp;
     };
     //}
@@ -60,18 +71,50 @@ namespace mrs_lib
         /* predict_to() method //{ */
         statecov_t predict_to(const ros::Time& stamp, const Model& model)
         {
+          statecov_t ret;
           double dt = (stamp - info.stamp).toSec();
-          return model.predict(statecov, info.u, dt, info.param);
+          switch (info.type)
+          {
+            case info_t::type_t::INPUT:
+            case info_t::type_t::BOTH:
+                ret = model.predict(statecov, info.u, dt, info.param);
+                break;
+            case info_t::type_t::MEASUREMENT:
+            case info_t::type_t::NONE:
+                ret = model.predict(statecov, u_t(), dt, info.param);
+          }
+          return ret;
         }
         //}
 
         /* update() method //{ */
         void update(const statecov_t& sc, const Model& model)
         {
-          if (info.type == info_t::type_t::MEASUREMENT)
-            statecov = model.correct(sc, info.z, info.R, info.param);
-          else
-            statecov = sc;
+          switch (info.type)
+          {
+            case info_t::type_t::MEASUREMENT:
+            case info_t::type_t::BOTH:
+              statecov = model.correct(sc, info.z, info.R, info.param);
+              break;
+            case info_t::type_t::INPUT:
+            case info_t::type_t::NONE:
+              statecov = sc;
+              break;
+          }
+        }
+        //}
+
+        /* get_statecov_stamped() method //{ */
+        statecov_stamped_t get_statecov_stamped() const
+        {
+          return {statecov, info.stamp};
+        }
+        //}
+
+        /* get_statecov() method //{ */
+        statecov_t get_statecov() const
+        {
+          return statecov;
         }
         //}
 
@@ -92,6 +135,13 @@ namespace mrs_lib
     //}
 
     using hist_t = boost::circular_buffer<Hist_point>;
+    //}
+
+    /* predict_to() method //{ */
+    statecov_t predict_to(const ros::Time& stamp)
+    {
+      return std::end(m_hist)->predict_to(stamp, m_model);
+    }
     //}
 
     /* apply_new_measurement() method //{ */
@@ -146,14 +196,35 @@ namespace mrs_lib
     }
     //}
 
+    /* get_history_states() method //{ */
+    std::vector<statecov_stamped_t> get_history_states()
+    {
+      std::vector<statecov_stamped_t> ret;
+      ret.reserve(m_hist.size());
+      for (const auto& hist_pt : m_hist)
+        ret.push_back(hist_pt.get_statecov_stamped());
+      return ret;
+    }
+    //}
+
   public:
-    Repredictor(const Model& model)
-      : m_model(model)
-    {};
+    Repredictor(const Model& model, const x_t& x0, const P_t& P0, const ros::Time& t0, const unsigned hist_len)
+      : m_model(model), m_hist(hist_t(hist_len))
+    {
+      assert(hist_len > 0);
+      // Initialize the history with the first state and covariance
+      info_t init_info;
+      init_info.type = info_t::type_t::NONE;  // the first info is empty (no known input or measurement)
+      init_info.stamp = t0;
+      const statecov_t init_sc {x0, P0};
+      Hist_point init_pt(init_info);
+      init_pt.update(init_sc, m_model);
+      m_hist.push_back(init_pt);
+    };
 
   private:
-    hist_t m_hist;
     Model m_model;
+    hist_t m_hist;
 
   private:
     /* find_prev() method and helpers //{ */
