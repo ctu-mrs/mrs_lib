@@ -89,7 +89,7 @@ namespace mrs_lib
 
       const double m_default_dt;
 
-      mutable std::mutex lkf_mutex;
+      mutable std::mutex m_mutex;
   };
   //}
 

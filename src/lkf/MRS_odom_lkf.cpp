@@ -15,6 +15,7 @@ namespace mrs_lib
   // set new measurement and its covariance
   void MRS_odom_lkf::setMeasurement(const z_t& z, const R_t& R)
   {
+    std::lock_guard<std::mutex> lck(m_mutex);
     m_last_z = z;
     m_last_R = R;
   }
@@ -22,36 +23,42 @@ namespace mrs_lib
   // set new measurement
   void MRS_odom_lkf::setMeasurement(const z_t& z)
   {
+    std::lock_guard<std::mutex> lck(m_mutex);
     m_last_z = z;
   }
 
   // set new input vector
   void MRS_odom_lkf::setInput(const u_t& u)
   {
+    std::lock_guard<std::mutex> lck(m_mutex);
     m_last_u = u;
   }
 
   // set process noise
   void MRS_odom_lkf::setQ(const Q_t& Q)
   {
+    std::lock_guard<std::mutex> lck(m_mutex);
     m_model.Q = Q;
   }
 
   // set covariance
   void MRS_odom_lkf::setCovariance(const P_t& P)
   {
+    std::lock_guard<std::mutex> lck(m_mutex);
     m_last_sc.P = P;
   }
 
   // set n-th states of the estimate state vector
   void MRS_odom_lkf::setState(const unsigned num, const double value)
   {
+    std::lock_guard<std::mutex> lck(m_mutex);
     m_last_sc.x(num) = value;
   }
 
   // set all states of the estimate state vector
   void MRS_odom_lkf::setStates(const x_t& x)
   {
+    std::lock_guard<std::mutex> lck(m_mutex);
     m_last_sc.x = x;
   }
   //}
@@ -60,18 +67,21 @@ namespace mrs_lib
   // return estimated states
   MRS_odom_lkf::x_t MRS_odom_lkf::getStates() const
   {
+    std::lock_guard<std::mutex> lck(m_mutex);
     return m_last_x;
   }
 
   // return n-th states of the estimate state vector
   double MRS_odom_lkf::getState(const unsigned num) const
   {
+    std::lock_guard<std::mutex> lck(m_mutex);
     return m_last_x(num);
   }
 
   // get the covariance matrix
   MRS_odom_lkf::P_t MRS_odom_lkf::getCovariance() const
   {
+    std::lock_guard<std::mutex> lck(m_mutex);
     return m_last_P;
   }
   //}
@@ -79,6 +89,7 @@ namespace mrs_lib
   // do iteration of the filter
   MRS_odom_lkf::statecov_t MRS_odom_lkf::iterate(const double dt, const int H_idx)
   {
+    std::lock_guard<std::mutex> lck(m_mutex);
     m_last_sc = m_model.predict(m_last_sc, m_last_u, dt);
     m_last_sc = m_model.correct(m_last_sc, m_last_z, m_last_R, H_idx);
     return m_last_sc;
@@ -91,6 +102,7 @@ namespace mrs_lib
   // iterate without the correction phase
   MRS_odom_lkf::statecov_t MRS_odom_lkf::iterateWithoutCorrection(double dt)
   {
+    std::lock_guard<std::mutex> lck(m_mutex);
     m_last_sc = m_model.predict(m_last_sc, m_last_u, dt);
     return m_last_sc;
   }
@@ -102,6 +114,7 @@ namespace mrs_lib
   // do just the correction
   MRS_odom_lkf::statecov_t MRS_odom_lkf::doCorrection(const int H_idx)
   {
+    std::lock_guard<std::mutex> lck(m_mutex);
     m_last_sc = m_model.correct(m_last_sc, m_last_z, m_last_R, H_idx);
     return m_last_sc;
   }
