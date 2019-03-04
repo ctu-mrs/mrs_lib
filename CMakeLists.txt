@@ -58,6 +58,12 @@ target_link_libraries(Lkf
   ${Eigen_LIBRARIES}
   )
 
+add_library(MRS_odom_lkf src/lkf/MRS_odom_lkf.cpp)
+target_link_libraries(MRS_odom_lkf
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
 add_library(Ukf src/ukf/ukf.cpp)
 target_link_libraries(Ukf
   ${catkin_LIBRARIES}

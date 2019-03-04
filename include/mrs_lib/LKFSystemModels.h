@@ -45,7 +45,7 @@ namespace mrs_lib
     Model_lkf(const A_t& A, const B_t& B, const H_t& H, const Q_t& Q) : A(A), B(B), H(H), Q(Q){};
 
     /* correct() method //{ */
-    virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, [[maybe_unused]] int param) const override
+    virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, [[maybe_unused]] int param = 0) const override
     {
       /* return correct_optimized(sc, z, R, H); */
       return correction_impl(sc, z, R, H);
@@ -53,7 +53,7 @@ namespace mrs_lib
     //}
 
     /* predict() method //{ */
-    virtual statecov_t predict(const statecov_t& sc, const u_t& u, [[maybe_unused]] double dt, [[maybe_unused]] int param) const override
+    virtual statecov_t predict(const statecov_t& sc, const u_t& u, [[maybe_unused]] double dt, [[maybe_unused]] int param = 0) const override
     {
       statecov_t ret;
       ret.x = state_predict(A, sc.x, B, u);
@@ -176,7 +176,7 @@ namespace mrs_lib
     };
 
     /* predict() method //{ */
-    virtual statecov_t predict(const statecov_t& sc, const u_t& u, double dt, [[maybe_unused]] int param) const override
+    virtual statecov_t predict(const statecov_t& sc, const u_t& u, double dt, [[maybe_unused]] int param = 0) const override
     {
       statecov_t ret;
       A_t A = get_A(coeff_A, dtexp_A, dt);
@@ -273,7 +273,7 @@ namespace mrs_lib
     };
 
     /* correct() method //{ */
-    virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, int param) const override
+    virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, int param = 0) const override
     {
       return Base_class::correction_impl(sc, z, R, Hs.at(param));
     };
@@ -317,8 +317,8 @@ namespace mrs_lib
 
   public:
     Model_mrs_odom(const std::vector<H_t>& Hs, const Q_t& Q, const double p1, const double p2, const double p3, const double default_dt = 1);
-    virtual statecov_t predict(const statecov_t& sc, const u_t& u, double dt, [[maybe_unused]] int param) const override;
-    virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, int param) const override;
+    virtual statecov_t predict(const statecov_t& sc, const u_t& u, double dt, [[maybe_unused]] int param = 0) const override;
+    virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, int param = 0) const override;
 
   public:
     double p1, p2, p3;
