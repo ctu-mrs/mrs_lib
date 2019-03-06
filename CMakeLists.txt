@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   )
 
+# set(CMAKE_CXX_FLAGS "-std=c++17 -Wall -O0 -g")
 set(CMAKE_CXX_FLAGS "-std=c++17 -Wall -O3")
 
 # include Eigen3

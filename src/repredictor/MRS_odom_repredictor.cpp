@@ -15,7 +15,7 @@ namespace mrs_lib
                      0, 0, 0, 0, 0, p3,
                      0, 0, 0, 0, 1, 0,
                      0, 0, 0, 0, 0, dt*p1;
-    Base_class::B << 0, 0, 0, 0, 0, p2;
+    Base_class::B << 0, 0, 0, 0, 0, dt*p2;
     Base_class::H = Hs.at(0);
   };
   //}
@@ -54,7 +54,7 @@ namespace mrs_lib
     ddx = ddxu + ddxd;
     ddxu = p3*th;
     /* ddxd = ddxd; */
-    th = dt*p1*th + p2*u(0);
+    th = dt*p1*th + dt*p2*u(0);
     return ret;
   };
   //}
@@ -63,13 +63,13 @@ namespace mrs_lib
   Model_mrs_odom::P_t Model_mrs_odom::covariance_predict_optimized(const Model_mrs_odom::P_t& P, const Model_mrs_odom::Q_t& Q, double dt) const
   {
     P_t P_ret;
-    const double& P11 = P(0, 0), &P12 = P(0, 1), &P13 = P(0, 2), &P14 = P(0, 3), &P15 = P(0, 4), &P16 = P(0, 5);
-    const double& P21 = P(1, 0), &P22 = P(1, 1), &P23 = P(1, 2), &P24 = P(1, 3), &P25 = P(1, 4), &P26 = P(1, 5);
-    const double& P31 = P(2, 0), &P32 = P(2, 1), &P33 = P(2, 2), &P34 = P(2, 3), &P35 = P(2, 4), &P36 = P(2, 5);
-    const double& P41 = P(3, 0), &P42 = P(3, 1), &P43 = P(3, 2), &P44 = P(3, 3), &P45 = P(3, 4), &P46 = P(3, 5);
-    const double& P51 = P(4, 0), &P52 = P(4, 1), &P53 = P(4, 2), &P54 = P(4, 3), &P55 = P(4, 4), &P56 = P(4, 5);
-    const double& P61 = P(5, 0), &P62 = P(5, 1), &P63 = P(5, 2), &P64 = P(5, 3), &P65 = P(5, 4), &P66 = P(5, 5);
-    double dtsqhalf = dt*dt/2.0;
+    const double &P11 = P(0, 0), &P12 = P(0, 1), &P13 = P(0, 2), &P14 = P(0,3), &P15 = P(0, 4), &P16 = P(0, 5);
+    const double &P21 = P(1, 0), &P22 = P(1, 1), &P23 = P(1, 2), &P24 = P(1,3), &P25 = P(1, 4), &P26 = P(1, 5);
+    const double &P31 = P(2, 0), &P32 = P(2, 1), &P33 = P(2, 2), &P34 = P(2,3), &P35 = P(2, 4), &P36 = P(2, 5);
+    const double &P41 = P(3, 0), &P42 = P(3, 1), &P43 = P(3, 2), &P44 = P(3,3), &P45 = P(3, 4), &P46 = P(3, 5);
+    const double &P51 = P(4, 0), &P52 = P(4, 1), &P53 = P(4, 2), &P54 = P(4,3), &P55 = P(4, 4), &P56 = P(4, 5);
+    const double &P61 = P(5, 0), &P62 = P(5, 1), &P63 = P(5, 2), &P64 = P(5,3), &P65 = P(5, 4), &P66 = P(5, 5);
+    const double dtsqhalf = dt*dt/2.0;
     P_ret(0, 0) = P11 + P21*dt + P31*dtsqhalf + (P12 + P22*dt + P32*dtsqhalf)*(dt) + (P13 + P23*dt + P33*dtsqhalf)*(dtsqhalf) + Q(0, 0);
     P_ret(0, 1) = P12 + P22*dt + P32*dtsqhalf + (P13 + P23*dt + P33*dtsqhalf)*(dt) + Q(0, 1);
     P_ret(0, 2) = P14 + P15 + P24*dt + P25*dt + P34*dtsqhalf + P35*dtsqhalf + Q(0, 2);
