@@ -35,7 +35,8 @@ namespace mrs_lib
   /* Model_mrs_odom::correct() method //{ */
   Model_mrs_odom::statecov_t Model_mrs_odom::correct(const Model_mrs_odom::statecov_t& sc, const Model_mrs_odom::z_t& z, const Model_mrs_odom::R_t& R, int param) const
   {
-    return correction_impl(sc, z, R, Hs.at(param));
+    /* return correction_impl(sc, z, R, Hs.at(param)); */
+    return correction_optimized(sc, z, R, Hs.at(param));
   };
   //}
 

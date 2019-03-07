@@ -122,18 +122,28 @@ namespace mrs_lib
     //}
 
     // NOT USED METHODS
-    /* /1* correct_optimized() method //{ *1/ */
-    /* // No notable performance gain was observed for the matrix sizes we use, so this is not used. */
-    /* static statecov_t correct_optimized(const statecov_t& sc, const z_t& z, const R_t& R, const H_t& H) */
+    /* correction_optimized() method //{ */
+    // No notable performance gain was observed for the matrix sizes we use, so this is not used.
+    static statecov_t correction_optimized(const statecov_t& sc, const z_t& z, const R_t& R, const H_t& H)
+    {
+      statecov_t ret = sc;
+      const H_t B(H*sc.P.transpose());
+      const K_t K((B*H.transpose() + R).ldlt().solve(B).transpose());
+      ret.x.noalias() += K*(z - H*sc.x);
+      ret.P.noalias() -= K*H*sc.P;
+      return ret;
+    }
+
+    /* static statecov_t correction_optimized(const statecov_t& sc, const z_t& z, const R_t& R, const H_t& H) */
     /* { */
     /*   statecov_t ret; */
     /*   const H_t B = H*sc.P.transpose(); */
-    /*   const K_t K = (B*H.transpose() + R).ldlt().solve(B).transpose(); */
+    /*   const K_t K = (B*H.transpose() + R).partialPivLu().solve(B).transpose(); */
     /*   ret.x = sc.x + K*(z - H*sc.x); */
     /*   ret.P = sc.P - K*H*sc.P; */
     /*   return ret; */
     /* } */
-    /* //} */
+    //}
   };
   //}
 
@@ -289,13 +299,13 @@ namespace mrs_lib
   //}
 
   /* class Model_mrs_odom //{ */
-  class Model_mrs_odom : public Model_lkf_multiH<6, 1, Eigen::Dynamic>
+  class Model_mrs_odom : public Model_lkf_multiH<6, 1, 1>
   {
   public:
     /* LKF definitions (typedefs, constants etc) //{ */
     static const int n = 6;
     static const int m = 1;
-    static const int p = Eigen::Dynamic;
+    static const int p = 1;
     using Base_class = Model_lkf_multiH<n, m, p>;
 
     using x_t = typename Base_class::x_t;
