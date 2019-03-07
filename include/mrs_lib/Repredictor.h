@@ -77,6 +77,8 @@ namespace mrs_lib
         {
           if (stamp == m_info.stamp)
             return m_statecov;
+          if (stamp < m_info.stamp)
+            std::cout << "blebleble-------------------------------------------------------------------------------------------------" << std::endl;
           statecov_t ret;
           double dt = (stamp - m_info.stamp).toSec();
           switch (get_type())
@@ -235,6 +237,9 @@ namespace mrs_lib
     /* apply_new_info() method //{ */
     void apply_new_info(info_t info)
     {
+      // ignore any info, which is older than oldest element in the buffer
+      if (info.stamp < m_hist.front().get_stamp())
+        return;
       // there must already be at least one history point in the buffer (which should be true)
       const typename hist_t::iterator histpt_prev_it = remove_const(find_prev(info.stamp, m_hist), m_hist);
       /* const typename hist_t::iterator histpt_prev_it = find_prev(info.stamp, m_hist); */
@@ -324,7 +329,6 @@ namespace mrs_lib
 
   private:
     Model m_model;
-    public:
     hist_t m_hist;
     u_hist_t m_u_hist;
 
@@ -412,7 +416,6 @@ namespace mrs_lib
     }
     //}
 
-    public:
     /* update_history() method //{ */
     void update_history(const typename hist_t::iterator& start_it)
     {
