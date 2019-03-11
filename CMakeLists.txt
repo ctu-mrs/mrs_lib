@@ -15,9 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   )
 
-# -march=native flag must be set either in all or none nodes that are linked together, otherwise segfaults due to mismatched vectorization of Eigen occur
-set(CMAKE_CXX_FLAGS "-std=c++17 -Wall -O3 -fopenmp -march=native")
-# set(CMAKE_CXX_FLAGS "-std=c++17 -Wall -O0 -g")
+# set(CMAKE_CXX_FLAGS "-std=c++17 -Wall -O3 -fopenmp -march=native")
 
 # include Eigen3
 find_package(Eigen3 REQUIRED)
