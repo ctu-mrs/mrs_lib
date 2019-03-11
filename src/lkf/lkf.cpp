@@ -2,7 +2,7 @@
 
 #include <ros/ros.h>
 #include <mrs_lib/Lkf.h>
-#include <eigen3/Eigen/Eigen>
+#include <Eigen/Eigen>
 
 using namespace Eigen;
 
