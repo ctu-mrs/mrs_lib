@@ -198,6 +198,7 @@ namespace mrs_lib
     boost::optional<Eigen::Vector3d> intersect = plane.intersectionRay(this->cone_ray, 1e-6);
 
     if (!intersect) {
+      std::cout << "nope" << std::endl;
       return intersect;
     } 
 
