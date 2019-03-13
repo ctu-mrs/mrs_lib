@@ -186,7 +186,7 @@ namespace mrs_lib
 
     if (point_axis_angle < this->angle) {
       return this->position + vec_point_on_cone * cos(beta) * point_vec.norm();
-    } else if (point_axis_angle >= this->angle && point_axis_angle <= M_PI - this->angle) {
+    } else if ((point_axis_angle >= this->angle) && (point_axis_angle - this->angle) <= M_PI/2.0) { // TODO: is this condition correct?
       return this->position + vec_point_on_cone * cos(point_axis_angle - this->angle) * point_vec.norm();
     } else {
       return this->position;
