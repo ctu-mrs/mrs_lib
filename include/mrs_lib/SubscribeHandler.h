@@ -91,8 +91,7 @@ namespace mrs_lib
         std::lock_guard<std::mutex> lck(m_mtx);
         iterator_t cl_it;
         const int ret = get_closest_impl(stamp, cl_it);
-        if (ret >= 0)
-          closest_out = *cl_it;
+        closest_out = *cl_it;
         return ret;
       }
       //}
@@ -148,7 +147,7 @@ namespace mrs_lib
         // a too new message
         int result = -1;
         bool first_elem = true;
-        closest_it = m_bfr.end();
+        closest_it = m_bfr.begin();
       
         for (iterator_t it = m_bfr.begin(); it != m_bfr.end(); it++)
         {
