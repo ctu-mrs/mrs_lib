@@ -43,6 +43,9 @@ public:
   // set element of covariance matrix
   void setCovariance(const int x, const int y, const double value);
 
+  // set the whole covariance
+  void setCovariance(const Eigen::MatrixXd in);
+
   // do iteration of the filter
   Eigen::VectorXd predictionUpdate(const double dt);
 

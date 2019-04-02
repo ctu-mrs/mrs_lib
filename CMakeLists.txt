@@ -15,12 +15,15 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   )
 
-set(CMAKE_CXX_FLAGS "-std=c++17 -fno-diagnostics-color")
+# -march=native flag must be set either in all or none nodes that are linked together, otherwise segfaults due to mismatched vectorization of Eigen occur
+set(CMAKE_CXX_FLAGS "-std=c++17 -Wall -O3 -fopenmp -march=native")
+# set(CMAKE_CXX_FLAGS "-std=c++17 -Wall -O0 -g")
 
 # include Eigen3
 find_package(Eigen3 REQUIRED)
 set(Eigen_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIRS})
 set(Eigen_LIBRARIES ${EIGEN3_LIBRARIES})
+
 ###################################
 ## catkin specific configuration ##
 ###################################
@@ -29,7 +32,7 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs mrs_msgs
   DEPENDS Eigen
-  LIBRARIES Lkf Ukf ConvexPolygon Profiler Utils ParamLoader SubscribeHandler MedianFilter
+  LIBRARIES Lkf Ukf ConvexPolygon Profiler Utils ParamLoader SubscribeHandler MedianFilter Repredictor
   )
 
 ###########
@@ -45,8 +48,20 @@ include_directories(
   ${Eigen_INCLUDE_DIRS}
   )
 
+add_library(Repredictor src/repredictor/Repredictor.cpp src/repredictor/MRS_odom_repredictor.cpp)
+target_link_libraries(Repredictor
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
 add_library(Lkf src/lkf/lkf.cpp)
 target_link_libraries(Lkf
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_library(MRS_odom_lkf src/lkf/MRS_odom_lkf.cpp)
+target_link_libraries(MRS_odom_lkf
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )

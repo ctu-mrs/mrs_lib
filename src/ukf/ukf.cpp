@@ -213,6 +213,18 @@ void Ukf::setCovariance(const int x, const int y, const double value) {
 
 //}
 
+/* setCovariance() //{ */
+
+// set element of covariance matrix
+void Ukf::setCovariance(const Eigen::MatrixXd in) {
+
+  std::scoped_lock lock(ukf_mutex);
+
+  P = in;
+}
+
+//}
+
 /* predictionUpdate() //{ */
 
 // do iteration of the filter
@@ -239,7 +251,7 @@ Eigen::VectorXd Ukf::predictionUpdate(const double dt) {
   }
 
   // if there are problems with square rooting P, try this:
-  // P_temp = 0.5*P_temp + 0.5*P_temp.transpose();
+  /* P_temp = 0.5*P_temp + 0.5*P_temp.transpose(); */
   // P_temp += MatrixXd::Identity(n, n)*0.01;
 
   try {
@@ -347,4 +359,5 @@ Eigen::VectorXd Ukf::correctionUpdate(const Eigen::VectorXd measurement) {
 }
 
 //}
+
 }  // namespace mrs_lib
