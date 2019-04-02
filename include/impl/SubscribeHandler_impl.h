@@ -40,12 +40,15 @@ namespace mrs_lib
         bool m_ok;
         bool m_got_data; // whether any data was received
         bool m_new_data; // whether new data was received since last call to get_data
+        bool m_got_valid_time;
 
       protected:
         std::mutex m_last_msg_received_mtx;
         ros::Time m_last_msg_received;
         ros::Timer m_timeout_check_timer;
+        ros::Timer m_valid_time_timer;
         void check_timeout([[maybe_unused]] const ros::TimerEvent& evt);
+        void check_valid_time([[maybe_unused]] const ros::TimerEvent& evt);
         std::string resolved_topic_name();
 
     };
@@ -127,26 +130,48 @@ namespace mrs_lib
         template<bool check=time_consistent>
         typename std::enable_if<!check>::type data_callback_impl(const MessageType& msg)
         {
-          m_latest_message = msg;
-          SubscribeHandler_base::m_new_data = true;
-          SubscribeHandler_base::m_got_data = true;
-          SubscribeHandler_base::m_last_msg_received = ros::Time::now();
+          data_callback_unchecked(msg, ros::Time::now());
         }
 
         // variant with time consistency check
         template<bool check=time_consistent>
         typename std::enable_if<check>::type data_callback_impl(const MessageType& msg)
         {
-          SubscribeHandler_base::m_last_msg_received = ros::Time::now();
-          if (SubscribeHandler_base::m_got_data && get_header(msg).stamp < get_header(m_latest_message).stamp)
+          ros::Time now = ros::Time::now(); 
+          const bool time_reset = check_time_reset(now);
+          const bool message_valid = check_message_valid(msg);
+          if (message_valid || time_reset)
           {
-            ROS_WARN("[%s]: New message from topic '%s' is older than the latest message, skipping it.", impl::SubscribeHandler_base::m_node_name.c_str(), SubscribeHandler_base::resolved_topic_name().c_str());
+            if (time_reset)
+              ROS_WARN("[%s]: Detected jump back in time of %f. Resetting time consistency checks.", SubscribeHandler_base::m_node_name.c_str(), (SubscribeHandler_base::m_last_msg_received - now).toSec());
+            data_callback_unchecked(msg, now);
           } else
           {
-            m_latest_message = msg;
-            SubscribeHandler_base::m_new_data = true;
-            SubscribeHandler_base::m_got_data = true;
+            ROS_WARN("[%s]: New message from topic '%s' is older than the latest message, skipping it.", SubscribeHandler_base::m_node_name.c_str(), SubscribeHandler_base::resolved_topic_name().c_str());
           }
+        }
+
+        bool check_time_reset(const ros::Time& now)
+        {
+          return now < SubscribeHandler_base::m_last_msg_received;
+        }
+
+        bool check_time_consistent(const MessageType& msg)
+        {
+          return get_header(msg).stamp >= get_header(m_latest_message).stamp;
+        }
+
+        bool check_message_valid(const MessageType& msg)
+        {
+          return !SubscribeHandler_base::m_got_data || check_time_consistent(msg);
+        }
+
+        void data_callback_unchecked(const MessageType& msg, const ros::Time& time)
+        {
+          m_latest_message = msg;
+          SubscribeHandler_base::m_new_data = true;
+          SubscribeHandler_base::m_got_data = true;
+          SubscribeHandler_base::m_last_msg_received = time;
         }
 
     };

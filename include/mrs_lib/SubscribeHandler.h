@@ -89,6 +89,8 @@ namespace mrs_lib
       int get_closest(ros::Time stamp, MessageWithHeaderType& closest_out)
       {
         std::lock_guard<std::mutex> lck(m_mtx);
+        if (m_bfr.empty())
+          return -1;
         iterator_t cl_it;
         const int ret = get_closest_impl(stamp, cl_it);
         closest_out = *cl_it;
@@ -97,7 +99,8 @@ namespace mrs_lib
       //}
 
       /* get_next_closest() method //{ */
-      // Finds the first message after the closest message in the buffer to the time stamp.
+      // Finds the first message after the closest message in the buffer to the time stamp
+      // (for example for interpolation).
       // returns -1 if requested message would be newer than newest message in buffer
       // returns 1 if requested message would be older than oldest message in buffer
       // returns 0 otherwise
@@ -178,14 +181,21 @@ namespace mrs_lib
       /* data_callback_impl() method for messages//{ */
       virtual void data_callback_impl(const MessageWithHeaderType& msg)
       {
-        if (!m_bfr.empty()
-         && impl_class_t::get_header(msg).stamp < impl_class_t::get_header(m_bfr.back()).stamp)
+        ros::Time now = ros::Time::now(); 
+        const bool time_reset = impl_class_t::check_time_reset(now);
+        const bool message_valid = impl_class_t::check_message_valid(msg);
+        if (message_valid || time_reset)
         {
-          ROS_WARN("[%s]: New message from topic '%s' is older than the latest message in the buffer, skipping it.", impl::SubscribeHandler_base::m_node_name.c_str(), impl::SubscribeHandler_base::resolved_topic_name().c_str());
+          if (time_reset)
+          {
+            ROS_WARN("[%s]: Detected jump back in time of %f. Resetting time consistency checks and clearing message buffer.", impl::SubscribeHandler_base::m_node_name.c_str(), (impl::SubscribeHandler_base::m_last_msg_received - now).toSec());
+            m_bfr.clear();
+          }
+          impl_class_t::data_callback_unchecked(msg, now);
+          m_bfr.push_back(msg);
         } else
         {
-          m_bfr.push_back(msg);
-          impl_class_t::data_callback(msg);
+          ROS_WARN("[%s]: New message from topic '%s' is older than the latest message, skipping it.", impl::SubscribeHandler_base::m_node_name.c_str(), impl::SubscribeHandler_base::resolved_topic_name().c_str());
         }
       }
       //}

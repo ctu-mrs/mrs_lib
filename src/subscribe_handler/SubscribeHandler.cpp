@@ -15,29 +15,49 @@ namespace mrs_lib
         m_topic_name(topic_name),
         m_node_name(node_name),
         m_got_data(false),
-        m_new_data(false),
-        m_last_msg_received(ros::Time::now())
+        m_new_data(false)
     {
       if (no_message_timeout != mrs_lib::no_timeout)
+      {
         m_timeout_check_timer = nh.createTimer(no_message_timeout, &SubscribeHandler_base::check_timeout, this);
+        if (ros::Time::isValid())
+        {
+          m_got_valid_time = true;
+          m_last_msg_received = ros::Time::now();
+        } else
+        {
+          m_valid_time_timer = nh.createTimer(ros::Duration(no_message_timeout.toSec()/10.0), &SubscribeHandler_base::check_valid_time, this);
+        }
+      }
     }
       
     void SubscribeHandler_base::check_timeout([[maybe_unused]] const ros::TimerEvent& evt)
     {
-      ros::Duration since_msg = (ros::Time::now() - m_last_msg_received);
       /* ROS_ERROR("Checking topic %s, delay: %.2f", m_sub.getTopic().c_str(), since_msg.toSec()); */
       std::lock_guard<std::mutex> lck(m_last_msg_received_mtx);
+      ros::Duration since_msg = (ros::Time::now() - m_last_msg_received);
       if (since_msg > m_no_message_timeout)
       {
         m_ok = false;
         const std::string msg = "Did not receive any message from topic '" + resolved_topic_name()
                               + "' for " + std::to_string(since_msg.toSec())
                               + "s (" + std::to_string(m_sub.getNumPublishers()) + " publishers on this topic)";
-
         if (m_node_name.empty())
           ROS_WARN_STREAM(msg);
         else
           ROS_WARN_STREAM("[" << m_node_name << "]: " << msg);
+      }
+    }
+
+    void SubscribeHandler_base::check_valid_time([[maybe_unused]] const ros::TimerEvent& evt)
+    {
+      std::lock_guard<std::mutex> lck(m_last_msg_received_mtx);
+      if (ros::Time::isValid())
+      {
+        ROS_ERROR("Got valid time: %.2f", ros::Time::now().toSec());
+        m_got_valid_time = true;
+        m_last_msg_received = ros::Time::now();
+        m_valid_time_timer.stop();
       }
     }
 
