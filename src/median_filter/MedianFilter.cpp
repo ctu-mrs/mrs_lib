@@ -21,6 +21,7 @@ MedianFilter::MedianFilter(int buffer_size, double max_valid_value, double min_v
 
   buffer.resize(buffer_size);
   next = 0;
+  m_median = 0;
   ROS_INFO("[MedianFilter]: initialized, buffer size: %d", buffer_size);
 }
 
@@ -92,6 +93,12 @@ bool MedianFilter::isValid(double input) {
     median = 0;
   }
 
+  {
+    std::scoped_lock lock(mutex_median);
+  
+    m_median = median;
+  }
+
   // if a new value is not close to the median, it is discarded
   if (fabs(value - median) > max_difference) {
     valid = false;
@@ -111,6 +118,18 @@ bool MedianFilter::isValid(double input) {
 
 bool MedianFilter::isFilled() {
   return is_filled;
+}
+
+double MedianFilter::getMedian() {
+
+  double median;
+
+  {
+    std::scoped_lock lock(mutex_median);
+  
+    median = m_median;
+  }
+    return median;
 }
 
 //}
