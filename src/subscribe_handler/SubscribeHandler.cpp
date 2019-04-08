@@ -15,20 +15,11 @@ namespace mrs_lib
         m_topic_name(topic_name),
         m_node_name(node_name),
         m_got_data(false),
-        m_new_data(false)
+        m_new_data(false),
+        m_last_msg_received(ros::Time::now())
     {
       if (no_message_timeout != mrs_lib::no_timeout)
-      {
         m_timeout_check_timer = nh.createTimer(no_message_timeout, &SubscribeHandler_base::check_timeout, this);
-        if (ros::Time::isValid())
-        {
-          m_got_valid_time = true;
-          m_last_msg_received = ros::Time::now();
-        } else
-        {
-          m_valid_time_timer = nh.createTimer(ros::Duration(no_message_timeout.toSec()/10.0), &SubscribeHandler_base::check_valid_time, this);
-        }
-      }
     }
       
     void SubscribeHandler_base::check_timeout([[maybe_unused]] const ros::TimerEvent& evt)
@@ -46,18 +37,6 @@ namespace mrs_lib
           ROS_WARN_STREAM(msg);
         else
           ROS_WARN_STREAM("[" << m_node_name << "]: " << msg);
-      }
-    }
-
-    void SubscribeHandler_base::check_valid_time([[maybe_unused]] const ros::TimerEvent& evt)
-    {
-      std::lock_guard<std::mutex> lck(m_last_msg_received_mtx);
-      if (ros::Time::isValid())
-      {
-        ROS_ERROR("Got valid time: %.2f", ros::Time::now().toSec());
-        m_got_valid_time = true;
-        m_last_msg_received = ros::Time::now();
-        m_valid_time_timer.stop();
       }
     }
 

@@ -40,15 +40,12 @@ namespace mrs_lib
         bool m_ok;
         bool m_got_data; // whether any data was received
         bool m_new_data; // whether new data was received since last call to get_data
-        bool m_got_valid_time;
 
       protected:
         std::mutex m_last_msg_received_mtx;
         ros::Time m_last_msg_received;
         ros::Timer m_timeout_check_timer;
-        ros::Timer m_valid_time_timer;
         void check_timeout([[maybe_unused]] const ros::TimerEvent& evt);
-        void check_valid_time([[maybe_unused]] const ros::TimerEvent& evt);
         std::string resolved_topic_name();
 
     };
