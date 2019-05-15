@@ -38,8 +38,9 @@ namespace mrs_lib
     
       protected:
         bool m_ok;
-        bool m_got_data; // whether any data was received
-        bool m_new_data; // whether new data was received since last call to get_data
+        bool m_got_data;  // whether any data was received
+        bool m_new_data;  // whether new data was received since last call to get_data
+        bool m_used_data; // whether get_data was successfully called at least once
 
       protected:
         std::mutex m_last_msg_received_mtx;
@@ -97,6 +98,7 @@ namespace mrs_lib
           SubscribeHandler_base::m_new_data = false;
           if (!SubscribeHandler_base::m_got_data)
             ROS_ERROR("[%s]: No data received yet from topic '%s' (forgot to check has_data()?)! Returning empty message.", SubscribeHandler_base::m_node_name.c_str(), SubscribeHandler_base::resolved_topic_name().c_str());
+          SubscribeHandler_base::m_used_data = true;
           return m_latest_message;
         }
 

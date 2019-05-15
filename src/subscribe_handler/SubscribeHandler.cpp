@@ -16,6 +16,7 @@ namespace mrs_lib
         m_node_name(node_name),
         m_got_data(false),
         m_new_data(false),
+        m_used_data(false),
         m_last_msg_received(ros::Time::now())
     {
       if (no_message_timeout != mrs_lib::no_timeout)
@@ -65,7 +66,7 @@ namespace mrs_lib
 
     bool SubscribeHandler_base::used_data() const
     {
-      return m_got_data && !m_new_data;
+      return m_used_data;
     }
 
   } // namespace impl
