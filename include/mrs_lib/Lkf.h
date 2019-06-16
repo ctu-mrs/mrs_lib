@@ -14,6 +14,8 @@ namespace mrs_lib
   class Lkf {
   
   public:
+
+  //n - number of states;  m - number of inputs;  p - number of measured states;  A - system matrix n*n;  B - input matrix n*m;  R - process covariance n*n;  Q - measurement covariance p*p;  P - measurement mapping p*n;  
     Lkf(const int n, const int m, const int p, const Eigen::MatrixXd& A, const Eigen::MatrixXd& B, const Eigen::MatrixXd& R, const Eigen::MatrixXd& Q,
         const Eigen::MatrixXd& P);
   
