@@ -15,7 +15,7 @@ Profiler::Profiler(ros::NodeHandle &nh_, std::string node_name, bool profiler_en
 
   if (profiler_enabled) {
     mutex_publisher = std::make_shared<std::mutex>();
-    publisher = std::make_shared<ros::Publisher>(nh_.advertise<mrs_msgs::ProfilerUpdate>("profiler", 100, false));
+    publisher       = std::make_shared<ros::Publisher>(nh_.advertise<mrs_msgs::ProfilerUpdate>("profiler", 100, false));
   }
 
   ROS_INFO("[%s]: profiler initialized", node_name.c_str());
@@ -80,8 +80,8 @@ Routine::Routine(std::string name, std::string node_name, int expected_rate, dou
 
   double dt = msg_out.real_start - msg_out.expected_start;
 
-  if (dt > 0.01) {
-    ROS_WARN_THROTTLE(1.0, "[%s]: routine '%s' was lauched late by %1.3f s!", node_name.c_str(), routine_name.c_str(), dt + threshold_);
+  if (dt > threshold_) {
+    ROS_WARN_THROTTLE(1.0, "[%s]: routine '%s' was lauched late by %.2f s!", node_name.c_str(), routine_name.c_str(), dt - threshold_);
   }
 
   {
@@ -100,7 +100,8 @@ Routine::Routine(std::string name, std::string node_name, int expected_rate, dou
 
 /* Routine constructor for normal //{ */
 
-Routine::Routine(std::string name, std::string node_name, std::shared_ptr<ros::Publisher> publisher, std::shared_ptr<std::mutex> mutex_publisher, bool profiler_enabled) {
+Routine::Routine(std::string name, std::string node_name, std::shared_ptr<ros::Publisher> publisher, std::shared_ptr<std::mutex> mutex_publisher,
+                 bool profiler_enabled) {
 
   if (!profiler_enabled) {
     return;
