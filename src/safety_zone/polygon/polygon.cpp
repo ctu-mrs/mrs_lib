@@ -2,7 +2,7 @@
 
 
 namespace mrs_lib {
-    Polygon::Polygon(const Eigen::MatrixXd & vertices):vertices(vertices) {
+    Polygon::Polygon(const Eigen::MatrixXd vertices):vertices(vertices) {
         if (vertices.cols() != 2) {
             ROS_WARN("(Polygon) The supplied polygon has to have 2 cols. It has %lu.", vertices.cols());
             throw WrongNumberOfColumns();

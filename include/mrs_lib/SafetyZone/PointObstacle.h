@@ -12,7 +12,7 @@ namespace mrs_lib
 {
     class PointObstacle {
     public:
-        PointObstacle(const Eigen::Vector2d & center, const double & r);
+        PointObstacle(const Eigen::Vector2d center, const double r);
 
         bool isPointInside(const double px,  const double py);
 

@@ -2,8 +2,8 @@
 
 
 namespace mrs_lib {
-    SafetyZone::SafetyZone(mrs_lib::Polygon & outerBorder, std::vector<mrs_lib::Polygon> & innerObstacles,
-                           std::vector<mrs_lib::PointObstacle> & pointObstacles):outerBorder(outerBorder), innerObstacles(innerObstacles), pointObstacles(pointObstacles) {}
+    SafetyZone::SafetyZone(mrs_lib::Polygon outerBorder, std::vector<mrs_lib::Polygon> innerObstacles,
+                           std::vector<mrs_lib::PointObstacle> pointObstacles):outerBorder(outerBorder), innerObstacles(innerObstacles), pointObstacles(pointObstacles) {}
 
     bool SafetyZone::isPointValid(const double px, const double py) {
         if (!outerBorder.isPointInside(px, py)) {

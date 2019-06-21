@@ -13,7 +13,7 @@ namespace mrs_lib
 {
     class Polygon {
     public:
-        Polygon(const Eigen::MatrixXd & vertices);
+        Polygon(const Eigen::MatrixXd vertices);
         bool isPointInside(const double px,  const double py);
 
     private:

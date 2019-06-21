@@ -4,7 +4,7 @@
 #include <math.h>
 
 namespace mrs_lib {
-    PointObstacle::PointObstacle(const Eigen::Vector2d & center, const double & r) : center(center), r(r) {
+    PointObstacle::PointObstacle(const Eigen::Vector2d center, const double r) : center(center), r(r) {
         if (r <= 0) {
         ROS_WARN("(Point Obstacle) Radius must be non zero");
             throw WrongRadius();
