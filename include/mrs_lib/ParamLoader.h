@@ -114,7 +114,6 @@ private:
   };
   void print_value(const std::string& name, const Eigen::MatrixXd& value)
   {
-
     std::stringstream strstr;
     /* const Eigen::IOFormat fmt(4, 0, ", ", "\n", "\t\t[", "]"); */
     /* strstr << value.format(fmt); */
@@ -145,7 +144,7 @@ private:
 
   /* helper functions for loading Eigen::MatrixXd matrices //{ */
   // load_MatrixXd helper function for loading Eigen::MatrixXd matrices //{
-  Eigen::MatrixXd load_MatrixXd(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols = -1, optional_t optional = OPTIONAL, unique_t unique = UNIQUE, swap_t swap = NO_SWAP)
+  Eigen::MatrixXd load_MatrixXd(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols = -1, optional_t optional = OPTIONAL, unique_t unique = UNIQUE, swap_t swap = NO_SWAP, bool print_values = true)
   {
     Eigen::MatrixXd loaded = default_value;
     // first, check if the user already tried to load this parameter
@@ -215,7 +214,7 @@ private:
     // check if load was a success
     if (cur_load_successful)
     {
-      if (m_print_values)
+      if (m_print_values && print_values)
         print_value(name, loaded);
       loaded_params.insert(name);
     } else
@@ -228,27 +227,64 @@ private:
   //}
 
   /* load_matrix_array_internal helper function for loading an array of static Eigen matrices //{ */
-  std::vector<Eigen::MatrixXd> load_matrix_array_internal(const std::string& name, const std::vector<Eigen::MatrixXd>& default_value, int rows, int cols, int dims, optional_t optional, unique_t unique)
+  std::vector<Eigen::MatrixXd> load_matrix_array_internal(const std::string& name, const std::vector<Eigen::MatrixXd>& default_value, optional_t optional, unique_t unique)
   {
+    int rows;
+    std::vector<int> cols;
+    bool success = true;
+    success = success && m_nh.getParam(name + "/rows", rows);
+    success = success && m_nh.getParam(name + "/cols", cols);
+
     std::vector<Eigen::MatrixXd> loaded;
-    loaded.reserve(dims);
-    // first, check that at least one dimension is set
-    if (rows <= 0 || cols <= 0 || dims <= 0)
+    loaded.reserve(cols.size());
+
+    int total_cols = 0;
+    /* check correctness of loaded parameters so far calculate the total dimension //{ */
+
+    if (!success)
     {
-      print_error(std::string("Invalid expected matrix dimensions for parameter ") + name + std::string(" (rows, cols and dims must be > 0)"));
+      print_error(std::string("Failed to load ") + name + std::string("/rows or ") + name + std::string("/cols"));
+      m_load_successful = false;
+      return default_value;
+    }
+    if (rows <= 0)
+    {
+      print_error(std::string("Invalid expected matrix dimensions for parameter ") + name + std::string(" (rows and cols must be > 0)"));
+      m_load_successful = false;
+      return default_value;
+    }
+    for (const auto& col : cols)
+    {
+      if (col <= 0)
+      {
+        print_error(std::string("Invalid expected matrix dimensions for parameter ") + name + std::string(" (rows and cols must be > 0)"));
+        m_load_successful = false;
+        return default_value;
+      }
+      total_cols += col;
+    }
+    
+    //}
+
+    const Eigen::MatrixXd loaded_matrix = load_MatrixXd(name + "/data", Eigen::MatrixXd(), rows, total_cols, optional, unique, NO_SWAP, false);
+    /* std::cout << "loaded_matrix: " << loaded_matrix << std::endl; */
+    /* std::cout << "loaded_matrix: " << loaded_matrix.rows() << "x" << loaded_matrix.cols() << std::endl; */
+    /* std::cout << "expected dims: " << rows << "x" << total_cols << std::endl; */
+    if (loaded_matrix.rows() != rows || loaded_matrix.cols() != total_cols)
+    {
       m_load_successful = false;
       return default_value;
     }
 
-    const Eigen::MatrixXd loaded_matrix = load_MatrixXd(name, Eigen::MatrixXd(), rows*dims, cols, optional, unique, NO_SWAP);
-    if (loaded_matrix.rows() != rows*dims || loaded_matrix.cols() != cols)
-      return default_value;
-
-    for (int it = 0; it < dims; it++)
+    int cols_loaded = 0;
+    for (unsigned it = 0; it < cols.size(); it++)
     {
-      const int start_row = it * rows;
-      const Eigen::MatrixXd cur_mat = loaded_matrix.block(start_row, 0, rows, cols);
+      const int cur_cols = cols.at(it);
+      const Eigen::MatrixXd cur_mat = loaded_matrix.block(cols_loaded, 0, rows, cur_cols);
+      /* std::cout << "cur_mat: " << cur_mat << std::endl; */
       loaded.push_back(cur_mat);
+      cols_loaded += cur_cols;
+      print_value(name + "/matrix#" + std::to_string(it), cur_mat);
     }
     return loaded;
   }
@@ -438,21 +474,21 @@ public:
   //}
 
   // load_matrix_array function for loading of an array of Eigen::MatrixXd with known dimensions //{
-  void load_matrix_array(const std::string& name, std::vector<Eigen::MatrixXd>& mat, int rows, int cols, int dims)
+  void load_matrix_array(const std::string& name, std::vector<Eigen::MatrixXd>& mat)
   {
-    mat = load_matrix_array2(name, rows, cols, dims);
+    mat = load_matrix_array2(name);
   }
-  void load_matrix_array(const std::string& name, std::vector<Eigen::MatrixXd>& mat, const std::vector<Eigen::MatrixXd>& default_value, int rows, int cols, int dims)
+  void load_matrix_array(const std::string& name, std::vector<Eigen::MatrixXd>& mat, const std::vector<Eigen::MatrixXd>& default_value)
   {
-    mat = load_matrix_array2(name, default_value, rows, cols, dims);
+    mat = load_matrix_array2(name, default_value);
   }
-  std::vector<Eigen::MatrixXd> load_matrix_array2(const std::string& name, const std::vector<Eigen::MatrixXd>& default_value, int rows, int cols, int dims)
+  std::vector<Eigen::MatrixXd> load_matrix_array2(const std::string& name, const std::vector<Eigen::MatrixXd>& default_value)
   {
-    return load_matrix_array_internal(name, default_value, rows, cols, dims, OPTIONAL, UNIQUE);
+    return load_matrix_array_internal(name, default_value, OPTIONAL, UNIQUE);
   }
-  std::vector<Eigen::MatrixXd> load_matrix_array2(const std::string& name, int rows, int cols, int dims)
+  std::vector<Eigen::MatrixXd> load_matrix_array2(const std::string& name)
   {
-    return load_matrix_array_internal(name, std::vector<Eigen::MatrixXd>(), rows, cols, dims, COMPULSORY, UNIQUE);
+    return load_matrix_array_internal(name, std::vector<Eigen::MatrixXd>(), COMPULSORY, UNIQUE);
   }
   //}
 
