@@ -10,7 +10,7 @@ namespace mrs_lib
 {
 
 /* constructor //{ */
-
+  //n - number of states;  m - number of inputs;  p - number of measured states;  A - system matrix n*n;  B - input matrix n*m;  R - process covariance n*n;  Q - measurement covariance p*p;  P - measurement mapping p*n;  
 Lkf::Lkf(const int n, const int m, const int p, const MatrixXd& A, const MatrixXd& B, const MatrixXd& R, const MatrixXd& Q, const MatrixXd& P) {
 
   this->n = n;
