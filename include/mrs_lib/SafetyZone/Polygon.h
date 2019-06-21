@@ -37,5 +37,4 @@ namespace mrs_lib
     };
 }
 
-
 #endif //MRS_LIB_POLYGON_H
