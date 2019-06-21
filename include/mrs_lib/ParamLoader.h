@@ -227,6 +227,33 @@ private:
   };
   //}
 
+  /* load_matrix_array_internal helper function for loading an array of static Eigen matrices //{ */
+  std::vector<Eigen::MatrixXd> load_matrix_array_internal(const std::string& name, const std::vector<Eigen::MatrixXd>& default_value, int rows, int cols, int dims, optional_t optional, unique_t unique)
+  {
+    std::vector<Eigen::MatrixXd> loaded;
+    loaded.reserve(dims);
+    // first, check that at least one dimension is set
+    if (rows <= 0 || cols <= 0 || dims <= 0)
+    {
+      print_error(std::string("Invalid expected matrix dimensions for parameter ") + name + std::string(" (rows, cols and dims must be > 0)"));
+      m_load_successful = false;
+      return default_value;
+    }
+
+    const Eigen::MatrixXd loaded_matrix = load_MatrixXd(name, Eigen::MatrixXd(), rows*dims, cols, optional, unique, NO_SWAP);
+    if (loaded_matrix.rows() != rows*dims || loaded_matrix.cols() != cols)
+      return default_value;
+
+    for (int it = 0; it < dims; it++)
+    {
+      const int start_row = it * rows;
+      const Eigen::MatrixXd cur_mat = loaded_matrix.block(start_row, 0, rows, cols);
+      loaded.push_back(cur_mat);
+    }
+    return loaded;
+  }
+  //}
+
   /* load_matrix_static_internal helper function for loading static Eigen matrices //{ */
   Eigen::MatrixXd load_matrix_static_internal(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols, optional_t optional, unique_t unique)
   {
@@ -384,7 +411,7 @@ public:
   };
   //}
 
-  /* load_param spetializations and convenience functions for Eigen::MatrixXd type //{ */
+  /* load_param specializations and convenience functions for Eigen::MatrixXd type //{ */
   // load_param function overload for Eigen::MatrixXd type //{
   void load_param(const std::string& name, Eigen::MatrixXd& mat, const Eigen::MatrixXd& default_value)
   {
@@ -407,6 +434,25 @@ public:
     print_error(std::string("You must specify matrix dimensions for parameter ") + name + std::string(" (use load_matrix_static?)"));
     m_load_successful = false;
     return Eigen::MatrixXd();
+  }
+  //}
+
+  // load_matrix_array function for loading of an array of Eigen::MatrixXd with known dimensions //{
+  void load_matrix_array(const std::string& name, std::vector<Eigen::MatrixXd>& mat, int rows, int cols, int dims)
+  {
+    mat = load_matrix_array2(name, rows, cols, dims);
+  }
+  void load_matrix_array(const std::string& name, std::vector<Eigen::MatrixXd>& mat, const std::vector<Eigen::MatrixXd>& default_value, int rows, int cols, int dims)
+  {
+    mat = load_matrix_array2(name, default_value, rows, cols, dims);
+  }
+  std::vector<Eigen::MatrixXd> load_matrix_array2(const std::string& name, const std::vector<Eigen::MatrixXd>& default_value, int rows, int cols, int dims)
+  {
+    return load_matrix_array_internal(name, default_value, rows, cols, dims, OPTIONAL, UNIQUE);
+  }
+  std::vector<Eigen::MatrixXd> load_matrix_array2(const std::string& name, int rows, int cols, int dims)
+  {
+    return load_matrix_array_internal(name, std::vector<Eigen::MatrixXd>(), rows, cols, dims, COMPULSORY, UNIQUE);
   }
   //}
 
