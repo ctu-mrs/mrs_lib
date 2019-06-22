@@ -1,5 +1,6 @@
 #include "mrs_lib/SafetyZone/Polygon.h"
-
+#include <geometry_msgs/Point32.h>
+#include <vector>
 
 namespace mrs_lib {
     Polygon::Polygon(const Eigen::MatrixXd vertices):vertices(vertices) {
@@ -31,5 +32,19 @@ namespace mrs_lib {
         }
 
         return count % 2;
+    }
+
+    geometry_msgs::Polygon Polygon::get_ros_message() {
+        geometry_msgs::Polygon polygon_msg;
+
+        std::vector<geometry_msgs::Point32> points(vertices.rows()); 
+        for (int i = 0; i < vertices.rows(); ++i) {
+            points.emplace_back();
+            points[i].x = vertices(i, 0);
+            points[i].y = vertices(i, 1);
+        }
+
+        polygon_msg.points = points;
+        return polygon_msg;
     }
 }

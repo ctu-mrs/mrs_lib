@@ -22,4 +22,16 @@ namespace mrs_lib {
         }
         return true;
     }
+
+    Polygon SafetyZone::getBorder() {
+        return outerBorder;
+    }
+
+    std::vector<Polygon> SafetyZone::getObstacles() {
+      return innerObstacles;
+    }
+
+    std::vector<PointObstacle> SafetyZone::getPointObstacles() {
+      return pointObstacles;
+    }
 }

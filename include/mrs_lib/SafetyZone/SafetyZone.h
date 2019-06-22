@@ -13,6 +13,9 @@ namespace mrs_lib {
     public:
         SafetyZone(Polygon outerBorder, std::vector<Polygon> innerObstacles, std::vector<PointObstacle> pointObstacles);
         bool isPointValid(const double px,  const double py);
+        Polygon getBorder();
+        std::vector<Polygon> getObstacles();
+        std::vector<PointObstacle> getPointObstacles();
 
     private:
         Polygon outerBorder;
