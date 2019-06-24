@@ -13,13 +13,13 @@ namespace mrs_lib
 {
     class PointObstacle {
     public:
-        PointObstacle(const Eigen::Vector2d center, const double r);
-
+        PointObstacle(const Eigen::RowVector2d center, const double r);
         bool isPointInside(const double px,  const double py);
+        bool doesSectionIntersect(const double startX, const double startY, const double endX, const double endY);
         std::vector<geometry_msgs::Point> getPointMessageVector();
 
     private:
-        const Eigen::Vector2d center;
+        const Eigen::RowVector2d center;
         const double r;
 
     public:

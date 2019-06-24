@@ -1,5 +1,5 @@
 #include <mrs_lib/SafetyZone/SafetyZone.h>
-
+#include <mrs_lib/SafetyZone/lineOperations.h>
 
 namespace mrs_lib {
     SafetyZone::SafetyZone(mrs_lib::Polygon outerBorder, std::vector<mrs_lib::Polygon> innerObstacles,
@@ -21,6 +21,22 @@ namespace mrs_lib {
             }
         }
         return true;
+    }
+
+
+    bool SafetyZone::isPathValid(const double p1x, const double p1y, const double p2x, const double p2y) {
+        if (outerBorder.doesSectionIntersect(p1x, p1y, p2x, p2y)) return false;
+        for (auto & el: innerObstacles) {
+            if (el.doesSectionIntersect(p1x, p1y, p2x, p2y)) return false;
+        }
+
+        for (auto & el: pointObstacles) {
+            if (el.doesSectionIntersect(p1x, p1y, p2x, p2y)) return false;
+        }
+
+        return true;
+
+
     }
 
     Polygon SafetyZone::getBorder() {

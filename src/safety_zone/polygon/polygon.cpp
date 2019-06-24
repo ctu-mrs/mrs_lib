@@ -1,4 +1,5 @@
 #include "mrs_lib/SafetyZone/Polygon.h"
+#include "mrs_lib/SafetyZone/lineOperations.h"
 #include <vector>
 
 namespace mrs_lib {
@@ -32,6 +33,21 @@ namespace mrs_lib {
 
         return count % 2;
     }
+
+    bool Polygon::doesSectionIntersect(const double startX, const double startY, const double endX, const double endY) {
+        Eigen::RowVector2d start{startX, startY};
+        Eigen::RowVector2d end{endX, endY};
+
+        for (int i = 0; i < vertices.rows(); ++i) {
+            Eigen::RowVector2d edgeStart = vertices.row(i);
+            Eigen::RowVector2d edgeEnd = vertices.row((i + 1) % vertices.rows());
+
+            if (sectionIntersect(start, end, edgeStart, edgeEnd).intersect) return true;
+        }
+
+        return false;
+    }
+
 
     std::vector<geometry_msgs::Point> Polygon::getPointMessageVector() {
         std::vector<geometry_msgs::Point> points(vertices.rows()); 
