@@ -8,7 +8,7 @@
 #include <ros/ros.h>
 #include <eigen3/Eigen/Eigen>
 #include <vector>
-#include <geometry_msgs/Polygon.h>
+#include <geometry_msgs/Point32.h>
 
 namespace mrs_lib
 {
@@ -16,7 +16,8 @@ namespace mrs_lib
     public:
         Polygon(const Eigen::MatrixXd vertices);
         bool isPointInside(const double px,  const double py);
-        geometry_msgs::Polygon get_ros_message();
+        std::vector<geometry_msgs::Point32> getPoint32Vector();
+        bool isClockwise();
 
     private:
         const Eigen::MatrixXd vertices;
