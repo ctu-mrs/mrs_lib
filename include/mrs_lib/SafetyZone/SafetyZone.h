@@ -8,11 +8,17 @@
 #include <mrs_lib/SafetyZone/PointObstacle.h>
 #include <mrs_lib/SafetyZone/Polygon.h>
 #include <visualization_msgs/Marker.h>
+#include <eigen3/Eigen/Eigen>
 
 namespace mrs_lib {
     class SafetyZone {
     public:
-        SafetyZone(Polygon outerBorder, std::vector<Polygon> innerObstacles, std::vector<PointObstacle> pointObstacles);
+        SafetyZone(Polygon outerBorder, std::vector<Polygon> innerObstacles,
+            std::vector<PointObstacle> pointObstacles);
+        SafetyZone(Eigen::MatrixXd& outerBorder,
+            const std::vector<Eigen::MatrixXd>& innerObstacles,
+            const std::vector<Eigen::MatrixXd>& pointObstacles);
+        
         bool isPointValid(const double px,  const double py);
         bool isPathValid(const double p1x, const double p1y, const double p2x, const double p2y);
         Polygon getBorder();

@@ -3,7 +3,31 @@
 
 namespace mrs_lib {
     SafetyZone::SafetyZone(mrs_lib::Polygon outerBorder, std::vector<mrs_lib::Polygon> innerObstacles,
-                           std::vector<mrs_lib::PointObstacle> pointObstacles):outerBorder(outerBorder), innerObstacles(innerObstacles), pointObstacles(pointObstacles) {}
+        std::vector<mrs_lib::PointObstacle> pointObstacles): 
+        outerBorder(outerBorder), innerObstacles(innerObstacles), pointObstacles(pointObstacles) {}
+
+    SafetyZone(Eigen::MatrixXd& outerBorderMatrix,
+            const std::vector<Eigen::MatrixXd>& innerObstaclesMatrixes,
+            const std::vector<Eigen::MatrixXd>& pointObstaclesMatrixes)
+    {
+        outerBorder = Polygon{outerBorderMatrix};
+
+        innerObstacles = std::vector<Polygon>;
+        for (auto &matrix: innerObstaclesMatrixes) {
+           innerObstacles.emplace_back(matrix);
+        }
+
+        for (auto &matrix: poingObstacleMatrixes) {
+           if (matrix.cols() != 3) {
+               throw Polygon::WrongNumberOfColumns();    
+           }
+           if (matrix.rows() != 1) {
+               throw Polygon::WrongNumberOfVertices();
+           }
+        }
+    }
+        
+
 
     bool SafetyZone::isPointValid(const double px, const double py) {
         if (!outerBorder.isPointInside(px, py)) {
