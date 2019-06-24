@@ -22,7 +22,7 @@ namespace mrs_lib {
 
     // cross product
     double cross = vector1(0) * vector2(1) - vector1(1) * vector2(0);
-    double difference_cross = (start2(0) - start1(0)) * vector2(1) - (start2(1) - start1(1)) * vector1(0);
+    double difference_cross = (start2(0) - start1(0)) * vector2(1) - (start2(1) - start1(1)) * vector2(0);
 
     if (cross == 0) {
       // are parallel
