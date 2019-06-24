@@ -7,6 +7,7 @@
 
 #include <mrs_lib/SafetyZone/PointObstacle.h>
 #include <mrs_lib/SafetyZone/Polygon.h>
+#include <visualization_msgs/Marker.h>
 
 namespace mrs_lib {
     class SafetyZone {
@@ -16,6 +17,7 @@ namespace mrs_lib {
         Polygon getBorder();
         std::vector<Polygon> getObstacles();
         std::vector<PointObstacle> getPointObstacles();
+        visualization_msgs::Marker getMarkerMessage();
 
     private:
         Polygon outerBorder;

@@ -33,8 +33,8 @@ namespace mrs_lib {
         return count % 2;
     }
 
-    std::vector<geometry_msgs::Point32> Polygon::getPoint32Vector() {
-        std::vector<geometry_msgs::Point32> points(vertices.rows()); 
+    std::vector<geometry_msgs::Point> Polygon::getPointMessageVector() {
+        std::vector<geometry_msgs::Point> points(vertices.rows()); 
         for (int i = 0; i < vertices.rows(); ++i) {
             points.emplace_back();
             points[i].x = vertices(i, 0);

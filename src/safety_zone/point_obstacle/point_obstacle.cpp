@@ -16,4 +16,32 @@ namespace mrs_lib {
 
     }
 
+    std::vector<geometry_msgs::Point> PointObstacle::getPointMessageVector() {
+      std::vector<geometry_msgs::Point> points(8);
+
+      for (int i = 0; i < 8; ++i) {
+        points[i].x = center(0);
+        points[i].y = center(1);
+      }
+
+      double cos45 = 0.7071067811;
+      points[0].y += r;
+      points[1].x += r * cos45;
+      points[1].y += r * cos45;
+
+      points[2].x += r;
+      points[3].x += r * cos45;
+      points[3].y -= r * cos45;
+      
+      points[4].y -= r;
+      points[5].x -= r * cos45;
+      points[5].y -= r * cos45;
+
+      points[6].x -= r;
+      points[7].x -= r * cos45;
+      points[7].y += r * cos45;
+
+      return points;
+    }
+
 }

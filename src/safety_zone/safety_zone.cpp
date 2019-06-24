@@ -34,4 +34,38 @@ namespace mrs_lib {
     std::vector<PointObstacle> SafetyZone::getPointObstacles() {
       return pointObstacles;
     }
+
+    visualization_msgs::Marker SafetyZone::getMarkerMessage() {
+      visualization_msgs::Marker marker;
+      marker.type = visualization_msgs::Marker::LINE_LIST;
+      marker.color.a = 1;
+      marker.scale.x = 0.2;
+      marker.color.r = 1;
+      marker.color.g = 0;
+      marker.color.b = 0;
+      
+      auto borderPoints = outerBorder.getPointMessageVector();
+      for (size_t i = 0; i < borderPoints.size(); ++i) {
+        marker.points.push_back(borderPoints[i]);
+        marker.points.push_back(borderPoints[(i + 1) % borderPoints.size()]);
+      }
+
+      for (auto polygon: innerObstacles) {
+        auto points = polygon.getPointMessageVector();
+        for (size_t i = 0; i < points.size(); ++i) {
+          marker.points.push_back(borderPoints[i]);
+          marker.points.push_back(borderPoints[(i + 1) % borderPoints.size()]);
+        } 
+      }
+
+      for (auto point: pointObstacles) {
+        auto points = point.getPointMessageVector();
+        for (size_t i = 0; i < points.size(); ++i) {
+          marker.points.push_back(borderPoints[i]);
+          marker.points.push_back(borderPoints[(i + 1) % borderPoints.size()]);
+        } 
+      }
+      
+      return marker;
+    }
 }

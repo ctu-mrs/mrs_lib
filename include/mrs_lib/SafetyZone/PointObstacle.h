@@ -6,7 +6,8 @@
 #define MRS_LIB_POINTOBSTACLE_H
 
 #include <exception>
-#include "eigen3/Eigen/Eigen"
+#include <eigen3/Eigen/Eigen>
+#include <geometry_msgs/Point.h>
 
 namespace mrs_lib
 {
@@ -15,6 +16,7 @@ namespace mrs_lib
         PointObstacle(const Eigen::Vector2d center, const double r);
 
         bool isPointInside(const double px,  const double py);
+        std::vector<geometry_msgs::Point> getPointMessageVector();
 
     private:
         const Eigen::Vector2d center;
