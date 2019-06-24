@@ -36,7 +36,6 @@ namespace mrs_lib {
     std::vector<geometry_msgs::Point> Polygon::getPointMessageVector() {
         std::vector<geometry_msgs::Point> points(vertices.rows()); 
         for (int i = 0; i < vertices.rows(); ++i) {
-            points.emplace_back();
             points[i].x = vertices(i, 0);
             points[i].y = vertices(i, 1);
         }
