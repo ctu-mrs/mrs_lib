@@ -1,6 +1,6 @@
 #include "mrs_lib/SafetyZone/Polygon.h"
 #include "mrs_lib/SafetyZone/lineOperations.h"
-#include <vector>
+
 
 namespace mrs_lib {
     Polygon::Polygon(const Eigen::MatrixXd vertices):vertices(vertices) {
@@ -13,6 +13,21 @@ namespace mrs_lib {
             throw WrongNumberOfVertices();
         }
 
+        Eigen::RowVector2d edge1;
+        Eigen::RowVector2d edge2 = vertices.row(1) - vertices.row(0);
+        for (int i = 0; i < vertices.rows(); ++i) {
+            edge1 = edge2;
+            edge2 = vertices.row((i + 2) % vertices.rows()) - vertices.row((i + 1) % vertices.rows());
+
+            if (edge1(0) == 0 && edge1(1) == 0) {
+                ROS_WARN("(Polygon) Polygon edge %d is of length zero.", i);
+                throw ExtraVertices();
+            }
+            if (edge1(0) * edge2(1) == edge1(1) * edge2(0)) {
+                ROS_WARN("(Polygon) Adjacent Polygon edges at vertice %d are collinear.", (int) ((i + 1) % vertices.rows()));
+                throw ExtraVertices();
+            }
+        }
     }
 
     bool Polygon::isPointInside(const double px, const double py) {

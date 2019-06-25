@@ -9,6 +9,7 @@
 #include <eigen3/Eigen/Eigen>
 #include <vector>
 #include <geometry_msgs/Point.h>
+#include <mrs_lib/SafetyZone/lineOperations.h>
 
 namespace mrs_lib
 {
@@ -17,6 +18,7 @@ namespace mrs_lib
         Polygon(const Eigen::MatrixXd vertices);
         bool isPointInside(const double px,  const double py);
         bool doesSectionIntersect(const double startX, const double startY, const double endX, const double endY);
+
         std::vector<geometry_msgs::Point> getPointMessageVector();
 
     private:
@@ -35,6 +37,13 @@ namespace mrs_lib
         {
             const char* what() const throw() {
                 return "Polygon: wrong number of colums, it should be =2!";
+            }
+        };
+
+        struct ExtraVertices : public std::exception
+        {
+            const char* what() const throw() {
+                return "Polygon: useless vertices detected, polygon methods may break!";
             }
         };
     };

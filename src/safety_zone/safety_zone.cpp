@@ -14,29 +14,35 @@ namespace mrs_lib {
     }
 
     SafetyZone::SafetyZone(Eigen::MatrixXd& outerBorderMatrix,
-        std::vector<Eigen::MatrixXd>& innerObstaclesMatrixes,
-        std::vector<Eigen::MatrixXd>& pointObstaclesMatrixes)
+      std::vector<Eigen::MatrixXd>& innerObstaclesMatrixes,
+      std::vector<Eigen::MatrixXd>& pointObstaclesMatrixes)
     {
-       	try {
-           	outerBorder = new Polygon(outerBorderMatrix);
-       	}
-       	catch (Polygon::WrongNumberOfVertices) {
-	       	throw BorderError();
+      try {
+         	outerBorder = new Polygon(outerBorderMatrix);
+      }
+      catch (Polygon::WrongNumberOfVertices) {
+       	throw BorderError();
 	   	}
 	   	catch (Polygon::WrongNumberOfColumns) {
-      		throw PolygonObstacleError();
-      	}
+    		throw BorderError();
+      }
+      catch (Polygon::ExtraVertices) {
+        throw BorderError();
+      }
 
 	    for (auto &matrix: innerObstaclesMatrixes) {
-	      	try {
-	        	innerObstacles.emplace_back(matrix);
-	      	}
-	      	catch (Polygon::WrongNumberOfVertices) {
-	        	throw PolygonObstacleError();
-	      	}
-	      	catch (Polygon::WrongNumberOfColumns) {
-	      		throw PolygonObstacleError();
-	      	}
+      	try {
+        	innerObstacles.emplace_back(matrix);
+      	}
+      	catch (Polygon::WrongNumberOfVertices) {
+        	throw PolygonObstacleError();
+      	}
+      	catch (Polygon::WrongNumberOfColumns) {
+      		throw PolygonObstacleError();
+      	}
+        catch (Polygon::ExtraVertices) {
+          throw PolygonObstacleError();
+        }
 	    }
 
 	    for (auto &matrix: pointObstaclesMatrixes) {
