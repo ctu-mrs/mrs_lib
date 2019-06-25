@@ -28,6 +28,10 @@ namespace mrs_lib {
         return sectionIntersect(start, end, circleDiagStart, circleDiagEnd).intersect;
     }
 
+    void PointObstacle::inflateSelf(double amount) {
+        r += amount;
+    }
+
     std::vector<geometry_msgs::Point> PointObstacle::getPointMessageVector() {
       std::vector<geometry_msgs::Point> points(8);
 
