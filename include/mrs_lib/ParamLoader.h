@@ -280,7 +280,7 @@ private:
     for (unsigned it = 0; it < cols.size(); it++)
     {
       const int cur_cols = cols.at(it);
-      const Eigen::MatrixXd cur_mat = loaded_matrix.block(cols_loaded, 0, rows, cur_cols);
+      const Eigen::MatrixXd cur_mat = loaded_matrix.block(0, cols_loaded, rows, cur_cols);
       /* std::cout << "cur_mat: " << cur_mat << std::endl; */
       loaded.push_back(cur_mat);
       cols_loaded += cur_cols;
