@@ -9,16 +9,18 @@
 #include <mrs_lib/SafetyZone/Polygon.h>
 #include <visualization_msgs/Marker.h>
 #include <eigen3/Eigen/Eigen>
+#include <vector>
 
 namespace mrs_lib {
     class SafetyZone {
     public:
         SafetyZone(Polygon outerBorder, std::vector<Polygon> innerObstacles,
             std::vector<PointObstacle> pointObstacles);
+        ~SafetyZone();
 
-//        SafetyZone(Eigen::MatrixXd& outerBorderMatrix,
-//            std::vector<Eigen::MatrixXd>& innerObstaclesMatrixes,
-//            std::vector<Eigen::MatrixXd>& pointObstaclesMatrixes);
+        SafetyZone(Eigen::MatrixXd& outerBorderMatrix,
+            std::vector<Eigen::MatrixXd>& innerObstaclesMatrixes,
+            std::vector<Eigen::MatrixXd>& pointObstaclesMatrixes);
         
         bool isPointValid(const double px,  const double py);
         bool isPathValid(const double p1x, const double p1y, const double p2x, const double p2y);
@@ -28,9 +30,34 @@ namespace mrs_lib {
         visualization_msgs::Marker getMarkerMessage();
 
     private:
-        Polygon outerBorder;
+        Polygon *outerBorder;
         std::vector<Polygon> innerObstacles;
         std::vector<PointObstacle> pointObstacles;
+
+
+    public:
+        struct BorderError : public std::exception
+        {
+            const char* what() const throw() {
+                return "SafeZone: Wrong configuration for the border";
+            }
+        };
+
+        struct PolygonObstacleError : public std::exception
+        {
+            const char* what() const throw() {
+                return "SafeZone: Wrong configuration for one of the polygon obstacles";
+            }
+        };
+
+
+        struct PointObstacleError : public std::exception 
+        {
+            const char* what() const throw() {
+                return "SafeZone: Wrong configuration for one of the point obstacles";
+            }
+        };
+
     };
 }
 
