@@ -16,11 +16,12 @@ namespace mrs_lib
         PointObstacle(const Eigen::RowVector2d center, const double r);
         bool isPointInside(const double px,  const double py);
         bool doesSectionIntersect(const double startX, const double startY, const double endX, const double endY);
+        void inflateSelf(double amount);
         std::vector<geometry_msgs::Point> getPointMessageVector();
 
     private:
-        const Eigen::RowVector2d center;
-        const double r;
+        Eigen::RowVector2d center;
+        double r;
 
     public:
         // exceptions

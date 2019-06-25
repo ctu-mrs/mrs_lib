@@ -18,11 +18,13 @@ namespace mrs_lib
         Polygon(const Eigen::MatrixXd vertices);
         bool isPointInside(const double px,  const double py);
         bool doesSectionIntersect(const double startX, const double startY, const double endX, const double endY);
+        bool isClockwise();
+        void inflateSelf(double amount);
 
         std::vector<geometry_msgs::Point> getPointMessageVector();
 
     private:
-        const Eigen::MatrixXd vertices;
+        Eigen::MatrixXd vertices;
 
     public:
         // exceptions
