@@ -2,30 +2,32 @@
 #include <mrs_lib/SafetyZone/lineOperations.h>
 
 namespace mrs_lib {
-    SafetyZone::SafetyZone(mrs_lib::Polygon outerBorder, std::vector<mrs_lib::Polygon> innerObstacles,
-        std::vector<mrs_lib::PointObstacle> pointObstacles): 
+    SafetyZone::SafetyZone(mrs_lib::Polygon outerBorder, std::vector<Polygon> innerObstacles,
+        std::vector<PointObstacle> pointObstacles):
         outerBorder(outerBorder), innerObstacles(innerObstacles), pointObstacles(pointObstacles) {}
 
-    SafetyZone(Eigen::MatrixXd& outerBorderMatrix,
-            const std::vector<Eigen::MatrixXd>& innerObstaclesMatrixes,
-            const std::vector<Eigen::MatrixXd>& pointObstaclesMatrixes)
-    {
-        outerBorder = Polygon{outerBorderMatrix};
-
-        innerObstacles = std::vector<Polygon>;
-        for (auto &matrix: innerObstaclesMatrixes) {
-           innerObstacles.emplace_back(matrix);
-        }
-
-        for (auto &matrix: poingObstacleMatrixes) {
-           if (matrix.cols() != 3) {
-               throw Polygon::WrongNumberOfColumns();    
-           }
-           if (matrix.rows() != 1) {
-               throw Polygon::WrongNumberOfVertices();
-           }
-        }
-    }
+//    SafetyZone::SafetyZone(Eigen::MatrixXd& outerBorderMatrix,
+//            std::vector<Eigen::MatrixXd>& innerObstaclesMatrixes,
+//            std::vector<Eigen::MatrixXd>& pointObstaclesMatrixes):
+//            outerBorder(outerBorderMatrix)
+//    {
+//        innerObstacles = std::vector<Polygon>{};
+//        for (auto &matrix: innerObstaclesMatrixes) {
+//           innerObstacles.emplace_back(matrix);
+//        }
+//
+//        pointObstacles = std::vector<PointObstacle>{};
+//        for (auto &matrix: pointObstaclesMatrixes) {
+//           if (matrix.cols() != 3) {
+//               throw Polygon::WrongNumberOfColumns();
+//           }
+//           if (matrix.rows() != 1) {
+//               throw Polygon::WrongNumberOfVertices();
+//           }
+//
+//           pointObstacles.emplace_back(Eigen::RowVector2d{matrix(0, 0), matrix(0, 1)}, matrix(0, 2));
+//        }
+//    }
         
 
 
@@ -92,17 +94,19 @@ namespace mrs_lib {
 
       for (auto polygon: innerObstacles) {
         auto points = polygon.getPointMessageVector();
+
         for (size_t i = 0; i < points.size(); ++i) {
-          marker.points.push_back(borderPoints[i]);
-          marker.points.push_back(borderPoints[(i + 1) % borderPoints.size()]);
+          marker.points.push_back(points[i]);
+          marker.points.push_back(points[(i + 1) % points.size()]);
         } 
       }
 
       for (auto point: pointObstacles) {
         auto points = point.getPointMessageVector();
+
         for (size_t i = 0; i < points.size(); ++i) {
-          marker.points.push_back(borderPoints[i]);
-          marker.points.push_back(borderPoints[(i + 1) % borderPoints.size()]);
+          marker.points.push_back(points[i]);
+          marker.points.push_back(points[(i + 1) % points.size()]);
         } 
       }
       
