@@ -30,7 +30,7 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs mrs_msgs
   DEPENDS Eigen
-  LIBRARIES Lkf Ukf ConvexPolygon Polygon lineOperations PointObstacle SafetyZone Profiler Utils ParamLoader SubscribeHandler MedianFilter Repredictor GeometryUtils
+  LIBRARIES Lkf Ukf ConvexPolygon SafetyZone Profiler Utils ParamLoader SubscribeHandler MedianFilter Repredictor GeometryUtils
   )
 
 ###########
@@ -76,29 +76,17 @@ target_link_libraries(ConvexPolygon
   ${Eigen_LIBRARIES}
   )
 
-add_library(Polygon src/safety_zone/polygon/polygon.cpp)
-target_link_libraries(Polygon
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  )
 
-add_library(SafetyZone src/safety_zone/safety_zone.cpp)
+add_library(SafetyZone src/safety_zone/safety_zone.cpp
+        src/safety_zone/point_obstacle/point_obstacle.cpp
+        src/safety_zone/lineOperations.cpp
+        src/safety_zone/polygon/polygon.cpp
+        )
 target_link_libraries(SafetyZone
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
 
-add_library(PointObstacle src/safety_zone/point_obstacle/point_obstacle.cpp)
-target_link_libraries(PointObstacle
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  )
-
-add_library(lineOperations src/safety_zone/lineOperations.cpp)
-target_link_libraries(lineOperations
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  )
 
 add_library(Profiler src/profiler/profiler.cpp)
 target_link_libraries(Profiler
