@@ -2,37 +2,54 @@
 #include <mrs_lib/SafetyZone/lineOperations.h>
 
 namespace mrs_lib {
-    SafetyZone::SafetyZone(mrs_lib::Polygon outerBorder, std::vector<Polygon> innerObstacles,
+    SafetyZone::SafetyZone(mrs_lib::Polygon border, std::vector<Polygon> innerObstacles,
         std::vector<PointObstacle> pointObstacles):
-        outerBorder(outerBorder), innerObstacles(innerObstacles), pointObstacles(pointObstacles) {}
+        innerObstacles(innerObstacles), pointObstacles(pointObstacles) 
+    {
+        outerBorder = new Polygon(border);
+    }
 
-//    SafetyZone::SafetyZone(Eigen::MatrixXd& outerBorderMatrix,
-//            std::vector<Eigen::MatrixXd>& innerObstaclesMatrixes,
-//            std::vector<Eigen::MatrixXd>& pointObstaclesMatrixes):
-//            outerBorder(outerBorderMatrix)
-//    {
-//        innerObstacles = std::vector<Polygon>{};
-//        for (auto &matrix: innerObstaclesMatrixes) {
-//           innerObstacles.emplace_back(matrix);
-//        }
-//
-//        pointObstacles = std::vector<PointObstacle>{};
-//        for (auto &matrix: pointObstaclesMatrixes) {
-//           if (matrix.cols() != 3) {
-//               throw Polygon::WrongNumberOfColumns();
-//           }
-//           if (matrix.rows() != 1) {
-//               throw Polygon::WrongNumberOfVertices();
-//           }
-//
-//           pointObstacles.emplace_back(Eigen::RowVector2d{matrix(0, 0), matrix(0, 1)}, matrix(0, 2));
-//        }
-//    }
-        
+    SafetyZone::~SafetyZone() {
+    	delete outerBorder;
+    }
 
+    SafetyZone::SafetyZone(Eigen::MatrixXd& outerBorderMatrix,
+        std::vector<Eigen::MatrixXd>& innerObstaclesMatrixes,
+        std::vector<Eigen::MatrixXd>& pointObstaclesMatrixes)
+    {
+       	try {
+           	outerBorder = new Polygon(outerBorderMatrix);
+       	}
+       	catch (Polygon::WrongNumberOfVertices) {
+	       	throw BorderError();
+	   	}
+	   	catch (Polygon::WrongNumberOfColumns) {
+      		throw PolygonObstacleError();
+      	}
+
+	    for (auto &matrix: innerObstaclesMatrixes) {
+	      	try {
+	        	innerObstacles.emplace_back(matrix);
+	      	}
+	      	catch (Polygon::WrongNumberOfVertices) {
+	        	throw PolygonObstacleError();
+	      	}
+	      	catch (Polygon::WrongNumberOfColumns) {
+	      		throw PolygonObstacleError();
+	      	}
+	    }
+
+	    for (auto &matrix: pointObstaclesMatrixes) {
+	      	if (matrix.cols() != 3 || matrix.rows() != 1) {
+	        	throw PointObstacleError();
+	      	}
+
+	      	pointObstacles.emplace_back(Eigen::RowVector2d{matrix(0, 0), matrix(0, 1)}, matrix(0, 2));
+	    }
+    }
 
     bool SafetyZone::isPointValid(const double px, const double py) {
-        if (!outerBorder.isPointInside(px, py)) {
+        if (!outerBorder->isPointInside(px, py)) {
             return false;
         }
         for (auto & elem: innerObstacles) {
@@ -51,7 +68,7 @@ namespace mrs_lib {
 
 
     bool SafetyZone::isPathValid(const double p1x, const double p1y, const double p2x, const double p2y) {
-        if (outerBorder.doesSectionIntersect(p1x, p1y, p2x, p2y)) return false;
+        if (outerBorder->doesSectionIntersect(p1x, p1y, p2x, p2y)) return false;
         for (auto & el: innerObstacles) {
             if (el.doesSectionIntersect(p1x, p1y, p2x, p2y)) return false;
         }
@@ -66,7 +83,7 @@ namespace mrs_lib {
     }
 
     Polygon SafetyZone::getBorder() {
-        return outerBorder;
+        return *outerBorder;
     }
 
     std::vector<Polygon> SafetyZone::getObstacles() {
@@ -86,7 +103,7 @@ namespace mrs_lib {
       marker.color.g = 0;
       marker.color.b = 0;
       
-      auto borderPoints = outerBorder.getPointMessageVector();
+      auto borderPoints = outerBorder->getPointMessageVector();
       for (size_t i = 0; i < borderPoints.size(); ++i) {
         marker.points.push_back(borderPoints[i]);
         marker.points.push_back(borderPoints[(i + 1) % borderPoints.size()]);
