@@ -100,6 +100,12 @@ target_link_libraries(param_loader_tests
   ${Eigen_LIBRARIES}
   )
 
+add_executable(param_loader_example src/param_loader/example.cpp)
+target_link_libraries(param_loader_example
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
 add_library(SubscribeHandler src/subscribe_handler/SubscribeHandler.cpp)
 target_link_libraries(SubscribeHandler
   ${catkin_LIBRARIES}
