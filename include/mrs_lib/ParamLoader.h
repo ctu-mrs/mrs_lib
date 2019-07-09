@@ -403,8 +403,11 @@ public:
   //}
 
 
-  // This function indicates whether all compulsory parameters were successfully loaded.
-  // It returns false if any of them was not loaded.
+  /*!
+    * \brief Indicates whether all compulsory parameters were successfully loaded.
+    *
+    * \return false if any compulsory parameter was not loaded (is not present at rosparam server). Otherwise returns true.
+    */
   bool loaded_successfully()
   {
     return m_load_successful;
