@@ -1,7 +1,7 @@
 // clang: MatousFormat
-/**  @file
-     @brief Defines ParamLoader - a convenience class for loading static ROS parameters.
-     @author Matouš Vrba - vrbamato@fel.cvut.cz
+/**  \file
+     \brief Defines ParamLoader - a convenience class for loading static ROS parameters.
+     \author Matouš Vrba - vrbamato@fel.cvut.cz
  */
 
 #ifndef PARAM_LOADER_H
@@ -764,6 +764,7 @@ public:
   //}
 
   //}
+
 };
 //}
 

@@ -1,9 +1,9 @@
 // clang: MatousFormat
-/**
- * This header defines a convenience class for loading of dynamic ROS parameters
- * Please report any bugs to me (Matouš Vrba, vrbamato@fel.cvut.cz).
- * Hope you find these helpful :)
- **/
+/**  \file
+     \brief Defines DynamicReconfigureMgr - a convenience class for managing dynamic ROS parameters through dynamic reconfigure.
+     \author Matouš Vrba - vrbamato@fel.cvut.cz
+ */
+
 #ifndef DYNAMIC_RECONFIGURE_MGR_H
 #define DYNAMIC_RECONFIGURE_MGR_H
 
