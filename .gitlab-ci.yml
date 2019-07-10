@@ -9,6 +9,7 @@ pages:
   - line=$(cat CMakeLists.txt | grep "project(.*)" -o); tmp=${line:8}; proj_name=${tmp:0:${#tmp}-1}; sed -i 's/\(PROJECT_NAME\s*=\s*\)\".*\"/\1\"'$proj_name'\"/g' Doxyfile Doxyfile;
   - doxygen Doxyfile
   - rm -rf ~/public_artifacts/$proj_name
+  - mkdir -p ~/public_artifacts/doc
   - mv -f doc/html ~/public_artifacts/doc/$proj_name
   artifacts:
     paths:
