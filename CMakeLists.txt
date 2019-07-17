@@ -15,7 +15,8 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fno-diagnostics-color")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O3 -Wall")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O0 -g -Wall")
 
 # include Eigen3
 find_package(Eigen3 REQUIRED)
@@ -64,8 +65,8 @@ target_link_libraries(MRS_odom_lkf
   ${Eigen_LIBRARIES}
   )
 
-add_library(Ukf src/ukf/ukf.cpp)
-target_link_libraries(Ukf
+add_executable(ukf_tests src/ukf/ukf_tests.cpp)
+target_link_libraries(ukf_tests
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )

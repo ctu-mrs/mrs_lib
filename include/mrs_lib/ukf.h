@@ -25,7 +25,7 @@ namespace mrs_lib
     static const int n = n_states;
     static const int m = n_inputs;
     static const int p = n_measurements;
-    static const int w = 2*n+1; // number of sigma points/weights
+    static const int w = 2 * n + 1;  // number of sigma points/weights
 
     using Base_class = SystemModel<n, m, p>;
 
@@ -42,12 +42,12 @@ namespace mrs_lib
     using R_t = typename Base_class::R_t;                // measurement covariance p*p
     using statecov_t = typename Base_class::statecov_t;  // helper struct for state and covariance
 
-    using H_t = typename Eigen::Matrix<double, p, n>;      // measurement mapping p*n
-    using Q_t = typename Eigen::Matrix<double, n, n>;      // process covariance n*n
-    using K_t = typename Eigen::Matrix<double, n, p>;      // kalman gain n*p
+    using Q_t = typename Eigen::Matrix<double, n, n>;  // process covariance n*n
+    using K_t = typename Eigen::Matrix<double, n, p>;  // kalman gain n*p
     using W_t = typename Eigen::Matrix<double, w, 1>;  // weights vector
 
-    using model_t = typename std::function<x_t(const x_t&, const u_t&, double)>;
+    using transition_model_t = typename std::function<x_t(const x_t&, const u_t&, double)>;
+    using observation_model_t = typename std::function<z_t(const x_t&)>;
 
     // exceptions
     struct square_root_exception : public std::exception
@@ -70,7 +70,7 @@ namespace mrs_lib
   public:
     /* UKF constructor //{ */
     UKF();
-    UKF(const double alpha, const double k, const double beta, const R_t& R, const Q_t& Q, const H_t& H, const model_t& model);
+    UKF(const double alpha, const double kappa, const double beta, const Q_t& Q, const transition_model_t& transition_model, const observation_model_t& observation_model);
     //}
 
     /* correct() method //{ */
@@ -82,32 +82,34 @@ namespace mrs_lib
     //}
 
     /* setConstants() method //{ */
-    void setConstants(const double alpha, const double k, const double beta);
+    void setConstants(const double alpha, const double kappa, const double beta);
     //}
 
   private:
     /* private methods and member variables //{ */
-    
+
     void computeWeights();
 
-    X_t computeSigmas(const x_t& x, const P_t& P_sqrt) const;
+    X_t computeSigmas(const x_t& x, const P_t& P) const;
 
-    P_t computePSqrt(const P_t& P) const;
-    
-    double m_alpha, m_k, m_beta, m_lambda;
+    P_t computePaSqrt(const P_t& P) const;
+
+    P_t computeInverse(const P_t& P) const;
+
+    double m_alpha, m_kappa, m_beta, m_lambda;
     W_t m_Wm;
     W_t m_Wc;
-    
-    R_t m_R;
-    Q_t m_Q;
-    H_t m_H;
-    
-    model_t m_model;
-    
-    //}
 
+    Q_t m_Q;
+
+    transition_model_t m_transition_model;
+    observation_model_t m_observation_model;
+
+    //}
   };
 
 }  // namespace mrs_lib
+
+#include <impl/ukf.hpp>
 
 #endif
