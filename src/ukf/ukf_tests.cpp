@@ -10,9 +10,9 @@
 
 namespace mrs_lib
 {
-  const int n_states = 2;
-  const int n_inputs = 2;
-  const int n_measurements = 2;
+  const int n_states = 9;
+  const int n_inputs = 8;
+  const int n_measurements = 7;
 
   using ukf_t = UKF<n_states, n_inputs, n_measurements>;
   using lkf_t = Model_lkf<n_states, n_inputs, n_measurements>;
@@ -32,74 +32,96 @@ using A_t = lkf_t::A_t;
 using B_t = lkf_t::B_t;
 using H_t = lkf_t::H_t;
 
-ukf_t::x_t tra_model_f(const ukf_t::x_t& x, const ukf_t::u_t& u, const double dt)
+A_t A;
+B_t B;
+H_t H;
+
+ukf_t::x_t tra_model_f(const ukf_t::x_t& x, const ukf_t::u_t& u, [[maybe_unused]] const double dt)
 {
-  ukf_t::x_t ret;
-  ret(0) = x(0) + x(1)*dt + u(0)*dt;
-  ret(1) = x(1) + u(1)*dt;
-  return ret;
+  return A*x + B*u;
 }
 
 ukf_t::z_t obs_model_f(const ukf_t::x_t& x)
 {
-  ukf_t::z_t ret = x;
-  return ret;
+  return H*x;
 }
 
 int main()
 {
+  srand(std::time(0));
   const double alpha = 1e-3;
   const double kappa = 1;
   const double beta  = 2;
-  Q_t Q = Q_t::Identity();
   tra_model_t tra_model(tra_model_f);
   obs_model_t obs_model(obs_model_f);
   const double dt = 1.0;
+  const double r = 10.0;
+  const Q_t Q_tmp = r*Q_t::Random();
+  const Q_t Q = Q_tmp*Q_tmp.transpose();
+
+  A = r*A_t::Random();
+  B = r*B_t::Random();
+  H = r*H_t::Random();
+  const x_t x0 = r*x_t::Random();
+  P_t P_tmp = P_t::Random();
+  const P_t P0 = r*P_tmp*P_tmp.transpose();
+  const ukf_t::statecov_t sc0({x0, P0});
 
   ukf_t ukf(alpha, kappa, beta, Q, tra_model, obs_model);
-
-  A_t A; A <<
-    1, dt,
-    0, 1;
-  B_t B; B << 
-    dt, 0,
-    0, dt;
-  H_t H; H << 
-    1, 0, 
-    0, 1;
   lkf_t lkf(A, B, H, Q);
 
-  const ukf_t::statecov_t sc0({
-      x_t(0.0, 100.0),
-      P_t::Identity()
-      });
-  const u_t u(1.0, -10.0);
+  const int n_its = 1e3;
+  std::vector<ukf_t::statecov_t> uscs;
+  std::vector<lkf_t::statecov_t> lscs;
+  std::vector<lkf_t::statecov_t> scs;
+  uscs.reserve(n_its+1);
+  lscs.reserve(n_its+1);
+  scs.reserve(n_its+1);
+  uscs.push_back(sc0);
+  lscs.push_back(sc0);
+  scs.push_back(sc0);
 
-  const ukf_t::statecov_t usc1_0 = ukf.predict(sc0, u, dt);
-  const lkf_t::statecov_t lsc1_0 = lkf.predict(sc0, u, dt);
+  for (int it = 0; it < n_its; it++)
+  {
+    const Q_t Q_tmp = r*Q_t::Random();
+    const Q_t Q = Q_tmp*Q_tmp.transpose();
+    const R_t R_tmp = r*R_t::Random();
+    const R_t R = R_tmp*R_tmp.transpose();
+    const u_t u = r*u_t::Random();
+    auto sc = scs.back();
+    sc.x = A*sc.x + B*u + Q*x_t::Random();
+    const z_t z = H*sc.x + R*z_t::Random();
+    scs.push_back(sc);
 
-  z_t z; z << 1, 50;
-  R_t R = R_t::Identity();
+    lkf.Q = Q;
+    auto lsc = lscs.back();
+    lsc = lkf.predict(lsc, u, dt);
+    lscs.push_back(lsc);
+    lsc = lkf.correct(lsc, z, R);
+    lscs.push_back(lsc);
 
-  const ukf_t::statecov_t usc1_1 = ukf.correct(usc1_0, z, R);
-  const lkf_t::statecov_t lsc1_1 = lkf.correct(lsc1_0, z, R);
+    ukf.setQ(Q);
+    auto usc = uscs.back();
+    usc = ukf.predict(usc, u, dt);
+    uscs.push_back(usc);
+    usc = ukf.correct(usc, z, R);
+    uscs.push_back(usc);
+  }
 
-  std::cout << "x[0]:" << std::endl << sc0.x << std::endl;
-  std::cout << "P[0]:" << std::endl << sc0.P << std::endl;
+  double x_diff = 0.0;
+  double P_diff = 0.0;
+  for (int it = 0; it < n_its+1; it++)
+  {
+    const auto usc = uscs.at(it);
+    const auto lsc = lscs.at(it);
+    const auto cur_x_diff = (usc.x-lsc.x).norm();
+    const auto cur_P_diff = (usc.P-lsc.P).norm();
+    x_diff += cur_x_diff;
+    P_diff += cur_P_diff;
+  }
 
-  std::cout << "----------------------------------------" << std::endl;
-
-  std::cout << "x[1,0] (UKF):" << std::endl << usc1_0.x << std::endl;
-  std::cout << "P[1,0] (UKF):" << std::endl << usc1_0.P << std::endl;
-  std::cout << "x[1,1] (UKF):" << std::endl << usc1_1.x << std::endl;
-  std::cout << "P[1,1] (UKF):" << std::endl << usc1_1.P << std::endl;
-
-  std::cout << "----------------------------------------" << std::endl;
-
-  std::cout << "x[1,0] (LKF):" << std::endl << lsc1_0.x << std::endl;
-  std::cout << "P[1,0] (LKF):" << std::endl << lsc1_0.P << std::endl;
-  std::cout << "x[1,1] (LKF):" << std::endl << lsc1_1.x << std::endl;
-  std::cout << "P[1,1] (LKF):" << std::endl << lsc1_1.P << std::endl;
+  std::cout << "x diff average: " << x_diff/(n_its+1) << std::endl;
+  std::cout << "P diff average: " << P_diff/(n_its+1) << std::endl;
 
   return 0;
 }

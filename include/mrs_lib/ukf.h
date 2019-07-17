@@ -10,6 +10,7 @@
 
 #include <ros/ros.h>
 #include <eigen3/Eigen/Eigen>
+#include <unsupported/Eigen/MatrixFunctions>
 #include <mutex>
 #include <stdexcept>
 #include <mrs_lib/system_model.h>
@@ -43,6 +44,7 @@ namespace mrs_lib
     using statecov_t = typename Base_class::statecov_t;  // helper struct for state and covariance
 
     using Q_t = typename Eigen::Matrix<double, n, n>;  // process covariance n*n
+    using Pzz_t = typename Eigen::Matrix<double, p, p>;  // Pzz helper matrix p*n
     using K_t = typename Eigen::Matrix<double, n, p>;  // kalman gain n*p
     using W_t = typename Eigen::Matrix<double, w, 1>;  // weights vector
 
@@ -85,6 +87,13 @@ namespace mrs_lib
     void setConstants(const double alpha, const double kappa, const double beta);
     //}
 
+    /* setQ() method //{ */
+    void setQ(const Q_t& Q)
+    {
+      m_Q = Q;
+    }
+    //}
+
   private:
     /* private methods and member variables //{ */
 
@@ -94,7 +103,7 @@ namespace mrs_lib
 
     P_t computePaSqrt(const P_t& P) const;
 
-    P_t computeInverse(const P_t& P) const;
+    Pzz_t computeInverse(const Pzz_t& Pzz) const;
 
     double m_alpha, m_kappa, m_beta, m_lambda;
     W_t m_Wm;

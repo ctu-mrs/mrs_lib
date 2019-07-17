@@ -75,22 +75,23 @@ namespace mrs_lib
     const P_t Pa = (double(n) + m_lambda)*P;
 
     Eigen::SelfAdjointEigenSolver<P_t> es(Pa);
-
     P_t Pa_sqrt;
     try
     {
       Pa_sqrt = es.operatorSqrt();
     }
-    catch (...)
+    catch (const std::exception& e)
     {
-      ROS_WARN("UKF: squaring of covariance in prediction update failed.");
+      ROS_WARN("UKF: taking the square root of covariance in prediction update failed.: %s", e.what());
       throw square_root_exception();
     }
+
+    /* const P_t Pa_sqrt = Pa.sqrt(); */
 
     // check whether the square root produced valid numbers
     if (!Pa_sqrt.array().isFinite().all())
     {
-      ROS_WARN("UKF: squaring of covariance in prediction update produced NANs!!! Fix your covariances (the measurement's is probably to low..)");
+      ROS_WARN("UKF: taking the square root of covariance in prediction update produced non-finite numbers!!! Fix your covariances (the measurement's is probably to low..)");
       ROS_INFO_STREAM(Pa);
       throw square_root_exception();
     }
@@ -100,23 +101,23 @@ namespace mrs_lib
   //}
 
   template <int n_states, int n_inputs, int n_measurements>
-  typename UKF<n_states, n_inputs, n_measurements>::P_t UKF<n_states, n_inputs, n_measurements>::computeInverse(const P_t& P) const
+  typename UKF<n_states, n_inputs, n_measurements>::Pzz_t UKF<n_states, n_inputs, n_measurements>::computeInverse(const Pzz_t& Pzz) const
   {
-    Eigen::ColPivHouseholderQR<P_t> qr(P);
+    Eigen::ColPivHouseholderQR<Pzz_t> qr(Pzz);
     if (!qr.isInvertible())
     {
       // add some stuff to the tmp matrix diagonal to make it invertible
-      P_t tmp = P + 1e-9*P_t::Identity();
+      Pzz_t tmp = Pzz + 1e-9*Pzz_t::Identity();
       qr.compute(tmp);
       if (!qr.isInvertible())
       {
         // never managed to make this happen except for explicitly putting NaNs in the input
-        ROS_ERROR("LKF: could not compute matrix inversion!!! Fix your covariances (the measurement's is probably too low...)");
+        ROS_ERROR("UKF: could not compute matrix inversion!!! Fix your covariances (the measurement's is probably too low...)");
         throw inverse_exception();
       }
-      ROS_WARN("LKF: artificially inflating matrix for inverse computation! Check your covariances (the measurement's might be too low...)");
+      ROS_WARN("UKF: artificially inflating matrix for inverse computation! Check your covariances (the measurement's might be too low...)");
     }
-    P_t ret = qr.inverse();
+    Pzz_t ret = qr.inverse();
     return ret;
   }
 
@@ -211,7 +212,7 @@ namespace mrs_lib
     }
 
     // compute the expected measurement
-    P_t Pzz = P_t::Zero();
+    Pzz_t Pzz = Pzz_t::Zero();
     for (int i = 0; i < w; i++)
     {
       Pzz += m_Wc(i) * (Z_exp.col(i) - z_exp) * (Z_exp.col(i) - z_exp).transpose();
@@ -226,13 +227,13 @@ namespace mrs_lib
     }
 
     // compute Kalman gain
-    const P_t Pzz_inv = computeInverse(Pzz);
+    const Pzz_t Pzz_inv = computeInverse(Pzz);
     const K_t K = Pxz * Pzz_inv;
 
     // check whether the inverse produced valid numbers
     if (!K.array().isFinite().all())
     {
-      ROS_ERROR("UKF: inverting of Pzz in correction update produced NANs!!! Fix your covariances (the measurement's is probably too low...)");
+      ROS_ERROR("UKF: inverting of Pzz in correction update produced non-finite numbers!!! Fix your covariances (the measurement's is probably too low...)");
       throw inverse_exception();
     }
 
