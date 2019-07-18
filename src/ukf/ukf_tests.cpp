@@ -6,7 +6,7 @@
  */
 
 #include <mrs_lib/ukf.h>
-#include <mrs_lib/LKFSystemModels.h>
+#include <mrs_lib/lkf.h>
 #include <random>
 
 namespace mrs_lib
@@ -16,7 +16,7 @@ namespace mrs_lib
   const int n_measurements = 7;
 
   using ukf_t = UKF<n_states, n_inputs, n_measurements>;
-  using lkf_t = Model_lkf<n_states, n_inputs, n_measurements>;
+  using lkf_t = LKF<n_states, n_inputs, n_measurements>;
 }
 
 using namespace mrs_lib;
@@ -34,7 +34,7 @@ using B_t = lkf_t::B_t;
 using H_t = lkf_t::H_t;
 
 template class mrs_lib::UKF<n_states, n_inputs, n_measurements>;
-template class mrs_lib::Model_lkf<n_states, n_inputs, n_measurements>;
+template class mrs_lib::LKF<n_states, n_inputs, n_measurements>;
 
 A_t A;
 B_t B;

@@ -1,9 +1,9 @@
-#include "mrs_lib/LKFSystemModels.h"
+#include "mrs_lib/lkf.h"
 
 namespace mrs_lib
 {
-  /* Model_mrs_odom constructor //{ */
-  Model_mrs_odom::Model_mrs_odom(const std::vector<Model_mrs_odom::H_t>& Hs, const Model_mrs_odom::Q_t& Q, const double p1, const double p2, const double p3, const double default_dt)
+  /* LKF_MRS_odom constructor //{ */
+  LKF_MRS_odom::LKF_MRS_odom(const std::vector<LKF_MRS_odom::H_t>& Hs, const LKF_MRS_odom::Q_t& Q, const double p1, const double p2, const double p3, const double default_dt)
     : p1(p1), p2(p2), p3(p3)
   {
     Base_class::Q = Q;
@@ -20,8 +20,8 @@ namespace mrs_lib
   };
   //}
 
-  /* Model_mrs_odom::predict() method //{ */
-  Model_mrs_odom::statecov_t Model_mrs_odom::predict(const statecov_t& sc, const u_t& u, double dt, [[maybe_unused]] int param) const
+  /* LKF_MRS_odom::predict() method //{ */
+  LKF_MRS_odom::statecov_t LKF_MRS_odom::predict(const statecov_t& sc, const u_t& u, double dt, [[maybe_unused]] int param) const
   {
     statecov_t ret;
     ret.x = state_predict_optimized(sc.x, u, dt);
@@ -32,16 +32,16 @@ namespace mrs_lib
   };
   //}
 
-  /* Model_mrs_odom::correct() method //{ */
-  Model_mrs_odom::statecov_t Model_mrs_odom::correct(const Model_mrs_odom::statecov_t& sc, const Model_mrs_odom::z_t& z, const Model_mrs_odom::R_t& R, int param) const
+  /* LKF_MRS_odom::correct() method //{ */
+  LKF_MRS_odom::statecov_t LKF_MRS_odom::correct(const LKF_MRS_odom::statecov_t& sc, const LKF_MRS_odom::z_t& z, const LKF_MRS_odom::R_t& R, int param) const
   {
     /* return correction_impl(sc, z, R, Hs.at(param)); */
     return correction_optimized(sc, z, R, Hs.at(param));
   };
   //}
 
-  /* Model_mrs_odom::state_predict_optimized() method //{ */
-  Model_mrs_odom::x_t Model_mrs_odom::state_predict_optimized(const Model_mrs_odom::x_t& x_prev, const Model_mrs_odom::u_t& u, double dt) const
+  /* LKF_MRS_odom::state_predict_optimized() method //{ */
+  LKF_MRS_odom::x_t LKF_MRS_odom::state_predict_optimized(const LKF_MRS_odom::x_t& x_prev, const LKF_MRS_odom::u_t& u, double dt) const
   {
     x_t ret = x_prev;
     double& x = ret(0);
@@ -60,8 +60,8 @@ namespace mrs_lib
   };
   //}
 
-  /* Model_mrs_odom::covariance_predict_optimized() method //{ */
-  Model_mrs_odom::P_t Model_mrs_odom::covariance_predict_optimized(const Model_mrs_odom::P_t& P, const Model_mrs_odom::Q_t& Q, double dt) const
+  /* LKF_MRS_odom::covariance_predict_optimized() method //{ */
+  LKF_MRS_odom::P_t LKF_MRS_odom::covariance_predict_optimized(const LKF_MRS_odom::P_t& P, const LKF_MRS_odom::Q_t& Q, double dt) const
   {
     P_t P_ret;
     const double &P11 = P(0, 0), &P12 = P(0, 1), &P13 = P(0, 2), &P14 = P(0,3), &P15 = P(0, 4), &P16 = P(0, 5);

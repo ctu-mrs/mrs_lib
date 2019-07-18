@@ -304,8 +304,8 @@ namespace mrs_lib
   };
   //}
 
-  /* class LKF_mrs_odom //{ */
-  class LKF_mrs_odom : public LKF_multiH<6, 1, 1>
+  /* class LKF_MRS_odom //{ */
+  class LKF_MRS_odom : public LKF_multiH<6, 1, 1>
   {
   public:
     /* LKF definitions (typedefs, constants etc) //{ */
@@ -332,7 +332,7 @@ namespace mrs_lib
     //}
 
   public:
-    LKF_mrs_odom(const std::vector<H_t>& Hs, const Q_t& Q, const double p1, const double p2, const double p3, const double default_dt = 1);
+    LKF_MRS_odom(const std::vector<H_t>& Hs, const Q_t& Q, const double p1, const double p2, const double p3, const double default_dt = 1);
     virtual statecov_t predict(const statecov_t& sc, const u_t& u, double dt, [[maybe_unused]] int param = 0) const override;
     virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, int param = 0) const override;
 
