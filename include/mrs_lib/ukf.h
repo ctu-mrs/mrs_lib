@@ -101,7 +101,15 @@ namespace mrs_lib
   public:
     /* UKF constructor //{ */
   /*!
-    * \brief Default constructor.
+    * \brief Convenience default constructor.
+    *
+    * This constructor should not be used if applicable. If used, the main constructor has to be called afterwards,
+    * otherwise the UKF object is invalid (not initialized).
+    */
+    UKF();
+
+  /*!
+    * \brief The main constructor.
     *
     * \param alpha             Scaling parameter of the sigma generation (a small positive value, e.g. 1e-3).
     * \param kappa             Secondary scaling parameter of the sigma generation (usually set to 0 or 1).

@@ -15,10 +15,10 @@ namespace mrs_lib
 {
   /* constructor //{ */
 
-  /* template <int n_states, int n_inputs, int n_measurements> */
-  /* UKF<n_states, n_inputs, n_measurements>::UKF() */
-  /* { */
-  /* } */
+  template <int n_states, int n_inputs, int n_measurements>
+  UKF<n_states, n_inputs, n_measurements>::UKF()
+  {
+  }
 
   template <int n_states, int n_inputs, int n_measurements>
   UKF<n_states, n_inputs, n_measurements>::UKF(const double alpha, const double kappa, const double beta, const Q_t& Q, const transition_model_t& transition_model, const observation_model_t& observation_model)
