@@ -9,8 +9,7 @@
  */
 
 #include <ros/ros.h>
-#include <eigen3/Eigen/Eigen>
-#include <unsupported/Eigen/MatrixFunctions>
+#include <Eigen/Dense>
 #include <mutex>
 #include <stdexcept>
 #include <mrs_lib/system_model.h>
@@ -64,7 +63,7 @@ namespace mrs_lib
     {
       const char* what() const throw()
       {
-        return "UKF: inverting of Pyy in correction update produced NANs!!!";
+        return "UKF: inverting of Pzz in correction update produced NANs!!!";
       }
     };
     //}

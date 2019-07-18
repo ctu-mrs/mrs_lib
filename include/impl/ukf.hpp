@@ -74,32 +74,25 @@ namespace mrs_lib
     // calculate the square root of the covariance matrix
     const P_t Pa = (double(n) + m_lambda)*P;
 
-    Eigen::SelfAdjointEigenSolver<P_t> es(Pa);
-    P_t Pa_sqrt;
-    try
+    /* Eigen::SelfAdjointEigenSolver<P_t> es(Pa); */
+    Eigen::LLT<P_t> llt(Pa);
+    if (llt.info() != Eigen::Success)
     {
-      Pa_sqrt = es.operatorSqrt();
-    }
-    catch (const std::exception& e)
-    {
-      ROS_WARN("UKF: taking the square root of covariance in prediction update failed.: %s", e.what());
-      throw square_root_exception();
-    }
-
-    /* const P_t Pa_sqrt = Pa.sqrt(); */
-
-    // check whether the square root produced valid numbers
-    if (!Pa_sqrt.array().isFinite().all())
-    {
-      ROS_WARN("UKF: taking the square root of covariance in prediction update produced non-finite numbers!!! Fix your covariances (the measurement's is probably to low..)");
-      ROS_INFO_STREAM(Pa);
-      throw square_root_exception();
+      P_t tmp = Pa + (double(n) + m_lambda)*1e-9*P_t::Identity();
+      llt.compute(tmp);
+      if (llt.info() != Eigen::Success)
+      {
+        ROS_WARN("UKF: taking the square root of covariance during sigma point generation failed.");
+        throw square_root_exception();
+      }
     }
 
+    const P_t Pa_sqrt = llt.matrixL();
     return Pa_sqrt;
   }
   //}
 
+  /* computeInverse() method //{ */
   template <int n_states, int n_inputs, int n_measurements>
   typename UKF<n_states, n_inputs, n_measurements>::Pzz_t UKF<n_states, n_inputs, n_measurements>::computeInverse(const Pzz_t& Pzz) const
   {
@@ -120,6 +113,7 @@ namespace mrs_lib
     Pzz_t ret = qr.inverse();
     return ret;
   }
+  //}
 
   /* computeSigmas() method //{ */
   template <int n_states, int n_inputs, int n_measurements>
@@ -131,18 +125,15 @@ namespace mrs_lib
     S.col(0) = x;
 
     const P_t P_sqrt = computePaSqrt(P);
+    const auto xrep = x.replicate(1, n);
 
     // positive sigma points
-    for (int i = 1; i <= n; i++)
-    {
-      S.col(i) = x + P_sqrt.row(i - 1).transpose();
-    }
+    /* S.block(1, n+1, n, n) = xrep + P_sqrt; */
+    S.template block<n, n>(0, 1) = xrep + P_sqrt;
 
     // negative sigma points
-    for (int i = n+1; i <= 2*n; i++)
-    {
-      S.col(i) = x - P_sqrt.row(i - n - 1).transpose();
-    }
+    /* S.block(n+1, w, n, n) = xrep - P_sqrt; */
+    S.template block<n, n>(0, n+1) = xrep - P_sqrt;
 
     return S;
   }
@@ -174,6 +165,9 @@ namespace mrs_lib
     }
 
     // recompute the covariance
+    /* const auto xrep = x.replicate(1, w); */
+    /* const auto tmp = X - xrep; */
+    /* ret.P = tmp * Eigen::DiagonalMatrix<double, w, w>(m_Wc) * tmp.transpose() + m_Q; */
     ret.P = P_t::Zero();
     for (int i = 0; i < w; i++)
     {
@@ -193,8 +187,6 @@ namespace mrs_lib
   {
     const auto& x = sc.x;
     const auto& P = sc.P;
-    statecov_t ret;
-
     const X_t S = computeSigmas(x, P);
 
     // propagate sigmas through the observation model
@@ -204,14 +196,14 @@ namespace mrs_lib
       Z_exp.col(i) = m_observation_model(S.col(i));
     }
 
-    // compute expected output
+    // compute expected measurement
     z_t z_exp = z_t::Zero();
     for (int i = 0; i < w; i++)
     {
       z_exp += m_Wm(i) * Z_exp.col(i);
     }
 
-    // compute the expected measurement
+    // compute the covariance of measurement
     Pzz_t Pzz = Pzz_t::Zero();
     for (int i = 0; i < w; i++)
     {
@@ -219,7 +211,7 @@ namespace mrs_lib
     }
     Pzz += R;
 
-    // compute ..
+    // compute cross covariance
     K_t Pxz = K_t::Zero();
     for (int i = 0; i < w; i++)
     {
@@ -238,9 +230,9 @@ namespace mrs_lib
     }
 
     // correct
+    statecov_t ret;
     ret.x = x + K * (z - z_exp);
     ret.P = P - K * Pzz * K.transpose();
-
     return ret;
   }
 

@@ -7,6 +7,7 @@
 
 #include <mrs_lib/ukf.h>
 #include <mrs_lib/LKFSystemModels.h>
+#include <random>
 
 namespace mrs_lib
 {
@@ -32,6 +33,9 @@ using A_t = lkf_t::A_t;
 using B_t = lkf_t::B_t;
 using H_t = lkf_t::H_t;
 
+template class mrs_lib::UKF<n_states, n_inputs, n_measurements>;
+template class mrs_lib::Model_lkf<n_states, n_inputs, n_measurements>;
+
 A_t A;
 B_t B;
 H_t H;
@@ -46,6 +50,18 @@ ukf_t::z_t obs_model_f(const ukf_t::x_t& x)
   return H*x;
 }
 
+template <int rows>
+Eigen::Matrix<double, rows, 1> normal_randmat(const Eigen::Matrix<double, rows, rows>& cov)
+{
+    static std::random_device rd{};
+    static std::mt19937 gen{rd()};
+    static std::normal_distribution<> d{0,1};
+    Eigen::Matrix<double, rows, 1> ret;
+    for (int row = 0; row < rows; row++)
+      ret(row, 0) = d(gen);
+    return cov*ret;
+}
+
 int main()
 {
   srand(std::time(0));
@@ -56,10 +72,10 @@ int main()
   obs_model_t obs_model(obs_model_f);
   const double dt = 1.0;
   const double r = 10.0;
-  const Q_t Q_tmp = r*Q_t::Random();
-  const Q_t Q = Q_tmp*Q_tmp.transpose();
+  const Q_t Q = r*Q_t::Identity();
+  /* const R_t R = r*R_t::Identity(); */
 
-  A = r*A_t::Random();
+  A = A_t::Identity();
   B = r*B_t::Random();
   H = r*H_t::Random();
   const x_t x0 = r*x_t::Random();
@@ -70,7 +86,7 @@ int main()
   ukf_t ukf(alpha, kappa, beta, Q, tra_model, obs_model);
   lkf_t lkf(A, B, H, Q);
 
-  const int n_its = 1e3;
+  const int n_its = 1e4;
   std::vector<ukf_t::statecov_t> uscs;
   std::vector<lkf_t::statecov_t> lscs;
   std::vector<lkf_t::statecov_t> scs;
@@ -83,14 +99,22 @@ int main()
 
   for (int it = 0; it < n_its; it++)
   {
-    const Q_t Q_tmp = r*Q_t::Random();
-    const Q_t Q = Q_tmp*Q_tmp.transpose();
-    const R_t R_tmp = r*R_t::Random();
-    const R_t R = R_tmp*R_tmp.transpose();
+    std::cout << "step: " << it << std::endl;
+    const Q_t Q_tmp = Q_t::Random();
+    const Q_t Q = r*Q_tmp*Q_tmp.transpose();
+    const R_t R_tmp = R_t::Random();
+    const R_t R = r*R_tmp*R_tmp.transpose();
     const u_t u = r*u_t::Random();
+    /* const x_t x = r*x_t::Random(); */
+    /* const P_t P = r*P_t::Random(); */
+    /* const z_t z = r*z_t::Random(); */
+    /* ukf_t::statecov_t sc {x, P}; */
+    /* scs.push_back(sc); */
+    /* scs.push_back(sc); */
     auto sc = scs.back();
-    sc.x = A*sc.x + B*u + Q*x_t::Random();
-    const z_t z = H*sc.x + R*z_t::Random();
+    sc.x = tra_model_f(sc.x, u, dt) + normal_randmat(Q);
+    scs.push_back(sc);
+    const z_t z = obs_model_f(sc.x) + normal_randmat(R);
     scs.push_back(sc);
 
     lkf.Q = Q;
@@ -106,6 +130,16 @@ int main()
     uscs.push_back(usc);
     usc = ukf.correct(usc, z, R);
     uscs.push_back(usc);
+
+    const auto cur_x_diff = (usc.x-lsc.x).norm();
+    const auto cur_P_diff = (usc.P-lsc.P).norm();
+    std::cout << "cur. x diff: " << cur_x_diff << std::endl;
+    std::cout << "cur. P diff: " << cur_P_diff << std::endl;
+
+    const auto cur_lgt_diff = (sc.x-lsc.x).norm();
+    const auto cur_ugt_diff = (sc.x-usc.x).norm();
+    std::cout << "cur. lgt diff: " << cur_lgt_diff << std::endl;
+    std::cout << "cur. ugt diff: " << cur_ugt_diff << std::endl;
   }
 
   double x_diff = 0.0;
