@@ -5,9 +5,9 @@
 
 namespace mrs_lib
 {
-  /* SystemModel virtual class //{ */
+  /* KalmanFilter virtual class //{ */
   template <int n_states, int n_inputs, int n_measurements>
-  class SystemModel
+  class KalmanFilter
   {
     public:
     /* states, inputs etc. definitions (typedefs, constants etc) //{ */

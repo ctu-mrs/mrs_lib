@@ -2,7 +2,7 @@
 
 /**  \file
      \brief Tests for the UKF implementation
-     \author Matouš Vrba - vrbamato@fel.cvut.cz (rewrite, documentation)
+     \author Matouš Vrba - vrbamato@fel.cvut.cz
  */
 
 #include <mrs_lib/ukf.h>
@@ -126,10 +126,17 @@ int main()
 
     ukf.setQ(Q);
     auto usc = uscs.back();
-    usc = ukf.predict(usc, u, dt);
-    uscs.push_back(usc);
-    usc = ukf.correct(usc, z, R);
-    uscs.push_back(usc);
+    try
+    {
+      usc = ukf.predict(usc, u, dt);
+      uscs.push_back(usc);
+      usc = ukf.correct(usc, z, R);
+      uscs.push_back(usc);
+    }
+    catch (const std::exception& e)
+    {
+      ROS_ERROR("UKF failed: %s", e.what());
+    }
 
     const auto cur_x_diff = (usc.x-lsc.x).norm();
     const auto cur_P_diff = (usc.P-lsc.P).norm();

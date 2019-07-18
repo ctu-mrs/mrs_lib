@@ -1,21 +1,27 @@
+// clang: MatousFormat
+/**  \file
+ *   \page handle LKF
+     \brief Defines LKF - a class, implementing the Linear Kalman Filter, as well as a few specialized variants.
+     \author Matouš Vrba - vrbamato@fel.cvut.cz
+ */
 #ifndef LKFSYSTEMMODELS_H
 #define LKFSYSTEMMODELS_H
 
-#include "mrs_lib/SystemModel.h"
+#include <mrs_lib/kalman_filter.h>
 
 namespace mrs_lib
 {
 
-  /* class Model_lkf //{ */
+  /* class LKF //{ */
   template <int n_states, int n_inputs, int n_measurements>
-  class Model_lkf : public SystemModel<n_states, n_inputs, n_measurements>
+  class LKF : public KalmanFilter<n_states, n_inputs, n_measurements>
   {
   public:
     /* LKF definitions (typedefs, constants etc) //{ */
     static const int n = n_states;
     static const int m = n_inputs;
     static const int p = n_measurements;
-    using Base_class = SystemModel<n, m, p>;
+    using Base_class = KalmanFilter<n, m, p>;
 
     using x_t = typename Base_class::x_t;                // state vector n*1
     using u_t = typename Base_class::u_t;                // input vector m*1
@@ -40,9 +46,9 @@ namespace mrs_lib
     //}
 
   public:
-    Model_lkf(){};
+    LKF(){};
 
-    Model_lkf(const A_t& A, const B_t& B, const H_t& H, const Q_t& Q) : A(A), B(B), H(H), Q(Q){};
+    LKF(const A_t& A, const B_t& B, const H_t& H, const Q_t& Q) : A(A), B(B), H(H), Q(Q){};
 
     /* correct() method //{ */
     virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, [[maybe_unused]] int param = 0) const override
@@ -147,16 +153,16 @@ namespace mrs_lib
   };
   //}
 
-  /* class Model_lkf_dt //{ */
+  /* class LKF_dt //{ */
   template <int n_states, int n_inputs, int n_measurements>
-  class Model_lkf_dt : public Model_lkf<n_states, n_inputs, n_measurements>
+  class LKF_dt : public LKF<n_states, n_inputs, n_measurements>
   {
   public:
     /* LKF definitions (typedefs, constants etc) //{ */
     static const int n = n_states;
     static const int m = n_inputs;
     static const int p = n_measurements;
-    using Base_class = Model_lkf<n, m, p>;
+    using Base_class = LKF<n, m, p>;
 
     using x_t = typename Base_class::x_t;
     using u_t = typename Base_class::u_t;
@@ -176,9 +182,9 @@ namespace mrs_lib
     //}
 
   public:
-    Model_lkf_dt(){};
+    LKF_dt(){};
 
-    Model_lkf_dt(const H_t& H, const Q_t& Q, const coeff_A_t& coeff_A, const dtexp_B_t& dtexp_A, const coeff_B_t& coeff_B, const dtexp_A_t& dtexp_B)
+    LKF_dt(const H_t& H, const Q_t& Q, const coeff_A_t& coeff_A, const dtexp_B_t& dtexp_A, const coeff_B_t& coeff_B, const dtexp_A_t& dtexp_B)
         : coeff_A(coeff_A), dtexp_A(dtexp_A), coeff_B(coeff_B), dtexp_B(dtexp_B)
     {
       Base_class::H = H;
@@ -243,16 +249,16 @@ namespace mrs_lib
   };
   //}
 
-  /* class Model_lkf_multiH //{ */
+  /* class LKF_multiH //{ */
   template <int n_states, int n_inputs, int n_measurements>
-  class Model_lkf_multiH : public Model_lkf_dt<n_states, n_inputs, n_measurements>
+  class LKF_multiH : public LKF_dt<n_states, n_inputs, n_measurements>
   {
   public:
     /* LKF definitions (typedefs, constants etc) //{ */
     static const int n = n_states;
     static const int m = n_inputs;
     static const int p = n_measurements;
-    using Base_class = Model_lkf_dt<n, m, p>;
+    using Base_class = LKF_dt<n, m, p>;
 
     using x_t = typename Base_class::x_t;
     using u_t = typename Base_class::u_t;
@@ -272,10 +278,10 @@ namespace mrs_lib
     //}
 
   public:
-    Model_lkf_multiH()
+    LKF_multiH()
     {};
 
-    Model_lkf_multiH(const std::vector<H_t>& Hs, const Q_t& Q, const coeff_A_t& coeff_A, const dtexp_B_t& dtexp_A, const coeff_B_t& coeff_B,
+    LKF_multiH(const std::vector<H_t>& Hs, const Q_t& Q, const coeff_A_t& coeff_A, const dtexp_B_t& dtexp_A, const coeff_B_t& coeff_B,
                      const dtexp_A_t& dtexp_B)
         : coeff_A(coeff_A), dtexp_A(dtexp_A), coeff_B(coeff_B), dtexp_B(dtexp_B), Hs(Hs)
     {
@@ -298,15 +304,15 @@ namespace mrs_lib
   };
   //}
 
-  /* class Model_mrs_odom //{ */
-  class Model_mrs_odom : public Model_lkf_multiH<6, 1, 1>
+  /* class LKF_mrs_odom //{ */
+  class LKF_mrs_odom : public LKF_multiH<6, 1, 1>
   {
   public:
     /* LKF definitions (typedefs, constants etc) //{ */
     static const int n = 6;
     static const int m = 1;
     static const int p = 1;
-    using Base_class = Model_lkf_multiH<n, m, p>;
+    using Base_class = LKF_multiH<n, m, p>;
 
     using x_t = typename Base_class::x_t;
     using u_t = typename Base_class::u_t;
@@ -326,7 +332,7 @@ namespace mrs_lib
     //}
 
   public:
-    Model_mrs_odom(const std::vector<H_t>& Hs, const Q_t& Q, const double p1, const double p2, const double p3, const double default_dt = 1);
+    LKF_mrs_odom(const std::vector<H_t>& Hs, const Q_t& Q, const double p1, const double p2, const double p3, const double default_dt = 1);
     virtual statecov_t predict(const statecov_t& sc, const u_t& u, double dt, [[maybe_unused]] int param = 0) const override;
     virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, int param = 0) const override;
 

@@ -12,13 +12,34 @@
 #include <Eigen/Dense>
 #include <mutex>
 #include <stdexcept>
-#include <mrs_lib/system_model.h>
+#include <mrs_lib/kalman_filter.h>
 
 namespace mrs_lib
 {
 
+  /**
+  * \brief Implementation of the Unscented Kalman Filter.
+  *
+  * The Unscented Kalman Filter (abbreviated UKF, \cite UKF) is a variant of the Kalman filter, which may be used
+  * for state filtration or estimation of non-linear systems as opposed to the Linear Kalman Filter
+  * (which is implemented in \ref LKF). The UKF tends to be more accurate than the simpler Extended Kalman Filter,
+  * espetially for highly non-linear systems. However, it is generally less stable than the LKF because of the extra
+  * matrix square root in the sigma points calculation, so it is recommended to use LKF for linear systems.
+  *
+  * The UKF C++ class itself is templated. This has its advantages and disadvantages. Main disadvantage is that it
+  * may be harder to use if you're not familiar with C++ templates, which, admittedly, can get somewhat messy,
+  * espetially during compilation. Another disadvantage is that if used unwisely, the compilation times can get
+  * much higher when using templates. The main advantage is compile-time checking (if it compiles, then it has
+  * a lower chance of crashing at runtime) and enabling more effective optimalizations during compilation. Also in case
+  * of Eigen, the code is arguably more readable when you use aliases to the specific Matrix instances instead of
+  * havine Eigen::MatrixXd and Eigen::VectorXd everywhere.
+  *
+  * Example usage:
+  * \include src/ukf/example.cpp
+  *
+  */
   template <int n_states, int n_inputs, int n_measurements>
-  class UKF : SystemModel<n_states, n_inputs, n_measurements>
+  class UKF : KalmanFilter<n_states, n_inputs, n_measurements>
   {
   private:
     /* private UKF definitions (typedefs, constants etc) //{ */
@@ -27,38 +48,47 @@ namespace mrs_lib
     static const int p = n_measurements;
     static const int w = 2 * n + 1;  // number of sigma points/weights
 
-    using Base_class = SystemModel<n, m, p>;
+    using Base_class = KalmanFilter<n, m, p>;
 
     using X_t = typename Eigen::Matrix<double, n, w>;  // state sigma points matrix n*w
     using Z_t = typename Eigen::Matrix<double, p, w>;  // measurement sigma points matrix p*w
+    using Pzz_t = typename Eigen::Matrix<double, p, p>;  // Pzz helper matrix p*n
+    using K_t = typename Eigen::Matrix<double, n, p>;  // kalman gain n*p
     //}
 
   public:
     /* public UKF definitions (typedefs, constants etc) //{ */
-    using x_t = typename Base_class::x_t;                // state vector n*1
-    using u_t = typename Base_class::u_t;                // input vector m*1
-    using z_t = typename Base_class::z_t;                // measurement vector p*1
-    using P_t = typename Base_class::P_t;                // state covariance n*n
-    using R_t = typename Base_class::R_t;                // measurement covariance p*p
-    using statecov_t = typename Base_class::statecov_t;  // helper struct for state and covariance
-
-    using Q_t = typename Eigen::Matrix<double, n, n>;  // process covariance n*n
-    using Pzz_t = typename Eigen::Matrix<double, p, p>;  // Pzz helper matrix p*n
-    using K_t = typename Eigen::Matrix<double, n, p>;  // kalman gain n*p
-    using W_t = typename Eigen::Matrix<double, w, 1>;  // weights vector
-
+    //! state vector n*1 typedef
+    using x_t = typename Base_class::x_t;
+    //! input vector m*1 typedef
+    using u_t = typename Base_class::u_t;
+    //! measurement vector p*1 typedef
+    using z_t = typename Base_class::z_t;
+    //! state covariance n*n typedef
+    using P_t = typename Base_class::P_t;
+    //! measurement covariance p*p typedef
+    using R_t = typename Base_class::R_t;
+    //! process covariance n*n typedef
+    using Q_t = typename Eigen::Matrix<double, n, n>;
+    //! weights vector (2n+1)*1 typedef
+    using W_t = typename Eigen::Matrix<double, w, 1>;
+    //! typedef of a helper struct for state and covariance
+    using statecov_t = typename Base_class::statecov_t;
+    //! function of the state transition model typedef
     using transition_model_t = typename std::function<x_t(const x_t&, const u_t&, double)>;
+    //! function of the observation model typedef
     using observation_model_t = typename std::function<z_t(const x_t&)>;
 
-    // exceptions
+    //! is thrown when taking the square root of a matrix fails during sigma generation
     struct square_root_exception : public std::exception
     {
       const char* what() const throw()
       {
-        return "UKF: taking the square root of covariance in prediction update produced NANs!!!";
+        return "UKF: taking the square root of covariance update produced NANs!!!";
       }
     };
 
+    //! is thrown when taking the inverse of a matrix fails during kalman gain calculation
     struct inverse_exception : public std::exception
     {
       const char* what() const throw()
@@ -70,23 +100,62 @@ namespace mrs_lib
 
   public:
     /* UKF constructor //{ */
-    UKF();
+  /*!
+    * \brief Default constructor.
+    *
+    * \param alpha             Scaling parameter of the sigma generation (a small positive value, e.g. 1e-3).
+    * \param kappa             Secondary scaling parameter of the sigma generation (usually set to 0 or 1).
+    * \param beta              Incorporates prior knowledge about the distribution (for Gaussian distribution, 2 is optimal).
+    * \param Q                 Process noise covariance matrix.
+    * \param transition_model  State transition model function.
+    * \param observation_model Observation model function.
+    */
     UKF(const double alpha, const double kappa, const double beta, const Q_t& Q, const transition_model_t& transition_model, const observation_model_t& observation_model);
     //}
 
     /* correct() method //{ */
+  /*!
+    * \brief Implements the state correction step (measurement update).
+    *
+    * \param sc     Previous estimate of the state and covariance.
+    * \param z      Measurement vector.
+    * \param R      Measurement covariance matrix.
+    * \param param  Unused.
+    * \returns      The state and covariance after applying the correction step.
+    */
     virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, [[maybe_unused]] int param = 0) const override;
     //}
 
     /* predict() method //{ */
+  /*!
+    * \brief Implements the state prediction step (time update).
+    *
+    * \param sc     Previous estimate of the state and covariance.
+    * \param u      Input vector.
+    * \param dt     Duration since the previous estimate.
+    * \param param  Unused.
+    * \returns      The state and covariance after applying the correction step.
+    */
     virtual statecov_t predict(const statecov_t& sc, const u_t& u, double dt, [[maybe_unused]] int param = 0) const override;
     //}
 
     /* setConstants() method //{ */
+  /*!
+    * \brief Changes the Unscented Transform parameters.
+    *
+    * \param alpha  Scaling parameter of the sigma generation (a small positive value - e.g. 1e-3).
+    * \param kappa  Secondary scaling parameter of the sigma generation (usually set to 0 or 1).
+    * \param beta   Incorporates prior knowledge about the distribution (for Gaussian distribution, 2 is optimal).
+    */
     void setConstants(const double alpha, const double kappa, const double beta);
     //}
 
     /* setQ() method //{ */
+  /*!
+    * \brief Changes the process noise covariance matrix..
+    *
+    * \param Q  The new process noise covariance matrix.
+    */
     void setQ(const Q_t& Q)
     {
       m_Q = Q;

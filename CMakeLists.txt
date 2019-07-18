@@ -71,6 +71,12 @@ target_link_libraries(ukf_tests
   ${Eigen_LIBRARIES}
   )
 
+add_executable(ukf_example src/ukf/example.cpp)
+target_link_libraries(ukf_example
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
 add_library(ConvexPolygon src/convex_polygon/convex_polygon.cpp)
 target_link_libraries(ConvexPolygon
   ${catkin_LIBRARIES}

@@ -15,15 +15,16 @@ namespace mrs_lib
 {
   /* constructor //{ */
 
-  template <int n_states, int n_inputs, int n_measurements>
-  UKF<n_states, n_inputs, n_measurements>::UKF()
-  {
-  }
+  /* template <int n_states, int n_inputs, int n_measurements> */
+  /* UKF<n_states, n_inputs, n_measurements>::UKF() */
+  /* { */
+  /* } */
 
   template <int n_states, int n_inputs, int n_measurements>
   UKF<n_states, n_inputs, n_measurements>::UKF(const double alpha, const double kappa, const double beta, const Q_t& Q, const transition_model_t& transition_model, const observation_model_t& observation_model)
     : m_alpha(alpha), m_kappa(kappa), m_beta(beta), m_Wm(W_t::Zero()), m_Wc(W_t::Zero()), m_Q(Q), m_transition_model(transition_model), m_observation_model(observation_model)
   {
+    assert(alpha > 0.0);
     computeWeights();
   }
 
@@ -128,11 +129,9 @@ namespace mrs_lib
     const auto xrep = x.replicate(1, n);
 
     // positive sigma points
-    /* S.block(1, n+1, n, n) = xrep + P_sqrt; */
     S.template block<n, n>(0, 1) = xrep + P_sqrt;
 
     // negative sigma points
-    /* S.block(n+1, w, n, n) = xrep - P_sqrt; */
     S.template block<n, n>(0, n+1) = xrep - P_sqrt;
 
     return S;
@@ -165,9 +164,6 @@ namespace mrs_lib
     }
 
     // recompute the covariance
-    /* const auto xrep = x.replicate(1, w); */
-    /* const auto tmp = X - xrep; */
-    /* ret.P = tmp * Eigen::DiagonalMatrix<double, w, w>(m_Wc) * tmp.transpose() + m_Q; */
     ret.P = P_t::Zero();
     for (int i = 0; i < w; i++)
     {
