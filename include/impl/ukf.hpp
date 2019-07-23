@@ -134,8 +134,8 @@ namespace mrs_lib
     // negative sigma points
     S.template block<n, n>(0, n+1) = xrep - P_sqrt;
 
-    std::cout << "x: " << std::endl << x << std::endl;
-    std::cout << "S rowmean: " << std::endl << S.rowwise().mean() << std::endl;
+    /* std::cout << "x: " << std::endl << x << std::endl; */
+    /* std::cout << "S rowmean: " << std::endl << S.rowwise().mean() << std::endl; */
 
     return S;
   }
@@ -159,9 +159,9 @@ namespace mrs_lib
       X.col(i) = m_transition_model(S.col(i), u, dt);
     }
 
-    std::cout << "x: " << std::endl << x << std::endl;
-    std::cout << "X rowmean: " << std::endl << X.rowwise().mean() << std::endl;
-    std::cout << "m_Wm sum: " << m_Wm.sum() << std::endl;
+    /* std::cout << "x: " << std::endl << x << std::endl; */
+    /* std::cout << "X rowmean: " << std::endl << X.rowwise().mean() << std::endl; */
+    /* std::cout << "m_Wm sum: " << m_Wm.sum() << std::endl; */
 
     // recompute the state vector
     ret.x = x_t::Zero();

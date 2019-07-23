@@ -44,11 +44,13 @@ H_t H;
 ukf_t::x_t tra_model_f(const ukf_t::x_t& x, const ukf_t::u_t& u, [[maybe_unused]] const double dt)
 {
   return A*x + B*u;
+  /* return A*x; */
 }
 
 Eigen::VectorXd tra_model_f2(Eigen::VectorXd x, Eigen::VectorXd u, [[maybe_unused]] const double dt)
 {
   return A*x + B*u;
+  /* return A*x; */
 }
 
 ukf_t::z_t obs_model_f(const ukf_t::x_t& x)
@@ -72,13 +74,13 @@ int main()
 {
   srand(std::time(0));
   const double alpha = 1e-3;
-  const double kappa = 1;
+  const double kappa = 0;
   const double beta  = 2;
   tra_model_t tra_model(tra_model_f);
   mrs_lib::model tra_model2(tra_model_f2);
   obs_model_t obs_model(obs_model_f);
   const double dt = 1.0;
-  const double r = 10.0;
+  const double r = 1.0;
   const Q_t Q = r*Q_t::Identity();
   /* const R_t R = r*R_t::Identity(); */
 
@@ -94,16 +96,21 @@ int main()
   const R_t R_tmp = R_t::Random();
   const R_t R = r*R_tmp*R_tmp.transpose();
   mrs_lib::Ukf ukf2(n_states, n_inputs, n_measurements, alpha, kappa, beta, Q, R, H, tra_model2);
+  ukf2.reset(x0);
+  ukf2.setCovariance(P0);
   lkf_t lkf(A, B, H, Q);
 
-  const int n_its = 1e4;
+  const int n_its = 1e3;
   std::vector<ukf_t::statecov_t> uscs;
+  std::vector<ukf_t::statecov_t> uscs2;
   std::vector<lkf_t::statecov_t> lscs;
   std::vector<lkf_t::statecov_t> scs;
   uscs.reserve(n_its+1);
+  uscs2.reserve(n_its+1);
   lscs.reserve(n_its+1);
   scs.reserve(n_its+1);
   uscs.push_back(sc0);
+  uscs2.push_back(sc0);
   lscs.push_back(sc0);
   scs.push_back(sc0);
 
@@ -145,18 +152,42 @@ int main()
     }
     catch (const std::exception& e)
     {
-      ROS_ERROR("UKF failed: %s", e.what());
+      ROS_ERROR("NEW  UKF failed: %s", e.what());
     }
 
-    const auto cur_x_diff = (usc.x-lsc.x).norm();
-    const auto cur_P_diff = (usc.P-lsc.P).norm();
-    std::cout << "cur. x diff: " << cur_x_diff << std::endl;
-    std::cout << "cur. P diff: " << cur_P_diff << std::endl;
+    auto usc2 = uscs2.back();
+    {
+      // Tomas notation
+      ukf2.setQ(R);
+      ukf2.setR(Q);
+      try
+      {
+        usc2.x = ukf2.predictionUpdate(dt, u);
+        usc2.P = ukf2.getCovariance();
+        uscs.push_back(usc2);
+        usc2.x = ukf2.correctionUpdate(z);
+        usc2.P = ukf2.getCovariance();
+        uscs2.push_back(usc2);
+      }
+      catch (const std::exception& e)
+      {
+        ROS_ERROR("ORIG UKF failed: %s", e.what());
+      }
+    }
 
-    const auto cur_lgt_diff = (sc.x-lsc.x).norm();
-    const auto cur_ugt_diff = (sc.x-usc.x).norm();
-    std::cout << "cur. lgt diff: " << cur_lgt_diff << std::endl;
-    std::cout << "cur. ugt diff: " << cur_ugt_diff << std::endl;
+
+    /* const auto cur_x_diff = (usc.x-usc2.x).norm(); */
+    /* const auto cur_P_diff = (usc.P-usc2.P).norm(); */
+    /* std::cout << "cur. x diff: " << cur_x_diff << std::endl; */
+    /* std::cout << "cur. P diff: " << cur_P_diff << std::endl; */
+
+    /* const auto cur_lgt_diff = (sc.x-usc2.x).norm(); */
+    /* const auto cur_ugt_diff = (sc.x-usc.x).norm(); */
+    /* std::cout << "cur. ukf_orig diff: " << cur_lgt_diff << std::endl; */
+    /* std::cout << "cur. ukf_new  diff: " << cur_ugt_diff << std::endl; */
+    std::cout << "gt       state:" << std::endl << sc.x.transpose() << std::endl;
+    std::cout << "ukf_orig state:" << std::endl << usc2.x.transpose() << std::endl;
+    std::cout << "ukf_new  state:" << std::endl << usc.x.transpose() << std::endl;
   }
 
   double x_diff = 0.0;
@@ -164,9 +195,10 @@ int main()
   for (int it = 0; it < n_its+1; it++)
   {
     const auto usc = uscs.at(it);
-    const auto lsc = lscs.at(it);
-    const auto cur_x_diff = (usc.x-lsc.x).norm();
-    const auto cur_P_diff = (usc.P-lsc.P).norm();
+    const auto usc2 = uscs2.at(it);
+    /* const auto lsc = lscs.at(it); */
+    const auto cur_x_diff = (usc.x-usc2.x).norm();
+    const auto cur_P_diff = (usc.P-usc2.P).norm();
     x_diff += cur_x_diff;
     P_diff += cur_P_diff;
   }

@@ -228,7 +228,7 @@ void Ukf::setCovariance(const Eigen::MatrixXd in) {
 /* predictionUpdate() //{ */
 
 // do iteration of the filter
-Eigen::VectorXd Ukf::predictionUpdate(const double dt) {
+Eigen::VectorXd Ukf::predictionUpdate(const double dt, const Eigen::VectorXd& u) {
 
   std::scoped_lock lock(ukf_mutex);
 
@@ -290,7 +290,7 @@ Eigen::VectorXd Ukf::predictionUpdate(const double dt) {
 
   // update sigmas by the model
   for (int i = 0; i < 2 * n + 1; i++) {
-    X.col(i) = modelIteration(X.col(i), VectorXd::Zero(1), dt);
+    X.col(i) = modelIteration(X.col(i), u, dt);
   }
 
   // recompute the state vector

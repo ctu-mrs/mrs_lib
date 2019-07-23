@@ -47,7 +47,7 @@ public:
   void setCovariance(const Eigen::MatrixXd in);
 
   // do iteration of the filter
-  Eigen::VectorXd predictionUpdate(const double dt);
+  Eigen::VectorXd predictionUpdate(const double dt, const Eigen::VectorXd& u = Eigen::VectorXd());
 
   // iterate without the correction phase
   Eigen::VectorXd correctionUpdate(const Eigen::VectorXd measurement);
