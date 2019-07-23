@@ -12,9 +12,9 @@
 
 namespace mrs_lib
 {
-  const int n_states = 9;
-  const int n_inputs = 8;
-  const int n_measurements = 7;
+  const int n_states = 3;
+  const int n_inputs = 1;
+  const int n_measurements = 2;
 
   using ukf_t = UKF<n_states, n_inputs, n_measurements>;
   using lkf_t = LKF<n_states, n_inputs, n_measurements>;
@@ -41,18 +41,43 @@ A_t A;
 B_t B;
 H_t H;
 
-ukf_t::x_t tra_model_f(const ukf_t::x_t& x, const ukf_t::u_t& u, [[maybe_unused]] const double dt)
+// Some helper enums to make the code more readable
+enum x_pos
 {
-  return A*x + B*u;
-  /* return A*x; */
+  x_x = 0,
+  x_y = 1,
+  x_alpha = 2,
+};
+enum u_pos
+{
+  u_alpha = 0,
+};
+enum z_pos
+{
+  z_x = 0,
+  z_y = 1,
+};
+
+// This function implements the state transition
+const double speed = 0.3;
+x_t tra_model_f(const x_t& x, const u_t& u, const double dt)
+{
+  x_t ret;
+  ret(x_x) = x(x_x) + dt*std::cos(x(x_alpha))*speed;
+  ret(x_y) = x(x_y) + dt*std::sin(x(x_alpha))*speed;
+  ret(x_alpha) = x(x_alpha) + u(u_alpha);
+  return ret;
+}
+Eigen::VectorXd tra_model_f2(Eigen::VectorXd x, Eigen::VectorXd u, const double dt)
+{
+  x_t ret;
+  ret(x_x) = x(x_x) + dt*std::cos(x(x_alpha))*speed;
+  ret(x_y) = x(x_y) + dt*std::sin(x(x_alpha))*speed;
+  ret(x_alpha) = x(x_alpha) + u(u_alpha);
+  return ret;
 }
 
-Eigen::VectorXd tra_model_f2(Eigen::VectorXd x, Eigen::VectorXd u, [[maybe_unused]] const double dt)
-{
-  return A*x + B*u;
-  /* return A*x; */
-}
-
+// This function implements the observation generation from a state
 ukf_t::z_t obs_model_f(const ukf_t::x_t& x)
 {
   return H*x;
@@ -79,67 +104,61 @@ int main()
   tra_model_t tra_model(tra_model_f);
   mrs_lib::model tra_model2(tra_model_f2);
   obs_model_t obs_model(obs_model_f);
-  const double dt = 1.0;
-  const double r = 1.0;
-  const Q_t Q = r*Q_t::Identity();
-  /* const R_t R = r*R_t::Identity(); */
 
-  A = A_t::Identity();
-  B = r*B_t::Random();
-  H = r*H_t::Random();
-  const x_t x0 = r*x_t::Random();
+  // dt will be constant in this example
+  const double dt = 1.0;
+
+  // Initialize the process noise matrix
+  Q_t Q; Q << 
+    1e-3, 0, 0,
+    0, 1e-3, 0,
+    0, 0, 1e-2;
+
+  // Initialize the measurement noise matrix
+  R_t R; R <<
+    1e-2, 0,
+    0, 1e-2;
+
+  // Generate initial state and covariance
+  const x_t x0 = 100.0*x_t::Random();
   P_t P_tmp = P_t::Random();
-  const P_t P0 = r*P_tmp*P_tmp.transpose();
+  const P_t P0 = 10.0*P_tmp*P_tmp.transpose();
   const ukf_t::statecov_t sc0({x0, P0});
 
   ukf_t ukf(alpha, kappa, beta, Q, tra_model, obs_model);
-  const R_t R_tmp = R_t::Random();
-  const R_t R = r*R_tmp*R_tmp.transpose();
   mrs_lib::Ukf ukf2(n_states, n_inputs, n_measurements, alpha, kappa, beta, Q, R, H, tra_model2);
   ukf2.reset(x0);
   ukf2.setCovariance(P0);
-  lkf_t lkf(A, B, H, Q);
 
   const int n_its = 1e3;
   std::vector<ukf_t::statecov_t> uscs;
   std::vector<ukf_t::statecov_t> uscs2;
-  std::vector<lkf_t::statecov_t> lscs;
   std::vector<lkf_t::statecov_t> scs;
+
   uscs.reserve(n_its+1);
   uscs2.reserve(n_its+1);
-  lscs.reserve(n_its+1);
   scs.reserve(n_its+1);
+
   uscs.push_back(sc0);
   uscs2.push_back(sc0);
-  lscs.push_back(sc0);
   scs.push_back(sc0);
 
   for (int it = 0; it < n_its; it++)
   {
     std::cout << "step: " << it << std::endl;
-    const Q_t Q_tmp = Q_t::Random();
-    const Q_t Q = r*Q_tmp*Q_tmp.transpose();
-    const R_t R_tmp = R_t::Random();
-    const R_t R = r*R_tmp*R_tmp.transpose();
-    const u_t u = r*u_t::Random();
-    /* const x_t x = r*x_t::Random(); */
-    /* const P_t P = r*P_t::Random(); */
-    /* const z_t z = r*z_t::Random(); */
-    /* ukf_t::statecov_t sc {x, P}; */
-    /* scs.push_back(sc); */
-    /* scs.push_back(sc); */
+
+    // Generate a new input vector
+    const u_t u = u_t::Random();
+    
+    // Generate a new state according to the model and noise parameters
     auto sc = scs.back();
     sc.x = tra_model_f(sc.x, u, dt) + normal_randmat(Q);
-    scs.push_back(sc);
+    
+    // Generate a new observation according to the model and noise parameters
     const z_t z = obs_model_f(sc.x) + normal_randmat(R);
-    scs.push_back(sc);
 
-    lkf.Q = Q;
-    auto lsc = lscs.back();
-    lsc = lkf.predict(lsc, u, dt);
-    lscs.push_back(lsc);
-    lsc = lkf.correct(lsc, z, R);
-    lscs.push_back(lsc);
+    scs.push_back(sc);
+    scs.push_back(sc);
 
     ukf.setQ(Q);
     auto usc = uscs.back();
