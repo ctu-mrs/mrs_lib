@@ -6,6 +6,7 @@
  */
 
 #include <mrs_lib/ukf.h>
+#include <mrs_lib/Ukf.h>
 #include <mrs_lib/lkf.h>
 #include <random>
 
@@ -45,6 +46,11 @@ ukf_t::x_t tra_model_f(const ukf_t::x_t& x, const ukf_t::u_t& u, [[maybe_unused]
   return A*x + B*u;
 }
 
+Eigen::VectorXd tra_model_f2(Eigen::VectorXd x, Eigen::VectorXd u, [[maybe_unused]] const double dt)
+{
+  return A*x + B*u;
+}
+
 ukf_t::z_t obs_model_f(const ukf_t::x_t& x)
 {
   return H*x;
@@ -69,6 +75,7 @@ int main()
   const double kappa = 1;
   const double beta  = 2;
   tra_model_t tra_model(tra_model_f);
+  mrs_lib::model tra_model2(tra_model_f2);
   obs_model_t obs_model(obs_model_f);
   const double dt = 1.0;
   const double r = 10.0;
@@ -84,6 +91,9 @@ int main()
   const ukf_t::statecov_t sc0({x0, P0});
 
   ukf_t ukf(alpha, kappa, beta, Q, tra_model, obs_model);
+  const R_t R_tmp = R_t::Random();
+  const R_t R = r*R_tmp*R_tmp.transpose();
+  mrs_lib::Ukf ukf2(n_states, n_inputs, n_measurements, alpha, kappa, beta, Q, R, H, tra_model2);
   lkf_t lkf(A, B, H, Q);
 
   const int n_its = 1e4;

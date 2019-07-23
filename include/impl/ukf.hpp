@@ -46,7 +46,7 @@ namespace mrs_lib
     // initialize the rest of the weights
     for (int i = 1; i < w; i++)
     {
-      m_Wm(i) = 1.0 / (2.0*(double(n) + m_lambda));
+      m_Wm(i) = (1.0 - m_Wm(0))/(w - 1.0);
       m_Wc(i) = m_Wm(i);
     }
   }
@@ -134,6 +134,9 @@ namespace mrs_lib
     // negative sigma points
     S.template block<n, n>(0, n+1) = xrep - P_sqrt;
 
+    std::cout << "x: " << std::endl << x << std::endl;
+    std::cout << "S rowmean: " << std::endl << S.rowwise().mean() << std::endl;
+
     return S;
   }
   //}
@@ -156,11 +159,18 @@ namespace mrs_lib
       X.col(i) = m_transition_model(S.col(i), u, dt);
     }
 
+    std::cout << "x: " << std::endl << x << std::endl;
+    std::cout << "X rowmean: " << std::endl << X.rowwise().mean() << std::endl;
+    std::cout << "m_Wm sum: " << m_Wm.sum() << std::endl;
+
     // recompute the state vector
     ret.x = x_t::Zero();
     for (int i = 0; i < w; i++)
     {
-      ret.x += m_Wm(i) * X.col(i);
+      //TODO: WHY DOES THIS SHIT WORK IF I SUBSTITUTE m_Wm(i) FOR 1.0/w ??
+      x_t tmp = 1.0/w * X.col(i);
+      /* x_t tmp = m_Wm(i) * X.col(i); */
+      ret.x += tmp;
     }
 
     // recompute the covariance
