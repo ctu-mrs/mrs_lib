@@ -69,7 +69,7 @@ namespace mrs_lib
     //! measurement covariance p*p typedef
     using R_t = typename Base_class::R_t;
     //! process covariance n*n typedef
-    using Q_t = typename Eigen::Matrix<double, n, n>;
+    using Q_t = typename Base_class::Q_t;
     //! weights vector (2n+1)*1 typedef
     using W_t = typename Eigen::Matrix<double, w, 1>;
     //! typedef of a helper struct for state and covariance
@@ -114,11 +114,10 @@ namespace mrs_lib
     * \param alpha             Scaling parameter of the sigma generation (a small positive value, e.g. 1e-3).
     * \param kappa             Secondary scaling parameter of the sigma generation (usually set to 0 or 1).
     * \param beta              Incorporates prior knowledge about the distribution (for Gaussian distribution, 2 is optimal).
-    * \param Q                 Process noise covariance matrix.
     * \param transition_model  State transition model function.
     * \param observation_model Observation model function.
     */
-    UKF(const double alpha, const double kappa, const double beta, const Q_t& Q, const transition_model_t& transition_model, const observation_model_t& observation_model);
+    UKF(const transition_model_t& transition_model, const observation_model_t& observation_model, const double alpha = 1e-3, const double kappa = 1, const double beta = 2);
     //}
 
     /* correct() method //{ */
@@ -140,11 +139,12 @@ namespace mrs_lib
     *
     * \param sc     Previous estimate of the state and covariance.
     * \param u      Input vector.
+    * \param Q      Process noise covariance matrix.
     * \param dt     Duration since the previous estimate.
     * \param param  Unused.
     * \returns      The state and covariance after applying the correction step.
     */
-    virtual statecov_t predict(const statecov_t& sc, const u_t& u, double dt, [[maybe_unused]] int param = 0) const override;
+    virtual statecov_t predict(const statecov_t& sc, const u_t& u, const Q_t& Q, double dt, [[maybe_unused]] int param = 0) const override;
     //}
 
     /* setConstants() method //{ */
@@ -156,18 +156,6 @@ namespace mrs_lib
     * \param beta   Incorporates prior knowledge about the distribution (for Gaussian distribution, 2 is optimal).
     */
     void setConstants(const double alpha, const double kappa, const double beta);
-    //}
-
-    /* setQ() method //{ */
-  /*!
-    * \brief Changes the process noise covariance matrix..
-    *
-    * \param Q  The new process noise covariance matrix.
-    */
-    void setQ(const Q_t& Q)
-    {
-      m_Q = Q;
-    }
     //}
 
   private:
@@ -184,8 +172,6 @@ namespace mrs_lib
     double m_alpha, m_kappa, m_beta, m_lambda;
     W_t m_Wm;
     W_t m_Wc;
-
-    Q_t m_Q;
 
     transition_model_t m_transition_model;
     observation_model_t m_observation_model;

@@ -3,10 +3,9 @@
 namespace mrs_lib
 {
   /* LKF_MRS_odom constructor //{ */
-  LKF_MRS_odom::LKF_MRS_odom(const std::vector<LKF_MRS_odom::H_t>& Hs, const LKF_MRS_odom::Q_t& Q, const double p1, const double p2, const double p3, const double default_dt)
+  LKF_MRS_odom::LKF_MRS_odom(const std::vector<LKF_MRS_odom::H_t>& Hs, const double p1, const double p2, const double p3, const double default_dt)
     : p1(p1), p2(p2), p3(p3)
   {
-    Base_class::Q = Q;
     Base_class::Hs = Hs;
     const double& dt = default_dt;
     Base_class::A << 1, dt, 0.5*dt*dt, 0, 0, 0,
@@ -21,11 +20,11 @@ namespace mrs_lib
   //}
 
   /* LKF_MRS_odom::predict() method //{ */
-  LKF_MRS_odom::statecov_t LKF_MRS_odom::predict(const statecov_t& sc, const u_t& u, double dt, [[maybe_unused]] int param) const
+  LKF_MRS_odom::statecov_t LKF_MRS_odom::predict(const statecov_t& sc, const u_t& u, const Q_t& Q, double dt, [[maybe_unused]] int param) const
   {
     statecov_t ret;
     ret.x = state_predict_optimized(sc.x, u, dt);
-    ret.P = covariance_predict_optimized(sc.P, Base_class::Q, dt);
+    ret.P = covariance_predict_optimized(sc.P, Q, dt);
     /* ret.x = Base_class::state_predict(A, sc.x, B, u); */
     /* ret.P = Base_class::covariance_predict(Base_class::A, sc.P, Base_class::Q); */
     return ret;

@@ -21,8 +21,8 @@ namespace mrs_lib
   }
 
   template <int n_states, int n_inputs, int n_measurements>
-  UKF<n_states, n_inputs, n_measurements>::UKF(const double alpha, const double kappa, const double beta, const Q_t& Q, const transition_model_t& transition_model, const observation_model_t& observation_model)
-    : m_alpha(alpha), m_kappa(kappa), m_beta(beta), m_Wm(W_t::Zero()), m_Wc(W_t::Zero()), m_Q(Q), m_transition_model(transition_model), m_observation_model(observation_model)
+  UKF<n_states, n_inputs, n_measurements>::UKF(const transition_model_t& transition_model, const observation_model_t& observation_model, const double alpha, const double kappa, const double beta)
+    : m_alpha(alpha), m_kappa(kappa), m_beta(beta), m_Wm(W_t::Zero()), m_Wc(W_t::Zero()), m_transition_model(transition_model), m_observation_model(observation_model)
   {
     assert(alpha > 0.0);
     computeWeights();
@@ -144,7 +144,7 @@ namespace mrs_lib
   /* predict() method //{ */
 
   template <int n_states, int n_inputs, int n_measurements>
-  typename UKF<n_states, n_inputs, n_measurements>::statecov_t UKF<n_states, n_inputs, n_measurements>::predict(const statecov_t& sc, const u_t& u, double dt, [[maybe_unused]] int param) const
+  typename UKF<n_states, n_inputs, n_measurements>::statecov_t UKF<n_states, n_inputs, n_measurements>::predict(const statecov_t& sc, const u_t& u, const Q_t& Q, double dt, [[maybe_unused]] int param) const
   {
     const auto& x = sc.x;
     const auto& P = sc.P;
@@ -179,7 +179,7 @@ namespace mrs_lib
     {
       ret.P += m_Wc(i) * (X.col(i) - ret.x) * (X.col(i) - ret.x).transpose();
     }
-    ret.P += m_Q;
+    ret.P += Q;
 
     return ret;
   }

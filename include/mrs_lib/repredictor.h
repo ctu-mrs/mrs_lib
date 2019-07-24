@@ -26,6 +26,7 @@ namespace mrs_lib
 
     using P_t = typename Model::P_t;  // state covariance n*n
     using R_t = typename Model::R_t;  // measurement covariance p*p
+    using Q_t = typename Model::Q_t;  // process noise covariance n*n
     //}
 
     /* info_t struct //{ */
@@ -40,6 +41,7 @@ namespace mrs_lib
       } type;
       z_t z;
       R_t R;
+      Q_t Q;
       u_t u;
       int param;
       ros::Time stamp;
@@ -88,7 +90,7 @@ namespace mrs_lib
 #ifdef DEBUG
                 std::cout << std::fixed << std::setprecision(2) <<  "Predicting using input from " << m_info.stamp.toSec() << " to " << stamp.toSec() << std::endl;
 #endif
-                ret = model.predict(m_statecov, m_info.u, dt, m_info.param);
+                ret = model.predict(m_statecov, m_info.u, m_info.Q, dt, m_info.param);
                 /* last_u = m_info.u; */
                 break;
             case info_t::type_t::MEASUREMENT:
@@ -97,7 +99,7 @@ namespace mrs_lib
                 std::cout << std::fixed << std::setprecision(2) << "Predicting using no input from " << m_info.stamp.toSec() << " to " << stamp.toSec() << std::endl;
 #endif
                 /* ret = model.predict(m_statecov, last_u, dt, m_info.param); */
-                ret = model.predict(m_statecov, u_t::Zero(), dt, m_info.param);
+                ret = model.predict(m_statecov, u_t::Zero(), m_info.Q, dt, m_info.param);
           }
           return ret;
         }

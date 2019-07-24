@@ -28,12 +28,12 @@ namespace mrs_lib
     using z_t = typename Base_class::z_t;                // measurement vector p*1
     using P_t = typename Base_class::P_t;                // state covariance n*n
     using R_t = typename Base_class::R_t;                // measurement covariance p*p
+    using Q_t = typename Base_class::Q_t;                // measurement covariance p*p
     using statecov_t = typename Base_class::statecov_t;  // helper struct for state and covariance
 
     typedef Eigen::Matrix<double, n, n> A_t;  // system matrix n*n
     typedef Eigen::Matrix<double, n, m> B_t;  // input matrix n*m
     typedef Eigen::Matrix<double, p, n> H_t;  // measurement mapping p*n
-    typedef Eigen::Matrix<double, n, n> Q_t;  // process covariance n*n
     typedef Eigen::Matrix<double, n, p> K_t;  // kalman gain n*p
 
     struct inverse_exception : public std::exception
@@ -48,7 +48,7 @@ namespace mrs_lib
   public:
     LKF(){};
 
-    LKF(const A_t& A, const B_t& B, const H_t& H, const Q_t& Q) : A(A), B(B), H(H), Q(Q){};
+    LKF(const A_t& A, const B_t& B, const H_t& H) : A(A), B(B), H(H){};
 
     /* correct() method //{ */
     virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, [[maybe_unused]] int param = 0) const override
@@ -59,7 +59,7 @@ namespace mrs_lib
     //}
 
     /* predict() method //{ */
-    virtual statecov_t predict(const statecov_t& sc, const u_t& u, [[maybe_unused]] double dt, [[maybe_unused]] int param = 0) const override
+    virtual statecov_t predict(const statecov_t& sc, const u_t& u, const Q_t& Q, [[maybe_unused]] double dt, [[maybe_unused]] int param = 0) const override
     {
       statecov_t ret;
       ret.x = state_predict(A, sc.x, B, u);
@@ -72,7 +72,6 @@ namespace mrs_lib
     A_t A;  // system matrix n*n
     B_t B;  // input matrix n*m
     H_t H;  // measurement mapping p*n
-    Q_t Q;  // process covariance n*n
 
   public:
     /* covariance_predict() method //{ */
@@ -184,21 +183,20 @@ namespace mrs_lib
   public:
     LKF_dt(){};
 
-    LKF_dt(const H_t& H, const Q_t& Q, const coeff_A_t& coeff_A, const dtexp_B_t& dtexp_A, const coeff_B_t& coeff_B, const dtexp_A_t& dtexp_B)
+    LKF_dt(const H_t& H, const coeff_A_t& coeff_A, const dtexp_B_t& dtexp_A, const coeff_B_t& coeff_B, const dtexp_A_t& dtexp_B)
         : coeff_A(coeff_A), dtexp_A(dtexp_A), coeff_B(coeff_B), dtexp_B(dtexp_B)
     {
       Base_class::H = H;
-      Base_class::Q = Q;
     };
 
     /* predict() method //{ */
-    virtual statecov_t predict(const statecov_t& sc, const u_t& u, double dt, [[maybe_unused]] int param = 0) const override
+    virtual statecov_t predict(const statecov_t& sc, const u_t& u, const Q_t& Q, double dt, [[maybe_unused]] int param = 0) const override
     {
       statecov_t ret;
       A_t A = get_A(coeff_A, dtexp_A, dt);
       B_t B = get_B(coeff_B, dtexp_B, dt);
       ret.x = Base_class::state_predict(A, sc.x, B, u);
-      ret.P = Base_class::covariance_predict(A, sc.P, Base_class::Q);
+      ret.P = Base_class::covariance_predict(A, sc.P, Q);
       return ret;
     };
     //}
@@ -281,11 +279,10 @@ namespace mrs_lib
     LKF_multiH()
     {};
 
-    LKF_multiH(const std::vector<H_t>& Hs, const Q_t& Q, const coeff_A_t& coeff_A, const dtexp_B_t& dtexp_A, const coeff_B_t& coeff_B,
+    LKF_multiH(const std::vector<H_t>& Hs, const coeff_A_t& coeff_A, const dtexp_B_t& dtexp_A, const coeff_B_t& coeff_B,
                      const dtexp_A_t& dtexp_B)
         : coeff_A(coeff_A), dtexp_A(dtexp_A), coeff_B(coeff_B), dtexp_B(dtexp_B), Hs(Hs)
     {
-      Base_class::Q = Q;
     };
 
     /* correct() method //{ */
@@ -332,8 +329,8 @@ namespace mrs_lib
     //}
 
   public:
-    LKF_MRS_odom(const std::vector<H_t>& Hs, const Q_t& Q, const double p1, const double p2, const double p3, const double default_dt = 1);
-    virtual statecov_t predict(const statecov_t& sc, const u_t& u, double dt, [[maybe_unused]] int param = 0) const override;
+    LKF_MRS_odom(const std::vector<H_t>& Hs, const double p1, const double p2, const double p3, const double default_dt = 1);
+    virtual statecov_t predict(const statecov_t& sc, const u_t& u, const Q_t& Q, double dt, [[maybe_unused]] int param = 0) const override;
     virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, int param = 0) const override;
 
   public:

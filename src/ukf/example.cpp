@@ -111,7 +111,7 @@ int main()
   const ukf_t::statecov_t sc0({x0, P0});
 
   // Instantiate the UKF itself
-  ukf_t ukf(alpha, kappa, beta, Q, tra_model, obs_model);
+  ukf_t ukf(tra_model, obs_model, alpha, kappa, beta);
 
   const int n_its = 1e4;
   // Prepare the ground-truth state and the estimated state and covariance
@@ -136,7 +136,7 @@ int main()
     try
     {
       // Apply the prediction step
-      sc_est = ukf.predict(sc_est, u, dt);
+      sc_est = ukf.predict(sc_est, u, Q, dt);
       
       // Apply the correction step
       sc_est = ukf.correct(sc_est, z, R);

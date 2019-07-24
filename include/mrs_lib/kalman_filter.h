@@ -21,6 +21,7 @@ namespace mrs_lib
 
     typedef Eigen::Matrix<double, n, n> P_t;  // state covariance n*n
     typedef Eigen::Matrix<double, p, p> R_t;  // measurement covariance p*p
+    typedef Eigen::Matrix<double, p, p> Q_t;  // process noise covariance n*n
     //}
 
     /* statecov_t struct //{ */
@@ -33,7 +34,7 @@ namespace mrs_lib
 
     public:
       virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, int param) const = 0;
-      virtual statecov_t predict(const statecov_t& sc, const u_t& u, double dt, int param) const = 0;
+      virtual statecov_t predict(const statecov_t& sc, const u_t& u, const Q_t& Q, double dt, int param) const = 0;
   };
   //}
 }

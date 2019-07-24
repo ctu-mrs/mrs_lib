@@ -170,12 +170,11 @@ int main()
     scs.push_back(sc);
     std::cout << "gt       state:" << std::endl << sc.x.transpose() << std::endl;
 
-    ukf.setQ(Q);
     auto usc = uscs.back();
     try
     {
       std::cout << "ukf_new  state:" << std::endl << usc.x.transpose() << std::endl;
-      usc = ukf.predict(usc, u, dt);
+      usc = ukf.predict(usc, u, Q, dt);
       std::cout << "ukf_new  predi:" << std::endl << usc.x.transpose() << std::endl;
       uscs.push_back(usc);
       usc = ukf.correct(usc, z, R);
