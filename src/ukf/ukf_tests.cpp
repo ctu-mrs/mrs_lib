@@ -12,7 +12,7 @@
 
 namespace mrs_lib
 {
-  const int n_states = 3;
+  const int n_states = 4;
   const int n_inputs = 1;
   const int n_measurements = 2;
 
@@ -37,16 +37,15 @@ using H_t = lkf_t::H_t;
 template class mrs_lib::UKF<n_states, n_inputs, n_measurements>;
 template class mrs_lib::LKF<n_states, n_inputs, n_measurements>;
 
-A_t A;
-B_t B;
 H_t H;
 
 // Some helper enums to make the code more readable
 enum x_pos
 {
   x_x = 0,
-  x_y = 1,
-  x_alpha = 2,
+  x_y,
+  x_alpha,
+  x_speed,
 };
 enum u_pos
 {
@@ -55,25 +54,26 @@ enum u_pos
 enum z_pos
 {
   z_x = 0,
-  z_y = 1,
+  z_y,
 };
 
 // This function implements the state transition
-const double speed = 0.3;
 x_t tra_model_f(const x_t& x, const u_t& u, const double dt)
 {
   x_t ret;
-  ret(x_x) = x(x_x) + dt*std::cos(x(x_alpha))*speed;
-  ret(x_y) = x(x_y) + dt*std::sin(x(x_alpha))*speed;
-  ret(x_alpha) = x(x_alpha) + u(u_alpha);
+  ret(x_x) = x(x_x) + dt*std::cos(x(x_alpha))*x(x_speed);
+  ret(x_y) = x(x_y) + dt*std::sin(x(x_alpha))*x(x_speed);
+  ret(x_alpha) = x(x_alpha) + dt*u(u_alpha);
+  ret(x_speed) = x(x_speed);
   return ret;
 }
 Eigen::VectorXd tra_model_f2(Eigen::VectorXd x, Eigen::VectorXd u, const double dt)
 {
   x_t ret;
-  ret(x_x) = x(x_x) + dt*std::cos(x(x_alpha))*speed;
-  ret(x_y) = x(x_y) + dt*std::sin(x(x_alpha))*speed;
-  ret(x_alpha) = x(x_alpha) + u(u_alpha);
+  ret(x_x) = x(x_x) + dt*std::cos(x(x_alpha))*x(x_speed);
+  ret(x_y) = x(x_y) + dt*std::sin(x(x_alpha))*x(x_speed);
+  ret(x_alpha) = x(x_alpha) + dt*u(u_alpha);
+  ret(x_speed) = x(x_speed);
   return ret;
 }
 
@@ -110,17 +110,25 @@ int main()
 
   // Initialize the process noise matrix
   Q_t Q; Q << 
-    1e-3, 0, 0,
-    0, 1e-3, 0,
-    0, 0, 1e-2;
+    1e-3, 0, 0, 0,
+    0, 1e-3, 0, 0,
+    0, 0, 1e-2, 0,
+    0, 0, 0, 1e-2;
 
   // Initialize the measurement noise matrix
   R_t R; R <<
     1e-2, 0,
     0, 1e-2;
 
+  // Initialize the observation matrix
+  H <<
+    1, 0, 0, 0,
+    0, 1, 0, 0;
+
   // Generate initial state and covariance
-  const x_t x0 = 100.0*x_t::Random();
+  x_t x0 = 100.0*x_t::Random();
+  x0(2) = 0.0;
+  x0(3) = 10.0;
   P_t P_tmp = P_t::Random();
   const P_t P0 = 10.0*P_tmp*P_tmp.transpose();
   const ukf_t::statecov_t sc0({x0, P0});
@@ -130,7 +138,7 @@ int main()
   ukf2.reset(x0);
   ukf2.setCovariance(P0);
 
-  const int n_its = 1e3;
+  const int n_its = 1e2;
   std::vector<ukf_t::statecov_t> uscs;
   std::vector<ukf_t::statecov_t> uscs2;
   std::vector<lkf_t::statecov_t> scs;
@@ -148,7 +156,8 @@ int main()
     std::cout << "step: " << it << std::endl;
 
     // Generate a new input vector
-    const u_t u = u_t::Random();
+    /* const u_t u = u_t(0.5) + 0.1*u_t::Random(); */
+    const u_t u = u_t(0.0);
     
     // Generate a new state according to the model and noise parameters
     auto sc = scs.back();
@@ -159,14 +168,18 @@ int main()
 
     scs.push_back(sc);
     scs.push_back(sc);
+    std::cout << "gt       state:" << std::endl << sc.x.transpose() << std::endl;
 
     ukf.setQ(Q);
     auto usc = uscs.back();
     try
     {
+      std::cout << "ukf_new  state:" << std::endl << usc.x.transpose() << std::endl;
       usc = ukf.predict(usc, u, dt);
+      std::cout << "ukf_new  predi:" << std::endl << usc.x.transpose() << std::endl;
       uscs.push_back(usc);
       usc = ukf.correct(usc, z, R);
+      std::cout << "ukf_new  corre:" << std::endl << usc.x.transpose() << std::endl;
       uscs.push_back(usc);
     }
     catch (const std::exception& e)
@@ -181,10 +194,13 @@ int main()
       ukf2.setR(Q);
       try
       {
+        std::cout << "ukf_orig state:" << std::endl << usc2.x.transpose() << std::endl;
         usc2.x = ukf2.predictionUpdate(dt, u);
+        std::cout << "ukf_orig predi:" << std::endl << usc2.x.transpose() << std::endl;
         usc2.P = ukf2.getCovariance();
         uscs.push_back(usc2);
         usc2.x = ukf2.correctionUpdate(z);
+        std::cout << "ukf_orig corre:" << std::endl << usc2.x.transpose() << std::endl;
         usc2.P = ukf2.getCovariance();
         uscs2.push_back(usc2);
       }
@@ -204,9 +220,6 @@ int main()
     /* const auto cur_ugt_diff = (sc.x-usc.x).norm(); */
     /* std::cout << "cur. ukf_orig diff: " << cur_lgt_diff << std::endl; */
     /* std::cout << "cur. ukf_new  diff: " << cur_ugt_diff << std::endl; */
-    std::cout << "gt       state:" << std::endl << sc.x.transpose() << std::endl;
-    std::cout << "ukf_orig state:" << std::endl << usc2.x.transpose() << std::endl;
-    std::cout << "ukf_new  state:" << std::endl << usc.x.transpose() << std::endl;
   }
 
   double x_diff = 0.0;
