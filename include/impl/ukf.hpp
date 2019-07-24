@@ -37,11 +37,13 @@ namespace mrs_lib
   {
     // initialize lambda
     /* m_lambda = double(n) * (m_alpha * m_alpha - 1.0); */
-    m_lambda = m_alpha*m_alpha*(double(n) + m_kappa) - double(n);
+    /* m_lambda = m_alpha*m_alpha*(double(n) + m_kappa) - double(n); */
 
     // initialize first terms of the weights
-    m_Wm(0) = m_lambda / (double(n) + m_lambda);
-    m_Wc(0) = m_Wm(0) + (1.0 - m_alpha*m_alpha + m_beta);
+    /* m_Wm(0) = m_lambda / (double(n) + m_lambda); */
+    /* m_Wc(0) = m_Wm(0) + (1.0 - m_alpha*m_alpha + m_beta); */
+    m_Wm(0) = 1.0 - n/3.0;
+    m_Wc(0) = m_Wm(0) + (1 + m_beta - m_alpha*m_alpha);
 
     // initialize the rest of the weights
     for (int i = 1; i < w; i++)
@@ -73,13 +75,13 @@ namespace mrs_lib
   typename UKF<n_states, n_inputs, n_measurements>::P_t UKF<n_states, n_inputs, n_measurements>::computePaSqrt(const P_t& P) const
   {
     // calculate the square root of the covariance matrix
-    const P_t Pa = (double(n) + m_lambda)*P;
+    const P_t Pa = (n/(1.0 - m_Wm(0)))*P;
 
     /* Eigen::SelfAdjointEigenSolver<P_t> es(Pa); */
     Eigen::LLT<P_t> llt(Pa);
     if (llt.info() != Eigen::Success)
     {
-      P_t tmp = Pa + (double(n) + m_lambda)*1e-9*P_t::Identity();
+      P_t tmp = Pa + (n/(1.0 - m_Wm(0)))*1e-9*P_t::Identity();
       llt.compute(tmp);
       if (llt.info() != Eigen::Success)
       {
@@ -167,9 +169,8 @@ namespace mrs_lib
     ret.x = x_t::Zero();
     for (int i = 0; i < w; i++)
     {
-      //TODO: WHY DOES THIS SHIT WORK IF I SUBSTITUTE m_Wm(i) FOR 1.0/w ??
-      x_t tmp = 1.0/w * X.col(i);
-      /* x_t tmp = m_Wm(i) * X.col(i); */
+      /* x_t tmp = 1.0/w * X.col(i); */
+      x_t tmp = m_Wm(i) * X.col(i);
       ret.x += tmp;
     }
 
