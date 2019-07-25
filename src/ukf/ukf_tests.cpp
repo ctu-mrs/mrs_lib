@@ -133,7 +133,7 @@ int main()
   const P_t P0 = 10.0*P_tmp*P_tmp.transpose();
   const ukf_t::statecov_t sc0({x0, P0});
 
-  ukf_t ukf(alpha, kappa, beta, Q, tra_model, obs_model);
+  ukf_t ukf(tra_model, obs_model, alpha, kappa, beta);
   mrs_lib::Ukf ukf2(n_states, n_inputs, n_measurements, alpha, kappa, beta, Q, R, H, tra_model2);
   ukf2.reset(x0);
   ukf2.setCovariance(P0);
