@@ -70,21 +70,33 @@ public:
   {
     m_server.updateConfig(cfg);
   }
+
   // pushes the actual config to the server
   void update_config()
   {
     m_server.updateConfig(config);
   }
+
   template <typename T>
   void load_param(const std::string& name, T& value)
   {
     m_pl.load_param(name, value);
     m_to_init.erase(name);
   }
+
+  template <typename T>
+  T load_param2(const std::string& name)
+  {
+    T ret = m_pl.load_param2<T>(name);
+    m_to_init.erase(name);
+    return ret;
+  }
+
   bool loaded_successfully()
   {
     return !m_not_initialized && m_to_init.empty() && m_pl.loaded_successfully();
   }
+
   std::vector<std::string> to_init()
   {
     std::vector<std::string> ret;
