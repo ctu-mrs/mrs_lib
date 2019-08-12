@@ -24,11 +24,11 @@ int main(int argc, char **argv)
   /* Load a parameter with a default value, which will be used in this case
    * unless you manually push the parameter 'test_param_int' to the rosparam server
    * (e.g. using 'rosparam set test_param_int 15'). */ 
-  const int test_param_int = pl.load_param2<int>("test_param_int", 4);
+  [[maybe_unused]] const int test_param_int = pl.load_param2<int>("test_param_int", 4);
 
   /* Load a compulsory parameter - without a default value. This will fail in this
    * case, unless you manually push the parameter to the server. */ 
-  const bool test_param_bool = pl.load_param2<bool>("test_param_bool");
+  [[maybe_unused]] const bool test_param_bool = pl.load_param2<bool>("test_param_bool");
 
   /* Check if all parameters were loaded successfully */ 
   if (!pl.loaded_successfully())

@@ -212,7 +212,8 @@ namespace mrs_lib
       info.type = info_t::type_t::MEASUREMENT;
       info.z = z;
       info.R = R;
-      info.u = u_t::Zero();
+      info.Q = Q_t();
+      info.u = u_t();
       info.param = param;
       info.stamp = stamp;
       apply_new_info(info);
@@ -229,6 +230,7 @@ namespace mrs_lib
       info.type = info_t::type_t::INPUT;
       info.z = z_t();
       info.R = R_t();
+      info.Q = Q_t();
       info.u = u;
       info.param = param;
       info.stamp = stamp;
@@ -319,6 +321,7 @@ namespace mrs_lib
       init_info.type = info_t::type_t::NONE;  // the first info is empty (no known input or measurement)
       init_info.z = z_t();
       init_info.R = R_t();
+      init_info.Q = Q_t();
       init_info.u = u_t::Zero();
       init_info.param = 0;
       init_info.stamp = t0;
