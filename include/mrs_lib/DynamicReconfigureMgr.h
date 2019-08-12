@@ -3,7 +3,6 @@
      \brief Defines DynamicReconfigureMgr - a convenience class for managing dynamic ROS parameters through dynamic reconfigure.
      \author Matouš Vrba - vrbamato@fel.cvut.cz
  */
-
 #ifndef DYNAMIC_RECONFIGURE_MGR_H
 #define DYNAMIC_RECONFIGURE_MGR_H
 
@@ -46,10 +45,11 @@ public:
   // initialize some stuff in the constructor
   DynamicReconfigureMgr(const ros::NodeHandle& nh = ros::NodeHandle("~"), bool print_values = true, std::string node_name = std::string())
       : m_not_initialized(true),
-       m_print_values(print_values),
-       m_node_name(node_name),
-       m_server(m_server_mtx, nh),
-       m_pl(nh, print_values, node_name)
+        m_loaded_invalid_default(false),
+        m_print_values(print_values),
+        m_node_name(node_name),
+        m_server(m_server_mtx, nh),
+        m_pl(nh, print_values, node_name)
   {
     // initialize the dynamic reconfigure callback
     m_cbf = boost::bind(&DynamicReconfigureMgr<ConfigType>::dynamic_reconfigure_callback, this, _1, _2);
@@ -79,11 +79,17 @@ public:
   void load_param(const std::string& name, T& value)
   {
     m_pl.load_param(name, value);
-    m_to_init.erase(name);
+    if (m_to_init.count(name) > 0)
+      m_to_init.erase(name);
+    else
+    {
+      ROS_ERROR("[%s]: Tried to load default value of non-existent dynamically reconfigurable parameter '%s'!", m_node_name.c_str(), name.c_str());
+      m_loaded_invalid_default = true;
+    }
   }
   bool loaded_successfully()
   {
-    return !m_not_initialized && m_to_init.empty() && m_pl.loaded_successfully();
+    return !m_not_initialized && m_to_init.empty() && !m_loaded_invalid_default && m_pl.loaded_successfully();
   }
   std::vector<std::string> to_init()
   {
@@ -96,7 +102,7 @@ public:
 
 
 private:
-  bool m_not_initialized, m_print_values;
+  bool m_not_initialized, m_loaded_invalid_default, m_print_values;
   std::string m_node_name;
   // dynamic_reconfigure server variables
   boost::recursive_mutex m_server_mtx;
