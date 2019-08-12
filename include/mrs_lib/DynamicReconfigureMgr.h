@@ -3,7 +3,6 @@
      \brief Defines DynamicReconfigureMgr - a convenience class for managing dynamic ROS parameters through dynamic reconfigure.
      \author Matouš Vrba - vrbamato@fel.cvut.cz
  */
-
 #ifndef DYNAMIC_RECONFIGURE_MGR_H
 #define DYNAMIC_RECONFIGURE_MGR_H
 
@@ -46,10 +45,11 @@ public:
   // initialize some stuff in the constructor
   DynamicReconfigureMgr(const ros::NodeHandle& nh = ros::NodeHandle("~"), bool print_values = true, std::string node_name = std::string())
       : m_not_initialized(true),
-       m_print_values(print_values),
-       m_node_name(node_name),
-       m_server(m_server_mtx, nh),
-       m_pl(nh, print_values, node_name)
+        m_loaded_invalid_default(false),
+        m_print_values(print_values),
+        m_node_name(node_name),
+        m_server(m_server_mtx, nh),
+        m_pl(nh, print_values, node_name)
   {
     // initialize the dynamic reconfigure callback
     m_cbf = boost::bind(&DynamicReconfigureMgr<ConfigType>::dynamic_reconfigure_callback, this, _1, _2);
@@ -71,44 +71,19 @@ public:
     m_server.updateConfig(cfg);
   }
 
-  // pushes the actual config to the server
+  // pushes the current config to the server
   void update_config()
   {
     m_server.updateConfig(config);
   }
 
-  template <typename T>
-  void load_param(const std::string& name, T& value)
-  {
-    m_pl.load_param(name, value);
-    m_to_init.erase(name);
-  }
-
-  template <typename T>
-  T load_param2(const std::string& name)
-  {
-    T ret = m_pl.load_param2<T>(name);
-    m_to_init.erase(name);
-    return ret;
-  }
-
   bool loaded_successfully()
   {
-    return !m_not_initialized && m_to_init.empty() && m_pl.loaded_successfully();
+    return !m_not_initialized && !m_loaded_invalid_default && m_pl.loaded_successfully();
   }
-
-  std::vector<std::string> to_init()
-  {
-    std::vector<std::string> ret;
-    ret.reserve(m_to_init.size());
-    for (const auto& key : m_to_init)
-      ret.push_back(key);
-    return ret;
-  }
-
 
 private:
-  bool m_not_initialized, m_print_values;
+  bool m_not_initialized, m_loaded_invalid_default, m_print_values;
   std::string m_node_name;
   // dynamic_reconfigure server variables
   boost::recursive_mutex m_server_mtx;
@@ -131,7 +106,8 @@ private:
 
     if (m_not_initialized)
     {
-      check_initialized(new_config);
+      load_defaults(new_config);
+      update_config(new_config);
     }
     if (m_print_values)
     {
@@ -139,9 +115,17 @@ private:
     }
     m_not_initialized = false;
     config = new_config;
-  };
+  }
+
+  template <typename T>
+  void load_param(const std::string& name, typename ConfigType::AbstractParamDescriptionConstPtr& descr, ConfigType& config)
+  {
+    using param_descr_t = typename ConfigType::template ParamDescription<T>;
+    boost::shared_ptr<const param_descr_t> cast_descr = boost::dynamic_pointer_cast<const param_descr_t>(descr);
+    m_pl.load_param(name, config.*(cast_descr->field));
+  }
   
-  void check_initialized(const ConfigType& new_config)
+  void load_defaults(ConfigType& new_config)
   {
     // Note that this part of the API is still unstable and may change! It was tested with ROS Kinetic and Melodic.
     std::vector<typename ConfigType::AbstractParamDescriptionConstPtr> descrs = new_config.__getParamDescriptions__();
@@ -150,9 +134,20 @@ private:
       std::string name = descr->name;
       const size_t pos = name.find("__");
       if (pos != name.npos)
-      {
         name.replace(pos, 2, "/");
-        m_to_init.emplace(name);
+
+      if (descr->type == "bool")
+        load_param<bool>(name, descr, new_config);
+      if (descr->type == "int")
+        load_param<int>(name, descr, new_config);
+      else if (descr->type == "double")
+        load_param<double>(name, descr, new_config);
+      else if (descr->type == "string")
+        load_param<std::string>(name, descr, new_config);
+      else
+      {
+        ROS_ERROR("[%s]: Unknown parameter type: '%s'", m_node_name.c_str(), descr->type.c_str());
+        m_loaded_invalid_default = true;
       }
     }
   }
@@ -212,7 +207,7 @@ private:
   
   // helper method for parameter printing
   template <typename T>
-  inline void print_value(std::string name, T val)
+  inline void print_value(const std::string& name, const T& val)
   {
     if (m_node_name.empty())
       std::cout << "\t" << name << ":\t" << val << std::endl;

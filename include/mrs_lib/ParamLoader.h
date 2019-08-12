@@ -308,18 +308,14 @@ private:
   //}
 
   /* load_matrix_static_internal helper function for loading static Eigen matrices //{ */
-  Eigen::MatrixXd load_matrix_static_internal(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols, optional_t optional, unique_t unique)
+  template <int rows, int cols>
+  Eigen::Matrix<double, rows, cols> load_matrix_static_internal(const std::string& name, const Eigen::Matrix<double, rows, cols>& default_value, optional_t optional, unique_t unique)
   {
-    Eigen::MatrixXd loaded = default_value;
-    // first, check that at least one dimension is set
-    if (rows <= 0 || cols <= 0)
-    {
-      print_error(std::string("Invalid expected matrix dimensions for parameter ") + name + std::string(" (use load_matrix_dynamic?)"));
-      m_load_successful = false;
-      return loaded;
-    }
-
-    return load_MatrixXd(name, default_value, rows, cols, optional, unique, NO_SWAP);
+    Eigen::MatrixXd dynamic = load_MatrixXd(name, default_value, rows, cols, optional, unique, NO_SWAP);
+    if (dynamic.rows() == rows || dynamic.cols() == cols)
+      return dynamic;
+    else
+      return default_value;
   }
   //}
 
@@ -583,7 +579,7 @@ public:
     int rows = default_value.rows();
     int cols = default_value.cols();
     Eigen::MatrixXd loaded;
-    load_matrix_static(name, loaded, default_value, rows, cols);
+    load_matrix_dynamic(name, loaded, default_value, rows, cols);
     return loaded;
   }
   
@@ -604,9 +600,10 @@ public:
     * \param rows  Expected number of rows of the matrix.
     * \param cols  Expected number of columns of the matrix.
     */
-  void load_matrix_static(const std::string& name, Eigen::MatrixXd& mat, int rows, int cols)
+  template <int rows, int cols>
+  void load_matrix_static(const std::string& name, Eigen::Matrix<double, rows, cols>& mat)
   {
-    mat = load_matrix_static2(name, rows, cols);
+    mat = load_matrix_static2<rows, cols>(name);
   }
 
   /*!
@@ -623,9 +620,10 @@ public:
     * \param rows          Expected number of rows of the matrix.
     * \param cols          Expected number of columns of the matrix.
     */
-  void load_matrix_static(const std::string& name, Eigen::MatrixXd& mat, const Eigen::MatrixXd& default_value, int rows, int cols)
+  template <int rows, int cols>
+  void load_matrix_static(const std::string& name, Eigen::Matrix<double, rows, cols> mat, const Eigen::Matrix<double, rows, cols>& default_value)
   {
-    mat = load_matrix_static2(name, default_value, rows, cols);
+    mat = load_matrix_static2(name, default_value);
   }
 
   /*!
@@ -641,9 +639,10 @@ public:
     * \param cols  Expected number of columns of the matrix.
     * \return      The loaded parameter value.
     */
-  Eigen::MatrixXd load_matrix_static2(const std::string& name, int rows, int cols)
+  template <int rows, int cols>
+  Eigen::Matrix<double, rows, cols> load_matrix_static2(const std::string& name)
   {
-    return load_matrix_static_internal(name, Eigen::MatrixXd(), rows, cols, COMPULSORY, UNIQUE);
+    return load_matrix_static_internal(name, Eigen::Matrix<double, rows, cols>(), COMPULSORY, UNIQUE);
   }
 
   /*!
@@ -660,9 +659,10 @@ public:
     * \param cols          Expected number of columns of the matrix.
     * \return              The loaded parameter value.
     */
-  Eigen::MatrixXd load_matrix_static2(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols)
+  template <int rows, int cols>
+  Eigen::MatrixXd load_matrix_static2(const std::string& name, const Eigen::Matrix<double, rows, cols>& default_value)
   {
-    return load_matrix_static_internal(name, default_value, rows, cols, OPTIONAL, UNIQUE);
+    return load_matrix_static_internal(name, default_value, OPTIONAL, UNIQUE);
   }
   //}
 
