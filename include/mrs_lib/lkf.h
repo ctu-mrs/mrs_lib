@@ -63,7 +63,7 @@ namespace mrs_lib
     {
       statecov_t ret;
       ret.x = state_predict(A, sc.x, B, u);
-      ret.P = covariance_predict(A, sc.P, Q);
+      ret.P = covariance_predict(A, sc.P, Q, dt);
       return ret;
     };
     //}
@@ -75,9 +75,9 @@ namespace mrs_lib
 
   public:
     /* covariance_predict() method //{ */
-    static P_t covariance_predict(const A_t& A, const P_t& P, const Q_t& Q)
+    static P_t covariance_predict(const A_t& A, const P_t& P, const Q_t& Q, const double dt)
     {
-      return A * P * A.transpose() + Q;
+      return A * P * A.transpose() + dt*Q;
     }
     //}
 
