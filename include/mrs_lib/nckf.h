@@ -48,11 +48,7 @@ namespace mrs_lib
   public:
     NCLKF(){};
 
-    NCLKF(const A_t& A, const B_t& B, const H_t& H, const double l)
-      : l_sqrt(sqrt(l))
-    {
-      Base_class(A, B, H);
-    };
+    NCLKF(const A_t& A, const B_t& B, const H_t& H, const double l) : Base_class(A, B, H), l_sqrt(sqrt(l)) {};
 
   public:
     double l_sqrt;
@@ -69,7 +65,7 @@ namespace mrs_lib
       const x_t x = sc.x + K_orig * inn;
       const double inn_scale = inn.transpose() * W_inv * inn;
       
-      const double x_norm = sc.x.norm();
+      const double x_norm = x.norm();
       const K_t K = K_orig + (l_sqrt/x_norm - 1.0) * x * (inn.transpose() * W_inv) / inn_scale;
     
       return K;
