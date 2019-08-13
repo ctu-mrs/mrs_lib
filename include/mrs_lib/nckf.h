@@ -55,7 +55,7 @@ namespace mrs_lib
     };
 
   public:
-    const double l_sqrt;
+    double l_sqrt;
 
   protected:
     /* calculate_kalman_gain() method //{ */
