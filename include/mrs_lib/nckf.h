@@ -51,7 +51,7 @@ namespace mrs_lib
     NCLKF(const A_t& A, const B_t& B, const H_t& H, const double l)
       : l_sqrt(sqrt(l))
     {
-      Base_class::Base_clas(A, B, H);
+      Base_class(A, B, H);
     };
 
   public:
@@ -62,15 +62,15 @@ namespace mrs_lib
     virtual K_t calculate_kalman_gain(const statecov_t& sc, const z_t& z, const R_t& R, const H_t& H) const override
     {
       const R_t W = H * sc.P * H.transpose() + R;
-      const R_t W_inv = invert_W(W);
+      const R_t W_inv = Base_class::invert_W(W);
       const K_t K_orig = sc.P * H.transpose() * W_inv;
 
       const z_t inn = z - (H * sc.x); // innovation
       const x_t x = sc.x + K_orig * inn;
-      const double inn_scale = inn.transposed() * W_inv * inn;
+      const double inn_scale = inn.transpose() * W_inv * inn;
       
       const double x_norm = sc.x.norm();
-      const K_t K = K_orig + (l_sqrt/x_norm - 1.0) * x * (inn * W_inv) / inn_scale;
+      const K_t K = K_orig + (l_sqrt/x_norm - 1.0) * x * (inn.transpose() * W_inv) / inn_scale;
     
       return K;
     }
