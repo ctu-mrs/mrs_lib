@@ -4,8 +4,8 @@
      \brief Defines NCLKF - a class, implementing the Norm-constrained Linear Kalman Filter \cite NCKF.
      \author Matouš Vrba - vrbamato@fel.cvut.cz
  */
-#ifndef LKFSYSTEMMODELS_H
-#define LKFSYSTEMMODELS_H
+#ifndef NCKFSYSTEMMODELS_H
+#define NCKFSYSTEMMODELS_H
 
 #include <mrs_lib/lkf.h>
 
@@ -59,7 +59,7 @@ namespace mrs_lib
 
   protected:
     /* calculate_kalman_gain() method //{ */
-    virtual K_t calculate_kalman_gain(const statecov_t& sc, const R_t& R, const H_t& H) const override
+    virtual K_t calculate_kalman_gain(const statecov_t& sc, const z_t& z, const R_t& R, const H_t& H) const override
     {
       const R_t W = H * sc.P * H.transpose() + R;
       const R_t W_inv = invert_W(W);
@@ -81,5 +81,5 @@ namespace mrs_lib
 
 }  // namespace mrs_lib
 
-#endif // LKFSYSTEMMODELS_H
+#endif // NCKFSYSTEMMODELS_H
 
