@@ -196,7 +196,7 @@ namespace mrs_lib
       A_t A = get_A(coeff_A, dtexp_A, dt);
       B_t B = get_B(coeff_B, dtexp_B, dt);
       ret.x = Base_class::state_predict(A, sc.x, B, u);
-      ret.P = Base_class::covariance_predict(A, sc.P, Q);
+      ret.P = Base_class::covariance_predict(A, sc.P, Q, dt);
       return ret;
     };
     //}
