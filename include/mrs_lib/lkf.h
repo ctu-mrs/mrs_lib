@@ -97,29 +97,44 @@ namespace mrs_lib
     //}
 
   protected:
-    /* correction_impl() method //{ */
-    static statecov_t correction_impl(const statecov_t& sc, const z_t& z, const R_t& R, const H_t& H)
+    /* invert_W() method //{ */
+    static R_t invert_W(R_t W)
     {
-      statecov_t ret;
-      // the correction phase
-      R_t tmp = H * sc.P * H.transpose() + R;
-
-      Eigen::ColPivHouseholderQR<R_t> qr(tmp);
+      Eigen::ColPivHouseholderQR<R_t> qr(W);
       if (!qr.isInvertible())
       {
         // add some stuff to the tmp matrix diagonal to make it invertible
-        R_t ident = R_t::Identity(R.rows(), R.cols());
-        tmp += 1e-9 * ident;
-        qr.compute(tmp);
+        R_t ident = R_t::Identity();
+        W += 1e-9 * ident;
+        qr.compute(W);
         if (!qr.isInvertible())
         {
           // never managed to make this happen except for explicitly putting NaNs in the input
           throw inverse_exception();
         }
       }
-      tmp = qr.inverse();
+      const R_t W_inv = qr.inverse();
+      return W_inv;
+    }
+    //}
 
-      const K_t K = sc.P * H.transpose() * tmp;
+    /* calculate_kalman_gain() method //{ */
+    virtual K_t calculate_kalman_gain(const statecov_t& sc, const R_t& R, const H_t& H) const
+    {
+      // calculation of the kalman gain K
+      const R_t W = H * sc.P * H.transpose() + R;
+      const R_t W_inv = invert_W(W);
+      const K_t K = sc.P * H.transpose() * W_inv;
+      return K;
+    }
+    //}
+
+    /* correction_impl() method //{ */
+    statecov_t correction_impl(const statecov_t& sc, const z_t& z, const R_t& R, const H_t& H) const
+    {
+      // the correction phase
+      statecov_t ret;
+      const K_t K = calculate_kalman_gain(sc, R, H);
       ret.x = sc.x + K * (z - (H * sc.x));
       ret.P = (P_t::Identity() - (K * H)) * sc.P;
       return ret;
