@@ -118,8 +118,8 @@ namespace mrs_lib
     }
     //}
 
-    /* calculate_kalman_gain() method //{ */
-    virtual K_t calculate_kalman_gain(const statecov_t& sc, [[maybe_unused]] const z_t& z, const R_t& R, const H_t& H) const
+    /* computeKalmanGain() method //{ */
+    virtual K_t computeKalmanGain(const statecov_t& sc, [[maybe_unused]] const z_t& z, const R_t& R, const H_t& H) const
     {
       // calculation of the kalman gain K
       const R_t W = H * sc.P * H.transpose() + R;
@@ -134,7 +134,7 @@ namespace mrs_lib
     {
       // the correction phase
       statecov_t ret;
-      const K_t K = calculate_kalman_gain(sc, z, R, H);
+      const K_t K = computeKalmanGain(sc, z, R, H);
       ret.x = sc.x + K * (z - (H * sc.x));
       ret.P = (P_t::Identity() - (K * H)) * sc.P;
       return ret;

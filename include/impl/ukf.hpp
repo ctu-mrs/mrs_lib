@@ -116,6 +116,16 @@ namespace mrs_lib
   }
   //}
 
+    /* computeKalmanGain() method //{ */
+    template <int n_states, int n_inputs, int n_measurements>
+    typename UKF<n_states, n_inputs, n_measurements>::K_t UKF<n_states, n_inputs, n_measurements>::computeKalmanGain(const statecov_t& sc, const z_t& z, const z_t& z_exp, const K_t& Pxz, const Pzz_t& Pzz) const
+    {
+      const Pzz_t Pzz_inv = computeInverse(Pzz);
+      const K_t K = Pxz * Pzz_inv;
+      return K;
+    }
+    //}
+
   /* computeSigmas() method //{ */
   template <int n_states, int n_inputs, int n_measurements>
   typename UKF<n_states, n_inputs, n_measurements>::X_t UKF<n_states, n_inputs, n_measurements>::computeSigmas(const x_t& x, const P_t& P) const
@@ -225,8 +235,7 @@ namespace mrs_lib
     }
 
     // compute Kalman gain
-    const Pzz_t Pzz_inv = computeInverse(Pzz);
-    const K_t K = Pxz * Pzz_inv;
+    const K_t K = computeKalmanGain(sc, z, z_exp, Pxz, Pzz);
 
     // check whether the inverse produced valid numbers
     if (!K.array().isFinite().all())
