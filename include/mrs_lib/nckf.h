@@ -89,8 +89,11 @@ namespace mrs_lib
 
     using transition_model_t = typename Base_class::transition_model_t;
     using observation_model_t = typename Base_class::observation_model_t;
-    using K_t = typename Base_class::K_t;
+
+    using X_t = typename Base_class::X_t;  // state sigma points matrix n*w
+    using Z_t = typename Base_class::Z_t;  // measurement sigma points matrix p*w
     using Pzz_t = typename Base_class::Pzz_t;  // Pzz helper matrix p*n
+    using K_t = typename Base_class::K_t;  // kalman gain n*p
     //}
 
   public:
@@ -100,6 +103,62 @@ namespace mrs_lib
      : Base_class(transition_model, observation_model, alpha, kappa, beta), l_sqrt(sqrt(l)) {};
 
   public:
+    /* correct() method //{ */
+    virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, [[maybe_unused]] int param = 0) const override
+    {
+      const auto& x = sc.x;
+      const auto& P = sc.P;
+      const X_t S = Base_class::computeSigmas(x, P);
+    
+      // propagate sigmas through the observation model
+      Z_t Z_exp;
+      for (int i = 0; i < Base_class::w; i++)
+      {
+        Z_exp.col(i) = Base_class::m_observation_model(S.col(i));
+      }
+    
+      // compute expected measurement
+      z_t z_exp = z_t::Zero();
+      for (int i = 0; i < Base_class::w; i++)
+      {
+        z_exp += Base_class::m_Wm(i) * Z_exp.col(i);
+      }
+    
+      // compute the covariance of measurement
+      Pzz_t Pzz = Pzz_t::Zero();
+      for (int i = 0; i < Base_class::w; i++)
+      {
+        Pzz += Base_class::m_Wc(i) * (Z_exp.col(i) - z_exp) * (Z_exp.col(i) - z_exp).transpose();
+      }
+      Pzz += R;
+    
+      // compute cross covariance
+      K_t Pxz = K_t::Zero();
+      for (int i = 0; i < Base_class::w; i++)
+      {
+        Pxz += Base_class::m_Wc(i) * (S.col(i) - x) * (Z_exp.col(i) - z_exp).transpose();
+      }
+    
+      // compute Kalman gain
+      const z_t inn = (z - z_exp); // innovation
+      const K_t K = computeKalmanGain(sc.x, inn, Pxz, Pzz);
+    
+      // check whether the inverse produced valid numbers
+      if (!K.array().isFinite().all())
+      {
+        ROS_ERROR("UKF: inverting of Pzz in correction update produced non-finite numbers!!! Fix your covariances (the measurement's is probably too low...)");
+        throw typename Base_class::inverse_exception();
+      }
+    
+      // correct
+      statecov_t ret;
+      ret.x = x + K * inn;
+      ret.P = P - K * Pxz.transpose() - Pxz * K.transpose() + K * Pzz * K.transpose();
+      return ret;
+    }
+    //}
+
+  protected:
     double l_sqrt;
 
   protected:
@@ -118,7 +177,7 @@ namespace mrs_lib
       return K;
     }
     //}
-    
+
   };
   //}
 

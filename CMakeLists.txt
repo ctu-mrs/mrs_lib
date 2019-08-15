@@ -15,7 +15,9 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O3 -Wall")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O3 -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -g -O0")
 
 # include Eigen3
 find_package(Eigen3 REQUIRED)
@@ -72,6 +74,12 @@ target_link_libraries(ukf_tests
 
 add_executable(ukf_example src/ukf/example.cpp)
 target_link_libraries(ukf_example
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_executable(nckf_tests src/nckf/nckf_tests.cpp)
+target_link_libraries(nckf_tests
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
