@@ -169,7 +169,7 @@ namespace mrs_lib
 
     Pzz_t computeInverse(const Pzz_t& Pzz) const;
 
-    virtual K_t computeKalmanGain(const statecov_t& sc, const z_t& z, const z_t& z_exp, const K_t& Pxz, const Pzz_t& Pzz) const;
+    virtual K_t computeKalmanGain([[maybe_unused]] const x_t& x, [[maybe_unused]] const z_t& inn, const K_t& Pxz, const Pzz_t& Pzz) const;
 
     double m_alpha, m_kappa, m_beta, m_lambda;
     W_t m_Wm;

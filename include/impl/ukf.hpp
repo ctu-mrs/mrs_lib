@@ -118,7 +118,7 @@ namespace mrs_lib
 
     /* computeKalmanGain() method //{ */
     template <int n_states, int n_inputs, int n_measurements>
-    typename UKF<n_states, n_inputs, n_measurements>::K_t UKF<n_states, n_inputs, n_measurements>::computeKalmanGain(const statecov_t& sc, const z_t& z, const z_t& z_exp, const K_t& Pxz, const Pzz_t& Pzz) const
+    typename UKF<n_states, n_inputs, n_measurements>::K_t UKF<n_states, n_inputs, n_measurements>::computeKalmanGain([[maybe_unused]] const x_t& x, [[maybe_unused]] const z_t& inn, const K_t& Pxz, const Pzz_t& Pzz) const
     {
       const Pzz_t Pzz_inv = computeInverse(Pzz);
       const K_t K = Pxz * Pzz_inv;
@@ -235,7 +235,8 @@ namespace mrs_lib
     }
 
     // compute Kalman gain
-    const K_t K = computeKalmanGain(sc, z, z_exp, Pxz, Pzz);
+    const z_t inn = (z - z_exp); // innovation
+    const K_t K = computeKalmanGain(sc.x, inn, Pxz, Pzz);
 
     // check whether the inverse produced valid numbers
     if (!K.array().isFinite().all())
@@ -246,7 +247,7 @@ namespace mrs_lib
 
     // correct
     statecov_t ret;
-    ret.x = x + K * (z - z_exp);
+    ret.x = x + K * inn;
     ret.P = P - K * Pzz * K.transpose();
     return ret;
   }

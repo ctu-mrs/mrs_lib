@@ -33,17 +33,9 @@ namespace mrs_lib
     using statecov_t = typename Base_class::statecov_t;  // helper struct for state and covariance
 
     using A_t = typename Base_class::A_t;  // system matrix n*n
-    using A_t = typename Base_class::B_t;  // input matrix n*m
-    using A_t = typename Base_class::H_t;  // measurement mapping p*n
-    using A_t = typename Base_class::K_t;  // kalman gain n*p
-
-    struct inverse_exception : public std::exception
-    {
-      const char* what() const throw()
-      {
-        return "NCLKF: could not compute matrix inversion!!! Fix your covariances (the measurement's is probably too low...)";
-      }
-    };
+    using B_t = typename Base_class::B_t;  // input matrix n*m
+    using H_t = typename Base_class::H_t;  // measurement mapping p*n
+    using K_t = typename Base_class::K_t;  // kalman gain n*p
     //}
 
   public:
@@ -99,14 +91,6 @@ namespace mrs_lib
     using observation_model_t = typename Base_class::observation_model_t;
     using K_t = typename Base_class::K_t;
     using Pzz_t = typename Base_class::Pzz_t;  // Pzz helper matrix p*n
-
-    struct inverse_exception : public std::exception
-    {
-      const char* what() const throw()
-      {
-        return "NCLKF: could not compute matrix inversion!!! Fix your covariances (the measurement's is probably too low...)";
-      }
-    };
     //}
 
   public:
@@ -120,17 +104,16 @@ namespace mrs_lib
 
   protected:
     /* computeKalmanGain() method //{ */
-    virtual K_t computeKalmanGain(const statecov_t& sc, const z_t& z, const z_t& z_exp, const K_t& Pxz, const Pzz_t& Pzz) const override
+    virtual K_t computeKalmanGain(const x_t& x, const z_t& inn, const K_t& Pxz, const Pzz_t& Pzz) const override
     {
       const Pzz_t Pzz_inv = computeInverse(Pzz);
       const K_t K_orig = Pxz * Pzz_inv;
 
-      const z_t inn = z - z_exp; // innovation
-      const x_t x = sc.x + K_orig * inn;
+      const x_t x_pred = x + K_orig * inn;
       const double inn_scale = inn.transpose() * Pzz_inv * inn;
       
-      const double x_norm = x.norm();
-      const K_t K = K_orig + (l_sqrt/x_norm - 1.0) * x * (inn.transpose() * Pzz_inv) / inn_scale;
+      const double x_norm = x_pred.norm();
+      const K_t K = K_orig + (l_sqrt/x_norm - 1.0) * x_pred * (inn.transpose() * Pzz_inv) / inn_scale;
     
       return K;
     }
