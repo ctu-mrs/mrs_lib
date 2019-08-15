@@ -41,8 +41,8 @@ namespace mrs_lib
   template <int n_states, int n_inputs, int n_measurements>
   class UKF : KalmanFilter<n_states, n_inputs, n_measurements>
   {
-  private:
-    /* private UKF definitions (typedefs, constants etc) //{ */
+  protected:
+    /* protected UKF definitions (typedefs, constants etc) //{ */
     static const int n = n_states;
     static const int m = n_inputs;
     static const int p = n_measurements;
@@ -158,8 +158,8 @@ namespace mrs_lib
     void setConstants(const double alpha, const double kappa, const double beta);
     //}
 
-  private:
-    /* private methods and member variables //{ */
+  protected:
+    /* protected methods and member variables //{ */
 
     void computeWeights();
 

@@ -106,7 +106,7 @@ namespace mrs_lib
     /* computeKalmanGain() method //{ */
     virtual K_t computeKalmanGain(const x_t& x, const z_t& inn, const K_t& Pxz, const Pzz_t& Pzz) const override
     {
-      const Pzz_t Pzz_inv = computeInverse(Pzz);
+      const Pzz_t Pzz_inv = Base_class::computeInverse(Pzz);
       const K_t K_orig = Pxz * Pzz_inv;
 
       const x_t x_pred = x + K_orig * inn;

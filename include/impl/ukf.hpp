@@ -116,15 +116,15 @@ namespace mrs_lib
   }
   //}
 
-    /* computeKalmanGain() method //{ */
-    template <int n_states, int n_inputs, int n_measurements>
-    typename UKF<n_states, n_inputs, n_measurements>::K_t UKF<n_states, n_inputs, n_measurements>::computeKalmanGain([[maybe_unused]] const x_t& x, [[maybe_unused]] const z_t& inn, const K_t& Pxz, const Pzz_t& Pzz) const
-    {
-      const Pzz_t Pzz_inv = computeInverse(Pzz);
-      const K_t K = Pxz * Pzz_inv;
-      return K;
-    }
-    //}
+  /* computeKalmanGain() method //{ */
+  template <int n_states, int n_inputs, int n_measurements>
+  typename UKF<n_states, n_inputs, n_measurements>::K_t UKF<n_states, n_inputs, n_measurements>::computeKalmanGain([[maybe_unused]] const x_t& x, [[maybe_unused]] const z_t& inn, const K_t& Pxz, const Pzz_t& Pzz) const
+  {
+    const Pzz_t Pzz_inv = computeInverse(Pzz);
+    const K_t K = Pxz * Pzz_inv;
+    return K;
+  }
+  //}
 
   /* computeSigmas() method //{ */
   template <int n_states, int n_inputs, int n_measurements>
