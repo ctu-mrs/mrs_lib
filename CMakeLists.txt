@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O0 -g")
 
 # include Eigen3
 find_package(Eigen3 REQUIRED)

@@ -151,24 +151,33 @@ private:
     std::stringstream strstr;
     for (unsigned it = 0; it < depth+1; it++)
       strstr << "\t";
-    strstr << name << ":" << std::endl;
+    strstr << name << ":";
     switch (value.getType())
     {
       case XmlRpc::XmlRpcValue::TypeArray:
         {
+          for (int it = 0; it < value.size(); it++)
+          {
+            strstr << std::endl;
+            const std::string name = "[" + std::to_string(it) + "]";
+            strstr << print_value_recursive(name, value[it], depth+1);
+          }
+          break;
+        }
+      case XmlRpc::XmlRpcValue::TypeStruct:
+        {
           int it = 0;
           for (auto& pair : value)
           {
+            strstr << std::endl;
             strstr << print_value_recursive(pair.first, pair.second, depth+1);
-            if (it < value.size() - 1)
-              strstr << std::endl;
             it++;
           }
           break;
         }
       default:
         {
-          strstr << name << " = " << value << std::endl;
+          strstr << "\t" << value;
           break;
         }
     }

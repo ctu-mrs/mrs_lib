@@ -1,0 +1,10 @@
+<launch>
+
+  <arg name="debug" default="false" />
+  <arg unless="$(arg debug)" name="launch_prefix" value=""/>
+  <arg     if="$(arg debug)" name="launch_prefix" value="debug_roslaunch"/>
+
+  <node pkg="mrs_lib" type="param_loader_tests" name="param_loader_tests" output="screen" launch-prefix="$(arg launch_prefix)" />
+
+</launch>
+
