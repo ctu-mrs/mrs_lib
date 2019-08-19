@@ -32,6 +32,9 @@ int main(int argc, char **argv)
   ROS_INFO("[%s]: initializing ParamLoader", ros::this_node::getName().c_str());
   mrs_lib::ParamLoader pl(nh);
 
+  XmlRpc::XmlRpcValue list;
+  pl.load_param("services", list, XmlRpc::XmlRpcValue());
+
   ROS_INFO("[%s]: testing ParamLoader", ros::this_node::getName().c_str());
   std::vector<Eigen::MatrixXd> loaded_nd_matrix = pl.load_matrix_array2("test_param_nd_matrix");
   if (pl.loaded_successfully())

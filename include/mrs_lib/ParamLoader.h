@@ -81,6 +81,7 @@ private:
   //}
 
   /* print_value function and overloads //{ */
+
   template <typename T>
   void print_value(const std::string& name, const T& value)
   {
@@ -89,6 +90,7 @@ private:
     else
       ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << name << "':\t" << value);
   };
+
   template <typename T>
   void print_value(const std::string& name, const std::vector<T>& value)
   {
@@ -109,6 +111,7 @@ private:
     else
       ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << strstr.str());
   };
+
   template <typename T1, typename T2>
   void print_value(const std::string& name, const std::map<T1, T2>& value)
   {
@@ -129,6 +132,7 @@ private:
     else
       ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << strstr.str());
   };
+
   void print_value(const std::string& name, const Eigen::MatrixXd& value)
   {
     std::stringstream strstr;
@@ -141,6 +145,45 @@ private:
     else
       ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << name << "':" << std::endl << strstr.str());
   };
+
+  std::string print_value_recursive(const std::string& name, XmlRpc::XmlRpcValue& value, unsigned depth = 0)
+  {
+    std::stringstream strstr;
+    for (unsigned it = 0; it < depth+1; it++)
+      strstr << "\t";
+    strstr << name << ":" << std::endl;
+    switch (value.getType())
+    {
+      case XmlRpc::XmlRpcValue::TypeArray:
+        {
+          int it = 0;
+          for (auto& pair : value)
+          {
+            strstr << print_value_recursive(pair.first, pair.second, depth+1);
+            if (it < value.size() - 1)
+              strstr << std::endl;
+            it++;
+          }
+          break;
+        }
+      default:
+        {
+          strstr << name << " = " << value << std::endl;
+          break;
+        }
+    }
+    return strstr.str();
+  };
+
+  void print_value(const std::string& name, XmlRpc::XmlRpcValue& value)
+  {
+    const std::string txt = print_value_recursive(name, value);
+    if (m_node_name.empty())
+      std::cout << txt << std::endl;
+    else
+      ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << txt);
+  };
+
   //}
   //}
 
