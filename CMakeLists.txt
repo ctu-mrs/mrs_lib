@@ -15,9 +15,9 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   )
 
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O3 -Wall")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -g -O0")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O3 -Wall")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
+# set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -g -O0")
 
 # include Eigen3
 find_package(Eigen3 REQUIRED)
