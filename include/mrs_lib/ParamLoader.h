@@ -149,7 +149,7 @@ private:
   std::string print_value_recursive(const std::string& name, XmlRpc::XmlRpcValue& value, unsigned depth = 0)
   {
     std::stringstream strstr;
-    for (unsigned it = 0; it < depth+1; it++)
+    for (unsigned it = 0; it < depth; it++)
       strstr << "\t";
     strstr << name << ":";
     switch (value.getType())
