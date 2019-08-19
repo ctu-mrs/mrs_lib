@@ -138,7 +138,7 @@ private:
 
       if (descr->type == "bool")
         load_param<bool>(name, descr, new_config);
-      if (descr->type == "int")
+      else if (descr->type == "int")
         load_param<int>(name, descr, new_config);
       else if (descr->type == "double")
         load_param<double>(name, descr, new_config);
