@@ -211,6 +211,18 @@ private:
   }
   //}
 
+  /* load_matrix_static_internal helper function for loading static Eigen matrices //{ */
+  template <int rows, int cols>
+  Eigen::Matrix<double, rows, cols> load_matrix_static_internal(const std::string& name, const Eigen::Matrix<double, rows, cols>& default_value, optional_t optional, unique_t unique)
+  {
+    Eigen::MatrixXd dynamic = load_MatrixXd(name, default_value, rows, cols, optional, unique, NO_SWAP);
+    if (dynamic.rows() == rows || dynamic.cols() == cols)
+      return dynamic;
+    else
+      return default_value;
+  }
+  //}
+
   /* helper functions for loading Eigen::MatrixXd matrices //{ */
   // load_MatrixXd helper function for loading Eigen::MatrixXd matrices //{
   Eigen::MatrixXd load_MatrixXd(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols = -1, optional_t optional = OPTIONAL, unique_t unique = UNIQUE, swap_t swap = NO_SWAP, bool print_values = true)
@@ -295,7 +307,7 @@ private:
   };
   //}
 
-  /* load_matrix_array_internal helper function for loading an array of static Eigen matrices //{ */
+  /* load_matrix_array_internal helper function for loading an array of EigenXd matrices with known dimensions //{ */
   std::vector<Eigen::MatrixXd> load_matrix_array_internal(const std::string& name, const std::vector<Eigen::MatrixXd>& default_value, optional_t optional, unique_t unique)
   {
     int rows;
@@ -359,15 +371,19 @@ private:
   }
   //}
 
-  /* load_matrix_static_internal helper function for loading static Eigen matrices //{ */
-  template <int rows, int cols>
-  Eigen::Matrix<double, rows, cols> load_matrix_static_internal(const std::string& name, const Eigen::Matrix<double, rows, cols>& default_value, optional_t optional, unique_t unique)
+  /* load_matrix_static_internal helper function for loading EigenXd matrices with known dimensions //{ */
+  Eigen::MatrixXd load_matrix_static_internal(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols, optional_t optional, unique_t unique)
   {
-    Eigen::MatrixXd dynamic = load_MatrixXd(name, default_value, rows, cols, optional, unique, NO_SWAP);
-    if (dynamic.rows() == rows || dynamic.cols() == cols)
-      return dynamic;
-    else
-      return default_value;
+    Eigen::MatrixXd loaded = default_value;
+    // first, check that at least one dimension is set
+    if (rows <= 0 || cols <= 0)
+    {
+      print_error(std::string("Invalid expected matrix dimensions for parameter ") + name + std::string(" (use load_matrix_dynamic?)"));
+      m_load_successful = false;
+      return loaded;
+    }
+
+    return load_MatrixXd(name, default_value, rows, cols, optional, unique, NO_SWAP);
   }
   //}
 
@@ -637,7 +653,7 @@ public:
   
   //}
 
-  // load_matrix_static function for loading of Eigen::MatrixXd with known dimensions //{
+  // load_matrix_static function for loading of static Eigen::Matrices //{
 
   /*!
     * \brief Specialized method for loading compulsory Eigen matrix parameters.
@@ -715,6 +731,83 @@ public:
   Eigen::MatrixXd load_matrix_static2(const std::string& name, const Eigen::Matrix<double, rows, cols>& default_value)
   {
     return load_matrix_static_internal(name, default_value, OPTIONAL, UNIQUE);
+  }
+  //}
+
+  // load_matrix_static function for loading of Eigen::MatrixXd with known dimensions //{
+
+  /*!
+    * \brief Specialized method for loading compulsory Eigen matrix parameters.
+    *
+    * If the dimensions of the loaded matrix do not match the specified number of rows and columns, the loading process is unsuccessful (loaded_successfully() will return false).
+    * If the parameter with the specified name is not found on the rosparam server (e.g. because it is not specified in the launchfile or yaml config file),
+    * the loading process is unsuccessful.
+    * Using this method, the parameter can only be loaded once using the same ParamLoader instance without error.
+    *
+    * \param name  Name of the parameter in the rosparam server.
+    * \param mat   Reference to the variable to which the parameter value will be stored (such as a class member variable).
+    * \param rows  Expected number of rows of the matrix.
+    * \param cols  Expected number of columns of the matrix.
+    */
+  void load_matrix_static(const std::string& name, Eigen::MatrixXd& mat, int rows, int cols)
+  {
+    mat = load_matrix_static2(name, rows, cols);
+  }
+
+  /*!
+    * \brief Specialized method for loading Eigen matrix parameters with default value.
+    *
+    * If the dimensions of the loaded matrix do not match the specified number of rows and columns, the loading process is unsuccessful (loaded_successfully() will return false).
+    * If the parameter with the specified name is not found on the rosparam server (e.g. because it is not specified in the launchfile or yaml config file),
+    * the default value is used.
+    * Using this method, the parameter can only be loaded once using the same ParamLoader instance without error.
+    *
+    * \param name          Name of the parameter in the rosparam server.
+    * \param mat           Reference to the variable to which the parameter value will be stored (such as a class member variable).
+    * \param default_value This value will be used if the parameter name is not found in the rosparam server.
+    * \param rows          Expected number of rows of the matrix.
+    * \param cols          Expected number of columns of the matrix.
+    */
+  void load_matrix_static(const std::string& name, Eigen::MatrixXd& mat, const Eigen::MatrixXd& default_value, int rows, int cols)
+  {
+    mat = load_matrix_static2(name, default_value, rows, cols);
+  }
+
+  /*!
+    * \brief Specialized method for loading compulsory Eigen matrix parameters.
+    *
+    * If the dimensions of the loaded matrix do not match the specified number of rows and columns, the loading process is unsuccessful (loaded_successfully() will return false).
+    * If the parameter with the specified name is not found on the rosparam server (e.g. because it is not specified in the launchfile or yaml config file),
+    * the loading process is unsuccessful.
+    * Using this method, the parameter can only be loaded once using the same ParamLoader instance without error.
+    *
+    * \param name  Name of the parameter in the rosparam server.
+    * \param rows  Expected number of rows of the matrix.
+    * \param cols  Expected number of columns of the matrix.
+    * \return      The loaded parameter value.
+    */
+  Eigen::MatrixXd load_matrix_static2(const std::string& name, int rows, int cols)
+  {
+    return load_matrix_static_internal(name, Eigen::MatrixXd(), rows, cols, COMPULSORY, UNIQUE);
+  }
+
+  /*!
+    * \brief Specialized method for loading Eigen matrix parameters with default value.
+    *
+    * If the dimensions of the loaded matrix do not match the specified number of rows and columns, the loading process is unsuccessful (loaded_successfully() will return false).
+    * If the parameter with the specified name is not found on the rosparam server (e.g. because it is not specified in the launchfile or yaml config file),
+    * the default value is used.
+    * Using this method, the parameter can only be loaded once using the same ParamLoader instance without error.
+    *
+    * \param name          Name of the parameter in the rosparam server.
+    * \param default_value This value will be used if the parameter name is not found in the rosparam server.
+    * \param rows          Expected number of rows of the matrix.
+    * \param cols          Expected number of columns of the matrix.
+    * \return              The loaded parameter value.
+    */
+  Eigen::MatrixXd load_matrix_static2(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols)
+  {
+    return load_matrix_static_internal(name, default_value, rows, cols, OPTIONAL, UNIQUE);
   }
   //}
 
