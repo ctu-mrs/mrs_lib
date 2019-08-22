@@ -18,7 +18,7 @@ namespace mrs_lib
   class NCLKF : public LKF<n_states, n_inputs, n_measurements>
   {
   public:
-    /* LKF definitions (typedefs, constants etc) //{ */
+    /* NCLKF definitions (typedefs, constants etc) //{ */
     static const int n = n_states;
     static const int m = n_inputs;
     static const int p = n_measurements;
@@ -43,7 +43,7 @@ namespace mrs_lib
 
     NCLKF(const A_t& A, const B_t& B, const H_t& H, const double l) : Base_class(A, B, H), l_sqrt(sqrt(l)) {};
 
-  public:
+  protected:
     double l_sqrt;
 
   protected:
@@ -60,6 +60,142 @@ namespace mrs_lib
       
       const double x_norm = x.norm();
       const K_t K = K_orig + (l_sqrt/x_norm - 1.0) * x * (inn.transpose() * W_inv) / inn_scale;
+    
+      return K;
+    }
+    //}
+    
+  };
+  //}
+
+  /* class NCLKF_partial //{ */
+  template <int n_states, int n_inputs, int n_measurements, int n_norm_constrained_states>
+  class NCLKF_partial : public NCLKF<n_states, n_inputs, n_measurements>
+  {
+  public:
+    /* NCLKF_partial definitions (typedefs, constants etc) //{ */
+    static const int n = n_states;
+    static const int m = n_inputs;
+    static const int p = n_measurements;
+    static const int nq = n_norm_constrained_states;
+    using Base_class = NCLKF<n, m, p>;
+
+    using x_t = typename Base_class::x_t;                // state vector n*1
+    using u_t = typename Base_class::u_t;                // input vector m*1
+    using z_t = typename Base_class::z_t;                // measurement vector p*1
+    using P_t = typename Base_class::P_t;                // state covariance n*n
+    using R_t = typename Base_class::R_t;                // measurement covariance p*p
+    using Q_t = typename Base_class::Q_t;                // measurement covariance p*p
+    using statecov_t = typename Base_class::statecov_t;  // helper struct for state and covariance
+
+    using A_t = typename Base_class::A_t;  // system matrix n*n
+    using B_t = typename Base_class::B_t;  // input matrix n*m
+    using H_t = typename Base_class::H_t;  // measurement mapping p*n
+    using K_t = typename Base_class::K_t;  // kalman gain n*p
+
+    using indices_t = std::array<size_t, n_norm_constrained_states>;  // indices of the norm-constrained states
+    using xq_t = Eigen::Matrix<double, nq, 1>;                     // norm-constrained states vector nq*1
+    using Hq_t = Eigen::Matrix<double, p, nq>;                     // norm-constrained measurement mapping p*nq
+    using Kq_t = Eigen::Matrix<double, nq, p>;                     // norm-constrained kalman gain nq*p
+    //}
+
+  public:
+    NCLKF_partial(){};
+
+    NCLKF_partial(const A_t& A, const B_t& B, const H_t& H, const double l, const indices_t& norm_constrained_indices)
+      : Base_class(A, B, H, l),
+        norm_indices(norm_constrained_indices)
+    {};
+
+  private:
+    indices_t norm_indices;
+
+    template <typename T, int rows, int cols, size_t out_rows, size_t out_cols>
+    Eigen::Matrix<T, out_rows, out_cols> select_indices(const Eigen::Matrix<T, rows, cols>& mat, const std::array<size_t, out_rows>& row_indices, const std::array<size_t, out_cols>& col_indices) const
+    {
+      Eigen::Matrix<T, out_rows, cols> tmp;
+      for (size_t it = 0; it < out_rows; it++)
+      {
+        const auto row = row_indices[it];
+        assert(row < rows);
+        tmp.row(it) = mat.row(row);
+      }
+
+      Eigen::Matrix<T, out_rows, out_cols> ret;
+      for (size_t it = 0; it < out_cols; it++)
+      {
+        const auto col = col_indices[it];
+        assert(col < cols);
+        tmp.col(it) = tmp.col(col);
+      }
+
+      return ret;
+    }
+
+    template <typename T, int rows, int cols, size_t out_rows>
+    Eigen::Matrix<T, out_rows, cols> select_rows(const Eigen::Matrix<T, rows, cols>& mat, const std::array<size_t, out_rows>& row_indices) const
+    {
+      Eigen::Matrix<T, out_rows, cols> ret;
+      for (size_t it = 0; it < out_rows; it++)
+      {
+        const auto row = row_indices[it];
+        assert(row < rows);
+        ret.row(it) = mat.row(row);
+      }
+      return ret;
+    }
+
+    template <typename T, int rows, int cols, size_t out_cols>
+    Eigen::Matrix<T, rows, out_cols> select_cols(const Eigen::Matrix<T, rows, cols>& mat, const std::array<size_t, out_cols>& col_indices) const
+    {
+      Eigen::Matrix<T, rows, out_cols> ret;
+      for (size_t it = 0; it < out_cols; it++)
+      {
+        const auto col = col_indices[it];
+        assert(col < cols);
+        ret.col(it) = mat.col(col);
+      }
+      return ret;
+    }
+
+    template <typename T, int rows, size_t out_rows>
+    Eigen::Matrix<T, out_rows, 1> select_indices(const Eigen::Matrix<T, rows, 1>& vec, const std::array<size_t, out_rows>& row_indices) const
+    {
+      return select_rows(vec, row_indices);
+    }
+
+    template <typename T, int rows, int cols, size_t n_rows>
+    void set_rows(const Eigen::Matrix<T, (size_t)n_rows, cols>& from_mat, Eigen::Matrix<T, rows, cols>& to_mat, const std::array<size_t, n_rows>& row_indices) const
+    {
+      for (size_t rit = 0; rit < n_rows; rit++)
+      {
+        const auto ridx = row_indices.at(rit);
+        assert(ridx < rows);
+        to_mat.row(ridx) = from_mat.row(rit);
+      }
+    }
+
+  protected:
+    /* computeKalmanGain() method //{ */
+    virtual K_t computeKalmanGain(const statecov_t& sc, const z_t& z, const R_t& R, const H_t& H) const override
+    {
+      const R_t W = H * sc.P * H.transpose() + R;
+      const R_t W_inv = Base_class::invert_W(W);
+      K_t K = sc.P * H.transpose() * W_inv;
+
+      // calculate the kalman gain for the norm-constrained states
+      {
+        const Kq_t K_orig = select_rows(K, norm_indices);
+        const xq_t xq = select_indices(sc.x, norm_indices);
+        const Hq_t Hq = select_cols(H, norm_indices);
+        const z_t inn = z - (Hq * xq); // innovation
+        const xq_t x = xq + K_orig * inn;
+        const double inn_scale = inn.transpose() * W_inv * inn;
+        
+        const double x_norm = x.norm();
+        const Kq_t Kq = K_orig + (Base_class::l_sqrt/x_norm - 1.0) * x * (inn.transpose() * W_inv) / inn_scale;
+        set_rows(Kq, K, norm_indices);
+      }
     
       return K;
     }
