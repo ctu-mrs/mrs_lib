@@ -69,6 +69,21 @@ namespace mrs_lib
   //}
 
   /* class NCLKF_partial //{ */
+
+  /**
+  * \brief This class implements the partially norm-constrained linear Kalman filter \cite NCKF.
+  *
+  * Note that the class is templated. The template parameters specify the number of states,
+  * number of inputs and number of measurements of the system. The last template parameter
+  * specifies the number of states which are norm-constrained.
+  *
+  * The norm constraint is specified in the constructor together with the indices of the
+  * states to which the constraint applies.
+  *
+  * Example usage:
+  * \include src/nckf/nckf_tests.cpp
+  *
+  */
   template <int n_states, int n_inputs, int n_measurements, int n_norm_constrained_states>
   class NCLKF_partial : public NCLKF<n_states, n_inputs, n_measurements>
   {
@@ -102,14 +117,34 @@ namespace mrs_lib
   public:
     NCLKF_partial(){};
 
+  /*!
+    * \brief Constructor.
+    *
+    * \param A                         State transition matrix of the system (n x n).
+    * \param B                         Input to state mapping matrix of the system (n x m).
+    * \param H                         State to measurement mapping matrix of the system (p x n).
+    * \param l                         The norm constraint, applied to the specified states.
+    * \param norm_constrained_indices  Indices of the norm-constrained states in the state vector.
+    */
     NCLKF_partial(const A_t& A, const B_t& B, const H_t& H, const double l, const indices_t& norm_constrained_indices)
       : Base_class(A, B, H, l),
         norm_indices(norm_constrained_indices)
-    {};
+    {
+      for (auto& idx : norm_indices)
+      {
+        if (idx > n)
+        {
+          ROS_ERROR("[NCLKF_partial]: Index of a norm-constrained state (%lu) cannot be higher than the number of states (%d)! Setting it to zero.", idx, n);
+          idx = 0;
+        }
+      }
+    };
 
   private:
     indices_t norm_indices;
 
+    /* helper methods for Eigen matrix subscripting //{ */
+    
     template <typename T, int rows, int cols, size_t out_rows, size_t out_cols>
     Eigen::Matrix<T, out_rows, out_cols> select_indices(const Eigen::Matrix<T, rows, cols>& mat, const std::array<size_t, out_rows>& row_indices, const std::array<size_t, out_cols>& col_indices) const
     {
@@ -120,7 +155,7 @@ namespace mrs_lib
         assert(row < rows);
         tmp.row(it) = mat.row(row);
       }
-
+    
       Eigen::Matrix<T, out_rows, out_cols> ret;
       for (size_t it = 0; it < out_cols; it++)
       {
@@ -128,10 +163,10 @@ namespace mrs_lib
         assert(col < cols);
         tmp.col(it) = tmp.col(col);
       }
-
+    
       return ret;
     }
-
+    
     template <typename T, int rows, int cols, size_t out_rows>
     Eigen::Matrix<T, out_rows, cols> select_rows(const Eigen::Matrix<T, rows, cols>& mat, const std::array<size_t, out_rows>& row_indices) const
     {
@@ -144,7 +179,7 @@ namespace mrs_lib
       }
       return ret;
     }
-
+    
     template <typename T, int rows, int cols, size_t out_cols>
     Eigen::Matrix<T, rows, out_cols> select_cols(const Eigen::Matrix<T, rows, cols>& mat, const std::array<size_t, out_cols>& col_indices) const
     {
@@ -157,13 +192,13 @@ namespace mrs_lib
       }
       return ret;
     }
-
+    
     template <typename T, int rows, size_t out_rows>
     Eigen::Matrix<T, out_rows, 1> select_indices(const Eigen::Matrix<T, rows, 1>& vec, const std::array<size_t, out_rows>& row_indices) const
     {
       return select_rows(vec, row_indices);
     }
-
+    
     template <typename T, int rows, int cols, size_t n_rows>
     void set_rows(const Eigen::Matrix<T, (size_t)n_rows, cols>& from_mat, Eigen::Matrix<T, rows, cols>& to_mat, const std::array<size_t, n_rows>& row_indices) const
     {
@@ -174,6 +209,8 @@ namespace mrs_lib
         to_mat.row(ridx) = from_mat.row(rit);
       }
     }
+    
+    //}
 
   protected:
     /* computeKalmanGain() method //{ */
