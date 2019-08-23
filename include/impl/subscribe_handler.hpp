@@ -64,13 +64,15 @@ namespace mrs_lib
     class SubscribeHandler_impl : public SubscribeHandler<MessageType>
     {
       public:
-        using timeout_callback_t = impl::SubscribeHandler_base::timeout_callback_t;
+        using timeout_callback_t = SubscribeHandler_base::timeout_callback_t;
+        using message_callback_t = std::function<void(const MessageType& msg)>;
 
       public:
         SubscribeHandler_impl(
               ros::NodeHandle& nh,
               const std::string& topic_name,
               const std::string& node_name = std::string(),
+              const message_callback_t& message_callback = message_callback_t(),
               const ros::Duration& no_message_timeout = mrs_lib::no_timeout,
               const timeout_callback_t& timeout_callback = timeout_callback_t(),
               uint32_t queue_size = 1,
@@ -102,6 +104,10 @@ namespace mrs_lib
               ROS_ERROR_STREAM("[" << SubscribeHandler_base::m_node_name << "]: " << error_msg);
             SubscribeHandler_base::m_ok = false;
           }
+          if (!m_message_callback)
+          {
+            m_message_callback = dummy_message_callback;
+          }
         }
 
         virtual MessageType get_data()
@@ -115,6 +121,9 @@ namespace mrs_lib
 
       private:
         MessageType m_latest_message;
+        message_callback_t m_message_callback;
+
+        static void dummy_message_callback(const MessageType& msg) {}
 
       protected:
         virtual void data_callback(const MessageType& msg)
@@ -193,23 +202,25 @@ namespace mrs_lib
     template <typename MessageType, bool time_consistent=false>
     class SubscribeHandler_threadsafe : public SubscribeHandler_impl<MessageType, time_consistent>
     {
-      public:
-        using timeout_callback_t = impl::SubscribeHandler_base::timeout_callback_t;
-
       private:
         using impl_class_t = impl::SubscribeHandler_impl<MessageType, time_consistent>;
+
+      public:
+        using timeout_callback_t = impl::SubscribeHandler_base::timeout_callback_t;
+        using message_callback_t = typename impl_class_t::message_callback_t;
 
       public:
         SubscribeHandler_threadsafe(
               ros::NodeHandle& nh,
               const std::string& topic_name,
               const std::string& node_name = std::string(),
+              const message_callback_t& message_callback = message_callback_t(),
               const ros::Duration& no_message_timeout = mrs_lib::no_timeout,
               const timeout_callback_t& timeout_callback = timeout_callback_t(),
               uint32_t queue_size = 1,
               const ros::TransportHints& transport_hints = ros::TransportHints()
             )
-          : impl_class_t::SubscribeHandler_impl(nh, topic_name, node_name, no_message_timeout, timeout_callback, queue_size, transport_hints)
+          : impl_class_t::SubscribeHandler_impl(nh, topic_name, node_name, message_callback, no_message_timeout, timeout_callback, queue_size, transport_hints)
         {
         }
 

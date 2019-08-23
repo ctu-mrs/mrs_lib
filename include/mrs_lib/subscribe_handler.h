@@ -219,6 +219,8 @@ namespace mrs_lib
   {
     public:
       using timeout_callback_t = impl::SubscribeHandler_base::timeout_callback_t;
+      template <typename MessageType>
+      using message_callback_t = typename impl::SubscribeHandler_impl<MessageType>::message_callback_t;
 
     public:
       SubscribeMgr(ros::NodeHandle& nh, std::string node_name = std::string()) : m_nh(nh), m_node_name(node_name), m_load_successful(true) {};
@@ -227,6 +229,7 @@ namespace mrs_lib
       template <typename MessageType, bool time_consistent=false>
       SubscribeHandlerPtr<MessageType> create_handler(
             const std::string& topic_name,
+            const message_callback_t<MessageType>& message_callback = message_callback_t<MessageType>(),
             const ros::Duration& no_message_timeout = mrs_lib::no_timeout,
             const timeout_callback_t& timeout_callback = timeout_callback_t(),
             const bool threadsafe = true,
@@ -242,6 +245,7 @@ namespace mrs_lib
               m_nh,
               topic_name,
               m_node_name,
+              message_callback,
               no_message_timeout,
               timeout_callback,
               queue_size,
@@ -254,6 +258,7 @@ namespace mrs_lib
               m_nh,
               topic_name,
               m_node_name,
+              message_callback,
               no_message_timeout,
               timeout_callback,
               queue_size,
