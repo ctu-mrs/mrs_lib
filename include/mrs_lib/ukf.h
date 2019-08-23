@@ -3,7 +3,7 @@
 #define UKF_H
 
 /**  \file
-     \brief Defines UKF - a class implementing the Unscented Kalman Filter.
+     \brief Defines UKF - a class implementing the Unscented Kalman Filter \cite UKF.
      \author Tomáš Báča - bacatoma@fel.cvut.cz (original implementation)
      \author Matouš Vrba - vrbamato@fel.cvut.cz (rewrite, documentation)
  */

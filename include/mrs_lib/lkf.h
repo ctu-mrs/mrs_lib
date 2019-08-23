@@ -1,6 +1,6 @@
 // clang: MatousFormat
 /**  \file
-     \brief Defines LKF - a class, implementing the Linear Kalman Filter, as well as a few specialized variants.
+     \brief Defines LKF - a class, implementing the Linear Kalman Filter \cite LKF, as well as a few specialized variants.
      \author Matouš Vrba - vrbamato@fel.cvut.cz
      \page handle LKF
  */

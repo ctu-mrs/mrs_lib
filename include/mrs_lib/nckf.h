@@ -1,8 +1,8 @@
 // clang: MatousFormat
 /**  \file
- *   \page handle NCKF
-     \brief Defines NCLKF - a class, implementing the Norm-constrained Linear Kalman Filter \cite NCKF.
+     \brief Defines NCLKF - a class, implementing the Norm-constrained Linear Kalman Filter \cite NCLKF and NCUKF for the Norm-constrained Unscented Kalman Filter \cite NCUKF.
      \author Matouš Vrba - vrbamato@fel.cvut.cz
+ *   \page handle NCKF
  */
 #ifndef NCKFSYSTEMMODELS_H
 #define NCKFSYSTEMMODELS_H
@@ -15,7 +15,7 @@ namespace mrs_lib
 
   /* class NCLKF //{ */
   /**
-  * \brief This class implements the norm-constrained linear Kalman filter \cite NCKF.
+  * \brief This class implements the norm-constrained linear Kalman filter \cite NCLKF.
   *
   * Note that the class is templated. The template parameters specify the number of states,
   * number of inputs and number of measurements of the system. The last template parameter
