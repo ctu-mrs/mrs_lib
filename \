@@ -1,4 +1,4 @@
-#include <mrs_lib/SubscribeHandler.h>
+#include <mrs_lib/subscribe_handler.h>
 
 namespace mrs_lib
 {
@@ -9,7 +9,8 @@ namespace mrs_lib
       ros::NodeHandle& nh,
       ros::Duration no_message_timeout,
       const std::string& topic_name,
-      const std::string& node_name
+      const std::string& node_name,
+      const timeout_callback_t& timeout_callback
       )
       : m_no_message_timeout(no_message_timeout),
         m_topic_name(topic_name),
@@ -17,16 +18,16 @@ namespace mrs_lib
         m_got_data(false),
         m_new_data(false),
         m_used_data(false),
-        m_last_msg_received(ros::Time::now())
+        m_last_msg_received(ros::Time::now()),
+        m_timeout_callback(timeout_callback)
     {
       if (no_message_timeout != mrs_lib::no_timeout)
-        m_timeout_check_timer = nh.createTimer(no_message_timeout, &SubscribeHandler_base::check_timeout, this);
+        m_timeout_check_timer = nh.createTimer(no_message_timeout, &SubscribeHandler_base::check_timeout, this, true /*oneshot*/);
     }
-      
-    void SubscribeHandler_base::check_timeout([[maybe_unused]] const ros::TimerEvent& evt)
+
+    void SubscribeHandler_base::default_timeout_callback(const std::string& topic, const ros::Time& last_msg)
     {
       /* ROS_ERROR("Checking topic %s, delay: %.2f", m_sub.getTopic().c_str(), since_msg.toSec()); */
-      std::lock_guard<std::mutex> lck(m_last_msg_received_mtx);
       ros::Duration since_msg = (ros::Time::now() - m_last_msg_received);
       if (since_msg > m_no_message_timeout)
       {
@@ -39,6 +40,17 @@ namespace mrs_lib
         else
           ROS_WARN_STREAM("[" << m_node_name << "]: " << msg);
       }
+    }
+    
+    void SubscribeHandler_base::check_timeout([[maybe_unused]] const ros::TimerEvent& evt)
+    {
+      ros::Time last_msg;
+      {
+        std::lock_guard<std::mutex> lck(m_last_msg_received_mtx);
+        last_msg = m_last_msg_received;
+      }
+      const auto n_pubs = m_sub.getNumPublishers();
+      m_timeout_callback(resolved_topic_name, last_msg, n_pubs);
     }
 
     std::string SubscribeHandler_base::resolved_topic_name()

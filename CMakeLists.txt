@@ -126,8 +126,14 @@ target_link_libraries(param_loader_example
   ${Eigen_LIBRARIES}
   )
 
-add_library(SubscribeHandler src/subscribe_handler/SubscribeHandler.cpp)
+add_library(SubscribeHandler src/subscribe_handler/subscribe_handler.cpp)
 target_link_libraries(SubscribeHandler
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_executable(subscribe_handler_tests src/subscribe_handler/subscribe_handler_tests.cpp src/subscribe_handler/subscribe_handler.cpp)
+target_link_libraries(subscribe_handler_tests
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )

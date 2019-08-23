@@ -1,5 +1,5 @@
-#ifndef SUBRSCRIBEHANDLER_H
-#define SUBRSCRIBEHANDLER_H
+#ifndef SUBRSCRIBE_HANDLER_H
+#define SUBRSCRIBE_HANDLER_H
 
 #include <ros/ros.h>
 #include <string>
@@ -13,7 +13,7 @@ namespace mrs_lib
   static const ros::Duration no_timeout = ros::Duration(0);
 }
 
-#include <impl/SubscribeHandler_impl.h>
+#include <impl/subscribe_handler.hpp>
 
 namespace mrs_lib
 {
@@ -24,20 +24,25 @@ namespace mrs_lib
   class SubscribeHandler : public impl::SubscribeHandler_base
   {
     public:
+      using timeout_callback_t = impl::SubscribeHandler_base::timeout_callback_t;
+
+    public:
       virtual MessageType get_data() = 0;
 
     protected:
       SubscribeHandler(
           ros::NodeHandle& nh,
-          ros::Duration no_message_timeout,
           const std::string& topic_name,
-          const std::string& node_name
+          const std::string& node_name,
+          const ros::Duration& no_message_timeout,
+          const timeout_callback_t& timeout_callback
         )
         : impl::SubscribeHandler_base(
             nh,
-            no_message_timeout,
             topic_name,
-            node_name
+            node_name,
+            no_message_timeout,
+            timeout_callback
           )
       {};
   };
@@ -59,7 +64,7 @@ namespace mrs_lib
           uint32_t queue_size,
           uint32_t buffer_size,
           const ros::TransportHints& transport_hints = ros::TransportHints(),
-          ros::Duration no_message_timeout = mrs_lib::no_timeout,
+          const ros::Duration& no_message_timeout = mrs_lib::no_timeout,
           const std::string& node_name = std::string()
         )
         : impl_class_t(
@@ -213,49 +218,48 @@ namespace mrs_lib
   class SubscribeMgr
   {
     public:
+      using timeout_callback_t = impl::SubscribeHandler_base::timeout_callback_t;
+
+    public:
       SubscribeMgr(ros::NodeHandle& nh, std::string node_name = std::string()) : m_nh(nh), m_node_name(node_name), m_load_successful(true) {};
 
       /* create_handler() method //{ */
       template <typename MessageType, bool time_consistent=false>
       SubscribeHandlerPtr<MessageType> create_handler(
             const std::string& topic_name,
-            uint32_t queue_size,
-            const ros::TransportHints& transport_hints = ros::TransportHints(),
-            ros::Duration no_message_timeout = mrs_lib::no_timeout
+            const ros::Duration& no_message_timeout = mrs_lib::no_timeout,
+            const timeout_callback_t& timeout_callback = timeout_callback_t(),
+            const bool threadsafe = true,
+            uint32_t queue_size = 1,
+            const ros::TransportHints& transport_hints = ros::TransportHints()
           )
       {
-        SubscribeHandlerPtr<MessageType> ptr = std::make_shared<impl::SubscribeHandler_impl<MessageType, time_consistent> >
-          (
-            m_nh,
-            topic_name,
-            queue_size,
-            transport_hints,
-            no_message_timeout,
-            m_node_name
-          );
-        m_load_successful = m_load_successful && ptr->ok();
-        return ptr;
-      }
-      //}
-
-      /* create_handler_threadsafe() method //{ */
-      template <typename MessageType, bool time_consistent=false>
-      SubscribeHandlerPtr<MessageType> create_handler_threadsafe(
-            const std::string& topic_name,
-            uint32_t queue_size,
-            const ros::TransportHints& transport_hints = ros::TransportHints(),
-            ros::Duration no_message_timeout = mrs_lib::no_timeout
-          )
-      {
-        SubscribeHandlerPtr<MessageType> ptr = std::make_shared<impl::SubscribeHandler_threadsafe<MessageType, time_consistent> >
-          (
-            m_nh,
-            topic_name,
-            queue_size,
-            transport_hints,
-            no_message_timeout,
-            m_node_name
-          );
+        SubscribeHandlerPtr<MessageType> ptr;
+        if (threadsafe)
+        {
+          ptr = std::make_shared<impl::SubscribeHandler_impl<MessageType, time_consistent> >
+            (
+              m_nh,
+              topic_name,
+              m_node_name,
+              no_message_timeout,
+              timeout_callback,
+              queue_size,
+              transport_hints
+            );
+        } else
+        {
+          ptr = std::make_shared<impl::SubscribeHandler_threadsafe<MessageType, time_consistent> >
+            (
+              m_nh,
+              topic_name,
+              m_node_name,
+              no_message_timeout,
+              timeout_callback,
+              queue_size,
+              transport_hints
+            );
+        }
         m_load_successful = m_load_successful && ptr->ok();
         return ptr;
       }
@@ -265,10 +269,10 @@ namespace mrs_lib
       template <typename MessageWithHeaderType>
       SubscribeBufferPtr<MessageWithHeaderType> create_buffer(
             const std::string& topic_name,
-            uint32_t queue_size,
             uint32_t buffer_size,
-            const ros::TransportHints& transport_hints = ros::TransportHints(),
-            ros::Duration no_message_timeout = mrs_lib::no_timeout
+            const ros::Duration& no_message_timeout = mrs_lib::no_timeout,
+            uint32_t queue_size = 1,
+            const ros::TransportHints& transport_hints = ros::TransportHints()
           )
       {
         SubscribeBufferPtr<MessageWithHeaderType> ptr = std::make_shared<SubscribeBuffer<MessageWithHeaderType> >
@@ -301,4 +305,4 @@ namespace mrs_lib
 
 }
 
-#endif // SUBRSCRIBEHANDLER_H
+#endif // SUBRSCRIBE_HANDLER_H
