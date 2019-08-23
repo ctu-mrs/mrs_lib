@@ -9,6 +9,7 @@
      \author Matouš Vrba - vrbamato@fel.cvut.cz (rewrite, documentation)
  */
 
+#include <ros/ros.h>
 #include <mrs_lib/ukf.h>
 
 namespace mrs_lib

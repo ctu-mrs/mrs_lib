@@ -8,19 +8,15 @@
      \author Matouš Vrba - vrbamato@fel.cvut.cz (rewrite, documentation)
  */
 
-#include <ros/ros.h>
-#include <Eigen/Dense>
-#include <mutex>
-#include <stdexcept>
 #include <mrs_lib/kalman_filter.h>
 
 namespace mrs_lib
 {
 
   /**
-  * \brief Implementation of the Unscented Kalman Filter.
+  * \brief Implementation of the Unscented Kalman filter \cite UKF.
   *
-  * The Unscented Kalman Filter (abbreviated UKF, \cite UKF) is a variant of the Kalman filter, which may be used
+  * The Unscented Kalman filter (abbreviated UKF, \cite UKF) is a variant of the Kalman filter, which may be used
   * for state filtration or estimation of non-linear systems as opposed to the Linear Kalman Filter
   * (which is implemented in \ref LKF). The UKF tends to be more accurate than the simpler Extended Kalman Filter,
   * espetially for highly non-linear systems. However, it is generally less stable than the LKF because of the extra
@@ -32,7 +28,7 @@ namespace mrs_lib
   * much higher when using templates. The main advantage is compile-time checking (if it compiles, then it has
   * a lower chance of crashing at runtime) and enabling more effective optimalizations during compilation. Also in case
   * of Eigen, the code is arguably more readable when you use aliases to the specific Matrix instances instead of
-  * havine Eigen::MatrixXd and Eigen::VectorXd everywhere.
+  * having Eigen::MatrixXd and Eigen::VectorXd everywhere.
   *
   * Example usage:
   * \include src/ukf/example.cpp

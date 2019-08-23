@@ -66,6 +66,12 @@ target_link_libraries(Ukf
   ${Eigen_LIBRARIES}
   )
 
+add_executable(lkf_example src/lkf/example.cpp)
+target_link_libraries(lkf_example
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
 add_executable(ukf_tests src/ukf/ukf_tests.cpp src/ukf/ukf.cpp)
 target_link_libraries(ukf_tests
   ${catkin_LIBRARIES}
