@@ -65,7 +65,7 @@ namespace mrs_lib
     {
       public:
         using timeout_callback_t = SubscribeHandler_base::timeout_callback_t;
-        using message_callback_t = std::function<void(const MessageType& msg)>;
+        using message_callback_t = std::function<void(SubscribeHandler<MessageType>&)>;
 
       public:
         SubscribeHandler_impl(
@@ -123,7 +123,7 @@ namespace mrs_lib
         MessageType m_latest_message;
         message_callback_t m_message_callback;
 
-        static void dummy_message_callback(const MessageType& msg) {}
+        static void dummy_message_callback(const SubscribeHandler<MessageType>& msg) {}
 
       protected:
         virtual void data_callback(const MessageType& msg)
@@ -193,6 +193,7 @@ namespace mrs_lib
           SubscribeHandler_base::m_last_msg_received = time;
           SubscribeHandler_base::m_timeout_check_timer.stop();
           SubscribeHandler_base::m_timeout_check_timer.start();
+          m_message_callback(*this);
         }
 
     };
