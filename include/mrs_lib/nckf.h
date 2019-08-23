@@ -14,33 +14,58 @@ namespace mrs_lib
 {
 
   /* class NCLKF //{ */
+  /**
+  * \brief This class implements the norm-constrained linear Kalman filter \cite NCKF.
+  *
+  * Note that the class is templated. The template parameters specify the number of states,
+  * number of inputs and number of measurements of the system. The last template parameter
+  * specifies the number of states which are norm-constrained.
+  *
+  * The norm constraint is specified in the constructor and applied to the whole state
+  * vector of the system.
+  *
+  */
   template <int n_states, int n_inputs, int n_measurements>
   class NCLKF : public LKF<n_states, n_inputs, n_measurements>
   {
   public:
     /* NCLKF definitions (typedefs, constants etc) //{ */
-    static const int n = n_states;
-    static const int m = n_inputs;
-    static const int p = n_measurements;
-    using Base_class = LKF<n, m, p>;
+    static const int n = n_states;                       /*!< \brief Length of the state vector of the system. */
+    static const int m = n_inputs;                       /*!< \brief Length of the input vector of the system. */
+    static const int p = n_measurements;                 /*!< \brief Length of the measurement vector of the system. */
+    using Base_class = LKF<n, m, p>;                     /*!< \brief Base class of this class. */
 
-    using x_t = typename Base_class::x_t;                // state vector n*1
-    using u_t = typename Base_class::u_t;                // input vector m*1
-    using z_t = typename Base_class::z_t;                // measurement vector p*1
-    using P_t = typename Base_class::P_t;                // state covariance n*n
-    using R_t = typename Base_class::R_t;                // measurement covariance p*p
-    using Q_t = typename Base_class::Q_t;                // measurement covariance p*p
-    using statecov_t = typename Base_class::statecov_t;  // helper struct for state and covariance
+    using x_t = typename Base_class::x_t;                /*!< \brief State vector type \f$n \times 1\f$ */
+    using u_t = typename Base_class::u_t;                /*!< \brief Input vector type \f$m \times 1\f$ */
+    using z_t = typename Base_class::z_t;                /*!< \brief Measurement vector type \f$p \times 1\f$ */
+    using P_t = typename Base_class::P_t;                /*!< \brief State uncertainty covariance matrix type \f$n \times n\f$ */
+    using R_t = typename Base_class::R_t;                /*!< \brief Measurement noise covariance matrix type \f$p \times p\f$ */
+    using Q_t = typename Base_class::Q_t;                /*!< \brief Process noise covariance matrix type \f$n \times n\f$ */
+    using statecov_t = typename Base_class::statecov_t;  /*!< \brief Helper struct for passing around the state and its covariance in one variable */
 
-    using A_t = typename Base_class::A_t;  // system matrix n*n
-    using B_t = typename Base_class::B_t;  // input matrix n*m
-    using H_t = typename Base_class::H_t;  // measurement mapping p*n
-    using K_t = typename Base_class::K_t;  // kalman gain n*p
+    using A_t = typename Base_class::A_t;                /*!< \brief System transition matrix type \f$n \times n\f$ */
+    using B_t = typename Base_class::B_t;                /*!< \brief Input to state mapping matrix type \f$n \times m\f$ */
+    using H_t = typename Base_class::H_t;                /*!< \brief State to measurement mapping matrix type \f$p \times n\f$ */
+    using K_t = typename Base_class::K_t;                /*!< \brief Kalman gain matrix type \f$n \times p\f$ */
     //}
 
   public:
+  /*!
+    * \brief Convenience default constructor.
+    *
+    * This constructor should not be used if applicable. If used, the main constructor has to be called afterwards,
+    * before using this class, otherwise the object is invalid (not initialized).
+    */
     NCLKF(){};
 
+  /*!
+    * \brief The main constructor.
+    *
+    * \param A                         State transition matrix of the system (n x n).
+    * \param B                         Input to state mapping matrix of the system (n x m).
+    * \param H                         State to measurement mapping matrix of the system (p x n).
+    * \param l                         The norm constraint, applied to the specified states.
+    */
     NCLKF(const A_t& A, const B_t& B, const H_t& H, const double l) : Base_class(A, B, H), l_sqrt(sqrt(l)) {};
 
   protected:
@@ -89,36 +114,42 @@ namespace mrs_lib
   {
   public:
     /* NCLKF_partial definitions (typedefs, constants etc) //{ */
-    static const int n = n_states;
-    static const int m = n_inputs;
-    static const int p = n_measurements;
-    static const int nq = n_norm_constrained_states;
-    using Base_class = NCLKF<n, m, p>;
+    static const int n = n_states;                       /*!< \brief Length of the state vector of the system. */
+    static const int m = n_inputs;                       /*!< \brief Length of the input vector of the system. */
+    static const int p = n_measurements;                 /*!< \brief Length of the measurement vector of the system. */
+    static const int nq = n_norm_constrained_states;     /*!< \brief Number of states to which the norm constraint applies. */
+    using Base_class = NCLKF<n, m, p>;                   /*!< \brief Base class of this class. */
 
-    using x_t = typename Base_class::x_t;                // state vector n*1
-    using u_t = typename Base_class::u_t;                // input vector m*1
-    using z_t = typename Base_class::z_t;                // measurement vector p*1
-    using P_t = typename Base_class::P_t;                // state covariance n*n
-    using R_t = typename Base_class::R_t;                // measurement covariance p*p
-    using Q_t = typename Base_class::Q_t;                // measurement covariance p*p
-    using statecov_t = typename Base_class::statecov_t;  // helper struct for state and covariance
+    using x_t = typename Base_class::x_t;                /*!< \brief State vector type \f$n \times 1\f$ */
+    using u_t = typename Base_class::u_t;                /*!< \brief Input vector type \f$m \times 1\f$ */
+    using z_t = typename Base_class::z_t;                /*!< \brief Measurement vector type \f$p \times 1\f$ */
+    using P_t = typename Base_class::P_t;                /*!< \brief State uncertainty covariance matrix type \f$n \times n\f$ */
+    using R_t = typename Base_class::R_t;                /*!< \brief Measurement noise covariance matrix type \f$p \times p\f$ */
+    using Q_t = typename Base_class::Q_t;                /*!< \brief Process noise covariance matrix type \f$n \times n\f$ */
+    using statecov_t = typename Base_class::statecov_t;  /*!< \brief Helper struct for passing around the state and its covariance in one variable */
 
-    using A_t = typename Base_class::A_t;  // system matrix n*n
-    using B_t = typename Base_class::B_t;  // input matrix n*m
-    using H_t = typename Base_class::H_t;  // measurement mapping p*n
-    using K_t = typename Base_class::K_t;  // kalman gain n*p
+    using A_t = typename Base_class::A_t;                /*!< \brief System transition matrix type \f$n \times n\f$ */
+    using B_t = typename Base_class::B_t;                /*!< \brief Input to state mapping matrix type \f$n \times m\f$ */
+    using H_t = typename Base_class::H_t;                /*!< \brief State to measurement mapping matrix type \f$p \times n\f$ */
+    using K_t = typename Base_class::K_t;                /*!< \brief Kalman gain matrix type \f$n \times p\f$ */
 
-    using indices_t = std::array<size_t, n_norm_constrained_states>;  // indices of the norm-constrained states
-    using xq_t = Eigen::Matrix<double, nq, 1>;                     // norm-constrained states vector nq*1
-    using Hq_t = Eigen::Matrix<double, p, nq>;                     // norm-constrained measurement mapping p*nq
-    using Kq_t = Eigen::Matrix<double, nq, p>;                     // norm-constrained kalman gain nq*p
+    using indices_t = std::array<size_t, nq>;            /*!< \brief Indices of the norm-constrained states type */
+    using xq_t = Eigen::Matrix<double, nq, 1>;           /*!< \brief Norm-constrained states vector type \f$ n_q \times 1 \f$ */
+    using Hq_t = Eigen::Matrix<double, p, nq>;           /*!< \brief Norm-constrained measurement mapping type \f$ p \times n_q \f$ */
+    using Kq_t = Eigen::Matrix<double, nq, p>;           /*!< \brief Norm-constrained kalman gain type \f$ n_q \times p \f$ */
     //}
 
   public:
+  /*!
+    * \brief Convenience default constructor.
+    *
+    * This constructor should not be used if applicable. If used, the main constructor has to be called afterwards,
+    * before using this class, otherwise the object is invalid (not initialized).
+    */
     NCLKF_partial(){};
 
   /*!
-    * \brief Constructor.
+    * \brief The main constructor.
     *
     * \param A                         State transition matrix of the system (n x n).
     * \param B                         Input to state mapping matrix of the system (n x m).
