@@ -61,11 +61,6 @@ namespace mrs_lib
       return ret;
     }
 
-    bool SubscribeHandler_base::ok() const
-    {
-      return m_ok;
-    }
-
     bool SubscribeHandler_base::has_data() const
     {
       return m_got_data;

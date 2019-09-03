@@ -27,9 +27,9 @@ int main(int argc, char **argv)
 
   auto handler1 = smgr.create_handler<std_msgs::BoolConstPtr>(
             topic_name,
-            message_callback,
             no_message_timeout,
             timeout_callback,
+            message_callback,
             threadsafe,
             queue_size,
             transport_hints

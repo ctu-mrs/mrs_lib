@@ -463,7 +463,7 @@ private:
 
 public:
   /*!
-    * \brief Default constructor.
+    * \brief Main constructor.
     *
     * \param nh            The parameters will be loaded from rosparam using this node handle.
     * \param print_values  If true, the loaded values will be printed to stdout using std::cout or ROS_INFO if node_name is not empty.

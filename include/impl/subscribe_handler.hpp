@@ -20,7 +20,7 @@ namespace mrs_lib
         using timeout_callback_t = std::function<void(const std::string&, const ros::Time&, const int)>;
 
       public:
-        virtual bool ok() const;
+        virtual bool ok() const = 0;
         virtual bool has_data() const;
         virtual bool new_data() const;
         virtual bool used_data() const;
@@ -121,11 +121,22 @@ namespace mrs_lib
           return m_latest_message;
         }
 
+        void set_ptr(SubscribeHandlerPtr<MessageType> ptr)
+        {
+          m_ptr = ptr;
+        }
+
+        bool ok() const override
+        {
+          return SubscribeHandler_base::m_ok && !m_ptr.expired();
+        }
+
       private:
+        std::weak_ptr<SubscribeHandler<MessageType>> m_ptr;
         MessageType m_latest_message;
         message_callback_t m_message_callback;
 
-        static void dummy_message_callback(SubscribeHandlerPtr<MessageType> sh_ptr) {}
+        static void dummy_message_callback([[maybe_unused]] SubscribeHandlerPtr<MessageType> sh_ptr) {}
 
       protected:
         virtual void data_callback(const MessageType& msg)
@@ -195,8 +206,7 @@ namespace mrs_lib
           SubscribeHandler_base::m_last_msg_received = time;
           SubscribeHandler_base::m_timeout_check_timer.stop();
           SubscribeHandler_base::m_timeout_check_timer.start();
-          // FIX THIS SHIT
-          m_message_callback(std::shared_ptr<SubscribeHandler<MessageType> >(this));
+          m_message_callback(std::shared_ptr(m_ptr));
         }
 
     };
@@ -228,34 +238,34 @@ namespace mrs_lib
         {
         }
 
-        virtual bool ok() const
+        virtual bool ok() const override
         {
           std::lock_guard<std::mutex> lck(m_mtx);
           return impl_class_t::ok();
         }
-        virtual bool has_data() const
+        virtual bool has_data() const override
         {
           std::lock_guard<std::mutex> lck(m_mtx);
           return impl_class_t::has_data();
         }
-        virtual bool new_data() const
+        virtual bool new_data() const override
         {
           std::lock_guard<std::mutex> lck(m_mtx);
           return impl_class_t::new_data();
         }
-        virtual bool used_data() const
+        virtual bool used_data() const override
         {
           std::lock_guard<std::mutex> lck(m_mtx);
           return impl_class_t::used_data();
         }
-        virtual MessageType get_data()
+        virtual MessageType get_data() override
         {
           std::lock_guard<std::mutex> lck(m_mtx);
           return impl_class_t::get_data();
         }
 
       protected:
-        virtual void data_callback(const MessageType& msg)
+        virtual void data_callback(const MessageType& msg) override
         {
           std::lock_guard<std::mutex> lck(m_mtx);
           return impl_class_t::data_callback(msg);
