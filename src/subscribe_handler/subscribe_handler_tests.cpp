@@ -8,7 +8,7 @@ void timeout_callback(const std::string& topic, const ros::Time& last_msg, const
 
 void message_callback(mrs_lib::SubscribeHandlerPtr<std_msgs::BoolConstPtr> sh_ptr)
 {
-  ROS_INFO_STREAM("Received: '" << sh_ptr->get_data() << "'");
+  ROS_INFO_STREAM("Received: '" << (int)sh_ptr->get_data()->data << "'");
 }
 
 int main(int argc, char **argv)
@@ -19,7 +19,7 @@ int main(int argc, char **argv)
 
   const std::string topic_name = "test_topic";
   const ros::Duration no_message_timeout = ros::Duration(5.0);
-  const bool threadsafe = false;
+  const bool threadsafe = true;
   const uint32_t queue_size = 5;
   const ros::TransportHints transport_hints = ros::TransportHints().tcpNoDelay();
 
@@ -35,6 +35,12 @@ int main(int argc, char **argv)
             transport_hints
             );
 
-  ros::spin();
+  ros::Rate r(100);
+  while (ros::ok())
+  {
+    ros::spinOnce();
+    ROS_INFO_THROTTLE(1.0, "[%s]: Spinning", ros::this_node::getName().c_str());
+    r.sleep();
+  }
 }
 

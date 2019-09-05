@@ -245,9 +245,9 @@ namespace mrs_lib
 
   /* SubscriberMgr class //{ */
   /**
-  * \brief Manager class for creating SunscribeHandler objects.
+  * \brief Manager class for creating SubscribeHandler objects.
   *
-  * This class automatically checks for subscribe errors when creating SubscribeHandlers.
+  * This class automatically checks for subscribe errors when creating SubscribeHandler objects.
   * Use the create_handler() method to create new SubscribeHandler objects.
   * Use the loaded_successfully() method to check if all subscribes have been successful so far.
   *
@@ -255,7 +255,13 @@ namespace mrs_lib
   class SubscribeMgr
   {
     public:
+    /*!
+      * \brief Convenience type for the timeout callback function.
+      */
       using timeout_callback_t = impl::SubscribeHandler_base::timeout_callback_t;
+    /*!
+      * \brief Convenience type for the message callback function.
+      */
       template <typename MessageType>
       using message_callback_t = typename impl::SubscribeHandler_impl<MessageType>::message_callback_t;
 
@@ -272,8 +278,15 @@ namespace mrs_lib
     /*!
       * \brief Instantiates a new SubscribeHandler object.
       *
-      * \param nh                     The topics will be subscribed using this node handle.
-      * \param node_name              Optional node name used when printing warnings and errors.
+      * \param topic_name           Name of the topic the new object will be handling (subscribe to).
+      * \param no_message_timeout   After this duration has passed without receiving any new messages on the handled topic, the \p timeout_callback will be called.
+      * \param timeout_callback     The method to call if no messages have arrived for \p no_message_timeout. If empty a throttled ROS warning will be prited instead of calling \p timeout_callback.
+      * \param message_callback     Optional callback when receiving a new message.
+      * \param threadsafe           Whether the handler should be mutexed.
+      * \param queue_size           Will be passed to the ROS NodeHandle when subscribing (see ROS docs for explanation).
+      * \param transport_hints      Will be passed to the ROS NodeHandle when subscribing (see ROS docs for explanation).
+      *
+      * \returns                    std::shared_ptr to the new SubscribeHandler object. When the object is destroyed, the callbacks will not be called anymore.
       */
       template <typename MessageType, bool time_consistent=false>
       SubscribeHandlerPtr<MessageType> create_handler(
@@ -289,7 +302,7 @@ namespace mrs_lib
         SubscribeHandlerPtr<MessageType> ptr;
         if (threadsafe)
         {
-          auto local_ptr = std::make_shared<impl::SubscribeHandler_impl<MessageType, time_consistent> >
+          auto local_ptr = std::make_shared<impl::SubscribeHandler_threadsafe<MessageType, time_consistent> >
             (
               m_nh,
               topic_name,
@@ -305,7 +318,7 @@ namespace mrs_lib
           ptr = local_ptr;
         } else
         {
-          auto local_ptr = std::make_shared<impl::SubscribeHandler_threadsafe<MessageType, time_consistent> >
+          auto local_ptr = std::make_shared<impl::SubscribeHandler_impl<MessageType, time_consistent> >
             (
               m_nh,
               topic_name,
@@ -350,10 +363,17 @@ namespace mrs_lib
       /* } */
       /* //} */
 
+      /* loaded_successfully() method //{ */
+    /*!
+      * \brief Returns true if all SubscribeHandler objects have been successfully initialized so far.
+      *
+      * \returns  true if all SubscribeHandler objects have been successfully initialized so far, false otherwise.
+      */
       bool loaded_successfully()
       {
         return m_load_successful;
       }
+      //}
 
     private:
       ros::NodeHandle m_nh;

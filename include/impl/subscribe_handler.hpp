@@ -86,7 +86,8 @@ namespace mrs_lib
               node_name,
               no_message_timeout,
               timeout_callback
-            )
+            ),
+          m_message_callback(message_callback)
         {
           try
           {
@@ -139,7 +140,7 @@ namespace mrs_lib
         static void dummy_message_callback([[maybe_unused]] SubscribeHandlerPtr<MessageType> sh_ptr) {}
 
       protected:
-        virtual void data_callback(const MessageType& msg)
+        void data_callback(const MessageType& msg)
         {
           data_callback_impl(msg);
         }
@@ -198,14 +199,19 @@ namespace mrs_lib
           return !SubscribeHandler_base::m_got_data || check_time_consistent(msg);
         }
 
-        void data_callback_unchecked(const MessageType& msg, const ros::Time& time)
+        virtual void process_new_message(const MessageType& msg, const ros::Time& time)
         {
+          SubscribeHandler_base::m_timeout_check_timer.stop();
           m_latest_message = msg;
           SubscribeHandler_base::m_new_data = true;
           SubscribeHandler_base::m_got_data = true;
           SubscribeHandler_base::m_last_msg_received = time;
-          SubscribeHandler_base::m_timeout_check_timer.stop();
           SubscribeHandler_base::m_timeout_check_timer.start();
+        }
+
+        void data_callback_unchecked(const MessageType& msg, const ros::Time& time)
+        {
+          process_new_message(msg, time);
           m_message_callback(std::shared_ptr(m_ptr));
         }
 
@@ -265,10 +271,10 @@ namespace mrs_lib
         }
 
       protected:
-        virtual void data_callback(const MessageType& msg) override
+        virtual void process_new_message(const MessageType& msg, const ros::Time& time) override
         {
           std::lock_guard<std::mutex> lck(m_mtx);
-          return impl_class_t::data_callback(msg);
+          return impl_class_t::process_new_message(msg, time);
         }
 
       private:
