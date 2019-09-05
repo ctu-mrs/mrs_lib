@@ -226,7 +226,7 @@ namespace mrs_lib
       statecov_t ret;
       const K_t K = computeKalmanGain(sc, z, R, H);
       ret.x = sc.x + K * (z - (H * sc.x));
-      ret.P = (P_t::Identity(sc.P.rows, sc.P.cols) - (K * H)) * sc.P;
+      ret.P = (P_t::Identity(sc.P.rows(), sc.P.cols()) - (K * H)) * sc.P;
       return ret;
     }
     //}
