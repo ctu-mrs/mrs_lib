@@ -100,11 +100,16 @@ namespace mrs_lib
 
     /*!
       * \brief Enables the callbacks for the handled topic.
+      * If the SubscribeHandler object is stopped using the stop() method, no callbacks will be called
+      * until the start() method is called.
       */
       void start() const {assert(m_pimpl); return m_pimpl->start();};
 
     /*!
       * \brief Disables the callbacks for the handled topic.
+      *
+      * All messages after this method is called will be ignored until start() is called again.
+      * Timeout checking will also be disabled.
       */
       void stop() const {assert(m_pimpl); return m_pimpl->stop();};
 
