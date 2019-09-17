@@ -208,13 +208,25 @@ namespace mrs_lib
     //}
 
     /* correction_impl() method //{ */
-    statecov_t correction_impl(const statecov_t& sc, const z_t& z, const R_t& R, const H_t& H) const
+    template<int check=n>
+    typename std::enable_if<check >= 0, statecov_t>::type correction_impl(const statecov_t& sc, const z_t& z, const R_t& R, const H_t& H) const
     {
       // the correction phase
       statecov_t ret;
       const K_t K = computeKalmanGain(sc, z, R, H);
       ret.x = sc.x + K * (z - (H * sc.x));
       ret.P = (P_t::Identity() - (K * H)) * sc.P;
+      return ret;
+    }
+
+    template<int check=n>
+    typename std::enable_if<check < 0, statecov_t>::type correction_impl(const statecov_t& sc, const z_t& z, const R_t& R, const H_t& H) const
+    {
+      // the correction phase
+      statecov_t ret;
+      const K_t K = computeKalmanGain(sc, z, R, H);
+      ret.x = sc.x + K * (z - (H * sc.x));
+      ret.P = (P_t::Identity(sc.P.rows, sc.P.cols) - (K * H)) * sc.P;
       return ret;
     }
     //}
