@@ -37,15 +37,6 @@ int main(int argc, char **argv)
             threadsafe
             );
 
-  /* Check if all subscribe handlers were initialized successfully */ 
-  if (!smgr.loaded_successfully())
-  {
-    /* If not, alert the user and shut the node down */ 
-    ROS_ERROR("[%s]: SubscribeHandler initialization failure", node_name.c_str());
-    ros::shutdown();
-    return 1;
-  }
-
   /* Type of the message may be accessed by C++11 decltype in case of need */ 
   using message_type = decltype(handler1)::element_type::message_type::element_type;
   ros::Publisher pub = nh.advertise<message_type>(topic_name, 5);

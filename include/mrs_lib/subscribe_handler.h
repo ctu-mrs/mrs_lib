@@ -49,6 +49,11 @@ namespace mrs_lib
   {
     public:
     /*!
+      * \brief Convenience type for the template parameter to enable nice aliasing.
+      */
+      using message_type = MessageType;
+
+    /*!
       * \brief Type for the timeout callback function. For clarity and consistency, it is recommended to use the SubscribeMgr::timeout_callback_t instead.
       */
       using timeout_callback_t = std::function<void(const std::string&, const ros::Time&, const int)>;
@@ -58,23 +63,45 @@ namespace mrs_lib
       */
       using message_callback_t = std::function<void(SubscribeHandlerPtr<MessageType>)>;
 
+    /*!
+      * \brief SubscribeMgr has to be friend to enable proper construction of this class.
+      */
       friend class SubscribeMgr;
 
     public:
     /*!
       * \brief Returns the last received message on the topic, handled by this SubscribeHandler.
       *
-      * \return The last received message.
+      * \return the last received message.
       */
       MessageType get_data() {return m_pimpl->get_data();};
+
+    /*!
+      * \brief Used to check whether at least one message has been received on the handled topic.
+      *
+      * \return true if at least one message was received, otherwise false.
+      */
       bool has_data() const {return m_pimpl->has_data();};
+
+    /*!
+      * \brief Used to check whether at least one message has been received on the handled topic since the last call to get_data().
+      *
+      * \return true if at least one message was received, otherwise false.
+      */
       bool new_data() const {return m_pimpl->new_data();};
+
+    /*!
+      * \brief Used to check whether get_data() was called at least once on this SubscribeHandler.
+      *
+      * \return true if get_data() was called at least once, otherwise false.
+      */
       bool used_data() const {return m_pimpl->used_data();};
 
     public:
     /*!
       * \brief Main constructor.
       *
+      * \warning Do not use this constructor to instantiate this class! Use the SubscribeMgr::create_handler() method instead!
       */
       SubscribeHandler() {};
 
