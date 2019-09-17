@@ -32,7 +32,8 @@ namespace mrs_lib
               uint32_t queue_size = 1,
               const ros::TransportHints& transport_hints = ros::TransportHints()
             )
-          : m_no_message_timeout(no_message_timeout),
+          : m_nh(nh),
+            m_no_message_timeout(no_message_timeout),
             m_topic_name(topic_name),
             m_node_name(node_name),
             m_got_data(false),
@@ -40,7 +41,9 @@ namespace mrs_lib
             m_used_data(false),
             m_last_msg_received(ros::Time::now()),
             m_timeout_callback(timeout_callback),
-            m_message_callback(message_callback)
+            m_message_callback(message_callback),
+            m_queue_size(queue_size),
+            m_transport_hints(transport_hints)
         {
           if (!m_message_callback)
             m_message_callback = dummy_message_callback;
@@ -49,9 +52,7 @@ namespace mrs_lib
             m_timeout_callback = std::bind(&SubscribeHandler_impl<MessageType>::default_timeout_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
           if (no_message_timeout != mrs_lib::no_timeout)
-            m_timeout_check_timer = nh.createTimer(no_message_timeout, &SubscribeHandler_impl<MessageType>::check_timeout, this, true /*oneshot*/);
-
-          m_sub = nh.subscribe(topic_name, queue_size, &SubscribeHandler_impl<MessageType>::data_callback, this, transport_hints);
+            m_timeout_check_timer = m_nh.createTimer(no_message_timeout, &SubscribeHandler_impl<MessageType>::check_timeout, this, true /*oneshot*/);
 
           const std::string msg = "Subscribed to topic '" + m_topic_name + "' -> '" + resolved_topic_name() + "'";
           if (m_node_name.empty())
@@ -64,6 +65,7 @@ namespace mrs_lib
         virtual MessageType get_data()
         {
           m_new_data = false;
+          assert(m_got_data);
           if (!m_got_data)
             ROS_ERROR("[%s]: No data received yet from topic '%s' (forgot to check has_data()?)! Returning empty message.", m_node_name.c_str(), resolved_topic_name().c_str());
           m_used_data = true;
@@ -85,6 +87,16 @@ namespace mrs_lib
           return m_used_data;
         }
 
+        virtual void start()
+        {
+          m_sub = m_nh.subscribe(m_topic_name, m_queue_size, &SubscribeHandler_impl<MessageType>::data_callback, this, m_transport_hints);
+        }
+
+        virtual void stop()
+        {
+          m_sub.shutdown();
+        }
+
       public:
         void set_owner_ptr(const SubscribeHandlerPtr<MessageType>& ptr)
         {
@@ -92,6 +104,7 @@ namespace mrs_lib
         }
 
       protected:
+        ros::NodeHandle m_nh;
         ros::Subscriber m_sub;
     
       protected:
@@ -110,6 +123,8 @@ namespace mrs_lib
         ros::Time m_last_msg_received;
         ros::Timer m_timeout_check_timer;
         timeout_callback_t m_timeout_callback;
+        uint32_t m_queue_size;
+        ros::TransportHints m_transport_hints;
 
       private:
         std::weak_ptr<SubscribeHandler<MessageType>> m_ptr;
@@ -279,6 +294,16 @@ namespace mrs_lib
         {
           std::lock_guard<std::mutex> lck(m_mtx);
           return impl_class_t::get_data();
+        }
+        virtual void start() override
+        {
+          std::lock_guard<std::mutex> lck(m_mtx);
+          return impl_class_t::start();
+        }
+        virtual void stop() override
+        {
+          std::lock_guard<std::mutex> lck(m_mtx);
+          return impl_class_t::stop();
         }
 
       protected:

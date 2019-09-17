@@ -38,7 +38,7 @@ int main(int argc, char **argv)
             );
 
   /* Type of the message may be accessed by C++11 decltype in case of need */ 
-  using message_type = decltype(handler1)::element_type::message_type::element_type;
+  using message_type = std::remove_const<decltype(handler1)::element_type::message_type::element_type>::type;
   ros::Publisher pub = nh.advertise<message_type>(topic_name, 5);
 
   /* Now let's just spin to process calbacks until the user decides to stop the program. */ 
@@ -47,7 +47,7 @@ int main(int argc, char **argv)
   {
     message_type msg;
     msg.data = true;
-    pub.publish({true});
+    pub.publish(msg);
     ros::spinOnce();
     ROS_INFO_THROTTLE(1.0, "[%s]: Spinning", ros::this_node::getName().c_str());
     r.sleep();

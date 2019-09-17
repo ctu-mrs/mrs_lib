@@ -12,7 +12,8 @@ Documentation of this package is available at http://mrs.felk.cvut.cz/doc/mrs_li
 
 ## Documentation of useful classes
 
-* [Linear Kalman filter implementation](http://mrs.felk.cvut.cz/doc/mrs_lib/classmrs__lib_1_1Lkf.html)
-* [Unscented Kalman filter implementation](http://mrs.felk.cvut.cz/doc/mrs_lib/classmrs__lib_1_1Ukf.html)
+* [Linear Kalman filter implementation](http://mrs.felk.cvut.cz/doc/mrs_lib/classmrs__lib_1_1LKF.html)
+* [Unscented Kalman filter implementation](http://mrs.felk.cvut.cz/doc/mrs_lib/classmrs__lib_1_1UKF.html)
 * [Parameter loading helper](http://mrs.felk.cvut.cz/doc/mrs_lib/classmrs__lib_1_1ParamLoader.html)
+* [Topic subscription handling helper](http://mrs.felk.cvut.cz/doc/mrs_lib/classmrs__lib_1_1SubscribeMgr.html)
 * [Profiling tool](http://mrs.felk.cvut.cz/doc/mrs_lib/classmrs__lib_1_1Profiler.html)

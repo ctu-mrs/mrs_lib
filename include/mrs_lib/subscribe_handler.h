@@ -40,8 +40,9 @@ namespace mrs_lib
   /**
   * \brief Base class for pointers, returned by the SubscribeMgr.
   *
-  * This class should not be manually instantiated by the user.
-  * Instead, use this class to store smart pointers returned by the SubscribeMgr.
+  * For example of instantiation and usage of this class, see documentation of SubscribeMgr.
+  *
+  * \warning This class should not be manually instantiated by the user. Instead, use this class to define smart pointers, returned by the SubscribeMgr::create_handler() method.
   *
   */
   template <typename MessageType>
@@ -74,28 +75,38 @@ namespace mrs_lib
       *
       * \return the last received message.
       */
-      MessageType get_data() {return m_pimpl->get_data();};
+      MessageType get_data() {assert(m_pimpl); return m_pimpl->get_data();};
 
     /*!
       * \brief Used to check whether at least one message has been received on the handled topic.
       *
       * \return true if at least one message was received, otherwise false.
       */
-      bool has_data() const {return m_pimpl->has_data();};
+      bool has_data() const {assert(m_pimpl); return m_pimpl->has_data();};
 
     /*!
       * \brief Used to check whether at least one message has been received on the handled topic since the last call to get_data().
       *
       * \return true if at least one message was received, otherwise false.
       */
-      bool new_data() const {return m_pimpl->new_data();};
+      bool new_data() const {assert(m_pimpl); return m_pimpl->new_data();};
 
     /*!
       * \brief Used to check whether get_data() was called at least once on this SubscribeHandler.
       *
       * \return true if get_data() was called at least once, otherwise false.
       */
-      bool used_data() const {return m_pimpl->used_data();};
+      bool used_data() const {assert(m_pimpl); return m_pimpl->used_data();};
+
+    /*!
+      * \brief Enables the callbacks for the handled topic.
+      */
+      void start() const {assert(m_pimpl); return m_pimpl->start();};
+
+    /*!
+      * \brief Disables the callbacks for the handled topic.
+      */
+      void stop() const {assert(m_pimpl); return m_pimpl->stop();};
 
     public:
     /*!
@@ -115,9 +126,11 @@ namespace mrs_lib
   /**
   * \brief Manager class for creating SubscribeHandler objects.
   *
-  * This class automatically checks for subscribe errors when creating SubscribeHandler objects.
+  * This class serves to instantiate objects of the SubscribeHandler.
   * Use the create_handler() method to create new SubscribeHandler objects.
-  * Use the loaded_successfully() method to check if all subscribes have been successful so far.
+  *
+  * Example usage:
+  * \include src/subscribe_handler/example.cpp
   *
   */
   class SubscribeMgr
@@ -151,6 +164,7 @@ namespace mrs_lib
       * \param timeout_callback     The method to call if no messages have arrived for \p no_message_timeout. If empty a throttled ROS warning will be prited instead of calling \p timeout_callback.
       * \param message_callback     Optional callback when receiving a new message.
       * \param threadsafe           Whether the handler should be mutexed.
+      * \param started              Whether the handler should be automatically started after construction (callbacks will be enabled immediately).
       * \param queue_size           Will be passed to the ROS NodeHandle when subscribing (see ROS docs for explanation).
       * \param transport_hints      Will be passed to the ROS NodeHandle when subscribing (see ROS docs for explanation).
       *
@@ -163,7 +177,8 @@ namespace mrs_lib
             const timeout_callback_t& timeout_callback = timeout_callback_t(),
             const message_callback_t<MessageType>& message_callback = message_callback_t<MessageType>(),
             const bool threadsafe = true,
-            uint32_t queue_size = 1,
+            const bool started = true,
+            const uint32_t queue_size = 1,
             const ros::TransportHints& transport_hints = ros::TransportHints()
           )
       {
@@ -205,6 +220,8 @@ namespace mrs_lib
           // Also important! Otherwise there will be nullptr dereferencing.
           ptr->set_impl_ptr(std::move(impl_ptr));
         }
+        if (started)
+          ptr->start();
         return ptr;
       }
       //}
