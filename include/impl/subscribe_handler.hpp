@@ -201,33 +201,44 @@ namespace mrs_lib
 
         /* get_header() method //{ */
         template <typename T>
-        std_msgs::Header get_header(const T& msg)
+        class has_header
         {
-          return msg.header;
-        }
+          private:
+              typedef char YesType[1];
+              typedef char NoType[2];
+
+              template <typename C> static YesType& test(decltype(&C::header));
+              template <typename C> static NoType& test(...);
+
+          public:
+              enum {value = sizeof(test<T>(0)) == sizeof(YesType)};
+        };
 
         template <typename T>
-        std_msgs::Header get_header(const boost::shared_ptr<T>& msg)
+        typename std::enable_if<has_header<T>::value, std_msgs::Header>::type
+        get_header(const boost::shared_ptr<T>& msg)
         {
           return msg->header;
         }
 
         template <typename T>
-        class HasToString
+        typename std::enable_if<!has_header<T>::value, std_msgs::Header>::type
+        get_header(const boost::shared_ptr<T>& msg)
         {
-        private:
-            typedef char YesType[1];
-            typedef char NoType[2];
+          assert(false);
+          ROS_ERROR("[%s]: SubscribeHandler: Cannot call get_header() for a message without a header! Cannot enforce time consistency for message type '%s'", m_node_name.c_str(), typeid(T).name());
+          return std_msgs::Header();
+        }
 
-            template <typename C> static YesType& test( decltype(&C::ToString) ) ;
-            template <typename C> static NoType& test(...);
-
-
-        public:
-            enum { value = sizeof(test<T>(0)) == sizeof(YesType) };
-        };
         template <typename T>
         typename std::enable_if<has_header<T>::value, std_msgs::Header>::type
+        get_header(const T& msg)
+        {
+          return msg.header;
+        }
+
+        template <typename T>
+        typename std::enable_if<!has_header<T>::value, std_msgs::Header>::type
         get_header(const T& msg)
         {
           assert(false);

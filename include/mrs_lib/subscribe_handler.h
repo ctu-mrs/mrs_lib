@@ -10,7 +10,7 @@
 #include <ros/ros.h>
 #include <string>
 #include <mutex>
-#include <boost/circular_buffer.hpp>
+/* #include <boost/circular_buffer.hpp> */
 
 #include <nav_msgs/Odometry.h>
 
