@@ -48,8 +48,8 @@ int main(int argc, char **argv)
     message_type msg;
     msg.data = true;
     pub.publish(msg);
-    ros::spinOnce();
     ROS_INFO_THROTTLE(1.0, "[%s]: Spinning", ros::this_node::getName().c_str());
+    ros::spinOnce();
     r.sleep();
   }
 }

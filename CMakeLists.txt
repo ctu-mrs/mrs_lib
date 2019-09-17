@@ -133,7 +133,7 @@ target_link_libraries(subscribe_handler_tests
   )
 
 add_executable(subscribe_handler_example src/subscribe_handler/example.cpp)
-target_link_libraries(subscribe_handler_tests
+target_link_libraries(subscribe_handler_example
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )

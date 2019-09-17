@@ -164,7 +164,7 @@ namespace mrs_lib
       * \param timeout_callback     The method to call if no messages have arrived for \p no_message_timeout. If empty a throttled ROS warning will be prited instead of calling \p timeout_callback.
       * \param message_callback     Optional callback when receiving a new message.
       * \param threadsafe           Whether the handler should be mutexed.
-      * \param started              Whether the handler should be automatically started after construction (callbacks will be enabled immediately).
+      * \param autostart            Whether the handler should be automatically started after construction (callbacks will be enabled immediately).
       * \param queue_size           Will be passed to the ROS NodeHandle when subscribing (see ROS docs for explanation).
       * \param transport_hints      Will be passed to the ROS NodeHandle when subscribing (see ROS docs for explanation).
       *
@@ -177,7 +177,7 @@ namespace mrs_lib
             const timeout_callback_t& timeout_callback = timeout_callback_t(),
             const message_callback_t<MessageType>& message_callback = message_callback_t<MessageType>(),
             const bool threadsafe = true,
-            const bool started = true,
+            const bool autostart = true,
             const uint32_t queue_size = 1,
             const ros::TransportHints& transport_hints = ros::TransportHints()
           )
@@ -220,7 +220,7 @@ namespace mrs_lib
           // Also important! Otherwise there will be nullptr dereferencing.
           ptr->set_impl_ptr(std::move(impl_ptr));
         }
-        if (started)
+        if (autostart)
           ptr->start();
         return ptr;
       }

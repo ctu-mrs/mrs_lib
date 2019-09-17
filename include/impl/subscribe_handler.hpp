@@ -52,7 +52,7 @@ namespace mrs_lib
             m_timeout_callback = std::bind(&SubscribeHandler_impl<MessageType>::default_timeout_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
           if (no_message_timeout != mrs_lib::no_timeout)
-            m_timeout_check_timer = m_nh.createTimer(no_message_timeout, &SubscribeHandler_impl<MessageType>::check_timeout, this, true /*oneshot*/);
+            m_timeout_check_timer = m_nh.createTimer(no_message_timeout, &SubscribeHandler_impl<MessageType>::check_timeout, this, true /*oneshot*/, false /*autostart*/);
 
           const std::string msg = "Subscribed to topic '" + m_topic_name + "' -> '" + resolved_topic_name() + "'";
           if (m_node_name.empty())
@@ -89,11 +89,13 @@ namespace mrs_lib
 
         virtual void start()
         {
+          m_timeout_check_timer.start();
           m_sub = m_nh.subscribe(m_topic_name, m_queue_size, &SubscribeHandler_impl<MessageType>::data_callback, this, m_transport_hints);
         }
 
         virtual void stop()
         {
+          m_timeout_check_timer.stop();
           m_sub.shutdown();
         }
 
