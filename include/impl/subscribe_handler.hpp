@@ -5,34 +5,91 @@
 
 namespace mrs_lib
 {
-  template <typename MessageType>
-  class SubscribeHandler;
-  template <typename MessageType>
-  using SubscribeHandlerPtr = std::shared_ptr<SubscribeHandler<MessageType> >;
-
   namespace impl
   {
     
-    /* SubscribeHandler_base class //{ */
-    class SubscribeHandler_base
+    /* SubscribeHandler_impl class //{ */
+    // implements the constructor, get_data() method and data_callback method (non-thread-safe)
+    template <typename MessageType, bool time_consistent=false>
+    class SubscribeHandler_impl
     {
       public:
-        using timeout_callback_t = std::function<void(const std::string&, const ros::Time&, const int)>;
+        using timeout_callback_t = typename SubscribeHandler<MessageType>::timeout_callback_t;
+        using message_callback_t = typename SubscribeHandler<MessageType>::message_callback_t;
+
+      private:
+        friend class SubscribeMgr;
+        friend class SubscribeHandler<MessageType>;
 
       public:
-        virtual bool ok() const = 0;
-        virtual bool has_data() const;
-        virtual bool new_data() const;
-        virtual bool used_data() const;
+        SubscribeHandler_impl(
+              ros::NodeHandle& nh,
+              const std::string& topic_name,
+              const std::string& node_name = std::string(),
+              const message_callback_t& message_callback = message_callback_t(),
+              const ros::Duration& no_message_timeout = mrs_lib::no_timeout,
+              const timeout_callback_t& timeout_callback = timeout_callback_t(),
+              uint32_t queue_size = 1,
+              const ros::TransportHints& transport_hints = ros::TransportHints()
+            )
+          : m_no_message_timeout(no_message_timeout),
+            m_topic_name(topic_name),
+            m_node_name(node_name),
+            m_got_data(false),
+            m_new_data(false),
+            m_used_data(false),
+            m_last_msg_received(ros::Time::now()),
+            m_timeout_callback(timeout_callback),
+            m_message_callback(message_callback)
+        {
+          if (!m_message_callback)
+            m_message_callback = dummy_message_callback;
+
+          if (!m_timeout_callback)
+            m_timeout_callback = std::bind(&SubscribeHandler_impl<MessageType>::default_timeout_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+
+          if (no_message_timeout != mrs_lib::no_timeout)
+            m_timeout_check_timer = nh.createTimer(no_message_timeout, &SubscribeHandler_impl<MessageType>::check_timeout, this, true /*oneshot*/);
+
+          m_sub = nh.subscribe(topic_name, queue_size, &SubscribeHandler_impl<MessageType>::data_callback, this, transport_hints);
+
+          const std::string msg = "Subscribed to topic '" + m_topic_name + "' -> '" + resolved_topic_name() + "'";
+          if (m_node_name.empty())
+            ROS_INFO_STREAM(msg);
+          else
+            ROS_INFO_STREAM("[" << m_node_name << "]: " << msg);
+        }
 
       protected:
-        SubscribeHandler_base(
-          ros::NodeHandle& nh,
-          const std::string& topic_name,
-          const std::string& node_name,
-          const ros::Duration& no_message_timeout,
-          const timeout_callback_t& timeout_callback
-          );
+        virtual MessageType get_data()
+        {
+          m_new_data = false;
+          if (!m_got_data)
+            ROS_ERROR("[%s]: No data received yet from topic '%s' (forgot to check has_data()?)! Returning empty message.", m_node_name.c_str(), resolved_topic_name().c_str());
+          m_used_data = true;
+          return m_latest_message;
+        }
+
+        virtual bool has_data() const
+        {
+          return m_got_data;
+        }
+
+        virtual bool new_data() const
+        {
+          return m_new_data;
+        }
+
+        virtual bool used_data() const
+        {
+          return m_used_data;
+        }
+
+      public:
+        void set_owner_ptr(const SubscribeHandlerPtr<MessageType>& ptr)
+        {
+          m_ptr = ptr;
+        }
 
       protected:
         ros::Subscriber m_sub;
@@ -53,93 +110,49 @@ namespace mrs_lib
         ros::Time m_last_msg_received;
         ros::Timer m_timeout_check_timer;
         timeout_callback_t m_timeout_callback;
-        void check_timeout([[maybe_unused]] const ros::TimerEvent& evt);
-        void default_timeout_callback(const std::string& topic, const ros::Time& last_msg, const int n_pubs);
-        std::string resolved_topic_name();
-
-    };
-    //}
-    
-    /* SubscribeHandler_impl class //{ */
-    // implements the constructor, get_data() method and data_callback method (non-thread-safe)
-    template <typename MessageType, bool time_consistent=false>
-    class SubscribeHandler_impl : public SubscribeHandler<MessageType>
-    {
-      public:
-        using timeout_callback_t = SubscribeHandler_base::timeout_callback_t;
-        using message_callback_t = std::function<void(SubscribeHandlerPtr<MessageType>)>;
-
-      public:
-        SubscribeHandler_impl(
-              ros::NodeHandle& nh,
-              const std::string& topic_name,
-              const std::string& node_name = std::string(),
-              const message_callback_t& message_callback = message_callback_t(),
-              const ros::Duration& no_message_timeout = mrs_lib::no_timeout,
-              const timeout_callback_t& timeout_callback = timeout_callback_t(),
-              uint32_t queue_size = 1,
-              const ros::TransportHints& transport_hints = ros::TransportHints()
-            )
-          : SubscribeHandler<MessageType>(
-              nh,
-              topic_name,
-              node_name,
-              no_message_timeout,
-              timeout_callback
-            ),
-          m_message_callback(message_callback)
-        {
-          try
-          {
-            SubscribeHandler_base::m_sub = nh.subscribe(topic_name, queue_size, &SubscribeHandler_impl::data_callback, this, transport_hints);
-            SubscribeHandler_base::m_ok = true;
-            const std::string msg = "Subscribed to topic '" + SubscribeHandler_base::m_topic_name + "' -> '" + SubscribeHandler_base::resolved_topic_name() + "'";
-            if (SubscribeHandler_base::m_node_name.empty())
-              ROS_INFO_STREAM(msg);
-            else
-              ROS_INFO_STREAM("[" << SubscribeHandler_base::m_node_name << "]: " << msg);
-          } catch (ros::Exception e)
-          {
-            const std::string error_msg = "Could not subscribe topic '" + SubscribeHandler_base::resolved_topic_name() + "': " + std::string(e.what());
-            if (SubscribeHandler_base::m_node_name.empty())
-              ROS_ERROR_STREAM(error_msg);
-            else
-              ROS_ERROR_STREAM("[" << SubscribeHandler_base::m_node_name << "]: " << error_msg);
-            SubscribeHandler_base::m_ok = false;
-          }
-          if (!m_message_callback)
-          {
-            m_message_callback = dummy_message_callback;
-          }
-        }
-
-        virtual MessageType get_data()
-        {
-          SubscribeHandler_base::m_new_data = false;
-          if (!SubscribeHandler_base::m_got_data)
-            ROS_ERROR("[%s]: No data received yet from topic '%s' (forgot to check has_data()?)! Returning empty message.", SubscribeHandler_base::m_node_name.c_str(), SubscribeHandler_base::resolved_topic_name().c_str());
-          SubscribeHandler_base::m_used_data = true;
-          return m_latest_message;
-        }
-
-        void set_ptr(SubscribeHandlerPtr<MessageType> ptr)
-        {
-          m_ptr = ptr;
-        }
-
-        bool ok() const override
-        {
-          return SubscribeHandler_base::m_ok && !m_ptr.expired();
-        }
 
       private:
         std::weak_ptr<SubscribeHandler<MessageType>> m_ptr;
         MessageType m_latest_message;
         message_callback_t m_message_callback;
 
-        static void dummy_message_callback([[maybe_unused]] SubscribeHandlerPtr<MessageType> sh_ptr) {}
+        static void dummy_message_callback([[maybe_unused]] SubscribeHandlerPtr<MessageType> sh_ptr) {};
 
       protected:
+        void default_timeout_callback(const std::string& topic, const ros::Time& last_msg, const int n_pubs)
+        {
+          /* ROS_ERROR("Checking topic %s, delay: %.2f", m_sub.getTopic().c_str(), since_msg.toSec()); */
+          ros::Duration since_msg = (ros::Time::now() - last_msg);
+          const std::string msg = "Did not receive any message from topic '" + topic
+                                + "' for " + std::to_string(since_msg.toSec())
+                                + "s (" + std::to_string(n_pubs) + " publishers on this topic)";
+          if (m_node_name.empty())
+            ROS_WARN_STREAM(msg);
+          else
+            ROS_WARN_STREAM("[" << m_node_name << "]: " << msg);
+        }
+        
+        void check_timeout([[maybe_unused]] const ros::TimerEvent& evt)
+        {
+          ros::Time last_msg;
+          {
+            std::lock_guard<std::mutex> lck(m_last_msg_received_mtx);
+            last_msg = m_last_msg_received;
+            m_ok = false;
+          }
+          const auto n_pubs = m_sub.getNumPublishers();
+          m_timeout_check_timer.start();
+          m_timeout_callback(resolved_topic_name(), last_msg, n_pubs);
+        }
+
+        std::string resolved_topic_name()
+        {
+          std::string ret = m_sub.getTopic();
+          if (ret.empty())
+            ret = m_topic_name;
+          return ret;
+        }
+
         void data_callback(const MessageType& msg)
         {
           data_callback_impl(msg);
@@ -176,17 +189,17 @@ namespace mrs_lib
           if (message_valid || time_reset)
           {
             if (time_reset)
-              ROS_WARN("[%s]: Detected jump back in time of %f. Resetting time consistency checks.", SubscribeHandler_base::m_node_name.c_str(), (SubscribeHandler_base::m_last_msg_received - now).toSec());
+              ROS_WARN("[%s]: Detected jump back in time of %f. Resetting time consistency checks.", m_node_name.c_str(), (m_last_msg_received - now).toSec());
             data_callback_unchecked(msg, now);
           } else
           {
-            ROS_WARN("[%s]: New message from topic '%s' is older than the latest message, skipping it.", SubscribeHandler_base::m_node_name.c_str(), SubscribeHandler_base::resolved_topic_name().c_str());
+            ROS_WARN("[%s]: New message from topic '%s' is older than the latest message, skipping it.", m_node_name.c_str(), resolved_topic_name().c_str());
           }
         }
 
         bool check_time_reset(const ros::Time& now)
         {
-          return now < SubscribeHandler_base::m_last_msg_received;
+          return now < m_last_msg_received;
         }
 
         bool check_time_consistent(const MessageType& msg)
@@ -196,17 +209,17 @@ namespace mrs_lib
 
         bool check_message_valid(const MessageType& msg)
         {
-          return !SubscribeHandler_base::m_got_data || check_time_consistent(msg);
+          return !m_got_data || check_time_consistent(msg);
         }
 
         virtual void process_new_message(const MessageType& msg, const ros::Time& time)
         {
-          SubscribeHandler_base::m_timeout_check_timer.stop();
+          m_timeout_check_timer.stop();
           m_latest_message = msg;
-          SubscribeHandler_base::m_new_data = true;
-          SubscribeHandler_base::m_got_data = true;
-          SubscribeHandler_base::m_last_msg_received = time;
-          SubscribeHandler_base::m_timeout_check_timer.start();
+          m_new_data = true;
+          m_got_data = true;
+          m_last_msg_received = time;
+          m_timeout_check_timer.start();
         }
 
         void data_callback_unchecked(const MessageType& msg, const ros::Time& time)
@@ -214,7 +227,6 @@ namespace mrs_lib
           process_new_message(msg, time);
           m_message_callback(std::shared_ptr(m_ptr));
         }
-
     };
     //}
 
@@ -226,8 +238,11 @@ namespace mrs_lib
         using impl_class_t = impl::SubscribeHandler_impl<MessageType, time_consistent>;
 
       public:
-        using timeout_callback_t = impl::SubscribeHandler_base::timeout_callback_t;
+        using timeout_callback_t = typename impl_class_t::timeout_callback_t;
         using message_callback_t = typename impl_class_t::message_callback_t;
+
+        friend class SubscribeMgr;
+        friend class SubscribeHandler<MessageType>;
 
       public:
         SubscribeHandler_threadsafe(
@@ -244,11 +259,7 @@ namespace mrs_lib
         {
         }
 
-        virtual bool ok() const override
-        {
-          std::lock_guard<std::mutex> lck(m_mtx);
-          return impl_class_t::ok();
-        }
+      protected:
         virtual bool has_data() const override
         {
           std::lock_guard<std::mutex> lck(m_mtx);
