@@ -25,6 +25,7 @@ int main(int argc, char **argv)
   /* whether mutexes should be used to prevent data races (set to true in a multithreaded scenario such as nodelets) */
   const bool threadsafe = false;
   const bool autostart = false;
+  const bool time_consistent = false;
   const uint32_t queue_size = 5;
   const ros::TransportHints& transport_hints = ros::TransportHints();
 
@@ -39,6 +40,7 @@ int main(int argc, char **argv)
             message_callback,
             threadsafe,
             autostart,
+            time_consistent,
             queue_size,
             transport_hints
             );

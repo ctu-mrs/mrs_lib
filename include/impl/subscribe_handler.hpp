@@ -10,7 +10,7 @@ namespace mrs_lib
     
     /* SubscribeHandler_impl class //{ */
     // implements the constructor, get_data() method and data_callback method (non-thread-safe)
-    template <typename MessageType, bool time_consistent=false>
+    template <typename MessageType>
     class SubscribeHandler_impl
     {
       public:
@@ -29,7 +29,8 @@ namespace mrs_lib
               const message_callback_t& message_callback = message_callback_t(),
               const ros::Duration& no_message_timeout = mrs_lib::no_timeout,
               const timeout_callback_t& timeout_callback = timeout_callback_t(),
-              uint32_t queue_size = 1,
+              const bool time_consistent = false,
+              const uint32_t queue_size = 10,
               const ros::TransportHints& transport_hints = ros::TransportHints()
             )
           : m_nh(nh),
@@ -42,6 +43,7 @@ namespace mrs_lib
             m_last_msg_received(ros::Time::now()),
             m_timeout_callback(timeout_callback),
             m_message_callback(message_callback),
+            m_time_consistent(time_consistent),
             m_queue_size(queue_size),
             m_transport_hints(transport_hints)
         {
@@ -90,7 +92,10 @@ namespace mrs_lib
         virtual void start()
         {
           m_timeout_check_timer.start();
-          m_sub = m_nh.subscribe(m_topic_name, m_queue_size, &SubscribeHandler_impl<MessageType>::data_callback, this, m_transport_hints);
+          if (m_time_consistent)
+            m_sub = m_nh.subscribe(m_topic_name, m_queue_size, &SubscribeHandler_impl<MessageType>::data_callback_time_consistent, this, m_transport_hints);
+          else
+            m_sub = m_nh.subscribe(m_topic_name, m_queue_size, &SubscribeHandler_impl<MessageType>::data_callback, this, m_transport_hints);
         }
 
         virtual void stop()
@@ -125,13 +130,16 @@ namespace mrs_lib
         ros::Time m_last_msg_received;
         ros::Timer m_timeout_check_timer;
         timeout_callback_t m_timeout_callback;
-        uint32_t m_queue_size;
-        ros::TransportHints m_transport_hints;
 
       private:
         std::weak_ptr<SubscribeHandler<MessageType>> m_ptr;
         MessageType m_latest_message;
         message_callback_t m_message_callback;
+        bool m_time_consistent;
+
+      private:
+        uint32_t m_queue_size;
+        ros::TransportHints m_transport_hints;
 
         static void dummy_message_callback([[maybe_unused]] SubscribeHandlerPtr<MessageType> sh_ptr) {};
 
@@ -172,33 +180,10 @@ namespace mrs_lib
 
         void data_callback(const MessageType& msg)
         {
-          data_callback_impl(msg);
-        }
-
-        /* get_header() method //{ */
-        template <typename T>
-        std_msgs::Header get_header(const T& msg)
-        {
-          return msg.header;
-        }
-
-        template <typename T>
-        std_msgs::Header get_header(const boost::shared_ptr<T>& msg)
-        {
-          return msg->header;
-        }
-        //}
-
-        // no time consistency check variant
-        template<bool check=time_consistent>
-        typename std::enable_if<!check>::type data_callback_impl(const MessageType& msg)
-        {
           data_callback_unchecked(msg, ros::Time::now());
         }
 
-        // variant with time consistency check
-        template<bool check=time_consistent>
-        typename std::enable_if<check>::type data_callback_impl(const MessageType& msg)
+        void data_callback_time_consistent(const MessageType& msg)
         {
           ros::Time now = ros::Time::now(); 
           const bool time_reset = check_time_reset(now);
@@ -213,6 +198,43 @@ namespace mrs_lib
             ROS_WARN("[%s]: New message from topic '%s' is older than the latest message, skipping it.", m_node_name.c_str(), resolved_topic_name().c_str());
           }
         }
+
+        /* get_header() method //{ */
+        template <typename T>
+        std_msgs::Header get_header(const T& msg)
+        {
+          return msg.header;
+        }
+
+        template <typename T>
+        std_msgs::Header get_header(const boost::shared_ptr<T>& msg)
+        {
+          return msg->header;
+        }
+
+        template <typename T>
+        class HasToString
+        {
+        private:
+            typedef char YesType[1];
+            typedef char NoType[2];
+
+            template <typename C> static YesType& test( decltype(&C::ToString) ) ;
+            template <typename C> static NoType& test(...);
+
+
+        public:
+            enum { value = sizeof(test<T>(0)) == sizeof(YesType) };
+        };
+        template <typename T>
+        typename std::enable_if<has_header<T>::value, std_msgs::Header>::type
+        get_header(const T& msg)
+        {
+          assert(false);
+          ROS_ERROR("[%s]: SubscribeHandler: Cannot call get_header() for a message without a header! Cannot enforce time consistency for message type '%s'", m_node_name.c_str(), typeid(T).name());
+          return std_msgs::Header();
+        }
+        //}
 
         bool check_time_reset(const ros::Time& now)
         {
@@ -248,11 +270,11 @@ namespace mrs_lib
     //}
 
     /* SubscribeHandler_threadsafe class //{ */
-    template <typename MessageType, bool time_consistent=false>
-    class SubscribeHandler_threadsafe : public SubscribeHandler_impl<MessageType, time_consistent>
+    template <typename MessageType>
+    class SubscribeHandler_threadsafe : public SubscribeHandler_impl<MessageType>
     {
       private:
-        using impl_class_t = impl::SubscribeHandler_impl<MessageType, time_consistent>;
+        using impl_class_t = impl::SubscribeHandler_impl<MessageType>;
 
       public:
         using timeout_callback_t = typename impl_class_t::timeout_callback_t;
@@ -269,10 +291,11 @@ namespace mrs_lib
               const message_callback_t& message_callback = message_callback_t(),
               const ros::Duration& no_message_timeout = mrs_lib::no_timeout,
               const timeout_callback_t& timeout_callback = timeout_callback_t(),
-              uint32_t queue_size = 1,
+              const bool time_consistent = false,
+              const uint32_t queue_size = 10,
               const ros::TransportHints& transport_hints = ros::TransportHints()
             )
-          : impl_class_t::SubscribeHandler_impl(nh, topic_name, node_name, message_callback, no_message_timeout, timeout_callback, queue_size, transport_hints)
+          : impl_class_t::SubscribeHandler_impl(nh, topic_name, node_name, message_callback, no_message_timeout, timeout_callback, time_consistent, queue_size, transport_hints)
         {
         }
 

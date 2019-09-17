@@ -100,6 +100,7 @@ namespace mrs_lib
 
     /*!
       * \brief Enables the callbacks for the handled topic.
+      *
       * If the SubscribeHandler object is stopped using the stop() method, no callbacks will be called
       * until the start() method is called.
       */
@@ -170,12 +171,13 @@ namespace mrs_lib
       * \param message_callback     Optional callback when receiving a new message.
       * \param threadsafe           Whether the handler should be mutexed.
       * \param autostart            Whether the handler should be automatically started after construction (callbacks will be enabled immediately).
+      * \param time_consistent      Whether the handler should discard messages with time stamp earlier than the latest message (enforce time consistency of messages).
       * \param queue_size           Will be passed to the ROS NodeHandle when subscribing (see ROS docs for explanation).
       * \param transport_hints      Will be passed to the ROS NodeHandle when subscribing (see ROS docs for explanation).
       *
       * \returns                    std::shared_ptr to the new SubscribeHandler object. When the object is destroyed, the callbacks will not be called anymore.
       */
-      template <typename MessageType, bool time_consistent=false>
+      template <typename MessageType>
       SubscribeHandlerPtr<MessageType> create_handler(
             const std::string& topic_name,
             const ros::Duration& no_message_timeout = mrs_lib::no_timeout,
@@ -183,14 +185,15 @@ namespace mrs_lib
             const message_callback_t<MessageType>& message_callback = message_callback_t<MessageType>(),
             const bool threadsafe = true,
             const bool autostart = true,
-            const uint32_t queue_size = 1,
+            const bool time_consistent = true,
+            const uint32_t queue_size = 10,
             const ros::TransportHints& transport_hints = ros::TransportHints()
           )
       {
         SubscribeHandlerPtr<MessageType> ptr;
         if (threadsafe)
         {
-          auto impl_ptr = std::make_unique<impl::SubscribeHandler_threadsafe<MessageType, time_consistent>>
+          auto impl_ptr = std::make_unique<impl::SubscribeHandler_threadsafe<MessageType>>
             (
               m_nh,
               topic_name,
@@ -198,6 +201,7 @@ namespace mrs_lib
               message_callback,
               no_message_timeout,
               timeout_callback,
+              time_consistent,
               queue_size,
               transport_hints
             );
@@ -208,7 +212,7 @@ namespace mrs_lib
           ptr->set_impl_ptr(std::move(impl_ptr));
         } else
         {
-          auto impl_ptr = std::make_unique<impl::SubscribeHandler_impl<MessageType, time_consistent>>
+          auto impl_ptr = std::make_unique<impl::SubscribeHandler_impl<MessageType>>
             (
               m_nh,
               topic_name,
@@ -216,6 +220,7 @@ namespace mrs_lib
               message_callback,
               no_message_timeout,
               timeout_callback,
+              time_consistent,
               queue_size,
               transport_hints
             );
