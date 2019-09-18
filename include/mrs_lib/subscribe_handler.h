@@ -28,8 +28,8 @@ namespace mrs_lib
   */
   template <typename MessageType>
   using SubscribeHandlerPtr = std::shared_ptr<SubscribeHandler<MessageType>>;
-  template <typename MessageType>
-  using SubscribeHandlerConstPtr = std::shared_ptr<const SubscribeHandler<MessageType>>;
+
+#define MSG_TYPE(x) decltype(x)::element_type::message_type
 }
 
 #include <impl/subscribe_handler.hpp>
