@@ -2,6 +2,7 @@
 #define SUBSCRIBE_HANDLER_HPP
 
 #include <mrs_lib/subscribe_handler.h>
+#include <mutex>
 
 namespace mrs_lib
 {

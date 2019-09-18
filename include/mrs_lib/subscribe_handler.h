@@ -8,11 +8,6 @@
 #define SUBRSCRIBE_HANDLER_H
 
 #include <ros/ros.h>
-#include <string>
-#include <mutex>
-/* #include <boost/circular_buffer.hpp> */
-
-#include <nav_msgs/Odometry.h>
 
 namespace mrs_lib
 {
