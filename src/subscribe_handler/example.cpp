@@ -6,7 +6,7 @@ void timeout_callback(const std::string& topic, const ros::Time& last_msg, const
   ROS_ERROR_STREAM("Have not received message from topic '" << topic << "' for " << (ros::Time::now()-last_msg).toSec() << " seconds (" << n_pubs << " publishers on topic)");
 }
 
-void message_callback(mrs_lib::SubscribeHandlerPtr<std_msgs::BoolConstPtr> sh_ptr)
+void message_callback(mrs_lib::SubscribeHandlerPtr<std_msgs::Bool> sh_ptr)
 {
   ROS_INFO_STREAM("Received: '" << (int)sh_ptr->get_data()->data << "'");
 }
@@ -29,7 +29,7 @@ int main(int argc, char **argv)
   mrs_lib::SubscribeMgr smgr(nh);
 
   /* This is how a new SubscribeHandler object is initialized. */ 
-  auto handler1 = smgr.create_handler<std_msgs::BoolConstPtr>(
+  auto handler1 = smgr.create_handler<std_msgs::Bool>(
             topic_name,
             no_message_timeout,
             timeout_callback,
@@ -38,7 +38,7 @@ int main(int argc, char **argv)
             );
 
   /* Type of the message may be accessed by C++11 decltype in case of need */ 
-  using message_type = std::remove_const<decltype(handler1)::element_type::message_type::element_type>::type;
+  using message_type = mrs_lib::message_type<decltype(handler1)>;
   ros::Publisher pub = nh.advertise<message_type>(topic_name, 5);
 
   /* Now let's just spin to process calbacks until the user decides to stop the program. */ 

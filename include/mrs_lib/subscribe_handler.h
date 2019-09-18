@@ -29,7 +29,11 @@ namespace mrs_lib
   template <typename MessageType>
   using SubscribeHandlerPtr = std::shared_ptr<SubscribeHandler<MessageType>>;
 
-#define MSG_TYPE(x) decltype(x)::element_type::message_type
+/*!
+  * \brief Helper alias for convenient extraction of handled message type from a SubscribeHandlerPtr.
+  */
+  template<typename SubscribeHandlerPtr>
+  using message_type = typename std::remove_const<typename SubscribeHandlerPtr::element_type::message_type>::type;
 }
 
 #include <impl/subscribe_handler.hpp>
@@ -75,7 +79,7 @@ namespace mrs_lib
       *
       * \return the last received message.
       */
-      MessageType get_data() {assert(m_pimpl); return m_pimpl->get_data();};
+      typename MessageType::ConstPtr get_data() {assert(m_pimpl); return m_pimpl->get_data();};
 
     /*!
       * \brief Used to check whether at least one message has been received on the handled topic.

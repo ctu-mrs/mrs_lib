@@ -12,7 +12,7 @@ void timeout_callback(const std::string& topic, const ros::Time& last_msg, const
 
 void message_callback(mrs_lib::SubscribeHandlerPtr<message_type> sh_ptr)
 {
-  ROS_INFO_STREAM("RECEIVED '" << sh_ptr->get_data() << "'");
+  ROS_INFO_STREAM("RECEIVED '" << *(sh_ptr->get_data()) << "'");
 }
 
 int main(int argc, char **argv)

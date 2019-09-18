@@ -16,7 +16,7 @@ namespace mrs_lib
       public:
         using timeout_callback_t = typename SubscribeHandler<MessageType>::timeout_callback_t;
         using message_callback_t = typename SubscribeHandler<MessageType>::message_callback_t;
-        using data_callback_t = std::function<void(const MessageType&)>;
+        using data_callback_t = std::function<void(const typename MessageType::ConstPtr&)>;
 
       private:
         friend class SubscribeMgr;
@@ -66,7 +66,7 @@ namespace mrs_lib
 
       protected:
         /* get_data() method //{ */
-        virtual MessageType get_data()
+        virtual typename MessageType::ConstPtr get_data()
         {
           m_new_data = false;
           assert(m_got_data);
@@ -99,21 +99,21 @@ namespace mrs_lib
         //}
 
         /* data_callback() method //{ */
-        virtual void data_callback(const MessageType& msg)
+        virtual void data_callback(const typename MessageType::ConstPtr& msg)
         {
           m_data_callback(msg);
         }
 
         template<bool time_consistent=false>
         typename std::enable_if<!time_consistent, void>::type
-        data_callback_impl(const MessageType& msg)
+        data_callback_impl(const typename MessageType::ConstPtr& msg)
         {
           data_callback_unchecked(msg, ros::Time::now());
         }
 
         template<bool time_consistent=false>
         typename std::enable_if<time_consistent, void>::type
-        data_callback_impl(const MessageType& msg)
+        data_callback_impl(const typename MessageType::ConstPtr& msg)
         {
           ros::Time now = ros::Time::now(); 
           const bool time_reset = check_time_reset(now);
@@ -130,22 +130,6 @@ namespace mrs_lib
         }
         //}
 
-        /* get_header() method //{ */
-        template <bool time_consistent=false>
-        typename std::enable_if<time_consistent, std_msgs::Header>::type
-        get_header(const boost::shared_ptr<MessageType>& msg)
-        {
-          return msg->header;
-        }
-
-        template <bool time_consistent=false>
-        typename std::enable_if<time_consistent, std_msgs::Header>::type
-        get_header(const MessageType& msg)
-        {
-          return msg.header;
-        }
-        //}
-
         /* check_time_reset() method //{ */
         bool check_time_reset(const ros::Time& now)
         {
@@ -156,9 +140,9 @@ namespace mrs_lib
         /* check_time_consistent() method //{ */
         template<bool time_consistent=false>
         typename std::enable_if<time_consistent, bool>::type
-        check_time_consistent(const MessageType& msg)
+        check_time_consistent(const typename MessageType::ConstPtr& msg)
         {
-          return get_header<time_consistent>(msg).stamp >= get_header<time_consistent>(m_latest_message).stamp;
+          return msg->header.stamp >= m_latest_message->header.stamp;
         }
         //}
 
@@ -217,7 +201,7 @@ namespace mrs_lib
 
       private:
         std::weak_ptr<SubscribeHandler<MessageType>> m_ptr;
-        MessageType m_latest_message;
+        typename MessageType::ConstPtr m_latest_message;
         message_callback_t m_message_callback;
 
       public:
@@ -270,7 +254,7 @@ namespace mrs_lib
         }
         //}
 
-        void process_new_message(const MessageType& msg, const ros::Time& time)
+        void process_new_message(const typename MessageType::ConstPtr& msg, const ros::Time& time)
         {
           m_timeout_check_timer.stop();
           m_latest_message = msg;
@@ -280,7 +264,7 @@ namespace mrs_lib
           m_timeout_check_timer.start();
         }
 
-        void data_callback_unchecked(const MessageType& msg, const ros::Time& time)
+        void data_callback_unchecked(const typename MessageType::ConstPtr& msg, const ros::Time& time)
         {
           process_new_message(msg, time);
           m_message_callback(std::shared_ptr(m_ptr));
@@ -318,7 +302,7 @@ namespace mrs_lib
         }
 
       protected:
-        virtual void data_callback(const MessageType& msg) override
+        virtual void data_callback(const typename MessageType::ConstPtr& msg) override
         {
           std::lock_guard<std::recursive_mutex> lck(m_mtx);
           impl_class_t::data_callback(msg);
@@ -338,7 +322,7 @@ namespace mrs_lib
           std::lock_guard<std::recursive_mutex> lck(m_mtx);
           return impl_class_t::used_data();
         }
-        virtual MessageType get_data() override
+        virtual typename MessageType::ConstPtr get_data() override
         {
           std::lock_guard<std::recursive_mutex> lck(m_mtx);
           return impl_class_t::get_data();
