@@ -33,7 +33,7 @@ namespace mrs_lib
   * \brief Helper alias for convenient extraction of handled message type from a SubscribeHandlerPtr.
   */
   template<typename SubscribeHandlerPtr>
-  using message_type = typename std::remove_const<typename SubscribeHandlerPtr::element_type::message_type>::type;
+  using message_type = typename SubscribeHandlerPtr::element_type::message_type;
 }
 
 #include <impl/subscribe_handler.hpp>
