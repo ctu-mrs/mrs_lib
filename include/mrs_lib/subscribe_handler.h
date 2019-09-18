@@ -205,6 +205,7 @@ namespace mrs_lib
               queue_size,
               transport_hints
             );
+          impl_ptr->template set_data_callback<time_consistent>();
           ptr = std::make_shared<SubscribeHandler<MessageType>>();
           // Important! Otherwise the message callback will crash when trying to pass pointer to self.
           impl_ptr->set_owner_ptr(ptr);

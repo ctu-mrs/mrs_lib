@@ -131,16 +131,16 @@ namespace mrs_lib
         //}
 
         /* get_header() method //{ */
-        template <typename T, bool time_consistent=false>
+        template <bool time_consistent=false>
         typename std::enable_if<time_consistent, std_msgs::Header>::type
-        get_header(const boost::shared_ptr<T>& msg)
+        get_header(const boost::shared_ptr<MessageType>& msg)
         {
           return msg->header;
         }
 
-        template <typename T, bool time_consistent=false>
+        template <bool time_consistent=false>
         typename std::enable_if<time_consistent, std_msgs::Header>::type
-        get_header(const T& msg)
+        get_header(const MessageType& msg)
         {
           return msg.header;
         }
@@ -158,7 +158,7 @@ namespace mrs_lib
         typename std::enable_if<time_consistent, bool>::type
         check_time_consistent(const MessageType& msg)
         {
-          return get_header<MessageType, time_consistent>(msg).stamp >= get_header<MessageType, time_consistent>(m_latest_message).stamp;
+          return get_header<time_consistent>(msg).stamp >= get_header<time_consistent>(m_latest_message).stamp;
         }
         //}
 
@@ -270,7 +270,7 @@ namespace mrs_lib
         }
         //}
 
-        virtual void process_new_message(const MessageType& msg, const ros::Time& time)
+        void process_new_message(const MessageType& msg, const ros::Time& time)
         {
           m_timeout_check_timer.stop();
           m_latest_message = msg;
@@ -320,49 +320,42 @@ namespace mrs_lib
       protected:
         virtual void data_callback(const MessageType& msg) override
         {
-          std::lock_guard<std::mutex> lck(m_mtx);
+          std::lock_guard<std::recursive_mutex> lck(m_mtx);
           impl_class_t::data_callback(msg);
         }
         virtual bool has_data() const override
         {
-          std::lock_guard<std::mutex> lck(m_mtx);
+          std::lock_guard<std::recursive_mutex> lck(m_mtx);
           return impl_class_t::has_data();
         }
         virtual bool new_data() const override
         {
-          std::lock_guard<std::mutex> lck(m_mtx);
+          std::lock_guard<std::recursive_mutex> lck(m_mtx);
           return impl_class_t::new_data();
         }
         virtual bool used_data() const override
         {
-          std::lock_guard<std::mutex> lck(m_mtx);
+          std::lock_guard<std::recursive_mutex> lck(m_mtx);
           return impl_class_t::used_data();
         }
         virtual MessageType get_data() override
         {
-          std::lock_guard<std::mutex> lck(m_mtx);
+          std::lock_guard<std::recursive_mutex> lck(m_mtx);
           return impl_class_t::get_data();
         }
         virtual void start() override
         {
-          std::lock_guard<std::mutex> lck(m_mtx);
+          std::lock_guard<std::recursive_mutex> lck(m_mtx);
           return impl_class_t::start();
         }
         virtual void stop() override
         {
-          std::lock_guard<std::mutex> lck(m_mtx);
+          std::lock_guard<std::recursive_mutex> lck(m_mtx);
           return impl_class_t::stop();
         }
 
-      protected:
-        virtual void process_new_message(const MessageType& msg, const ros::Time& time) override
-        {
-          std::lock_guard<std::mutex> lck(m_mtx);
-          return impl_class_t::process_new_message(msg, time);
-        }
-
       private:
-        mutable std::mutex m_mtx;
+        mutable std::recursive_mutex m_mtx;
     };
     //}
 
