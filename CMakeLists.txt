@@ -16,8 +16,8 @@ find_package(catkin REQUIRED COMPONENTS
   )
 
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O3 -Wall")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -g -O0")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -Wall")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -g -O0 -Wall")
 
 # include Eigen3
 find_package(Eigen3 REQUIRED)
@@ -134,6 +134,12 @@ target_link_libraries(subscribe_handler_tests
 
 add_executable(subscribe_handler_example src/subscribe_handler/example.cpp)
 target_link_libraries(subscribe_handler_example
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_executable(rheiv_example src/rheiv/example.cpp)
+target_link_libraries(rheiv_example
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )

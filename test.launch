@@ -4,7 +4,7 @@
   <arg unless="$(arg debug)" name="launch_prefix" value=""/>
   <arg     if="$(arg debug)" name="launch_prefix" value="debug_roslaunch"/>
 
-  <node pkg="mrs_lib" type="subscribe_handler_tests" name="tests" output="screen" launch-prefix="$(arg launch_prefix)" />
+  <node pkg="mrs_lib" type="rheiv_example" name="tests" output="screen" launch-prefix="$(arg launch_prefix)" />
 
 </launch>
 
