@@ -46,7 +46,7 @@ int main()
   xs <<
     0, 1, 0, 10,
     0, 0, 1, 0,
-    0, 0, 0, 0.01;  // if you change the last value to 0, the iterative optimization will fail because the matrices M and N will be degenerate
+    0, 0, 0, 0.001;  // if you change the last value to 0, the iterative optimization will fail because the matrices M and N will be degenerate
   const mrs_lib::P_t P = mrs_lib::P_t::Identity();
   mrs_lib::Ps_t Ps;
   Ps.reserve(n_pts);
@@ -60,11 +60,11 @@ int main()
   try
   {
     theta = rheiv.fit(xs, Ps);
-  } catch (const mrs_lib::rheiv_t::eigenvector_exception& ex)
+  } catch (const mrs_lib::eigenvector_exception& ex)
   {
     std::cerr << "Iteration failed with message '" << ex.what() << "'." << std::endl;
     std::cout << "using last valid theta" << std::endl;
-    theta = rheiv.last_valid_estimate();
+    theta = rheiv.get_last_estimate();
   }
   std::cout << "finished:" << std::endl << theta << std::endl;
 }

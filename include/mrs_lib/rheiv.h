@@ -11,6 +11,28 @@
 
 namespace mrs_lib
 {
+  /* eigenvector_exception //{ */
+  
+  /*!
+    * \brief This exception may be thrown when solving the generalized eigenvalue problem with the M and N matrices.
+    *
+    * You should catch this exception in your code and act accordingly if it appears
+    * (e.g. ask for the last valid parameter estimate).
+    */
+    struct eigenvector_exception : public std::exception
+    {
+    /*!
+      * \brief Returns the error message, describing what caused the exception.
+      *
+      * \return  The error message, describing what caused the exception.
+      */
+      virtual const char* what() const throw() override
+      {
+        return "Could not compute matrix eigenvectors.";
+      }
+    };
+  
+  //}
 
   /* class RHEIV //{ */
   /**
@@ -60,25 +82,6 @@ namespace mrs_lib
 
     using theta_t = Eigen::Matrix<double, l, 1>;            /*!< \brief Parameter vector type \f$l \times 1\f$ */
     using eta_t = z_t;                                      /*!< \brief Reduced parameter vector type \f$l_r \times 1\f$ */
-
-  /*!
-    * \brief This exception may be thrown when solving the generalized eigenvalue problem with the M and N matrices.
-    *
-    * You should catch this exception in your code and act accordingly if it appears
-    * (e.g. ask for the last valid parameter estimate).
-    */
-    struct eigenvector_exception : public std::exception
-    {
-    /*!
-      * \brief Returns the error message, describing what caused the exception.
-      *
-      * \return  The error message, describing what caused the exception.
-      */
-      const char* what() const throw()
-      {
-        return "RHEIV: could not compute matrix eigenvectors! The input data is not well formed.";
-      }
-    };
 
   private:
     using A_t = Eigen::Matrix<double, lr, lr>;          /*!< \brief Type of the helper matrix \f$m \mathbf{A} 1\f$, \f$l_r \times l_r\f$ */
@@ -154,8 +157,9 @@ namespace mrs_lib
           const zs_t zs = m_f_z(xs);
       
           // Find initial conditions through ALS
-          m_ALS_theta = fit_ALS(zs);
-          m_ALS_theta_set = true;
+          m_ALS_theta = fit_ALS_impl(zs);
+          m_last_theta = m_ALS_theta;
+          m_ALS_theta_set = m_last_theta_set = true;
           eta_t eta = m_ALS_theta.template block<lr, 1>(0, 0);
       
           for (unsigned it = 0; it < m_max_its; it++)
@@ -164,7 +168,6 @@ namespace mrs_lib
               const auto [M, N, zc] = calc_MN(eta, zs, Ps, m_dzdx);
               eta = calc_min_eigvec(M, N);
               m_last_theta = calc_theta(eta, zc);
-              m_last_theta_set = true;
               if ((prev_theta - m_last_theta).norm() < m_min_dtheta)
                   break;
           }
@@ -172,7 +175,30 @@ namespace mrs_lib
         }
       //}
 
-      /* last_valid_estimate() method //{ */
+      /* fit_ALS() method //{ */
+      /*!
+        * \brief Fit the defined model to the provided data using Algebraic Least Squares (not RHEIV).
+        *
+        * Instead of using the iterative RHEIV algorithm to fit the data, just use the simple ALS (which basically does eigenvector decomposition).
+        * This can be useful in cases of degenerate data where the RHEIV algorithm fails or when covariances of the data are not available.
+        *
+        * \param xs the data points \f$ \mathbf{x}_i \f$.
+        *
+        * \returns  estimate of the parameter vector \f$ \mathbf{\theta} \f$.
+        *
+        */
+        theta_t fit_ALS(const xs_t& xs)
+        {
+          assert(m_initialized);
+      
+          const zs_t zs = m_f_z(xs);
+          m_ALS_theta = fit_ALS_impl(zs);
+          m_ALS_theta_set = true;
+          return m_ALS_theta;
+        }
+      //}
+
+      /* get_last_estimate() method //{ */
       /*!
         * \brief Returns the last valid estimate of \f$ \mathbf{\theta} \f$.
         *
@@ -184,14 +210,14 @@ namespace mrs_lib
         * \warning  The fit() method must be called prior to attempting to get the last valid estimate!
         *
         */
-        theta_t last_valid_estimate() const
+        theta_t get_last_estimate() const
         {
           assert(m_last_theta_set);
           return m_last_theta;
         }
       //}
 
-      /* ALS_estimate() method //{ */
+      /* get_ALS_estimate() method //{ */
       /*!
         * \brief Returns the Algebraic Least Squares estimate of \f$ \mathbf{\theta} \f$.
         *
@@ -203,7 +229,7 @@ namespace mrs_lib
         * \warning  The fit() method must be called prior to attempting to get the last ALS estimate!
         *
         */
-        theta_t ALS_estimate() const
+        theta_t get_ALS_estimate() const
         {
           assert(m_ALS_theta_set);
           return m_ALS_theta;
@@ -226,7 +252,7 @@ namespace mrs_lib
     theta_t m_last_theta;
 
   private:
-    std::tuple<M_t, N_t, z_t> calc_MN(const eta_t& eta, const zs_t& zs, const Ps_t& Ps, const dzdx_t& dzdx)
+    std::tuple<M_t, N_t, z_t> calc_MN(const eta_t& eta, const zs_t& zs, const Ps_t& Ps, const dzdx_t& dzdx) const
     {
       const int n = zs.cols();
     
@@ -248,7 +274,7 @@ namespace mrs_lib
       return {M, N, zc};
     }
 
-    Bs_t calc_Bs(const Ps_t& Ps, const dzdx_t& dzdx)
+    Bs_t calc_Bs(const Ps_t& Ps, const dzdx_t& dzdx) const
     {
       const int n = Ps.size();
       Bs_t Bs;
@@ -262,7 +288,7 @@ namespace mrs_lib
       return Bs;
     }
 
-    betas_t calc_betas(const eta_t& eta, const Bs_t& Bs)
+    betas_t calc_betas(const eta_t& eta, const Bs_t& Bs) const
     {
       const int n = Bs.size();
 
@@ -276,19 +302,19 @@ namespace mrs_lib
       return betas;
     }
 
-    A_t calc_A(const z_t& z)
+    A_t calc_A(const z_t& z) const
     {
       return z*z.transpose();
     }
 
-    theta_t calc_theta(const eta_t& eta, const z_t& zc)
+    theta_t calc_theta(const eta_t& eta, const z_t& zc) const
     {
       const double alpha = -zc.transpose()*eta;
       const theta_t theta( (theta_t() << eta, alpha).finished().normalized());
       return theta;
     }
 
-    eta_t calc_min_eigvec(const M_t& M, const N_t& N)
+    eta_t calc_min_eigvec(const M_t& M, const N_t& N) const
     {
       const Eigen::GeneralizedSelfAdjointEigenSolver<M_t> es(M, N);
       if (es.info() != Eigen::Success)
@@ -298,7 +324,7 @@ namespace mrs_lib
       return evec;
     }
 
-    eta_t calc_min_eigvec(const M_t& M)
+    eta_t calc_min_eigvec(const M_t& M) const
     {
       const Eigen::SelfAdjointEigenSolver<M_t> es(M);
       if (es.info() != Eigen::Success)
@@ -308,13 +334,13 @@ namespace mrs_lib
       return evec;
     }
 
-    z_t calc_centroid(const zs_t& zs, const betas_t& betas)
+    z_t calc_centroid(const zs_t& zs, const betas_t& betas) const
     {
       const z_t zc = (zs.array().rowwise() * betas.array()).rowwise().sum()/betas.sum();
       return zc;
     }
 
-    std::pair<zs_t, z_t> reduce_zs(const zs_t& zs, const betas_t& betas)
+    std::pair<zs_t, z_t> reduce_zs(const zs_t& zs, const betas_t& betas) const
     {
       const z_t zc = calc_centroid(zs, betas);
       const zs_t zrs = zs.colwise() - zc;
@@ -325,19 +351,19 @@ namespace mrs_lib
 // |           Algebraic Least Squares-related methods          |
 // --------------------------------------------------------------
 
-    z_t calc_centroid(const zs_t& zs)
+    z_t calc_centroid(const zs_t& zs) const
     {
       return zs.rowwise().mean();
     }
 
-    std::pair<zs_t, z_t> reduce_zs(const zs_t& zs)
+    std::pair<zs_t, z_t> reduce_zs(const zs_t& zs) const
     {
       const z_t zc = calc_centroid(zs);
       const zs_t zrs = zs.colwise() - zc;
       return {zrs, zc};
     }
 
-    theta_t fit_ALS(const zs_t& zs)
+    theta_t fit_ALS_impl(const zs_t& zs) const
     {
       const auto [zrs, zc] = reduce_zs(zs);
       M_t M = M_t::Zero();
