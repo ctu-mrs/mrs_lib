@@ -81,11 +81,16 @@ namespace mrs_lib
       
       for (unsigned it = 0; it < m_max_its; it++)
       {
+          std::cout << "-------------------------------------" << std::endl;
+          std::cout << "iteration: " << it << std::endl;
           const nu_t prev_nu = nu;
+          std::cout << "pre-nu:" << std::endl << nu << std::endl;
           const auto [M, N, zc] = calc_MN(nu, zs, Ps, m_dzdx);
+          std::cout << "M:" << std::endl << M << std::endl;
+          std::cout << "N:" << std::endl << N << std::endl;
           last_zc = zc;
-          const M_t N_under_M = N.inverse()*M; // TODO: better way to calculate this
-          nu = calc_min_eigvec(N_under_M);
+          nu = calc_min_eigvec(M, N);
+          std::cout << "post-nu:" << std::endl << nu << std::endl;
           if ((prev_nu - nu).norm() < m_min_dnu)
               break;
       }
@@ -164,18 +169,23 @@ namespace mrs_lib
     nu_t calc_min_eigvec(const M_t& M, const N_t& N)
     {
       const Eigen::GeneralizedSelfAdjointEigenSolver<M_t> es(M, N);
+      if (es.info() != Eigen::Success)
+        // TODO: throw an exception
+        std::cerr << "GeneralizedSelfAdjointEigenSolver failed: " << es.info() << std::endl; 
       // eigenvalues are sorted in increasing order when using the GeneralizedSelfAdjointEigenSolver as per Eigen documentation
-      const auto evals = es.eigenvalues();
-      const nu_t evec = evals.col(0);
+      const nu_t evec = es.eigenvectors().col(0).normalized(); // altough the Eigen documentation states that this vector should already be normalized, it isn't!!
+      /* std::cout << "GeneralizedSelfAdjointEigenSolver eigenvec norm: " << evec.norm() << std::endl; */
       return evec;
     }
 
     nu_t calc_min_eigvec(const M_t& M)
     {
       const Eigen::SelfAdjointEigenSolver<M_t> es(M);
+      if (es.info() != Eigen::Success)
+        std::cerr << "SelfAdjointEigenSolver failed: " << es.info() << std::endl; 
       // eigenvalues are sorted in increasing order when using the SelfAdjointEigenSolver as per Eigen documentation
-      const auto evals = es.eigenvalues();
-      const nu_t evec = evals.col(0);
+      const nu_t evec = es.eigenvectors().col(0).normalized(); // altough the Eigen documentation states that this vector should already be normalized, it isn't!!
+      std::cout << "SelfAdjointEigenSolver eigenvec norm: " << evec.norm() << std::endl;
       return evec;
     }
 

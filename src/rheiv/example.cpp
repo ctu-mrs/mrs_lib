@@ -34,7 +34,7 @@ int main()
   us <<
     0, 1, 0, 10,
     0, 0, 1, 0,
-    0, 0, 0, 0,
+    0, 0, 0, 1,
     1, 1, 1, 1;
   const mrs_lib::P_t P = mrs_lib::P_t::Identity();
   mrs_lib::Ps_t Ps;
@@ -43,7 +43,7 @@ int main()
     Ps.push_back(P);
 
   std::cout << "initializing object:" << std::endl;
-  mrs_lib::rheiv_t rheiv(dzdx, 1e-15, 100);
+  mrs_lib::rheiv_t rheiv(dzdx, 1e-15, 10);
   std::cout << "running fit" << std::endl;
   mrs_lib::theta_t theta = rheiv.fit(us, Ps);
   std::cout << "finished:" << std::endl << theta << std::endl;
