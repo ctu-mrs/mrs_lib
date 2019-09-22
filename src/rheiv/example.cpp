@@ -31,7 +31,7 @@ namespace mrs_lib
 }
 
 /* For the plane surface model, there is no need to transform the data. */
-mrs_lib::zs_t f_z(const mrs_lib::xs_t & xs)
+mrs_lib::zs_t f_z(const mrs_lib::xs_t& xs)
 {
   return xs;
 }

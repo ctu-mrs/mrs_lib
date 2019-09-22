@@ -8,6 +8,7 @@
 #define HEIV_H
 
 #include <Eigen/Dense>
+#include <iostream>
 
 namespace mrs_lib
 {
@@ -71,6 +72,7 @@ namespace mrs_lib
 
     using x_t = Eigen::Matrix<double, k, 1>;                /*!< \brief Input vector type \f$k \times 1\f$ */
     using xs_t = Eigen::Matrix<double, k, -1>;              /*!< \brief Container type for the input data array */
+    using u_t = Eigen::Matrix<double, l, 1>;                /*!< \brief Transformed input vector type \f$l \times 1\f$ */
     using P_t = Eigen::Matrix<double, k, k>;                /*!< \brief Covariance type of the input vector \f$k \times k\f$ */
     using Ps_t = std::vector<P_t>;                          /*!< \brief Container type for covariances \p P of the input data array */
 
@@ -118,18 +120,20 @@ namespace mrs_lib
         * - if change of the estimate of \f$ \mathbf{\theta} \f$ between two iterations is smaller than a defined threshold, or
         * - if a maximal number of iterations was reached.
         *
-        * \param f_z        the mapping function \f$ \mathbf{z}\left( \mathbf{x} \right) \f$.
-        * \param dzdx       the jacobian matrix of partial derivations of \f$ \mathbf{z}\left( \mathbf{x} \right) \f$ by \f$ \mathbf{x} \f$.
-        * \param min_dtheta   if the difference of \f$ \mathbf{\theta}_{k} \f$ and \f$ \mathbf{\theta}_{k-1} \f$ is smaller than this number, the iteration is stopped.
-        * \param max_its    if the iteration is stopped after this number of iterations.
+        * \param f_z                   the mapping function \f$ \mathbf{z}\left( \mathbf{x} \right) \f$.
+        * \param dzdx                  the jacobian matrix of partial derivations of \f$ \mathbf{z}\left( \mathbf{x} \right) \f$ by \f$ \mathbf{x} \f$.
+        * \param min_dtheta            if the difference of \f$ \mathbf{\theta}_{k} \f$ and \f$ \mathbf{\theta}_{k-1} \f$ is smaller than this number, the iteration is stopped.
+        * \param max_its               if the iteration is stopped after this number of iterations.
+        * \param debug_nth_it          a debug message will be printed every \p debug_nth_it th iteration (negative number disables debug).
         */
-        RHEIV(const f_z_t& f_z, const dzdx_t& dzdx, const double min_dtheta = 1e-15, const unsigned max_its = 100)
+        RHEIV(const f_z_t& f_z, const dzdx_t& dzdx, const double min_dtheta = 1e-15, const unsigned max_its = 100, const int debug_nth_it = -1)
           : 
             m_initialized(true),
             m_f_z(f_z),
             m_dzdx(dzdx),
             m_min_dtheta(min_dtheta),
             m_max_its(max_its),
+            m_debug_nth_it(debug_nth_it),
             m_ALS_theta_set(false),
             m_last_theta_set(false)
         {};
@@ -168,7 +172,10 @@ namespace mrs_lib
               const auto [M, N, zc] = calc_MN(eta, zs, Ps, m_dzdx);
               eta = calc_min_eigvec(M, N);
               m_last_theta = calc_theta(eta, zc);
-              if ((prev_theta - m_last_theta).norm() < m_min_dtheta)
+              const double dtheta = calc_dtheta(prev_theta, m_last_theta);
+              if (m_debug_nth_it > 0 && it % m_debug_nth_it == 0)
+                std::cout << "[RHEIV]: iteration " << it << " (max " << m_max_its << "), dtheta: " << dtheta << " (min " << m_min_dtheta << ") " << std::endl;
+              if (dtheta < m_min_dtheta)
                   break;
           }
           return m_last_theta;
@@ -244,6 +251,7 @@ namespace mrs_lib
     dzdx_t m_dzdx;
     double m_min_dtheta;
     unsigned m_max_its;
+    int m_debug_nth_it;
 
   private:
     bool m_ALS_theta_set;
@@ -268,8 +276,8 @@ namespace mrs_lib
           const z_t& zr = zrs.col(it);
           const B_t& B = Bs.at(it);
           const A_t A = calc_A(zr);
-          M += A/beta;
-          N += (eta.transpose()*A*eta)*B/(beta*beta);
+          M += A*beta;
+          N += (eta.transpose()*A*eta)*B*(beta*beta);
       }
       return {M, N, zc};
     }
@@ -296,7 +304,7 @@ namespace mrs_lib
       for (int it = 0; it < n; it++)
       {
           const B_t& B = Bs.at(it);
-          const double beta = 1/(eta.transpose()*B*eta);
+          const double beta = 1.0/(eta.transpose()*B*eta);
           betas(it) = beta;
       }
       return betas;
@@ -305,6 +313,11 @@ namespace mrs_lib
     A_t calc_A(const z_t& z) const
     {
       return z*z.transpose();
+    }
+
+    double calc_dtheta(const theta_t& th1, const theta_t& th2) const
+    {
+      return std::min( (th1 - th2).norm(), (th1 + th2).norm() );
     }
 
     theta_t calc_theta(const eta_t& eta, const z_t& zc) const
