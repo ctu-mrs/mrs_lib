@@ -32,7 +32,7 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs mrs_msgs
   DEPENDS Eigen
-  LIBRARIES Lkf Ukf ConvexPolygon Profiler Utils ParamLoader MedianFilter Repredictor GeometryUtils
+  LIBRARIES Lkf Ukf ConvexPolygon Profiler Utils ParamLoader MedianFilter Repredictor geometry_utils
   )
 
 ###########
@@ -150,8 +150,15 @@ target_link_libraries(MedianFilter
   ${Eigen_LIBRARIES}
   )
 
-add_library(GeometryUtils src/geometry_utils/geometry_utils.cpp)
-target_link_libraries(GeometryUtils
+add_library(geometry_utils src/geometry_utils/geometry_utils.cpp)
+target_link_libraries(geometry_utils
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  ${GAZEBO_INCLUDE_DIRS}
+  )
+
+add_executable(geometry_utils_tests src/geometry_utils/geometry_utils.cpp src/geometry_utils/geometry_utils_tests.cpp)
+target_link_libraries(geometry_utils_tests
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   ${GAZEBO_INCLUDE_DIRS}

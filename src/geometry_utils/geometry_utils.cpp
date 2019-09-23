@@ -1,5 +1,4 @@
 #include <mrs_lib/geometry_utils.h>
-#include <iostream>
 
 namespace mrs_lib
 {
@@ -18,7 +17,7 @@ namespace mrs_lib
     Eigen::AngleAxisd ret;
     if (abs(angle) < tolerance)
       ret = Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitX());
-    else if (abs(angle) - M_PI < tolerance)
+    else if (abs(abs(angle) - M_PI) < tolerance)
       ret = Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitX());
     else
       ret = Eigen::AngleAxisd(angle, v.normalized());
