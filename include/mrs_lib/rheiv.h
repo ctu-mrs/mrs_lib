@@ -180,6 +180,30 @@ namespace mrs_lib
           }
           return m_last_theta;
         }
+
+      /*!
+        * \brief Fit the defined model to the provided data.
+        *
+        * The RHEIV iterative optimization algorithm will be applied to estimate optimal parameters of the model based on the provided data.
+        * This is a conveinence overload, which takes the data points and covariances in a general container, supporting std::begin() and std::end().
+        *
+        * \param xs the data points \f$ \mathbf{x}_i \f$.
+        * \param Ps the corresponding covariance matrices\f$ \mathbf{P}_i \f$ .
+        *
+        * \returns  estimate of the parameter vector \f$ \mathbf{\theta} \f$.
+        *
+        * \warning  Note that length of \p xs and \p Ps must be the same!
+        *
+        */
+        template <class T_it1,
+                  class T_it2>
+        theta_t fit(const T_it1& xs_begin, const T_it1& xs_end, const T_it2& Ps_begin, const T_it2& Ps_end)
+        {
+          const xs_t xs = cont_to_eigen(xs_begin, xs_end);
+          const Ps_t Ps = cont_to_vector(Ps_begin, Ps_end);
+          const theta_t ret = fit(xs, Ps);
+          return ret;
+        }
       //}
 
       /* fit_ALS() method //{ */
@@ -260,6 +284,7 @@ namespace mrs_lib
     theta_t m_last_theta;
 
   private:
+    /* calc_MN() method //{ */
     std::tuple<M_t, N_t, z_t> calc_MN(const eta_t& eta, const zs_t& zs, const Ps_t& Ps, const dzdx_t& dzdx) const
     {
       const int n = zs.cols();
@@ -267,7 +292,7 @@ namespace mrs_lib
       const Bs_t Bs = calc_Bs(Ps, dzdx);
       const betas_t betas = calc_betas(eta, Bs);
       const auto [zrs, zc] = reduce_zs(zs, betas);
-      
+    
       M_t M = M_t::Zero();
       N_t N = N_t::Zero();
       for (int it = 0; it < n; it++)
@@ -281,7 +306,9 @@ namespace mrs_lib
       }
       return {M, N, zc};
     }
+    //}
 
+    /* calc_Bs() method //{ */
     Bs_t calc_Bs(const Ps_t& Ps, const dzdx_t& dzdx) const
     {
       const int n = Ps.size();
@@ -295,11 +322,12 @@ namespace mrs_lib
       }
       return Bs;
     }
+    //}
 
+    /* calc_betas() method //{ */
     betas_t calc_betas(const eta_t& eta, const Bs_t& Bs) const
     {
       const int n = Bs.size();
-
       betas_t betas(n);
       for (int it = 0; it < n; it++)
       {
@@ -309,24 +337,32 @@ namespace mrs_lib
       }
       return betas;
     }
+    //}
 
+    /* calc_A() method //{ */
     A_t calc_A(const z_t& z) const
     {
       return z*z.transpose();
     }
+    //}
 
+    /* calc_dtheta() method //{ */
     double calc_dtheta(const theta_t& th1, const theta_t& th2) const
     {
       return std::min( (th1 - th2).norm(), (th1 + th2).norm() );
     }
+    //}
 
+    /* calc_theta() method //{ */
     theta_t calc_theta(const eta_t& eta, const z_t& zc) const
     {
       const double alpha = -zc.transpose()*eta;
       const theta_t theta( (theta_t() << eta, alpha).finished().normalized());
       return theta;
     }
+    //}
 
+    /* calc_min_eigvec() method //{ */
     eta_t calc_min_eigvec(const M_t& M, const N_t& N) const
     {
       const Eigen::GeneralizedSelfAdjointEigenSolver<M_t> es(M, N);
@@ -336,7 +372,9 @@ namespace mrs_lib
       const eta_t evec = es.eigenvectors().col(0).normalized(); // altough the Eigen documentation states that this vector should already be normalized, it isn't!!
       return evec;
     }
+    //}
 
+    /* calc_min_eigvec() method //{ */
     eta_t calc_min_eigvec(const M_t& M) const
     {
       const Eigen::SelfAdjointEigenSolver<M_t> es(M);
@@ -346,19 +384,57 @@ namespace mrs_lib
       const eta_t evec = es.eigenvectors().col(0).normalized(); // altough the Eigen documentation states that this vector should already be normalized, it isn't!!
       return evec;
     }
+    //}
 
+    /* calc_centroid() method //{ */
     z_t calc_centroid(const zs_t& zs, const betas_t& betas) const
     {
       const z_t zc = (zs.array().rowwise() * betas.array()).rowwise().sum()/betas.sum();
       return zc;
     }
+    //}
 
+    /* reduce_zs() method //{ */
     std::pair<zs_t, z_t> reduce_zs(const zs_t& zs, const betas_t& betas) const
     {
       const z_t zc = calc_centroid(zs, betas);
       const zs_t zrs = zs.colwise() - zc;
       return {zrs, zc};
     }
+    //}
+
+    /* cont_to_eigen() method //{ */
+    template <typename T_it>
+    xs_t cont_to_eigen(const T_it& begin, const T_it& end)
+    {
+      const auto n = end-begin;
+      xs_t ret(n_states, n);
+      size_t i = 0;
+      for (T_it it = begin; it != end; it++)
+      {
+        ret.template block<n_states, 1>(0, i) = *it;
+        i++;
+      }
+      return ret;
+    }
+    //}
+
+    /* cont_to_vector() method //{ */
+    template <typename T_it>
+    Ps_t cont_to_vector(const T_it& begin, const T_it& end)
+    {
+      const auto n = end-begin;
+      Ps_t ret(n);
+      size_t i = 0;
+      for (T_it it = begin; it != end; it++)
+      {
+        ret.at(i) = *it;
+        i++;
+      }
+      return ret;
+    }
+    //}
+
 
 // --------------------------------------------------------------
 // |           Algebraic Least Squares-related methods          |
