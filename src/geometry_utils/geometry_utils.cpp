@@ -3,6 +3,21 @@
 namespace mrs_lib
 {
 
+  /* double angle_between(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2) //{ */
+  
+  double angle_between(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2)
+  {
+    const Eigen::Vector3d a = vec1.normalized();
+    const Eigen::Vector3d b = vec2.normalized();
+    const Eigen::Vector3d v = a.cross(b);
+    const double sin_ab = v.norm();
+    const double cos_ab = a.dot(b);
+    const double angle = std::atan2(sin_ab, cos_ab);
+    return angle;
+  }
+  
+  //}
+
   /* Eigen::AngleAxisd angleaxis_between(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2, const double tolerance) //{ */
   
   Eigen::AngleAxisd angleaxis_between(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2, const double tolerance)

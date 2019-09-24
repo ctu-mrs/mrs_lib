@@ -8,6 +8,7 @@
 namespace mrs_lib
 {
 
+  double angle_between(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2);
   Eigen::AngleAxisd angleaxis_between(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2, const double tolerance = 1e-9);
   Eigen::Quaterniond quaternion_between(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2, const double tolerance = 1e-9);
   Eigen::Matrix3d rotation_between(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2, const double tolerance = 1e-9);
