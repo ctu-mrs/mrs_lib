@@ -76,11 +76,13 @@ namespace mrs_lib
     using P_t = Eigen::Matrix<double, k, k>;                /*!< \brief Covariance type of the input vector \f$k \times k\f$ */
     using Ps_t = std::vector<P_t>;                          /*!< \brief Container type for covariances \p P of the input data array */
 
-    using z_t = Eigen::Matrix<double, lr, 1>;               /*!< \brief Type of a reduced transformed input vector \f$l_r \times 1\f$ */
-    using zs_t = Eigen::Matrix<double, lr, -1>;             /*!< \brief Container type for an array of the reduced transformed input vectors \p z */
-
+    using z_t = Eigen::Matrix<double, lr, 1>;                       /*!< \brief Type of a reduced transformed input vector \f$l_r \times 1\f$ */
+    using zs_t = Eigen::Matrix<double, lr, -1>;                     /*!< \brief Container type for an array of the reduced transformed input vectors \p z */
     using f_z_t = typename std::function<zs_t(const xs_t&)>;        /*!< \brief Function signature of the \f$ \mathbf{z}\left( \mathbf{x} \right) \f$ mapping function */
-    using dzdx_t = Eigen::Matrix<double, lr, k>;                    /*!< \brief Type of the jacobian matrix \f$ \mathbf{J} \mathbf{z}\left( \mathbf{x} \right) \f$, \f$l_r \times k\f$ */
+
+    using dzdx_t = Eigen::Matrix<double, lr, k>;                    /*!< \brief Type of the jacobian matrix \f$ \mathbf{J} \mathbf{z}\left( \mathbf{x} \right) \f$, evaluated at \f$ \mathbf{x} \f$ */
+    using dzdxs_t = std::vector<dzdx_t>;                            /*!< \brief Contained type for an array of the jacobian matrices */
+    using f_dzdx_t = typename std::function<dzdx_t(const xs_t&)>;   /*!< \brief Function signature of the jacobian \f$ \mathbf{J} \mathbf{z}\left( \mathbf{x} \right) \f$ */
 
     using theta_t = Eigen::Matrix<double, l, 1>;            /*!< \brief Parameter vector type \f$l \times 1\f$ */
     using eta_t = z_t;                                      /*!< \brief Reduced parameter vector type \f$l_r \times 1\f$ */
@@ -121,6 +123,30 @@ namespace mrs_lib
         * - if a maximal number of iterations was reached.
         *
         * \param f_z                   the mapping function \f$ \mathbf{z}\left( \mathbf{x} \right) \f$.
+        * \param f_dzdx                a function, returning the jacobian matrix of partial derivations of \f$ \mathbf{z}\left( \mathbf{x} \right) \f$ by \f$ \mathbf{x} \f$, evaluated at \f$ \mathbf{x} \f$.
+        * \param min_dtheta            if the difference of \f$ \mathbf{\theta}_{k} \f$ and \f$ \mathbf{\theta}_{k-1} \f$ is smaller than this number, the iteration is stopped.
+        * \param max_its               if the iteration is stopped after this number of iterations.
+        * \param debug_nth_it          a debug message will be printed every \p debug_nth_it th iteration (negative number disables debug).
+        */
+        RHEIV(const f_z_t& f_z, const f_dzdx_t& f_dzdx, const double min_dtheta = 1e-15, const unsigned max_its = 100, const int debug_nth_it = -1)
+          : 
+            m_initialized(true),
+            m_f_z(f_z),
+            m_f_dzdx(f_dzdx),
+            m_min_dtheta(min_dtheta),
+            m_max_its(max_its),
+            m_debug_nth_it(debug_nth_it),
+            m_ALS_theta_set(false),
+            m_last_theta_set(false)
+        {};
+
+      /*!
+        * \brief A convenience constructor constructor.
+        *
+        * This constructor differs from the main one only in the parameters it takes. Instead of the function f_dzdx, it takes directly the dzdx matrix. This variant is meant to be used
+        * for systems where the jacobian matrix \f$ \mathbf{z}\left( \mathbf{x} \right) \f$ by \f$ \mathbf{x} \f$ does not depend on \f$ \mathbf{x} \f$.
+        *
+        * \param f_z                   the mapping function \f$ \mathbf{z}\left( \mathbf{x} \right) \f$.
         * \param dzdx                  the jacobian matrix of partial derivations of \f$ \mathbf{z}\left( \mathbf{x} \right) \f$ by \f$ \mathbf{x} \f$.
         * \param min_dtheta            if the difference of \f$ \mathbf{\theta}_{k} \f$ and \f$ \mathbf{\theta}_{k-1} \f$ is smaller than this number, the iteration is stopped.
         * \param max_its               if the iteration is stopped after this number of iterations.
@@ -130,13 +156,21 @@ namespace mrs_lib
           : 
             m_initialized(true),
             m_f_z(f_z),
-            m_dzdx(dzdx),
             m_min_dtheta(min_dtheta),
             m_max_its(max_its),
             m_debug_nth_it(debug_nth_it),
             m_ALS_theta_set(false),
             m_last_theta_set(false)
-        {};
+        {
+          // define a helper function which just returns the constant dzdx
+          m_f_dzdx =
+              {
+              [dzdx](const x_t&)
+                {
+                  return dzdx;
+                }
+              };
+        };
       //}
 
       /* fit() method //{ */
@@ -159,6 +193,7 @@ namespace mrs_lib
           assert((size_t)xs.cols() == Ps.size());
       
           const zs_t zs = m_f_z(xs);
+          const dzdxs_t dzdxs = precalculate_dxdzs(xs, m_f_dzdx);
       
           // Find initial conditions through ALS
           m_ALS_theta = fit_ALS_impl(zs);
@@ -169,7 +204,7 @@ namespace mrs_lib
           for (unsigned it = 0; it < m_max_its; it++)
           {
               const theta_t prev_theta = m_last_theta;
-              const auto [M, N, zc] = calc_MN(eta, zs, Ps, m_dzdx);
+              const auto [M, N, zc] = calc_MN(eta, zs, Ps, dzdxs);
               eta = calc_min_eigvec(M, N);
               m_last_theta = calc_theta(eta, zc);
               const double dtheta = calc_dtheta(prev_theta, m_last_theta);
@@ -272,7 +307,7 @@ namespace mrs_lib
 
   private:
     f_z_t m_f_z;
-    dzdx_t m_dzdx;
+    f_dzdx_t m_f_dzdx;
     double m_min_dtheta;
     unsigned m_max_its;
     int m_debug_nth_it;
@@ -285,11 +320,11 @@ namespace mrs_lib
 
   private:
     /* calc_MN() method //{ */
-    std::tuple<M_t, N_t, z_t> calc_MN(const eta_t& eta, const zs_t& zs, const Ps_t& Ps, const dzdx_t& dzdx) const
+    std::tuple<M_t, N_t, z_t> calc_MN(const eta_t& eta, const zs_t& zs, const Ps_t& Ps, const dzdxs_t& dzdxs) const
     {
       const int n = zs.cols();
     
-      const Bs_t Bs = calc_Bs(Ps, dzdx);
+      const Bs_t Bs = calc_Bs(Ps, dzdxs);
       const betas_t betas = calc_betas(eta, Bs);
       const auto [zrs, zc] = reduce_zs(zs, betas);
     
@@ -309,7 +344,7 @@ namespace mrs_lib
     //}
 
     /* calc_Bs() method //{ */
-    Bs_t calc_Bs(const Ps_t& Ps, const dzdx_t& dzdx) const
+    Bs_t calc_Bs(const Ps_t& Ps, const dzdxs_t& dzdxs) const
     {
       const int n = Ps.size();
       Bs_t Bs;
@@ -317,6 +352,7 @@ namespace mrs_lib
       for (int it = 0; it < n; it++)
       {
         const P_t& P = Ps.at(it);
+        const dzdx_t& dzdx = dzdxs.at(it);
         const B_t B = dzdx*P*dzdx.transpose();
         Bs.push_back(B);
       }
@@ -383,6 +419,21 @@ namespace mrs_lib
       // eigenvalues are sorted in increasing order when using the SelfAdjointEigenSolver as per Eigen documentation
       const eta_t evec = es.eigenvectors().col(0).normalized(); // altough the Eigen documentation states that this vector should already be normalized, it isn't!!
       return evec;
+    }
+    //}
+
+    /* precalculate_dxdzs() method //{ */
+    dzdxs_t precalculate_dxdzs(const xs_t& xs, const f_dzdx_t& f_dzdx)
+    {
+      const int n = xs.cols();
+      dzdxs_t ret;
+      ret.reserve(n);
+      for (int it = 0; it < n; it++)
+      {
+        const x_t& x = xs.col(it);
+        ret.push_back(f_dzdx(x));
+      }
+      return ret;
     }
     //}
 
