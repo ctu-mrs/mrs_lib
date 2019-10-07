@@ -1,3 +1,4 @@
+// clang: MatousFormat
 //
 // Created by markiian on 20.6.19.
 //
@@ -11,54 +12,55 @@
 #include <eigen3/Eigen/Eigen>
 #include <vector>
 
-namespace mrs_lib {
-    class SafetyZone {
-    public:
-        SafetyZone(Polygon outerBorder, std::vector<Polygon> innerObstacles,
-            std::vector<PointObstacle> pointObstacles);
-        ~SafetyZone();
+namespace mrs_lib
+{
+  class SafetyZone
+  {
+  public:
+    SafetyZone(Polygon outerBorder, std::vector<Polygon> innerObstacles, std::vector<PointObstacle> pointObstacles);
+    ~SafetyZone();
 
-        SafetyZone(Eigen::MatrixXd& outerBorderMatrix,
-            std::vector<Eigen::MatrixXd>& innerObstaclesMatrixes,
-            std::vector<Eigen::MatrixXd>& pointObstaclesMatrixes);
-        
-        bool isPointValid(const double px,  const double py);
-        bool isPathValid(const double p1x, const double p1y, const double p2x, const double p2y);
-        Polygon getBorder();
-        std::vector<Polygon> getObstacles();
-        std::vector<PointObstacle> getPointObstacles();
-        visualization_msgs::Marker getMarkerMessage();
+    SafetyZone(Eigen::MatrixXd& outerBorderMatrix, std::vector<Eigen::MatrixXd>& innerObstaclesMatrixes, std::vector<Eigen::MatrixXd>& pointObstaclesMatrixes);
 
-    private:
-        Polygon *outerBorder;
-        std::vector<Polygon> innerObstacles;
-        std::vector<PointObstacle> pointObstacles;
+    bool isPointValid(const double px, const double py);
+    bool isPathValid(const double p1x, const double p1y, const double p2x, const double p2y);
+    Polygon getBorder();
+    std::vector<Polygon> getObstacles();
+    std::vector<PointObstacle> getPointObstacles();
+    visualization_msgs::Marker getMarkerMessage();
 
-
-    public:
-        struct BorderError : public std::exception
-        {
-            const char* what() const throw() {
-                return "SafeZone: Wrong configuration for the border";
-            }
-        };
-
-        struct PolygonObstacleError : public std::exception
-        {
-            const char* what() const throw() {
-                return "SafeZone: Wrong configuration for one of the polygon obstacles";
-            }
-        };
+  private:
+    Polygon* outerBorder;
+    std::vector<Polygon> innerObstacles;
+    std::vector<PointObstacle> pointObstacles;
 
 
-        struct PointObstacleError : public std::exception 
-        {
-            const char* what() const throw() {
-                return "SafeZone: Wrong configuration for one of the point obstacles";
-            }
-        };
-
+  public:
+    struct BorderError : public std::exception
+    {
+      const char* what() const throw()
+      {
+        return "SafeZone: Wrong configuration for the border";
+      }
     };
-}
 
-#endif //MRS_LIB_SAFETYZONE_H
+    struct PolygonObstacleError : public std::exception
+    {
+      const char* what() const throw()
+      {
+        return "SafeZone: Wrong configuration for one of the polygon obstacles";
+      }
+    };
+
+
+    struct PointObstacleError : public std::exception
+    {
+      const char* what() const throw()
+      {
+        return "SafeZone: Wrong configuration for one of the point obstacles";
+      }
+    };
+  };
+}  // namespace mrs_lib
+
+#endif  // MRS_LIB_SAFETYZONE_H

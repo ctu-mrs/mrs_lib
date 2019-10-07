@@ -1,4 +1,4 @@
-
+// clang: MatousFormat
 #ifndef MRS_LIB_LINE_OPERATIONS_H
 #define MRS_LIB_LINE_OPERATIONS_H
 
@@ -6,7 +6,8 @@
 
 namespace mrs_lib
 {
-  struct Intersection {
+  struct Intersection
+  {
     Eigen::RowVector2d point;
     bool parallel;
     bool intersect;
@@ -14,9 +15,8 @@ namespace mrs_lib
     explicit Intersection(bool intersect, bool parallel = false, Eigen::RowVector2d point = Eigen::RowVector2d{});
   };
 
-  Intersection sectionIntersect(Eigen::RowVector2d start1, Eigen::RowVector2d end1,
-                              Eigen::RowVector2d start2, Eigen::RowVector2d end2); 
+  Intersection sectionIntersect(Eigen::RowVector2d start1, Eigen::RowVector2d end1, Eigen::RowVector2d start2, Eigen::RowVector2d end2);
 
-}
+}  // namespace mrs_lib
 
 #endif
