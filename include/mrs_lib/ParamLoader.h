@@ -233,17 +233,28 @@ private:
       return loaded;
 
     // this function only accepts dynamic columns (you can always transpose the matrix afterward)
-    if (rows <= 0)
+    if (rows < 0)
     {
       // if the parameter was compulsory, alert the user and set the flag
       print_error(std::string("Invalid expected matrix dimensions for parameter ") + name);
       m_load_successful = false;
       return loaded;
     }
+    bool expect_zero_matrix = rows == 0;
+    if (expect_zero_matrix)
+    {
+      if (cols > 0)
+      {
+        print_error(std::string("Invalid expected matrix dimensions for parameter ") + name + ". One dimension indicates zero matrix, but other expects non-zero.");
+        m_load_successful = false;
+        return loaded;
+      }
+    }
+
 
     bool cur_load_successful = true;
     bool check_size_exact = true;
-    if (cols <= 0)  // this means that the cols dimension is dynamic
+    if (cols <= 0)  // this means that the cols dimension is dynamic or a zero matrix is expected
       check_size_exact = false;
 
     std::vector<double> tmp_vec;
@@ -251,14 +262,14 @@ private:
     bool success = m_nh.getParam(name, tmp_vec);
     // check if the loaded vector has correct length
     bool correct_size = (int)tmp_vec.size() == rows * cols;
-    if (!check_size_exact)
+    if (!check_size_exact && !expect_zero_matrix)
       correct_size = (int)tmp_vec.size() % rows == 0;  // if the cols dimension is dynamic, the size just has to be divisable by rows
 
     if (success && correct_size)
     {
       // if successfully loaded, everything is in order
       // transform the vector to the matrix
-      if (cols <= 0)
+      if (cols <= 0 && rows > 0)
         cols = tmp_vec.size() / rows;
       if (swap)
       {
@@ -328,17 +339,17 @@ private:
       m_load_successful = false;
       return default_value;
     }
-    if (rows <= 0)
+    if (rows < 0)
     {
-      print_error(std::string("Invalid expected matrix dimensions for parameter ") + name + std::string(" (rows and cols must be > 0)"));
+      print_error(std::string("Invalid expected matrix dimensions for parameter ") + name + std::string(" (rows and cols must be >= 0)"));
       m_load_successful = false;
       return default_value;
     }
     for (const auto& col : cols)
     {
-      if (col <= 0)
+      if (col < 0)
       {
-        print_error(std::string("Invalid expected matrix dimensions for parameter ") + name + std::string(" (rows and cols must be > 0)"));
+        print_error(std::string("Invalid expected matrix dimensions for parameter ") + name + std::string(" (rows and cols must be >= 0)"));
         m_load_successful = false;
         return default_value;
       }
@@ -890,6 +901,35 @@ public:
   //}
 
   // load_matrix_array function for loading of an array of Eigen::MatrixXd with known dimensions //{
+  /*!
+    * \brief Specialized method for loading compulsory parameters, interpreted as an array of dynamic Eigen matrices.
+    *
+    * The number of rows and columns of the matrices to be loaded is specified in the \p rosparam parameter. A typical structure of a \p yaml file, specifying the
+    * matrix array to be loaded using this method is
+    *
+    * \code{.yaml}
+
+  point_obstacles:
+
+    rows: 1
+
+    cols: [3, 3]
+
+    data: [-5.0, -5.0, 2,   -10.0, -10.0, 4]
+
+    *
+    * \endcode
+    *
+    * If the dimensions of the loaded matrix do not match the specified number of rows and columns, the loading process is unsuccessful (loaded_successfully() will return false).
+    * If the parameter with the specified name is not found on the rosparam server (e.g. because it is not specified in the launchfile or yaml config file),
+    * the loading process is unsuccessful.
+    * Using this method, the parameter can only be loaded once using the same ParamLoader instance without error.
+    *
+    * \param name  Name of the parameter in the rosparam server.
+    * \param mat   Reference to the variable to which the parameter value will be stored (such as a class member variable).
+    * \param rows  Expected number of rows of the matrix (negative value indicates that the number of rows is to be deduced from the specified number of columns and the size of the loaded array).
+    * \param cols  Expected number of columns of the matrix (negative value indicates that the number of columns is to be deduced from the specified number of rows and the size of the loaded array).
+    */
   void load_matrix_array(const std::string& name, std::vector<Eigen::MatrixXd>& mat)
   {
     mat = load_matrix_array2(name);
