@@ -372,7 +372,7 @@ private:
     for (unsigned it = 0; it < cols.size(); it++)
     {
       const int cur_cols = cols.at(it);
-      const Eigen::MatrixXd cur_mat = loaded_matrix.block(cols_loaded, 0, rows, cur_cols);
+      const Eigen::MatrixXd cur_mat = loaded_matrix.block(0, cols_loaded, rows, cur_cols);
       /* std::cout << "cur_mat: " << cur_mat << std::endl; */
       loaded.push_back(cur_mat);
       cols_loaded += cur_cols;
@@ -908,15 +908,13 @@ public:
     * matrix array to be loaded using this method is
     *
     * \code{.yaml}
-
-  point_obstacles:
-
-    rows: 1
-
-    cols: [3, 3]
-
-    data: [-5.0, -5.0, 2,   -10.0, -10.0, 4]
-
+    *
+    * point_obstacles:
+    *   rows: 3
+    *   cols: [1, 1]
+    *   data: [-5.0, -10.0,
+    *          -5.0, -10.0,
+    *           2.0,   4.0]
     *
     * \endcode
     *
