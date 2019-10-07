@@ -2,10 +2,10 @@
 <package format="2">
 
   <name>mrs_lib</name>
-  <version>0.0.1</version>
+  <version>0.0.2</version>
   <description>The MRS library</description>
 
-  <author email="tomas.baca@fel.cvut.cz">Tomas Baca</author>
+  <author email="matous.vrba@fel.cvut.cz">Matous Vrba</author>
   <maintainer email="tomas.baca@fel.cvut.cz">Tomas Baca</maintainer>
 
   <license>MIT</license>

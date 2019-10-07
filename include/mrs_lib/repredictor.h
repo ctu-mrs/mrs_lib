@@ -5,7 +5,7 @@
 #include <boost/circular_buffer.hpp>
 #include <std_msgs/Time.h>
 #include <functional>
-#include "mrs_lib/Utils.h"
+#include <mrs_lib/Utils.h>
 
 namespace mrs_lib
 {
@@ -26,6 +26,7 @@ namespace mrs_lib
 
     using P_t = typename Model::P_t;  // state covariance n*n
     using R_t = typename Model::R_t;  // measurement covariance p*p
+    using Q_t = typename Model::Q_t;  // process noise covariance n*n
     //}
 
     /* info_t struct //{ */
@@ -40,6 +41,7 @@ namespace mrs_lib
       } type;
       z_t z;
       R_t R;
+      Q_t Q;
       u_t u;
       int param;
       ros::Time stamp;
@@ -88,7 +90,7 @@ namespace mrs_lib
 #ifdef DEBUG
                 std::cout << std::fixed << std::setprecision(2) <<  "Predicting using input from " << m_info.stamp.toSec() << " to " << stamp.toSec() << std::endl;
 #endif
-                ret = model.predict(m_statecov, m_info.u, dt, m_info.param);
+                ret = model.predict(m_statecov, m_info.u, m_info.Q, dt, m_info.param);
                 /* last_u = m_info.u; */
                 break;
             case info_t::type_t::MEASUREMENT:
@@ -97,7 +99,7 @@ namespace mrs_lib
                 std::cout << std::fixed << std::setprecision(2) << "Predicting using no input from " << m_info.stamp.toSec() << " to " << stamp.toSec() << std::endl;
 #endif
                 /* ret = model.predict(m_statecov, last_u, dt, m_info.param); */
-                ret = model.predict(m_statecov, u_t::Zero(), dt, m_info.param);
+                ret = model.predict(m_statecov, u_t::Zero(), m_info.Q, dt, m_info.param);
           }
           return ret;
         }
@@ -210,7 +212,8 @@ namespace mrs_lib
       info.type = info_t::type_t::MEASUREMENT;
       info.z = z;
       info.R = R;
-      info.u = u_t::Zero();
+      info.Q = Q_t();
+      info.u = u_t();
       info.param = param;
       info.stamp = stamp;
       apply_new_info(info);
@@ -227,6 +230,7 @@ namespace mrs_lib
       info.type = info_t::type_t::INPUT;
       info.z = z_t();
       info.R = R_t();
+      info.Q = Q_t();
       info.u = u;
       info.param = param;
       info.stamp = stamp;
@@ -317,6 +321,7 @@ namespace mrs_lib
       init_info.type = info_t::type_t::NONE;  // the first info is empty (no known input or measurement)
       init_info.z = z_t();
       init_info.R = R_t();
+      init_info.Q = Q_t();
       init_info.u = u_t::Zero();
       init_info.param = 0;
       init_info.stamp = t0;

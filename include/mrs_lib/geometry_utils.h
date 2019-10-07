@@ -1,38 +1,45 @@
+// clang: MatousFormat
 #ifndef GEOMETRY_UTILS_H
 #define GEOMETRY_UTILS_H
 
 #include <vector>
-#include <math.h>
-#include <boost/optional.hpp>
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/Dense>
-#include <tf2/LinearMath/Quaternion.h>
+#include <cmath>
+#include <Eigen/Dense>
 
 namespace mrs_lib
 {
 
-  class Ray {
+  double angle_between(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2);
+  Eigen::AngleAxisd angleaxis_between(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2, const double tolerance = 1e-9);
+  Eigen::Quaterniond quaternion_between(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2, const double tolerance = 1e-9);
+  Eigen::Matrix3d rotation_between(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2, const double tolerance = 1e-9);
+
+  class Ray
+  {
   public:
     Ray();
     ~Ray();
     Ray(Eigen::Vector3d origin, Eigen::Vector3d direction, double energy = 0.0);
 
-    double          energy;
+    double energy;
     Eigen::Vector3d origin;
     Eigen::Vector3d direction;
 
-    static Ray twopointCast(Eigen::Vector3d pointFrom, Eigen::Vector3d pointTo) {
-      Eigen::Vector3d origin    = pointFrom;
+    static Ray twopointCast(Eigen::Vector3d pointFrom, Eigen::Vector3d pointTo)
+    {
+      Eigen::Vector3d origin = pointFrom;
       Eigen::Vector3d direction = (pointTo - pointFrom);
       /* direction.normalize(); */
       return Ray(origin, direction);
     }
-    static Ray directionCast(Eigen::Vector3d origin, Eigen::Vector3d direction) {
+    static Ray directionCast(Eigen::Vector3d origin, Eigen::Vector3d direction)
+    {
       return Ray(origin, direction);
     }
   };
 
-  class Plane {
+  class Plane
+  {
   public:
     Plane();
     ~Plane();
@@ -41,11 +48,12 @@ namespace mrs_lib
     Eigen::Vector3d point;
     Eigen::Vector3d normal;
 
-    boost::optional<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-16);
+    std::optional<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-16);
   };
 
 
-  class Rectangle {
+  class Rectangle
+  {
   public:
     Rectangle();
     ~Rectangle();
@@ -56,23 +64,27 @@ namespace mrs_lib
     Eigen::Matrix3d basis;
     Eigen::Matrix3d projector;
 
-    Plane                        plane;
+    Plane plane;
     std::vector<Eigen::Vector3d> points;
 
-    boost::optional<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-16);
+    std::optional<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-16);
   };
 
-  class Cone {
+  class Cone
+  {
 
   public:
     Cone(Eigen::Vector3d position, Eigen::Vector3d direction, double angle);
     ~Cone();
     Eigen::Vector3d ProjectPoint(Eigen::Vector3d point);
-    boost::optional<Eigen::Vector3d> ProjectPointOnPlane(Plane plane, Eigen::Vector3d point);
+
+    /* NOT FINISHED //{ */
+    std::optional<Eigen::Vector3d> ProjectPointOnPlane(Plane plane, Eigen::Vector3d point);
+    //}
 
   private:
     Eigen::Vector3d position, direction;
-    double          angle;
+    double angle;
 
     Eigen::MatrixXd cone_axis_projector;
     Ray cone_ray;
