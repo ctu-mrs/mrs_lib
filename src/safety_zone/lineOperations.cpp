@@ -17,26 +17,26 @@ namespace mrs_lib
   Intersection::Intersection(bool intersect, bool parallel, Eigen::RowVector2d point) : point(std::move(point)), parallel(parallel), intersect(intersect){};
 
   /* sectionIntersect() //{ */
-  
+
   Intersection sectionIntersect(Eigen::RowVector2d start1, Eigen::RowVector2d end1, Eigen::RowVector2d start2, Eigen::RowVector2d end2)
   {
     Eigen::RowVector2d vector1 = end1 - start1;
     Eigen::RowVector2d vector2 = end2 - start2;
-  
+
     // x - cross product (in 2d is just a scalar of z)
     // start1 + scale1 * vector1 = start2 + scale2 * vector2  // x vector2
     // scale1 * vector1 x vector2 = (start2 - start1) x vector2
-  
+
     // cross product
     double cross = vector1(0) * vector2(1) - vector1(1) * vector2(0);
     double difference_cross = (start2(0) - start1(0)) * vector2(1) - (start2(1) - start1(1)) * vector2(0);
-  
+
     if (cross == 0)
     {
       // are parallel
       if (difference_cross != 0)
         return Intersection{false, true};
-  
+
       // are collinear
       double start2Scale = getScale(start1, vector1, start2);
       if (0 <= start2Scale && start2Scale <= 1)
@@ -44,21 +44,21 @@ namespace mrs_lib
       double end2Scale = getScale(start1, vector1, end2);
       if (0 <= end2Scale && end2Scale <= 1)
         return Intersection{true, true, end2};
-  
+
       return Intersection{false, true};
     }
-  
+
     double scale1 = difference_cross / cross;
     Eigen::RowVector2d point = start1 + scale1 * vector1;
     double scale2 = getScale(start2, vector2, point);
-  
+
     if (0 <= scale1 && scale1 <= 1 && 0 <= scale2 && scale2 <= 1)
     {
       return Intersection{true, false, point};
     }
     return Intersection{false, false};
   }
-  
+
   //}
 
 }  // namespace mrs_lib

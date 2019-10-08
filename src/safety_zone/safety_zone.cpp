@@ -82,10 +82,12 @@ namespace mrs_lib
 
   bool SafetyZone::isPointValid(const double px, const double py)
   {
+
     if (!outerBorder->isPointInside(px, py))
     {
       return false;
     }
+
     for (auto& elem : innerObstacles)
     {
       if (elem.isPointInside(px, py))
@@ -101,6 +103,7 @@ namespace mrs_lib
         return false;
       }
     }
+
     return true;
   }
 
@@ -110,8 +113,10 @@ namespace mrs_lib
 
   bool SafetyZone::isPathValid(const double p1x, const double p1y, const double p2x, const double p2y)
   {
+
     if (outerBorder->doesSectionIntersect(p1x, p1y, p2x, p2y))
       return false;
+
     for (auto& el : innerObstacles)
     {
       if (el.doesSectionIntersect(p1x, p1y, p2x, p2y))

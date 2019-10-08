@@ -25,7 +25,7 @@ namespace mrs_lib
 
   bool PointObstacle::isPointInside(const double px, const double py)
   {
-    return (pow(px - center(0), 2) + pow(py - center(1), 2)) < pow(r, 2);
+    return (pow(px - center(0), 2.0) + pow(py - center(1), 2.0)) < pow(r, 2.0);
   }
 
   //}
@@ -38,8 +38,11 @@ namespace mrs_lib
     Eigen::RowVector2d end{endX, endY};
 
     Eigen::RowVector2d orthogonal_vector{end(1) - start(1), start(0) - end(0)};
-    Eigen::RowVector2d circleDiagStart = center - orthogonal_vector;
-    Eigen::RowVector2d circleDiagEnd = center + orthogonal_vector;
+
+    orthogonal_vector.normalize();
+
+    Eigen::RowVector2d circleDiagStart = center - orthogonal_vector*r;
+    Eigen::RowVector2d circleDiagEnd = center + orthogonal_vector*r;
 
     return sectionIntersect(start, end, circleDiagStart, circleDiagEnd).intersect;
   }
@@ -68,6 +71,7 @@ namespace mrs_lib
     }
 
     double cos45 = 0.7071067811;
+
     points[0].y += r;
     points[1].x += r * cos45;
     points[1].y += r * cos45;
