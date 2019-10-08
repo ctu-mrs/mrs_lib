@@ -194,6 +194,11 @@ private:
   };
 
   //}
+  
+  std::string resolved(const std::string& param_name)
+  {
+    return m_nh.resolveName(param_name);
+  }
   //}
 
   /* check_duplicit_loading checks whether the parameter was already loaded - returns true if yes //{ */
@@ -233,17 +238,28 @@ private:
       return loaded;
 
     // this function only accepts dynamic columns (you can always transpose the matrix afterward)
-    if (rows <= 0)
+    if (rows < 0)
     {
       // if the parameter was compulsory, alert the user and set the flag
-      print_error(std::string("Invalid expected matrix dimensions for parameter ") + name);
+      print_error(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name));
       m_load_successful = false;
       return loaded;
     }
+    bool expect_zero_matrix = rows == 0;
+    if (expect_zero_matrix)
+    {
+      if (cols > 0)
+      {
+        print_error(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name) + ". One dimension indicates zero matrix, but other expects non-zero.");
+        m_load_successful = false;
+        return loaded;
+      }
+    }
+
 
     bool cur_load_successful = true;
     bool check_size_exact = true;
-    if (cols <= 0)  // this means that the cols dimension is dynamic
+    if (cols <= 0)  // this means that the cols dimension is dynamic or a zero matrix is expected
       check_size_exact = false;
 
     std::vector<double> tmp_vec;
@@ -251,14 +267,14 @@ private:
     bool success = m_nh.getParam(name, tmp_vec);
     // check if the loaded vector has correct length
     bool correct_size = (int)tmp_vec.size() == rows * cols;
-    if (!check_size_exact)
+    if (!check_size_exact && !expect_zero_matrix)
       correct_size = (int)tmp_vec.size() % rows == 0;  // if the cols dimension is dynamic, the size just has to be divisable by rows
 
     if (success && correct_size)
     {
       // if successfully loaded, everything is in order
       // transform the vector to the matrix
-      if (cols <= 0)
+      if (cols <= 0 && rows > 0)
         cols = tmp_vec.size() / rows;
       if (swap)
       {
@@ -287,7 +303,7 @@ private:
       if (!optional)
       {
         // if the parameter was compulsory, alert the user and set the flag
-        print_error(std::string("Could not load non-optional parameter ") + name);
+        print_error(std::string("Could not load non-optional parameter ") + resolved(name));
         cur_load_successful = false;
       }
     }
@@ -324,21 +340,21 @@ private:
 
     if (!success)
     {
-      print_error(std::string("Failed to load ") + name + std::string("/rows or ") + name + std::string("/cols"));
+      print_error(std::string("Failed to load ") + resolved(name) + std::string("/rows or ") + resolved(name) + std::string("/cols"));
       m_load_successful = false;
       return default_value;
     }
-    if (rows <= 0)
+    if (rows < 0)
     {
-      print_error(std::string("Invalid expected matrix dimensions for parameter ") + name + std::string(" (rows and cols must be > 0)"));
+      print_error(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name) + std::string(" (rows and cols must be >= 0)"));
       m_load_successful = false;
       return default_value;
     }
     for (const auto& col : cols)
     {
-      if (col <= 0)
+      if (col < 0)
       {
-        print_error(std::string("Invalid expected matrix dimensions for parameter ") + name + std::string(" (rows and cols must be > 0)"));
+        print_error(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name) + std::string(" (rows and cols must be >= 0)"));
         m_load_successful = false;
         return default_value;
       }
@@ -378,7 +394,7 @@ private:
     // first, check that at least one dimension is set
     if (rows <= 0 || cols <= 0)
     {
-      print_error(std::string("Invalid expected matrix dimensions for parameter ") + name + std::string(" (use load_matrix_dynamic?)"));
+      print_error(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name) + std::string(" (use load_matrix_dynamic?)"));
       m_load_successful = false;
       return loaded;
     }
@@ -395,7 +411,7 @@ private:
     // next, check that at least one dimension is set
     if (rows <= 0 && cols <= 0)
     {
-      print_error(std::string("Invalid expected matrix dimensions for parameter ") + name + std::string(" (at least one dimension must be specified)"));
+      print_error(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name) + std::string(" (at least one dimension must be specified)"));
       m_load_successful = false;
       return loaded;
     }
@@ -440,7 +456,7 @@ private:
       if (!optional)
       {
         // if the parameter was compulsory, alert the user and set the flag
-        print_error(std::string("Could not load non-optional parameter ") + name);
+        print_error(std::string("Could not load non-optional parameter ") + resolved(name));
         cur_load_successful = false;
       }
     }
@@ -890,18 +906,85 @@ public:
   //}
 
   // load_matrix_array function for loading of an array of Eigen::MatrixXd with known dimensions //{
+  /*!
+    * \brief Specialized method for loading compulsory parameters, interpreted as an array of dynamic Eigen matrices.
+    *
+    * The number of rows and columns of the matrices to be loaded is specified in the \c rosparam parameter. Specifically, the \c name/rows value specifies the
+    * number of rows, which must be common to all the loaded matrices (i.e. it is one integer >= 0), and the \c name/cols value specifies the number of columns of
+    * each matrix (i.e. it is an array of integers > 0). The \c name/data array contains the values of the elements of the matrices and it must have length
+    * \f$ r\sum_i c_i \f$, where \f$ r \f$ is the common number of rows and \f$ c_i \f$ is the number of columns of the \f$ i \f$-th matrix.
+    * A typical structure of a \c yaml file, specifying the
+    * matrix array to be loaded using this method, is
+    *
+    * \code{.yaml}
+    *
+    * matrix_array:
+    *   rows: 3
+    *   cols: [1, 2]
+    *   data: [-5.0, -10.0, 23.0,
+    *          -5.0, -10.0, 12.0,
+    *           2.0,   4.0,  7.0]
+    *
+    * \endcode
+    *
+    * which will be loaded as a \c std::vector, containing one \f$ 3\times 1 \f$ matrix and one \f$ 3\times 2 \f$ matrix.
+    *
+    * If the dimensions of the loaded matrices do not match the specified number of rows and columns, the loading process is unsuccessful (loaded_successfully() will return false).
+    * If the parameter with the specified name is not found on the \c rosparam server (e.g. because it is not specified in the launchfile or yaml config file),
+    * the loading process is unsuccessful.
+    * Using this method, the parameter can only be loaded once using the same ParamLoader instance without error.
+    *
+    * \param name  Name of the parameter in the rosparam server.
+    * \param mat   Reference to the variable to which the parameter value will be stored (such as a class member variable).
+    *
+    */
   void load_matrix_array(const std::string& name, std::vector<Eigen::MatrixXd>& mat)
   {
     mat = load_matrix_array2(name);
   }
+
+  /*!
+    * \brief Specialized method for loading compulsory parameters, interpreted as an array of dynamic Eigen matrices.
+    *
+    * This overload of the load_matrix_array() method takes a default value for the parameter, which is used in case a \c rosparam with the specified name is not
+    * found in the \c rosparam server, instead of causing an unsuccessful load. This makes specifying the parameter value in the \rosparam server optional.
+    *
+    * \param name           Name of the parameter in the rosparam server.
+    * \param mat            Reference to the variable to which the parameter value will be stored (such as a class member variable).
+    * \param default_value  The default value to be used in case the parameter is not found on the \c rosparam server.
+    *
+    */
   void load_matrix_array(const std::string& name, std::vector<Eigen::MatrixXd>& mat, const std::vector<Eigen::MatrixXd>& default_value)
   {
     mat = load_matrix_array2(name, default_value);
   }
+
+  /*!
+    * \brief Specialized method for loading compulsory parameters, interpreted as an array of dynamic Eigen matrices.
+    *
+    * This method works in the same way as the load_matrix_array() method for optional parameters, except that the loaded
+    * parameter is returned and not stored in the reference parameter.
+    *
+    * \param name           Name of the parameter in the rosparam server.
+    * \param default_value  The default value to be used in case the parameter is not found on the \c rosparam server.
+    * \returns              The loaded parameter or the default value.
+    *
+    */
   std::vector<Eigen::MatrixXd> load_matrix_array2(const std::string& name, const std::vector<Eigen::MatrixXd>& default_value)
   {
     return load_matrix_array_internal(name, default_value, OPTIONAL, UNIQUE);
   }
+
+  /*!
+    * \brief Specialized method for loading compulsory parameters, interpreted as an array of dynamic Eigen matrices.
+    *
+    * This method works in the same way as the load_matrix_array() method for compulsory parameters, except that the loaded
+    * parameter is returned and not stored in the reference parameter.
+    *
+    * \param name           Name of the parameter in the rosparam server.
+    * \returns              The loaded parameter or a default constructed object of the respective type.
+    *
+    */
   std::vector<Eigen::MatrixXd> load_matrix_array2(const std::string& name)
   {
     return load_matrix_array_internal(name, std::vector<Eigen::MatrixXd>(), COMPULSORY, UNIQUE);

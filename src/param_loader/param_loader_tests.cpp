@@ -18,16 +18,16 @@ int main(int argc, char **argv)
 {
   // Set up ROS.
   ros::init(argc, argv, "param_loader_tests");
-  ros::NodeHandle nh;
+  ros::NodeHandle nh = ros::NodeHandle("~");
 
-  int rows = 4;
-  std::vector<int> cols = {3, 2, 1};
+  /* int rows = 4; */
+  /* std::vector<int> cols = {3, 2, 1}; */
 
-  ROS_INFO("[%s]: pushing testing parameters to the rosparam server", ros::this_node::getName().c_str());
-  std::vector<double> param_nd_matrix = gemerate_nd_matrix(rows, cols);
-  nh.setParam("test_param_nd_matrix/rows", rows);
-  nh.setParam("test_param_nd_matrix/cols", cols);
-  nh.setParam("test_param_nd_matrix/data", param_nd_matrix);
+  /* ROS_INFO("[%s]: pushing testing parameters to the rosparam server", ros::this_node::getName().c_str()); */
+  /* std::vector<double> param_nd_matrix = gemerate_nd_matrix(rows, cols); */
+  /* nh.setParam("test_param_nd_matrix/rows", rows); */
+  /* nh.setParam("test_param_nd_matrix/cols", cols); */
+  /* nh.setParam("test_param_nd_matrix/data", param_nd_matrix); */
 
   ROS_INFO("[%s]: initializing ParamLoader", ros::this_node::getName().c_str());
   mrs_lib::ParamLoader pl(nh);
@@ -47,11 +47,16 @@ int main(int argc, char **argv)
       std::cout << mat << std::endl;
       it++;
     }
-    return 0;
   } else
   {
     ROS_ERROR("[%s]: parameter loading failure", ros::this_node::getName().c_str());
     return 1;
   }
 
+  std::cout << "Loading empty matrix" << std::endl;
+  nh.setParam("test_param_matrix", std::vector<double>());
+  Eigen::Matrix<double, 0, 0> mat = pl.load_matrix_static2<0, 0>("test_param_matrix");
+  std::cout << "Empty matrix:" << std::endl << mat;
+
+  return 0;
 }
