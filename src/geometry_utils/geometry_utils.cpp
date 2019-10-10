@@ -4,6 +4,9 @@
 namespace mrs_lib
 {
 
+  Eigen::Matrix<double, 3+1, 1> to_homogenous(const Eigen::Matrix<double, 3, 1>& vec);
+  Eigen::Matrix<double, 2+1, 1> to_homogenous(const Eigen::Matrix<double, 2, 1>& vec);
+
   /* double angle_between(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2) //{ */
 
   double angle_between(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2)
@@ -62,6 +65,94 @@ namespace mrs_lib
     return ret;
   }
 
+  //}
+
+  /* UNUSED //{ */
+  
+  /* /1* ConicSection constructor //{ *1/ */
+  /* ConicSection::ConicSection(const double A, const double B, const double C, const double D, const double E, const double F, const double tolerance) */
+  /* { */
+  /*   // determinant of the 2x2 submatrix (the discriminant) */
+  /*   alpha = B*B - 4*A*C; */
+  
+  /*   // determinant of the 3x3 matrix */
+  /*   beta = (B*E*D - C*D*D - A*E*E - F*alpha)/4.0; */
+  
+  /*   conic_type = classify_conic_section(alpha, beta, tolerance); */
+  /* } */
+  /* //} */
+  
+  /* /1* classify_conic_section() method //{ *1/ */
+  /* ConicSection::conic_type_t ConicSection::classify_conic_section(const double alpha, const double beta, const double tolerance) */
+  /* { */
+  /*   conic_type_t conic_type; */
+  /*   if (abs(beta) < tolerance) */
+  /*   { */
+  /*     if (abs(alpha) < tolerance) */
+  /*       conic_type = parallel_lines; */
+  /*     else if (alpha < 0.0) */
+  /*       conic_type = point; */
+  /*     else // (alpha > 0.0) */
+  /*       conic_type = intersecting_lines; */
+  /*   } else */
+  /*   { */
+  /*     if (abs(alpha) < tolerance) */
+  /*       conic_type = parabola; */
+  /*     else if (alpha < 0.0) */
+  /*     { */
+  /*       if (abs(A-C) < tolerance && abs(B) < tolerance) */
+  /*         conic_type = circle; */
+  /*       else */
+  /*         conic_type = ellipse; */
+  /*     } */
+  /*     else // (alpha > 0.0) */
+  /*     { */
+  /*       if (abs(A+C) < tolerance) */
+  /*         conic_type = rectangular_hyperbola; */
+  /*       else */
+  /*         conic_type = hyperbola; */
+  /*     } */
+  /*   } */
+  /*   return conic_type; */
+  /* } */
+  /* //} */
+  
+  // THIS IS WRONG!! It's actually pretty complicated stuff!!
+  /* double ConicSection::closest_point_on_ellipse_param(const pt2_t& to_point, const central_conic_params_t& ellipse_params) */
+  /* { */
+  /*   // transform the point to a frame where the ellipse is centered and has axes aligned with the frame axes */
+  /*   const Eigen::Rotation2Dd rot(-ellipse_params.theta); */
+  /*   const pt2_t pt_tfd = rot*(to_point - vec2_t(ellipse_params.x0, ellipse_params.y0)); */
+  /*   // calculate the `t` parameter of the ellipse, corresponding to the angle in which the point lies */
+  /*   const double t = atan2(ellipse_params.a*pt_tfd.y(), ellipse_params.b*pt_tfd.x()); */
+  /*   return t; */
+  /* } */
+  
+  /* /1* calc_central_conic_params() method //{ *1/ */
+  /* ConicSection::central_conic_params_t ConicSection::calc_central_conic_params() */
+  /* { */
+  /*   assert(conic_type & basic_type_mask == ellipse || conic_type & basic_type_mask == hyperbola); */
+  /*   const double tmp1 = 2*(A*E*E + C*D*D - B*D*E + alpha*F); */
+  /*   const double tmp2 = sqrt((A - C)*(A - C) + B*B); */
+  /*   const double atmp = tmp1*((A + C) + tmp2); */
+  /*   const double btmp = tmp1*((A + C) - tmp2); */
+  /*   const double a = sqrt(abs(atmp))/alpha; */
+  /*   const double b = sqrt(abs(btmp))/alpha; */
+  /*   const double x0 = (2*C*D - B*E)/alpha; */
+  /*   const double y0 = (2*A*E - B*D)/alpha; */
+  /*   double th = atan2(C - A - tmp2, B); */
+  /*   if (A < C) */
+  /*     th += M_PI_2; */
+  /*   central_conic_params_t ret; */
+  /*   ret.a = a; */
+  /*   ret.b = b; */
+  /*   ret.x0 = x0; */
+  /*   ret.y0 = y0; */
+  /*   ret.theta = th; */
+  /*   return ret; */
+  /* } */
+  /* //} */
+  
   //}
 
   /* Ray //{ */

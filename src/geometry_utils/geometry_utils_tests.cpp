@@ -11,6 +11,8 @@ int main()
   Eigen::Vector3d vec1(1, 0, 0);
   Eigen::Vector3d vec2(-10, 0, 0);
   Eigen::Vector3d vec3(1, 1, 0);
+  const auto hvec1 = to_homogenous(vec1);
+  cout << hvec1 << std::endl;
   const auto rot_iden = rotation_between(vec1, vec1);
   const auto rot_180 = rotation_between(vec1, vec2);
   const auto rot_45 = rotation_between(vec1, vec3);
