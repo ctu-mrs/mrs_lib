@@ -13,13 +13,16 @@
 
 namespace mrs_lib
 {
-  using pt2_t = Eigen::Vector2d;
-  using vec2_t = Eigen::Vector2d;
-  using pt3_t = Eigen::Vector3d;
-  using vec3_t = Eigen::Vector3d;
+  template <int dims>
+  using vec_t = Eigen::Matrix<double, dims, 1>;
+
+  using pt2_t = vec_t<2>;
+  using vec2_t = vec_t<2>;
+  using pt3_t = vec_t<3>;
+  using vec3_t = vec_t<3>;
 
   template <int dims>
-  Eigen::Matrix<double, dims+1, 1> to_homogenous(const Eigen::Matrix<double, dims, 1>& vec)
+  vec_t<dims+1> to_homogenous(const vec_t<dims>& vec)
   {
     const Eigen::Matrix<double, dims+1, 1> ret( (Eigen::Matrix<double, dims+1, 1>() << vec, 1).finished() );
     return ret;
@@ -27,6 +30,19 @@ namespace mrs_lib
 
 
   /* Rotation and angle related functions //{ */
+
+  /*!
+    * \brief Implementation of cross product for 2D vectors.
+    *
+    * Useful e.g. for finding the sine of an angle between two 2D vectors.
+    *
+    * \param a first vector of the cross product.
+    * \param b second vector of the cross product.
+    *
+    * \returns    \f$ a \cross b \f$ (sine of the angle from \p a to \p b).
+    *
+    */
+    double cross(const vec2_t& a, const vec2_t b);
   
   /*!
     * \brief Returns the angle between two vectors, taking orientation into account.
@@ -34,13 +50,27 @@ namespace mrs_lib
     * This implementation uses \p atan2 instead of just \p acos and thus it properly
     * takes into account orientation of the vectors, returning angle in all four quadrants.
     *
-    * \param vec1 vector from which the angle will be measured.
-    * \param vec2 vector to which the angle will be measured.
+    * \param a vector from which the angle will be measured.
+    * \param b vector to which the angle will be measured.
     *
-    * \returns    angle from \p vec1 to \p vec2.
+    * \returns    angle from \p a to \p b.
     *
     */
-    double angle_between(const vec3_t& vec1, const vec3_t& vec2);
+    double angle_between(const vec2_t& a, const vec2_t& b);
+  
+  /*!
+    * \brief Returns the angle between two vectors, taking orientation into account.
+    *
+    * This implementation uses \p atan2 instead of just \p acos and thus it properly
+    * takes into account orientation of the vectors, returning angle in all four quadrants.
+    *
+    * \param a vector from which the angle will be measured.
+    * \param b vector to which the angle will be measured.
+    *
+    * \returns    angle from \p a to \p b.
+    *
+    */
+    double angle_between(const vec3_t& a, const vec3_t& b);
   
   /*!
     * \brief Returns the rotation between two vectors, represented as angle-axis.
@@ -49,39 +79,39 @@ namespace mrs_lib
     * * If the absolute angle between the two vectors is less than \p tolerance, a zero rotation is returned.
     * * If the angle between the two vectors is closer to \f$ \pi \f$ than \p tolerance, a \f$ \pi \f$ rotation is returned.
     *
-    * \param vec1 rotation from which the angle will be measured.
-    * \param vec2 rotation to which the angle will be measured.
+    * \param a vector from which the rotation starts.
+    * \param b vector at which the rotation ends.
     *
-    * \returns    rotation from \p vec1 to \p vec2.
+    * \returns    rotation from \p a to \p b.
     *
     */
-    Eigen::AngleAxisd angleaxis_between(const vec3_t& vec1, const vec3_t& vec2, const double tolerance = 1e-9);
+    Eigen::AngleAxisd angleaxis_between(const vec3_t& a, const vec3_t& b, const double tolerance = 1e-9);
   
   /*!
     * \brief Returns the rotation between two vectors, represented as a quaternion.
     *
     * Works the same as the angleaxis_between() function (in fact it is used in the implementation).
     *
-    * \param vec1 rotation from which the angle will be measured.
-    * \param vec2 rotation to which the angle will be measured.
+    * \param a vector from which the rotation starts.
+    * \param b vector at which the rotation ends.
     *
-    * \returns    rotation from \p vec1 to \p vec2.
+    * \returns    rotation from \p a to \p b.
     *
     */
-    Eigen::Quaterniond quaternion_between(const vec3_t& vec1, const vec3_t& vec2, const double tolerance = 1e-9);
+    Eigen::Quaterniond quaternion_between(const vec3_t& a, const vec3_t& b, const double tolerance = 1e-9);
   
   /*!
     * \brief Returns the rotation between two vectors, represented as a rotation matrix.
     *
     * Works the same as the angleaxis_between() function (in fact it is used in the implementation).
     *
-    * \param vec1 rotation from which the angle will be measured.
-    * \param vec2 rotation to which the angle will be measured.
+    * \param a vector from which the rotation starts.
+    * \param b vector at which the rotation ends.
     *
-    * \returns    rotation from \p vec1 to \p vec2.
+    * \returns    rotation from \p a to \p b.
     *
     */
-    Eigen::Matrix3d rotation_between(const vec3_t& vec1, const vec3_t& vec2, const double tolerance = 1e-9);
+    Eigen::Matrix3d rotation_between(const vec3_t& a, const vec3_t& b, const double tolerance = 1e-9);
   
   //}
 

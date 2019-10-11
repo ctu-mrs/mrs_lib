@@ -4,22 +4,37 @@
 namespace mrs_lib
 {
 
-  Eigen::Matrix<double, 3+1, 1> to_homogenous(const Eigen::Matrix<double, 3, 1>& vec);
-  Eigen::Matrix<double, 2+1, 1> to_homogenous(const Eigen::Matrix<double, 2, 1>& vec);
+  // instantiation of common template values
+  vec_t<3+1> to_homogenous(const vec_t<3>& vec);
+  vec_t<2+1> to_homogenous(const vec_t<2>& vec);
 
-  /* double angle_between(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2) //{ */
-
-  double angle_between(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2)
+  /* double cross(const vec2_t& vec1, const vec2_t vec2) //{ */
+  
+  double cross(const vec2_t& vec1, const vec2_t vec2)
   {
-    const Eigen::Vector3d a = vec1.normalized();
-    const Eigen::Vector3d b = vec2.normalized();
-    const Eigen::Vector3d v = a.cross(b);
-    const double sin_ab = v.norm();
-    const double cos_ab = a.dot(b);
-    const double angle = std::atan2(sin_ab, cos_ab);
+    return vec1.x()*vec2.y() - vec1.y()*vec2.x();
+  }
+  
+  //}
+
+  /* double angle_between(const vec2_t& vec1, const vec2_t& vec2) and overloads //{ */
+
+  double angle_between(const vec3_t& vec1, const vec3_t& vec2)
+  {
+    const double sin_12 = vec1.cross(vec2).norm();
+    const double cos_12 = vec1.dot(vec2);
+    const double angle = std::atan2(sin_12, cos_12);
     return angle;
   }
-
+  
+  double angle_between(const vec2_t& vec1, const vec2_t& vec2)
+  {
+    const double sin_12 = cross(vec1, vec2);
+    const double cos_12 = vec1.dot(vec2);
+    const double angle = std::atan2(sin_12, cos_12);
+    return angle;
+  }
+  
   //}
 
   /* Eigen::AngleAxisd angleaxis_between(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2, const double tolerance) //{ */
