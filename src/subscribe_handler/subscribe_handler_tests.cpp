@@ -15,12 +15,21 @@ void message_callback(mrs_lib::SubscribeHandlerPtr<message_type> sh_ptr)
   ROS_INFO_STREAM("RECEIVED '" << *(sh_ptr->get_data()) << "'");
 }
 
+mrs_lib::SubscribeHandlerPtr<message_type> sh_ptr;
+void thread_fcn([[maybe_unused]] const ros::TimerEvent& evt)
+{
+  if (sh_ptr->has_data())
+  {
+    ROS_INFO_STREAM_THROTTLE(1.0, "time of last message:" << sh_ptr->last_message_time());
+  }
+}
+
 int main(int argc, char **argv)
 {
   /* Set up ROS. */
   const std::string node_name("subscribe_handler_example");
   ros::init(argc, argv, node_name);
-  ros::NodeHandle nh;
+  ros::NodeHandle nh("~");
 
   /* name of the topic to be handled */
   const std::string topic_name = "test_topic";
@@ -37,7 +46,7 @@ int main(int argc, char **argv)
   mrs_lib::SubscribeMgr smgr(nh, node_name);
 
   /* This is how a new SubscribeHandler object is initialized. */ 
-  auto handler1 = smgr.create_handler<message_type, time_consistent>(
+  sh_ptr = smgr.create_handler<message_type, time_consistent>(
             topic_name,
             no_message_timeout,
             timeout_callback,
@@ -48,24 +57,30 @@ int main(int argc, char **argv)
             transport_hints
             );
 
+  std::vector<ros::Timer> timers;
+  for (int it = 0; it < 200; it++)
+  {
+    timers.push_back(nh.createTimer(ros::Duration(1e-3), thread_fcn));
+  }
+
   /* Type of the message may be accessed by C++11 decltype in case of need */ 
   /* using message_type = std::remove_const<decltype(handler1)::element_type::message_type>::type; */
   ros::Publisher pub = nh.advertise<message_type>(topic_name, 5);
 
   /* Now let's just spin to process calbacks until the user decides to stop the program. */ 
-  ros::Rate r(1);
+  ros::Rate r(10);
   int n = 0;
   message_type msg;
-  while (ros::ok())
+  while (ros::ok() && n < 50)
   {
     if (n % 10 == 0)
     {
       ROS_INFO("[%s]: STARTING handler", ros::this_node::getName().c_str());
-      handler1->start();
+      sh_ptr->start();
     } else if (n % 5 == 0)
     {
       ROS_INFO("[%s]: STOPPING handler", ros::this_node::getName().c_str());
-      handler1->stop();
+      sh_ptr->stop();
     }
 
     if (n % 4 == 0)

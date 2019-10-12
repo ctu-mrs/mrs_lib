@@ -39,7 +39,7 @@ namespace mrs_lib
     * \param a first vector of the cross product.
     * \param b second vector of the cross product.
     *
-    * \returns    \f$ a \cross b \f$ (sine of the angle from \p a to \p b).
+    * \returns    \f$ a \times b \f$ (sine of the angle from \p a to \p b).
     *
     */
     double cross(const vec2_t& a, const vec2_t b);
