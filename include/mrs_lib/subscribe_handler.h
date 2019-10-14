@@ -77,6 +77,13 @@ namespace mrs_lib
       typename MessageType::ConstPtr get_data() {assert(m_pimpl); return m_pimpl->get_data();};
 
     /*!
+      * \brief Returns the last received message on the topic without resetting the new_data() or used_data() flags.
+      *
+      * \return the last received message.
+      */
+      typename MessageType::ConstPtr peek_data() {assert(m_pimpl); return m_pimpl->peek_data();};
+
+    /*!
       * \brief Used to check whether at least one message has been received on the handled topic.
       *
       * \return true if at least one message was received, otherwise false.
@@ -96,13 +103,6 @@ namespace mrs_lib
       * \return true if get_data() was called at least once, otherwise false.
       */
       bool used_data() const {assert(m_pimpl); return m_pimpl->used_data();};
-
-    /*!
-      * \brief Returns time of the last received message on the topic, handled by this SubscribeHandler.
-      *
-      * \return time when the last message was received.
-      */
-      ros::Time last_message_time() const {assert(m_pimpl); return m_pimpl->last_message_time();};
 
     /*!
       * \brief Enables the callbacks for the handled topic.

@@ -70,10 +70,17 @@ namespace mrs_lib
         virtual typename MessageType::ConstPtr get_data()
         {
           m_new_data = false;
+          m_used_data = true;
+          return peek_data();
+        }
+        //}
+
+        /* peek_data() method //{ */
+        virtual typename MessageType::ConstPtr peek_data()
+        {
           assert(m_got_data);
           if (!m_got_data)
             ROS_ERROR("[%s]: No data received yet from topic '%s' (forgot to check has_data()?)! Returning empty message.", m_node_name.c_str(), resolved_topic_name().c_str());
-          m_used_data = true;
           return m_latest_message;
         }
         //}
@@ -147,17 +154,6 @@ namespace mrs_lib
         }
         //}
 
-        /* last_message_time() method //{ */
-        virtual ros::Time last_message_time() const
-        {
-          assert(m_got_data);
-          if (!m_got_data)
-            ROS_ERROR("[%s]: No data received yet from topic '%s' (forgot to check has_data()?)! Returned message time will be nonsential.", m_node_name.c_str(), resolved_topic_name().c_str());
-          std::lock_guard<std::mutex> lck(m_last_msg_received_mtx);
-          return m_last_msg_received;
-        };
-        //}
-
         /* start() method //{ */
         virtual void start()
         {
@@ -206,7 +202,7 @@ namespace mrs_lib
         bool m_used_data; // whether get_data was successfully called at least once
 
       protected:
-        mutable std::mutex m_last_msg_received_mtx;
+        std::mutex m_last_msg_received_mtx;
         ros::Time m_last_msg_received;
         ros::Timer m_timeout_check_timer;
         timeout_callback_t m_timeout_callback;
@@ -257,7 +253,7 @@ namespace mrs_lib
         //}
 
         /* resolved_topic_name() method //{ */
-        std::string resolved_topic_name() const
+        std::string resolved_topic_name()
         {
           std::string ret = m_sub.getTopic();
           if (ret.empty())
@@ -339,11 +335,11 @@ namespace mrs_lib
           std::lock_guard<std::recursive_mutex> lck(m_mtx);
           return impl_class_t::get_data();
         }
-        virtual ros::Time last_message_time() const override
+        virtual typename MessageType::ConstPtr peek_data() override
         {
           std::lock_guard<std::recursive_mutex> lck(m_mtx);
-          return impl_class_t::last_message_time();
-        };
+          return impl_class_t::peek_data();
+        }
         virtual void start() override
         {
           std::lock_guard<std::recursive_mutex> lck(m_mtx);
