@@ -11,6 +11,20 @@ void message_callback(mrs_lib::SubscribeHandlerPtr<std_msgs::Bool> sh_ptr)
   ROS_INFO_STREAM("Received: '" << (int)sh_ptr->get_data()->data << "'");
 }
 
+class SubObject
+{
+  public:
+    void callback_method(mrs_lib::SubscribeHandlerPtr<std_msgs::Bool> sh_ptr)
+    {
+      ROS_INFO_STREAM("Object received: '" << (int)sh_ptr->get_data()->data << "'");
+    }
+
+    void timeout_method(const std::string& topic, const ros::Time& last_msg, const int n_pubs)
+    {
+      ROS_ERROR_STREAM("Object has not received message from topic '" << topic << "' for " << (ros::Time::now()-last_msg).toSec() << " seconds (" << n_pubs << " publishers on topic)");
+    }
+} sub_obj;
+
 int main(int argc, char **argv)
 {
   /* Set up ROS. */
@@ -29,11 +43,20 @@ int main(int argc, char **argv)
   mrs_lib::SubscribeMgr smgr(nh);
 
   /* This is how a new SubscribeHandler object is initialized. */ 
-  auto handler1 = smgr.create_handler<std_msgs::Bool>(
+  mrs_lib::SubscribeHandlerPtr<std_msgs::Bool> handler1 = smgr.create_handler<std_msgs::Bool>(
             topic_name,
             no_message_timeout,
             timeout_callback,
             message_callback,
+            threadsafe
+            );
+
+  /* A variation of the factory method for easier use with objects also exists. */ 
+  mrs_lib::SubscribeHandlerPtr<std_msgs::Bool> handler2 = smgr.create_handler<std_msgs::Bool>(
+            topic_name,
+            no_message_timeout,
+            &SubObject::timeout_method, &sub_obj,
+            &SubObject::callback_method, &sub_obj,
             threadsafe
             );
 
