@@ -105,6 +105,13 @@ namespace mrs_lib
       bool used_data() const {assert(m_pimpl); return m_pimpl->used_data();};
 
     /*!
+      * \brief Returns time of the last received message on the topic, handled by this SubscribeHandler.
+      *
+      * \return time when the last message was received.
+      */
+      ros::Time last_message_time() const {assert(m_pimpl); return m_pimpl->last_message_time();};
+
+    /*!
       * \brief Enables the callbacks for the handled topic.
       *
       * If the SubscribeHandler object is stopped using the stop() method, no callbacks will be called

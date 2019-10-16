@@ -20,7 +20,7 @@ void thread_fcn([[maybe_unused]] const ros::TimerEvent& evt)
 {
   if (sh_ptr->has_data())
   {
-    /* ROS_INFO_STREAM_THROTTLE(1.0, "time of last message:" << sh_ptr->last_message_time()); */
+    ROS_INFO_STREAM_THROTTLE(1.0, "time of last message: " << sh_ptr->last_message_time());
   }
 }
 
