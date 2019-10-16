@@ -33,23 +33,27 @@ namespace mrs_lib
   * Example usage:
   * \include src/ukf/example.cpp
   *
+  * \tparam n_states         number of states of the system (length of the \f$ \mathbf{x} \f$ vector).
+  * \tparam n_inputs         number of inputs of the system (length of the \f$ \mathbf{u} \f$ vector).
+  * \tparam n_measurements   number of measurements of the system (length of the \f$ \mathbf{z} \f$ vector).
+  *
   */
   template <int n_states, int n_inputs, int n_measurements>
   class UKF : KalmanFilter<n_states, n_inputs, n_measurements>
   {
   protected:
     /* protected UKF definitions (typedefs, constants etc) //{ */
-    static const int n = n_states;
-    static const int m = n_inputs;
-    static const int p = n_measurements;
-    static const int w = 2 * n + 1;  // number of sigma points/weights
+    static const int n = n_states;            /*!< \brief Length of the state vector of the system. */
+    static const int m = n_inputs;            /*!< \brief Length of the input vector of the system. */
+    static const int p = n_measurements;      /*!< \brief Length of the measurement vector of the system. */
+    static const int w = 2 * n + 1;           /*!< \brief Number of sigma points/weights. */
 
-    using Base_class = KalmanFilter<n, m, p>;
+    using Base_class = KalmanFilter<n, m, p>; /*!< \brief Base class of this class. */
 
-    using X_t = typename Eigen::Matrix<double, n, w>;  // state sigma points matrix n*w
-    using Z_t = typename Eigen::Matrix<double, p, w>;  // measurement sigma points matrix p*w
-    using Pzz_t = typename Eigen::Matrix<double, p, p>;  // Pzz helper matrix p*n
-    using K_t = typename Eigen::Matrix<double, n, p>;  // kalman gain n*p
+    using X_t = typename Eigen::Matrix<double, n, w>;    /*!< \brief State sigma points matrix. */
+    using Z_t = typename Eigen::Matrix<double, p, w>;    /*!< \brief Measurement sigma points matrix. */
+    using Pzz_t = typename Eigen::Matrix<double, p, p>;  /*!< \brief Pzz helper matrix. */
+    using K_t = typename Eigen::Matrix<double, n, p>;    /*!< \brief Kalman gain matrix. */
     //}
 
   public:

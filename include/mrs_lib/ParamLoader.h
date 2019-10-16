@@ -679,10 +679,12 @@ public:
     * the loading process is unsuccessful.
     * Using this method, the parameter can only be loaded once using the same ParamLoader instance without error.
     *
+    * \tparam rows  Expected number of rows of the matrix.
+    * \tparam cols  Expected number of columns of the matrix.
+    *
     * \param name  Name of the parameter in the rosparam server.
     * \param mat   Reference to the variable to which the parameter value will be stored (such as a class member variable).
-    * \param rows  Expected number of rows of the matrix.
-    * \param cols  Expected number of columns of the matrix.
+    *
     */
   template <int rows, int cols>
   void load_matrix_static(const std::string& name, Eigen::Matrix<double, rows, cols>& mat)
@@ -698,11 +700,13 @@ public:
     * the default value is used.
     * Using this method, the parameter can only be loaded once using the same ParamLoader instance without error.
     *
+    * \tparam rows          Expected number of rows of the matrix.
+    * \tparam cols          Expected number of columns of the matrix.
+    *
     * \param name          Name of the parameter in the rosparam server.
     * \param mat           Reference to the variable to which the parameter value will be stored (such as a class member variable).
     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
-    * \param rows          Expected number of rows of the matrix.
-    * \param cols          Expected number of columns of the matrix.
+    *
     */
   template <int rows, int cols>
   void load_matrix_static(const std::string& name, Eigen::Matrix<double, rows, cols> mat, const Eigen::Matrix<double, rows, cols>& default_value)
@@ -718,10 +722,12 @@ public:
     * the loading process is unsuccessful.
     * Using this method, the parameter can only be loaded once using the same ParamLoader instance without error.
     *
+    * \tparam rows  Expected number of rows of the matrix.
+    * \tparam cols  Expected number of columns of the matrix.
+    *
     * \param name  Name of the parameter in the rosparam server.
-    * \param rows  Expected number of rows of the matrix.
-    * \param cols  Expected number of columns of the matrix.
     * \return      The loaded parameter value.
+    *
     */
   template <int rows, int cols>
   Eigen::Matrix<double, rows, cols> load_matrix_static2(const std::string& name)
@@ -737,11 +743,13 @@ public:
     * the default value is used.
     * Using this method, the parameter can only be loaded once using the same ParamLoader instance without error.
     *
+    * \tparam rows          Expected number of rows of the matrix.
+    * \tparam cols          Expected number of columns of the matrix.
+    *
     * \param name          Name of the parameter in the rosparam server.
     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
-    * \param rows          Expected number of rows of the matrix.
-    * \param cols          Expected number of columns of the matrix.
     * \return              The loaded parameter value.
+    *
     */
   template <int rows, int cols>
   Eigen::MatrixXd load_matrix_static2(const std::string& name, const Eigen::Matrix<double, rows, cols>& default_value)
@@ -947,7 +955,7 @@ public:
     * \brief Specialized method for loading compulsory parameters, interpreted as an array of dynamic Eigen matrices.
     *
     * This overload of the load_matrix_array() method takes a default value for the parameter, which is used in case a \c rosparam with the specified name is not
-    * found in the \c rosparam server, instead of causing an unsuccessful load. This makes specifying the parameter value in the \rosparam server optional.
+    * found in the \c rosparam server, instead of causing an unsuccessful load. This makes specifying the parameter value in the \c rosparam server optional.
     *
     * \param name           Name of the parameter in the rosparam server.
     * \param mat            Reference to the variable to which the parameter value will be stored (such as a class member variable).

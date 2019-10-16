@@ -222,8 +222,10 @@ namespace mrs_lib
         * The RHEIV iterative optimization algorithm will be applied to estimate optimal parameters of the model based on the provided data.
         * This is a conveinence overload, which takes the data points and covariances in a general container, supporting std::begin() and std::end().
         *
-        * \param xs the data points \f$ \mathbf{x}_i \f$.
-        * \param Ps the corresponding covariance matrices\f$ \mathbf{P}_i \f$ .
+        * \param xs_begin begin iterator of a container, containing the data points \f$ \mathbf{x}_i \f$.
+        * \param xs_end   end iterator of a container, containing the data points \f$ \mathbf{x}_i \f$.
+        * \param Ps_begin begin iterator of a container, containing the corresponding covariance matrices\f$ \mathbf{P}_i \f$ .
+        * \param Ps_end   end iterator of a container, containing the corresponding covariance matrices\f$ \mathbf{P}_i \f$ .
         *
         * \returns  estimate of the parameter vector \f$ \mathbf{\theta} \f$.
         *

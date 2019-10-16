@@ -32,6 +32,10 @@ namespace mrs_lib
   * Example usage:
   * \include src/lkf/example.cpp
   *
+  * \tparam n_states         number of states of the system (length of the \f$ \mathbf{x} \f$ vector).
+  * \tparam n_inputs         number of inputs of the system (length of the \f$ \mathbf{u} \f$ vector).
+  * \tparam n_measurements   number of measurements of the system (length of the \f$ \mathbf{z} \f$ vector).
+  *
   */
   template <int n_states, int n_inputs, int n_measurements>
   class LKF : public KalmanFilter<n_states, n_inputs, n_measurements>

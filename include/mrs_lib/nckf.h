@@ -96,7 +96,7 @@ namespace mrs_lib
   /* class NCLKF_partial //{ */
 
   /**
-  * \brief This class implements the partially norm-constrained linear Kalman filter \cite NCKF.
+  * \brief This class implements the partially norm-constrained linear Kalman filter \cite NCLKF.
   *
   * Note that the class is templated. The template parameters specify the number of states,
   * number of inputs and number of measurements of the system. The last template parameter
