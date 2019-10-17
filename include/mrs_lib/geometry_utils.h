@@ -21,13 +21,19 @@ namespace mrs_lib
   using pt3_t = vec_t<3>;
   using vec3_t = vec_t<3>;
 
+  // branchless, templated, more efficient version of sign
+  // taken from https://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
+  template <typename T> int sign(T val)
+  {
+      return (T(0) < val) - (val < T(0));
+  }
+
   template <int dims>
   vec_t<dims+1> to_homogenous(const vec_t<dims>& vec)
   {
     const Eigen::Matrix<double, dims+1, 1> ret( (Eigen::Matrix<double, dims+1, 1>() << vec, 1).finished() );
     return ret;
   }
-
 
   /* Rotation and angle related functions //{ */
 
