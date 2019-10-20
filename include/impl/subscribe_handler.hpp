@@ -248,6 +248,7 @@ namespace mrs_lib
         /* check_timeout() method //{ */
         void check_timeout([[maybe_unused]] const ros::TimerEvent& evt)
         {
+          m_timeout_check_timer.stop();
           ros::Time last_msg;
           {
             std::lock_guard lck(m_last_msg_received_mtx);
