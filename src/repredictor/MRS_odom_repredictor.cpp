@@ -54,7 +54,8 @@ namespace mrs_lib
     ddx = ddxu + ddxd;
     ddxu = p3*th;
     /* ddxd = ddxd; */
-    th = dt*p1*th + dt*p2*u(0);
+    /* th = dt*p1*th + dt*p2*u(0); */
+    th = p1*th + p2*u(0);
     return ret;
   };
   //}
