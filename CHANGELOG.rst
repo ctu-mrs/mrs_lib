@@ -2,8 +2,8 @@
 Changelog for package mrs_lib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.3 (2019-10-25)
+------------------
 * [shandler]: fixed bug which caused message timeout to only be called once
 * [shandler]: last_message_time() now returns even if no message was received yet
 * [shandler]: put back the last_message_time() method (dunno why I put it away)
