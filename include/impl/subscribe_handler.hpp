@@ -266,7 +266,7 @@ namespace mrs_lib
         {
           std::string ret = m_sub.getTopic();
           if (ret.empty())
-            ret = m_topic_name;
+            ret = m_nh.resolveName(m_topic_name);
           return ret;
         }
         //}
