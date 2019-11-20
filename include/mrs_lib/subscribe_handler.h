@@ -280,7 +280,7 @@ namespace mrs_lib
             const ros::TransportHints& transport_hints = ros::TransportHints()
           )
       {
-        const auto msg_cbk = std::bind(message_callback, obj, std::placeholders::_1);
+        const auto msg_cbk = message_callback == nullptr ? message_callback_t<MessageType>() :std::bind(message_callback, obj, std::placeholders::_1);
         return create_handler<MessageType, time_consistent>(
             topic_name,
             no_message_timeout,
@@ -323,7 +323,7 @@ namespace mrs_lib
             const ros::TransportHints& transport_hints = ros::TransportHints()
           )
       {
-        const auto tim_cbk = std::bind(timeout_callback, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        const auto tim_cbk = timeout_callback == nullptr ? timeout_callback_t() : std::bind(timeout_callback, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
         return create_handler<MessageType, time_consistent>(
             topic_name,
             no_message_timeout,
@@ -368,8 +368,8 @@ namespace mrs_lib
             const ros::TransportHints& transport_hints = ros::TransportHints()
           )
       {
-        const auto tim_cbk = std::bind(timeout_callback, obj1, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-        const auto msg_cbk = std::bind(message_callback, obj2, std::placeholders::_1);
+        const auto tim_cbk = timeout_callback == nullptr ? timeout_callback_t() : std::bind(timeout_callback, obj1, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        const auto msg_cbk = message_callback == nullptr ? message_callback_t<MessageType>() :std::bind(message_callback, obj2, std::placeholders::_1);
         return create_handler<MessageType, time_consistent>(
             topic_name,
             no_message_timeout,
