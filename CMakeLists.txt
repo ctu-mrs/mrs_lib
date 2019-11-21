@@ -99,17 +99,16 @@ target_link_libraries(ConvexPolygon
   ${Eigen_LIBRARIES}
   )
 
-
 add_library(SafetyZone src/safety_zone/safety_zone.cpp
         src/safety_zone/point_obstacle/point_obstacle.cpp
         src/safety_zone/lineOperations.cpp
         src/safety_zone/polygon/polygon.cpp
         )
+
 target_link_libraries(SafetyZone
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
-
 
 add_library(Profiler src/profiler/profiler.cpp)
 target_link_libraries(Profiler
