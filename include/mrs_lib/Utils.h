@@ -3,7 +3,6 @@
 #define UTILS_H
 
 #include <iterator>
-#include <mutex>
 
 namespace mrs_lib
 {
@@ -17,18 +16,6 @@ namespace mrs_lib
     typename T::iterator ret = cont.begin();
     std::advance(ret, std::distance((typename T::const_iterator)ret, it));
     return ret;
-  }
-
-  //}
-
-  /* copying mutexed variable to a local variable //{ */
-
-  template <typename Type>
-  Type get_mutexed(const Type& var, std::mutex& mut)
-  {
-    std::scoped_lock lock(mut);
-
-    return var;
   }
 
   //}
