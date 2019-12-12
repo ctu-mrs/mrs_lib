@@ -51,20 +51,34 @@ auto set_mutexed_even(T& first, Args&... args) {
   first = set_mutexed_odd(args...);
 }
 
-template <class... Args>
-void set_mutexed(std::mutex& mut, Args&... args) {
-
-  std::scoped_lock lock(mut);
-
-  set_mutexed_even(args...);
-}
-
-template <class... Args>
-void set_mutexed(std::mutex& mut, std::tuple<Args&...> to, std::tuple<Args&...> from) {
+template <class T>
+auto set_mutexed(std::mutex& mut, T& to, T from) {
 
   std::scoped_lock lock(mut);
 
   to = from;
+
+  return to;
+}
+
+template <class... Args>
+auto set_mutexed(std::mutex& mut, Args&... args) {
+
+  std::scoped_lock lock(mut);
+
+  set_mutexed_even(args...);
+
+  return std::tuple(args...);
+}
+
+template <class... Args>
+auto set_mutexed(std::mutex& mut, std::tuple<Args&...> to, std::tuple<Args&...> from) {
+
+  std::scoped_lock lock(mut);
+
+  to = from;
+
+  return to;
 }
 
 }  // namespace mrs_lib
