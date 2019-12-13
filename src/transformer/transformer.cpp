@@ -305,10 +305,6 @@ bool Transformer::getTransform(const std::string from_frame, const std::string t
 
 std::string Transformer::resolveFrameName(const std::string in) {
 
-  ROS_INFO("[%s]: uav_name_ %s", ros::this_node::getName().c_str(), uav_name_.c_str());
-  ROS_INFO("[%s]: node_name_ %s", ros::this_node::getName().c_str(), node_name_.c_str());
-  ROS_INFO("[%s]: cache_timeout_ %f", ros::this_node::getName().c_str(), cache_timeout_);
-
   if (in.compare("") == STRING_EQUAL) {
 
     if (got_current_control_frame_) {
