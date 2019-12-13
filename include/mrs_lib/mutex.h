@@ -15,7 +15,7 @@ namespace mrs_lib
 /**
  * @brief thread-safe getter for values of variables (args)
  *
- * @tparam Args
+ * @tparam Args types of the variables
  * @param mut mutex which protects the variables
  * @param args variables to obtain the values from
  *
@@ -35,7 +35,7 @@ std::tuple<Args...> get_mutexed(std::mutex& mut, Args&... args) {
 /**
  * @brief thread-safe getter a value from a variable
  *
- * @tparam T
+ * @tparam T type of the variable
  * @param mut mutex which protects the variable
  * @param arg variable to obtain the value from
  *
@@ -52,7 +52,7 @@ T get_mutexed(std::mutex& mut, T& arg) {
 /**
  * @brief base case of the variadic template for set_mutexed()
  *
- * @tparam T
+ * @tparam T variable type
  * @param what value to set
  * @param where reference to be set
  */
@@ -65,8 +65,8 @@ void set_mutexed_impl(const T what, T& where) {
 /**
  * @brief general case of the variadic template for set_mutexed()
  *
- * @tparam T
- * @tparam Args
+ * @tparam T type of the next variable to set
+ * @tparam Args types of the rest of the variables
  * @param what value to set
  * @param where reference to be set
  * @param args the remaining arguments
@@ -82,7 +82,7 @@ void set_mutexed_impl(const T what, T& where, Args&... args) {
 /**
  * @brief thread-safe setter for a variable
  *
- * @tparam T
+ * @tparam T type of the variable
  * @param mut mutex to be locked
  * @param what value to set
  * @param where reference to be set
@@ -101,12 +101,13 @@ auto set_mutexed(std::mutex& mut, const T what, T& where) {
 
 /**
  * @brief thread-safe setter for multiple variables
- *        example:
- *          set_mutexed(my_mutex_, a, a_, b, b_, c, c_);
- *          where a, b, c are the values to be set
- *                a_, b_, c_ are the updated variables
  *
- * @tparam Args
+ * example:
+ *   set_mutexed(my_mutex_, a, a_, b, b_, c, c_);
+ *   where a, b, c are the values to be set
+ *         a_, b_, c_ are the updated variables
+ *
+ * @tparam Args types of the variables
  * @param mut mutex to be locked
  * @param args
  *
@@ -124,12 +125,13 @@ auto set_mutexed(std::mutex& mut, Args&... args) {
 
 /**
  * @brief thread-safe setter for multiple variables
- *        example:
- *          set_mutexed(mu_mutex, std::tuple(a, b, c), std::forward_as_tuple(a_, b_, c_));
- *          where a, b, c are the values to be set
- *                a_, b_, c_ are the updated variables
  *
- * @tparam Args
+ * example:
+ *   set_mutexed(mu_mutex, std::tuple(a, b, c), std::forward_as_tuple(a_, b_, c_));
+ *   where a, b, c are the values to be set
+ *         a_, b_, c_ are the updated variables
+ *
+ * @tparam Args types of the variables
  * @param mut mutex to be locked
  * @param from std::tuple of the values
  * @param to std::tuple of reference to the variablaes
