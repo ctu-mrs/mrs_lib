@@ -40,6 +40,9 @@ typedef struct
   geometry_msgs::TransformStamped tf;
 } TransformCache_t;
 
+/**
+ * @brief tf wrapper that simplifies transforming stuff, adding caching, frame_id deduction and simple functions for one-time execution without getting the transform first
+ */
 class Transformer {
 
 public:
