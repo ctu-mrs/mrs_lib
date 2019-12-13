@@ -7,8 +7,17 @@
 namespace mrs_lib
 {
 
+/**
+ * @brief thread-safe getter for values of variables (args)
+ *
+ * @tparam Args
+ * @param mut mutex which protects the variables
+ * @param args variables to obtain the values from
+ *
+ * @return std::tuple of the values
+ */
 template <class... Args>
-auto get_mutexed(std::mutex& mut, Args&... args) {
+std::tuple<Args...> get_mutexed(std::mutex& mut, Args&... args) {
 
   std::scoped_lock lock(mut);
 
@@ -17,6 +26,16 @@ auto get_mutexed(std::mutex& mut, Args&... args) {
   return result;
 }
 
+
+/**
+ * @brief thread-safe getter a value from a variable
+ *
+ * @tparam T
+ * @param mut mutex which protects the variable
+ * @param arg variable to obtain the value from
+ *
+ * @return value of the variable
+ */
 template <class T>
 T get_mutexed(std::mutex& mut, T& arg) {
 
@@ -25,54 +44,95 @@ T get_mutexed(std::mutex& mut, T& arg) {
   return arg;
 }
 
-template <class T, class... Args>
-auto set_mutexed_even(T& first, Args&... args);
+/**
+ * @brief base case of the variadic template for set_mutexed()
+ *
+ * @tparam T
+ * @param what value to set
+ * @param where reference to be set
+ */
 template <class T>
-auto set_mutexed_odd(T& first);
-template <class T, class... Args>
-auto set_mutexed_odd(T& first, Args&... args);
+void set_mutexed_impl(const T what, T& where) {
 
-template <class T>
-auto set_mutexed_odd(T& first) {
-
-  return first;
+  where = what;
 }
 
+/**
+ * @brief general case of the variadic template for set_mutexed()
+ *
+ * @tparam T
+ * @tparam Args
+ * @param what value to set
+ * @param where reference to be set
+ * @param args the remaining arguments
+ */
 template <class T, class... Args>
-auto set_mutexed_odd(T& first, Args&... args) {
+void set_mutexed_impl(const T what, T& where, Args&... args) {
 
-  set_mutexed_even(args...);
-  return first;
+  where = what;
+
+  set_mutexed_impl(args...);
 }
 
-template <class T, class... Args>
-auto set_mutexed_even(T& first, Args&... args) {
-
-  first = set_mutexed_odd(args...);
-}
-
+/**
+ * @brief thread-safe setter for a variable
+ *
+ * @tparam T
+ * @param mut mutex to be locked
+ * @param what value to set
+ * @param where reference to be set
+ *
+ * @return
+ */
 template <class T>
-auto set_mutexed(std::mutex& mut, T& to, T from) {
+auto set_mutexed(std::mutex& mut, const T what, T& where) {
 
   std::scoped_lock lock(mut);
 
-  to = from;
+  where = what;
 
-  return to;
+  return where;
 }
 
+/**
+ * @brief thread-safe setter for multiple variables
+ *        example:
+ *          set_mutexed(my_mutex_, a, a_, b, b_, c, c_);
+ *          where a, b, c are the values to be set
+ *                a_, b_, c_ are the updated variables
+ *
+ * @tparam Args
+ * @param mut mutex to be locked
+ * @param args
+ *
+ * @return alternating list of values that were just set
+ */
 template <class... Args>
 auto set_mutexed(std::mutex& mut, Args&... args) {
 
   std::scoped_lock lock(mut);
 
-  set_mutexed_even(args...);
+  set_mutexed_impl(args...);
 
   return std::tuple(args...);
 }
 
+/**
+ * @brief thread-safe setter for multiple variables
+ *        example:
+ *          set_mutexed(mu_mutex, std::tuple(a, b, c), std::forward_as_tuple(a_, b_, c_));
+ *          where a, b, c are the values to be set
+ *                a_, b_, c_ are the updated variables
+ *
+ * @tparam Args
+ * @param mut mutex to be locked
+ * @param from std::tuple of the values
+ * @param to std::tuple of reference to the variablaes
+ *
+ * @return
+ */
 template <class... Args>
-auto set_mutexed(std::mutex& mut, std::tuple<Args&...> to, std::tuple<Args&...> from) {
+auto set_mutexed(std::mutex& mut, const std::tuple<Args...> from, std::tuple<Args&...> to) {
 
   std::scoped_lock lock(mut);
 
