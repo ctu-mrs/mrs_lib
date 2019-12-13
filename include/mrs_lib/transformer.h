@@ -41,28 +41,46 @@ typedef struct
 } TransformCache_t;
 
 /**
- * @brief tf wrapper that simplifies transforming stuff, adding caching, frame_id deduction and simple functions for one-time execution without getting the transform first
+ * @brief tf wrapper that simplifies transforming stuff, adding caching, frame_id deduction and simple functions for one-time execution without getting the
+ * transform first
  */
 class Transformer {
 
 public:
-
   /**
-   * @brief the constructor
+   * @brief the constructor inc. uav_name for namespacing and cache_timeout
    *
    * @param node_name the name of the node running the transformer, is used in ROS prints
-   * @param uav_name the name of the UAV (a namespace), is used to de-reference un-namespaced frame-ids
+   * @param uav_name the name of the UAV (a namespace), is used to deduce un-namespaced frame-ids
    * @param cache_timeout timeout in secs for the internal transform cache
    */
   Transformer(const std::string node_name, const std::string uav_name, const double cache_timeout);
 
   /**
-   * @brief the desctructor
+   * @brief the constructor inc. cache_timeout
+   *
+   * @param node_name the name of the node running the transformer, is used in ROS prints
+   * @param cache_timeout timeout in secs for the internal transform cache
    */
-  ~Transformer();
+  Transformer(const std::string node_name, const double cache_timeout);
 
   /**
-   * @brief setter for the current frame_id into which the empty frame id will be de-referenced
+   * @brief the constructor inc. uav_name for namespacing, cache timeout defaults to 0.001 s
+   *
+   * @param node_name the name of the node running the transformer, is used in ROS prints
+   * @param uav_name the name of the UAV (a namespace), is used to deduce un-namespaced frame-ids
+   */
+  Transformer(const std::string node_name, const std::string uav_name);
+
+  /**
+   * @brief the most basic constructor, cache timeout defaults to 0.001 s
+   *
+   * @param node_name the name of the node running the transformer, is used in ROS prints
+   */
+  Transformer(const std::string node_name);
+
+  /**
+   * @brief setter for the current frame_id into which the empty frame id will be deduced
    *
    * @param in the frame_id name
    */
@@ -143,13 +161,14 @@ public:
   bool getTransform(const std::string from_frame, const std::string to_frame, const ros::Time time_stamp, geometry_msgs::TransformStamped& tf);
 
 private:
-
   tf2_ros::Buffer                             tf_buffer_;
   std::unique_ptr<tf2_ros::TransformListener> tf_listener_ptr_;
   std::mutex                                  mutex_tf_buffer_;
 
   std::string node_name_;
+
   std::string uav_name_;
+  bool        got_uav_name_ = false;
 
   double cache_timeout_;
 

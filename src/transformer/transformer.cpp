@@ -7,24 +7,28 @@ namespace mrs_lib
 
 Transformer::Transformer(const std::string node_name, const std::string uav_name, const double cache_timeout) {
 
-  this->uav_name_  = uav_name;
-  this->node_name_ = node_name;
+  node_name_     = node_name;
+  uav_name_      = uav_name;
+  cache_timeout_ = cache_timeout;
 
-  this->current_control_frame_ = "";
+  if (uav_name.compare("") != STRING_EQUAL) {
+    got_uav_name_ = true;
+  } else {
+    got_uav_name_ = false;
+  }
 
-  this->cache_timeout_ = cache_timeout;
+  current_control_frame_ = "";
 
   tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(tf_buffer_, node_name);
 
   ROS_INFO("[%s]: tf transformer initialized", node_name_.c_str());
 }
 
-//}
+Transformer::Transformer(const std::string node_name, const std::string uav_name) : Transformer(node_name, uav_name, 0.001){};
 
-/* ~Transformer() //{ */
+Transformer::Transformer(const std::string node_name, const double cache_timeout) : Transformer(node_name, "", cache_timeout){};
 
-Transformer::~Transformer() {
-}
+Transformer::Transformer(const std::string node_name) : Transformer(node_name, "", 0.001){};
 
 //}
 
@@ -301,6 +305,10 @@ bool Transformer::getTransform(const std::string from_frame, const std::string t
 
 std::string Transformer::resolveFrameName(const std::string in) {
 
+  ROS_INFO("[%s]: uav_name_ %s", ros::this_node::getName().c_str(), uav_name_.c_str());
+  ROS_INFO("[%s]: node_name_ %s", ros::this_node::getName().c_str(), node_name_.c_str());
+  ROS_INFO("[%s]: cache_timeout_ %f", ros::this_node::getName().c_str(), cache_timeout_);
+
   if (in.compare("") == STRING_EQUAL) {
 
     if (got_current_control_frame_) {
@@ -321,7 +329,15 @@ std::string Transformer::resolveFrameName(const std::string in) {
   size_t found = in.find("/");
   if (found == std::string::npos) {
 
-    return uav_name_ + "/" + in;
+    if (got_uav_name_) {
+
+      return uav_name_ + "/" + in;
+
+    } else {
+
+      ROS_ERROR("[%s]: could not deduce a namespaced frame_id '%s' (did you instanced the Transformer with the uav_name argument?)", node_name_.c_str(),
+                in.c_str());
+    }
   }
 
   return in;
