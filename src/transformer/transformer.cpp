@@ -3,25 +3,31 @@
 namespace mrs_lib
 {
 
-/* Transformer() //{ */
+/* Transformer() (constructors)//{ */
+
+Transformer::Transformer() {
+}
+
+Transformer::~Transformer() {
+}
 
 Transformer::Transformer(const std::string node_name, const std::string uav_name, const double cache_timeout) {
 
-  node_name_     = node_name;
-  uav_name_      = uav_name;
-  cache_timeout_ = cache_timeout;
+  this->node_name_     = node_name;
+  this->uav_name_      = uav_name;
+  this->cache_timeout_ = cache_timeout;
 
   if (uav_name.compare("") != STRING_EQUAL) {
-    got_uav_name_ = true;
+    this->got_uav_name_ = true;
   } else {
-    got_uav_name_ = false;
+    this->got_uav_name_ = false;
   }
 
-  current_control_frame_ = "";
+  this->current_control_frame_ = "";
 
-  tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(tf_buffer_, node_name);
+  this->tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(tf_buffer_, node_name);
 
-  ROS_INFO("[%s]: tf transformer initialized", node_name_.c_str());
+  this->is_initialized_ = true;
 }
 
 Transformer::Transformer(const std::string node_name, const std::string uav_name) : Transformer(node_name, uav_name, 0.001){};
@@ -30,11 +36,62 @@ Transformer::Transformer(const std::string node_name, const double cache_timeout
 
 Transformer::Transformer(const std::string node_name) : Transformer(node_name, "", 0.001){};
 
+Transformer::Transformer(const Transformer& other) {
+
+  this->is_initialized_ = other.is_initialized_;
+  this->node_name_      = other.node_name_;
+  this->uav_name_       = other.uav_name_;
+  this->cache_timeout_  = other.cache_timeout_;
+  this->got_uav_name_   = other.got_uav_name_;
+
+  {
+    std::scoped_lock lock(other.mutex_current_control_frame_);
+
+    this->current_control_frame_     = other.current_control_frame_;
+    this->got_current_control_frame_ = other.got_current_control_frame_;
+  }
+
+  if (this->is_initialized_) {
+    this->tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(tf_buffer_, this->node_name_);
+  }
+}
+
+Transformer& Transformer::operator=(const Transformer& other) {
+
+  if (this == &other) {
+    return *this;
+  }
+
+  this->is_initialized_ = other.is_initialized_;
+  this->node_name_      = other.node_name_;
+  this->uav_name_       = other.uav_name_;
+  this->cache_timeout_  = other.cache_timeout_;
+  this->got_uav_name_   = other.got_uav_name_;
+
+  {
+    std::scoped_lock lock(other.mutex_current_control_frame_);
+
+    this->current_control_frame_     = other.current_control_frame_;
+    this->got_current_control_frame_ = other.got_current_control_frame_;
+  }
+
+  if (this->is_initialized_) {
+    this->tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(tf_buffer_, this->node_name_);
+  }
+
+  return *this;
+}
+
 //}
 
 /* transformReferenceSingle() //{ */
 
 bool Transformer::transformReferenceSingle(const std::string to_frame, mrs_msgs::ReferenceStamped& ref) {
+
+  if (!is_initialized_) {
+    ROS_ERROR("[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
+    return false;
+  }
 
   ref.header.frame_id           = resolveFrameName(ref.header.frame_id);
   std::string to_frame_resolved = resolveFrameName(to_frame);
@@ -64,6 +121,11 @@ bool Transformer::transformReferenceSingle(const std::string to_frame, mrs_msgs:
 
 bool Transformer::transformPoseSingle(const std::string to_frame, geometry_msgs::PoseStamped& ref) {
 
+  if (!is_initialized_) {
+    ROS_ERROR("[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
+    return false;
+  }
+
   ref.header.frame_id           = resolveFrameName(ref.header.frame_id);
   std::string to_frame_resolved = resolveFrameName(to_frame);
 
@@ -92,6 +154,11 @@ bool Transformer::transformPoseSingle(const std::string to_frame, geometry_msgs:
 
 bool Transformer::transformVector3Single(const std::string to_frame, geometry_msgs::Vector3Stamped& ref) {
 
+  if (!is_initialized_) {
+    ROS_ERROR("[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
+    return false;
+  }
+
   ref.header.frame_id           = resolveFrameName(ref.header.frame_id);
   std::string to_frame_resolved = resolveFrameName(to_frame);
 
@@ -119,6 +186,11 @@ bool Transformer::transformVector3Single(const std::string to_frame, geometry_ms
 /* transformReference() //{ */
 
 bool Transformer::transformReference(const geometry_msgs::TransformStamped& tf, mrs_msgs::ReferenceStamped& ref) {
+
+  if (!is_initialized_) {
+    ROS_ERROR("[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
+    return false;
+  }
 
   ref.header.frame_id = resolveFrameName(ref.header.frame_id);
 
@@ -160,7 +232,8 @@ bool Transformer::transformReference(const geometry_msgs::TransformStamped& tf, 
     return true;
   }
   catch (...) {
-    ROS_WARN("[%s]: Error during transform from \"%s\" frame to \"%s\" frame.", node_name_.c_str(), tf.header.frame_id.c_str(), tf.child_frame_id.c_str());
+    ROS_WARN("[%s]: Transformer: Error during transform from \"%s\" frame to \"%s\" frame.", node_name_.c_str(), tf.header.frame_id.c_str(),
+             tf.child_frame_id.c_str());
     return false;
   }
 }
@@ -189,7 +262,8 @@ bool Transformer::transformPose(const geometry_msgs::TransformStamped& tf, geome
     return true;
   }
   catch (...) {
-    ROS_WARN("[%s]: Error during transform from \"%s\" frame to \"%s\" frame.", node_name_.c_str(), tf.header.frame_id.c_str(), tf.child_frame_id.c_str());
+    ROS_WARN("[%s]: Transformer: Error during transform from \"%s\" frame to \"%s\" frame.", node_name_.c_str(), tf.header.frame_id.c_str(),
+             tf.child_frame_id.c_str());
     return false;
   }
 }
@@ -199,6 +273,11 @@ bool Transformer::transformPose(const geometry_msgs::TransformStamped& tf, geome
 /* transformVector3() //{ */
 
 bool Transformer::transformVector3(const geometry_msgs::TransformStamped& tf, geometry_msgs::Vector3Stamped& vector3) {
+
+  if (!is_initialized_) {
+    ROS_ERROR("[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
+    return false;
+  }
 
   vector3.header.frame_id = resolveFrameName(vector3.header.frame_id);
 
@@ -218,7 +297,8 @@ bool Transformer::transformVector3(const geometry_msgs::TransformStamped& tf, ge
     return true;
   }
   catch (...) {
-    ROS_WARN("[%s]: Error during transform from \"%s\" frame to \"%s\" frame.", node_name_.c_str(), tf.header.frame_id.c_str(), tf.child_frame_id.c_str());
+    ROS_WARN("[%s]: Transformer: Error during transform from \"%s\" frame to \"%s\" frame.", node_name_.c_str(), tf.header.frame_id.c_str(),
+             tf.child_frame_id.c_str());
     return false;
   }
 }
@@ -228,6 +308,11 @@ bool Transformer::transformVector3(const geometry_msgs::TransformStamped& tf, ge
 /* getTransform() //{ */
 
 bool Transformer::getTransform(const std::string from_frame, const std::string to_frame, const ros::Time time_stamp, geometry_msgs::TransformStamped& tf) {
+
+  if (!is_initialized_) {
+    ROS_ERROR("[%s]: Transformer: cannot provide transform, not initialized", ros::this_node::getName().c_str());
+    return false;
+  }
 
   std::string to_frame_resolved   = resolveFrameName(to_frame);
   std::string from_frame_resolved = resolveFrameName(from_frame);
@@ -266,7 +351,7 @@ bool Transformer::getTransform(const std::string from_frame, const std::string t
 
     std::scoped_lock lock(mutex_tf_buffer_);
 
-    tf = tf_buffer_.lookupTransform(to_frame_resolved, from_frame_resolved, time_stamp, ros::Duration(0.0));
+    tf = tf_buffer_.lookupTransform(to_frame_resolved, from_frame_resolved, time_stamp);
 
     it->second.stamp = ros::Time::now();
     it->second.tf    = tf;
@@ -275,7 +360,7 @@ bool Transformer::getTransform(const std::string from_frame, const std::string t
   }
   catch (tf2::TransformException& ex) {
     // this happens often -> DEBUG
-    ROS_DEBUG("[%s]: Exception caught while constructing transform from '%s' to '%s': %s", node_name_.c_str(), from_frame_resolved.c_str(),
+    ROS_DEBUG("[%s]: Transformer: Exception caught while constructing transform from '%s' to '%s': %s", node_name_.c_str(), from_frame_resolved.c_str(),
               to_frame_resolved.c_str(), ex.what());
   }
 
@@ -283,7 +368,7 @@ bool Transformer::getTransform(const std::string from_frame, const std::string t
 
     std::scoped_lock lock(mutex_tf_buffer_);
 
-    tf = tf_buffer_.lookupTransform(to_frame_resolved, from_frame_resolved, ros::Time(0), ros::Duration(0.0));
+    tf = tf_buffer_.lookupTransform(to_frame_resolved, from_frame_resolved, ros::Time(0));
 
     it->second.stamp = ros::Time::now();
     it->second.tf    = tf;
@@ -292,7 +377,7 @@ bool Transformer::getTransform(const std::string from_frame, const std::string t
   }
   catch (tf2::TransformException& ex) {
     // this does not happen often and when it does, it should be seen
-    ROS_ERROR("[%s]: Exception caught while constructing transform from '%s' to '%s': %s", node_name_.c_str(), from_frame_resolved.c_str(),
+    ROS_ERROR("[%s]: Transformer: Exception caught while constructing transform from '%s' to '%s': %s", node_name_.c_str(), from_frame_resolved.c_str(),
               to_frame_resolved.c_str(), ex.what());
   }
 
@@ -315,7 +400,7 @@ std::string Transformer::resolveFrameName(const std::string in) {
 
     } else {
 
-      ROS_ERROR("[%s]: could not resolve an empty frame_id, missing the current control frame (are you calling the setCurrentControlFrame()?)",
+      ROS_ERROR("[%s]: Transformer: could not resolve an empty frame_id, missing the current control frame (are you calling the setCurrentControlFrame()?)",
                 node_name_.c_str());
 
       return "";
@@ -331,8 +416,8 @@ std::string Transformer::resolveFrameName(const std::string in) {
 
     } else {
 
-      ROS_ERROR("[%s]: could not deduce a namespaced frame_id '%s' (did you instanced the Transformer with the uav_name argument?)", node_name_.c_str(),
-                in.c_str());
+      ROS_ERROR("[%s]: Transformer: could not deduce a namespaced frame_id '%s' (did you instanced the Transformer with the uav_name argument?)",
+                node_name_.c_str(), in.c_str());
     }
   }
 

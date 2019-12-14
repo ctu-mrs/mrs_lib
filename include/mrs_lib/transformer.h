@@ -46,7 +46,57 @@ typedef struct
  */
 class Transformer {
 
+private:
+  tf2_ros::Buffer                             tf_buffer_;
+  std::unique_ptr<tf2_ros::TransformListener> tf_listener_ptr_;
+  std::mutex                                  mutex_tf_buffer_;
+
+  std::string node_name_;
+
+  std::string uav_name_;
+  bool        got_uav_name_ = false;
+
+  double cache_timeout_;
+
+  std::string        current_control_frame_;
+  bool               got_current_control_frame_ = false;
+  mutable std::mutex mutex_current_control_frame_;
+
+  /**
+   * @brief deduced the full frame_id from a shortened or empty string
+   *
+   * example:
+   *   "" -> "uav1/gps_origin" (if the UAV is currently controlled in the gps_origin)
+   *   "local_origin" -> "uav1/local_origin"
+   *
+   * @param in the frame_id to be resolved
+   *
+   * @return resolved frame_id
+   */
+  std::string resolveFrameName(const std::string in);
+
+  // caches the last calculated transforms
+  // if someone asks for tf which was calculated within the last 1 ms
+  // it is pulled from a cache
+  std::map<std::string, TransformCache_t> transformer_cache_;
+  std::mutex                              mutex_transformer_cache_;
+
+  /**
+   * @brief keeps track whether a non-basic constructor was launched and the transform listener was initialized
+   */
+  bool is_initialized_ = false;
+
 public:
+  /**
+   * @brief the basic constructor
+   */
+  Transformer();
+
+  /**
+   * @brief the basic destructor
+   */
+  ~Transformer();
+
   /**
    * @brief the constructor inc. uav_name for namespacing and cache_timeout
    *
@@ -78,6 +128,22 @@ public:
    * @param node_name the name of the node running the transformer, is used in ROS prints
    */
   Transformer(const std::string node_name);
+
+  /**
+   * @brief the copy constructor
+   *
+   * @param other other object
+   */
+  Transformer(const Transformer& other);
+
+  /**
+   * @brief the assignment operator
+   *
+   * @param other other object
+   *
+   * @return this
+   */
+  Transformer& operator=(const Transformer& other);
 
   /**
    * @brief setter for the current frame_id into which the empty frame id will be deduced
@@ -159,30 +225,6 @@ public:
    * @return true if succeeded
    */
   bool getTransform(const std::string from_frame, const std::string to_frame, const ros::Time time_stamp, geometry_msgs::TransformStamped& tf);
-
-private:
-  tf2_ros::Buffer                             tf_buffer_;
-  std::unique_ptr<tf2_ros::TransformListener> tf_listener_ptr_;
-  std::mutex                                  mutex_tf_buffer_;
-
-  std::string node_name_;
-
-  std::string uav_name_;
-  bool        got_uav_name_ = false;
-
-  double cache_timeout_;
-
-  std::string current_control_frame_;
-  bool        got_current_control_frame_ = false;
-  std::mutex  mutex_current_control_frame_;
-
-  std::string resolveFrameName(const std::string in);
-
-  // caches the last calculated transforms
-  // if someone asks for tf which was calculated within the last 1 ms
-  // it is pulled from a cache
-  std::map<std::string, TransformCache_t> transformer_cache_;
-  std::mutex                              mutex_transformer_cache_;
 };
 
 }  // namespace mrs_lib
