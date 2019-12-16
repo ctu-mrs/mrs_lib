@@ -35,7 +35,7 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs mrs_msgs
   DEPENDS Eigen
-  LIBRARIES Lkf Ukf ConvexPolygon SafetyZone Profiler Utils ParamLoader MedianFilter Repredictor geometry_utils Transformer
+  LIBRARIES Lkf Ukf ConvexPolygon SafetyZone Profiler Utils ParamLoader MedianFilter Repredictor geometry_utils MrsLibTransformer
   )
 
 ###########
@@ -116,8 +116,8 @@ target_link_libraries(Profiler
   ${Eigen_LIBRARIES}
   )
 
-add_library(Transformer src/transformer/transformer.cpp)
-target_link_libraries(Transformer
+add_library(MrsLibTransformer src/transformer/transformer.cpp)
+target_link_libraries(MrsLibTransformer
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
