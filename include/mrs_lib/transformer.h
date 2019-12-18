@@ -28,6 +28,8 @@
 /* defines //{ */
 
 #define STRING_EQUAL 0
+#define UTM_ORIGIN "utm_origin"
+#define LATLON_ORIGIN "latlon_origin"
 
 //}
 
@@ -39,6 +41,27 @@ typedef struct
   ros::Time                       stamp;
   geometry_msgs::TransformStamped tf;
 } TransformCache_t;
+
+/**
+ * @brief a wrapper around the standard transform object
+ */
+class TransformStamped {
+
+public:
+  TransformStamped();
+  TransformStamped(const std::string from_frame, const std::string to_frame);
+  TransformStamped(const std::string from_frame, const std::string to_frame, const geometry_msgs::TransformStamped transform_stamped);
+
+  std::string from(void) const;
+  std::string to(void) const;
+  geometry_msgs::TransformStamped getTransform(void) const;
+
+private:
+  geometry_msgs::TransformStamped transform_stamped_;
+
+  std::string from_frame_;
+  std::string to_frame_;
+};
 
 /**
  * @brief tf wrapper that simplifies transforming stuff, adding caching, frame_id deduction and simple functions for one-time execution without getting the
@@ -190,7 +213,7 @@ public:
    *
    * @return true if succeeded
    */
-  bool transformReference(const geometry_msgs::TransformStamped& tf, mrs_msgs::ReferenceStamped& ref);
+  bool transformReference(const mrs_lib::TransformStamped& tf, mrs_msgs::ReferenceStamped& ref);
 
   /**
    * @brief transform geometry_msgs::PoseStamped message to new frame, given a particular tf
@@ -200,7 +223,7 @@ public:
    *
    * @return true if succeeded
    */
-  bool transformPose(const geometry_msgs::TransformStamped& tf, geometry_msgs::PoseStamped& pose);
+  bool transformPose(const mrs_lib::TransformStamped& tf, geometry_msgs::PoseStamped& pose);
 
   /**
    * @brief transform geometry_msgs::Vector3Stamped message to new frame, given a particular tf
@@ -210,7 +233,7 @@ public:
    *
    * @return true if succeeded
    */
-  bool transformVector3(const geometry_msgs::TransformStamped& tf, geometry_msgs::Vector3Stamped& vector3);
+  bool transformVector3(const mrs_lib::TransformStamped& tf, geometry_msgs::Vector3Stamped& vector3);
 
   /**
    * @brief gets a transform between two frames in a given time
@@ -224,7 +247,7 @@ public:
    *
    * @return true if succeeded
    */
-  bool getTransform(const std::string from_frame, const std::string to_frame, const ros::Time time_stamp, geometry_msgs::TransformStamped& tf);
+  bool getTransform(const std::string from_frame, const std::string to_frame, const ros::Time time_stamp, mrs_lib::TransformStamped& tf);
 };
 
 }  // namespace mrs_lib

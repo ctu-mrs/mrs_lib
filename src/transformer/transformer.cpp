@@ -3,6 +3,8 @@
 namespace mrs_lib
 {
 
+// | ----------------------- Transformer ---------------------- |
+
 /* Transformer() (constructors)//{ */
 
 Transformer::Transformer() {
@@ -100,7 +102,7 @@ bool Transformer::transformReferenceSingle(const std::string to_frame, mrs_msgs:
     return true;
   }
 
-  geometry_msgs::TransformStamped tf;
+  mrs_lib::TransformStamped tf;
 
   // get the transform
   if (!getTransform(ref.header.frame_id, to_frame_resolved, ref.header.stamp, tf)) {
@@ -133,7 +135,7 @@ bool Transformer::transformPoseSingle(const std::string to_frame, geometry_msgs:
     return true;
   }
 
-  geometry_msgs::TransformStamped tf;
+  mrs_lib::TransformStamped tf;
 
   // get the transform
   if (!getTransform(ref.header.frame_id, to_frame_resolved, ref.header.stamp, tf)) {
@@ -166,7 +168,7 @@ bool Transformer::transformVector3Single(const std::string to_frame, geometry_ms
     return true;
   }
 
-  geometry_msgs::TransformStamped tf;
+  mrs_lib::TransformStamped tf;
 
   // get the transform
   if (!getTransform(ref.header.frame_id, to_frame_resolved, ref.header.stamp, tf)) {
@@ -185,7 +187,7 @@ bool Transformer::transformVector3Single(const std::string to_frame, geometry_ms
 
 /* transformReference() //{ */
 
-bool Transformer::transformReference(const geometry_msgs::TransformStamped& tf, mrs_msgs::ReferenceStamped& ref) {
+bool Transformer::transformReference(const mrs_lib::TransformStamped& tf, mrs_msgs::ReferenceStamped& ref) {
 
   if (!is_initialized_) {
     ROS_ERROR("[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
@@ -194,7 +196,7 @@ bool Transformer::transformReference(const geometry_msgs::TransformStamped& tf, 
 
   ref.header.frame_id = resolveFrameName(ref.header.frame_id);
 
-  if (tf.header.frame_id.compare(ref.header.frame_id) == STRING_EQUAL) {
+  if (ref.header.frame_id.compare(tf.to()) == STRING_EQUAL) {
     return true;
   }
 
@@ -214,7 +216,10 @@ bool Transformer::transformReference(const geometry_msgs::TransformStamped& tf, 
   pose.pose.orientation.w = quat.getW();
 
   try {
-    tf2::doTransform(pose, pose, tf);
+
+    geometry_msgs::TransformStamped transform = tf.getTransform();
+
+    tf2::doTransform(pose, pose, transform);
 
     // copy the new transformed data back
     ref.reference.position.x = pose.pose.position.x;
@@ -226,14 +231,13 @@ bool Transformer::transformReference(const geometry_msgs::TransformStamped& tf, 
     double        roll, pitch;
     m.getRPY(roll, pitch, ref.reference.yaw);
 
-    ref.header.frame_id = tf.header.frame_id;
-    ref.header.stamp    = tf.header.stamp;
+    ref.header.frame_id = transform.header.frame_id;
+    ref.header.stamp    = transform.header.stamp;
 
     return true;
   }
   catch (...) {
-    ROS_WARN("[%s]: Transformer: Error during transform from \"%s\" frame to \"%s\" frame.", node_name_.c_str(), tf.header.frame_id.c_str(),
-             tf.child_frame_id.c_str());
+    ROS_WARN("[%s]: Transformer: Error during transform from \"%s\" frame to \"%s\" frame.", node_name_.c_str(), tf.from().c_str(), tf.to().c_str());
     return false;
   }
 }
@@ -242,11 +246,11 @@ bool Transformer::transformReference(const geometry_msgs::TransformStamped& tf, 
 
 /* transformPose() //{ */
 
-bool Transformer::transformPose(const geometry_msgs::TransformStamped& tf, geometry_msgs::PoseStamped& pose) {
+bool Transformer::transformPose(const mrs_lib::TransformStamped& tf, geometry_msgs::PoseStamped& pose) {
 
   pose.header.frame_id = resolveFrameName(pose.header.frame_id);
 
-  if (tf.header.frame_id.compare(pose.header.frame_id) == STRING_EQUAL) {
+  if (pose.header.frame_id.compare(tf.to()) == STRING_EQUAL) {
     return true;
   }
 
@@ -254,7 +258,9 @@ bool Transformer::transformPose(const geometry_msgs::TransformStamped& tf, geome
   geometry_msgs::PoseStamped pose_transformed = pose;
 
   try {
-    tf2::doTransform(pose_transformed, pose_transformed, tf);
+    geometry_msgs::TransformStamped transform = tf.getTransform();
+
+    tf2::doTransform(pose_transformed, pose_transformed, transform);
 
     // copy the new transformed data back
     pose = pose_transformed;
@@ -262,8 +268,7 @@ bool Transformer::transformPose(const geometry_msgs::TransformStamped& tf, geome
     return true;
   }
   catch (...) {
-    ROS_WARN("[%s]: Transformer: Error during transform from \"%s\" frame to \"%s\" frame.", node_name_.c_str(), tf.header.frame_id.c_str(),
-             tf.child_frame_id.c_str());
+    ROS_WARN("[%s]: Transformer: Error during transform from \"%s\" frame to \"%s\" frame.", node_name_.c_str(), tf.from().c_str(), tf.to().c_str());
     return false;
   }
 }
@@ -272,7 +277,7 @@ bool Transformer::transformPose(const geometry_msgs::TransformStamped& tf, geome
 
 /* transformVector3() //{ */
 
-bool Transformer::transformVector3(const geometry_msgs::TransformStamped& tf, geometry_msgs::Vector3Stamped& vector3) {
+bool Transformer::transformVector3(const mrs_lib::TransformStamped& tf, geometry_msgs::Vector3Stamped& vector3) {
 
   if (!is_initialized_) {
     ROS_ERROR("[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
@@ -281,7 +286,7 @@ bool Transformer::transformVector3(const geometry_msgs::TransformStamped& tf, ge
 
   vector3.header.frame_id = resolveFrameName(vector3.header.frame_id);
 
-  if (tf.header.frame_id.compare(vector3.header.frame_id) == STRING_EQUAL) {
+  if (vector3.header.frame_id.compare(tf.to()) == STRING_EQUAL) {
     return true;
   }
 
@@ -289,7 +294,9 @@ bool Transformer::transformVector3(const geometry_msgs::TransformStamped& tf, ge
   geometry_msgs::Vector3Stamped vector3_transformed = vector3;
 
   try {
-    tf2::doTransform(vector3_transformed, vector3_transformed, tf);
+    geometry_msgs::TransformStamped transform = tf.getTransform();
+
+    tf2::doTransform(vector3_transformed, vector3_transformed, transform);
 
     // copy the new transformed data back
     vector3 = vector3_transformed;
@@ -297,8 +304,7 @@ bool Transformer::transformVector3(const geometry_msgs::TransformStamped& tf, ge
     return true;
   }
   catch (...) {
-    ROS_WARN("[%s]: Transformer: Error during transform from \"%s\" frame to \"%s\" frame.", node_name_.c_str(), tf.header.frame_id.c_str(),
-             tf.child_frame_id.c_str());
+    ROS_WARN("[%s]: Transformer: Error during transform from \"%s\" frame to \"%s\" frame.", node_name_.c_str(), tf.from().c_str(), tf.to().c_str());
     return false;
   }
 }
@@ -307,7 +313,7 @@ bool Transformer::transformVector3(const geometry_msgs::TransformStamped& tf, ge
 
 /* getTransform() //{ */
 
-bool Transformer::getTransform(const std::string from_frame, const std::string to_frame, const ros::Time time_stamp, geometry_msgs::TransformStamped& tf) {
+bool Transformer::getTransform(const std::string from_frame, const std::string to_frame, const ros::Time time_stamp, mrs_lib::TransformStamped& tf) {
 
   if (!is_initialized_) {
     ROS_ERROR("[%s]: Transformer: cannot provide transform, not initialized", ros::this_node::getName().c_str());
@@ -333,7 +339,7 @@ bool Transformer::getTransform(const std::string from_frame, const std::string t
 
       if (tf_age < cache_timeout_) {
 
-        tf = it->second.tf;
+        tf = mrs_lib::TransformStamped(from_frame_resolved, to_frame_resolved, it->second.tf);
         return true;
       }
 
@@ -351,10 +357,15 @@ bool Transformer::getTransform(const std::string from_frame, const std::string t
 
     std::scoped_lock lock(mutex_tf_buffer_);
 
-    tf = tf_buffer_.lookupTransform(to_frame_resolved, from_frame_resolved, time_stamp);
+    // get the transform
+    geometry_msgs::TransformStamped transform = tf_buffer_.lookupTransform(to_frame_resolved, from_frame_resolved, time_stamp);
 
+    // put it in the cache
     it->second.stamp = ros::Time::now();
-    it->second.tf    = tf;
+    it->second.tf    = transform;
+
+    // return it
+    tf = mrs_lib::TransformStamped(from_frame_resolved, to_frame_resolved, transform);
 
     return true;
   }
@@ -368,10 +379,13 @@ bool Transformer::getTransform(const std::string from_frame, const std::string t
 
     std::scoped_lock lock(mutex_tf_buffer_);
 
-    tf = tf_buffer_.lookupTransform(to_frame_resolved, from_frame_resolved, ros::Time(0));
+    geometry_msgs::TransformStamped transform = tf_buffer_.lookupTransform(to_frame_resolved, from_frame_resolved, ros::Time(0));
 
     it->second.stamp = ros::Time::now();
-    it->second.tf    = tf;
+    it->second.tf    = transform;
+
+    // return it
+    tf = mrs_lib::TransformStamped(from_frame_resolved, to_frame_resolved, transform);
 
     return true;
   }
@@ -439,4 +453,52 @@ void Transformer::setCurrentControlFrame(const std::string in) {
 
 //}
 
+// | --------------- TransformStamped wrapper ---------------- |
+
+/* TransformStamped() //{ */
+
+TransformStamped::TransformStamped() {
+}
+
+TransformStamped::TransformStamped(const std::string from_frame, const std::string to_frame) {
+
+  this->from_frame_ = from_frame;
+  this->to_frame_   = to_frame;
+}
+
+TransformStamped::TransformStamped(const std::string from_frame, const std::string to_frame, const geometry_msgs::TransformStamped transform_stamped) {
+
+  this->from_frame_        = from_frame;
+  this->to_frame_          = to_frame;
+  this->transform_stamped_ = transform_stamped;
+}
+
+//}
+
+/* from() //{ */
+
+std::string TransformStamped::from(void) const {
+
+  return from_frame_;
+}
+
+//}
+
+/* to() //{ */
+
+std::string TransformStamped::to(void) const {
+
+  return to_frame_;
+}
+
+//}
+
+/* getTransform() //{ */
+
+geometry_msgs::TransformStamped TransformStamped::getTransform(void) const {
+
+  return transform_stamped_;
+}
+
+//}
 }  // namespace mrs_lib
