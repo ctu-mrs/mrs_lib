@@ -1,4 +1,5 @@
 #include <mrs_lib/transformer.h>
+#include <mrs_lib/GpsConversions.h>
 
 namespace mrs_lib
 {
@@ -219,22 +220,27 @@ bool Transformer::transformReference(const mrs_lib::TransformStamped& tf, mrs_ms
 
     geometry_msgs::TransformStamped transform = tf.getTransform();
 
-    tf2::doTransform(pose, pose, transform);
+    if (transformPoseImpl(tf, pose)) {
 
-    // copy the new transformed data back
-    ref.reference.position.x = pose.pose.position.x;
-    ref.reference.position.y = pose.pose.position.y;
-    ref.reference.position.z = pose.pose.position.z;
+      // copy the new transformed data back
+      ref.reference.position.x = pose.pose.position.x;
+      ref.reference.position.y = pose.pose.position.y;
+      ref.reference.position.z = pose.pose.position.z;
 
-    quaternionMsgToTF(pose.pose.orientation, quat);
-    tf::Matrix3x3 m(quat);
-    double        roll, pitch;
-    m.getRPY(roll, pitch, ref.reference.yaw);
+      quaternionMsgToTF(pose.pose.orientation, quat);
+      tf::Matrix3x3 m(quat);
+      double        roll, pitch;
+      m.getRPY(roll, pitch, ref.reference.yaw);
 
-    ref.header.frame_id = transform.header.frame_id;
-    ref.header.stamp    = transform.header.stamp;
+      ref.header.frame_id = transform.header.frame_id;
+      ref.header.stamp    = transform.header.stamp;
 
-    return true;
+      return true;
+
+    } else {
+
+      return false;
+    }
   }
   catch (...) {
     ROS_WARN("[%s]: Transformer: Error during transform from \"%s\" frame to \"%s\" frame.", node_name_.c_str(), tf.from().c_str(), tf.to().c_str());
@@ -244,33 +250,109 @@ bool Transformer::transformReference(const mrs_lib::TransformStamped& tf, mrs_ms
 
 //}
 
-/* transformPose() //{ */
+/* transformPoseImpl() //{ */
 
-bool Transformer::transformPose(const mrs_lib::TransformStamped& tf, geometry_msgs::PoseStamped& pose) {
+bool Transformer::transformPoseImpl(const mrs_lib::TransformStamped& tf, geometry_msgs::PoseStamped& pose) {
 
-  pose.header.frame_id = resolveFrameName(pose.header.frame_id);
+  pose.header.frame_id          = resolveFrameName(pose.header.frame_id);
+  std::string latlon_frame_name = resolveFrameName(LATLON_ORIGIN);
 
+  // if it is already in the target frame
   if (pose.header.frame_id.compare(tf.to()) == STRING_EQUAL) {
     return true;
   }
 
-  // create the pose message
-  geometry_msgs::PoseStamped pose_transformed = pose;
+  // check for the transform from LAT-LON GPS
+  if (tf.from().compare(latlon_frame_name) == STRING_EQUAL) {
 
-  try {
-    geometry_msgs::TransformStamped transform = tf.getTransform();
+    ROS_INFO("[%s]: transforming from latlon", ros::this_node::getName().c_str());
 
-    tf2::doTransform(pose_transformed, pose_transformed, transform);
+    double utm_x, utm_y;
 
-    // copy the new transformed data back
-    pose = pose_transformed;
+    // convert LAT-LON to UTM
+    mrs_lib::UTM(pose.pose.position.x, pose.pose.position.y, &utm_x, &utm_y);
 
-    return true;
+    std::string utm_frame_name = resolveFrameName("utm_origin");
+
+    pose.header.frame_id = utm_frame_name;
+    pose.pose.position.x = utm_x;
+    pose.pose.position.y = utm_y;
+
+    mrs_lib::TransformStamped utm_origin_to_end_tf;
+    if (getTransform(utm_frame_name, tf.to(), tf.stamp(), utm_origin_to_end_tf)) {
+
+      return transformPoseImpl(utm_origin_to_end_tf, pose);
+
+    } else {
+
+      return false;
+    }
+
+    // it is a normal transform
+  } else if (tf.to().compare(latlon_frame_name) == STRING_EQUAL) {
+
+    if (!got_utm_zone_) {
+
+      ROS_ERROR_THROTTLE(1.0, "[%s]: cannot transform to latlong, missing UTM zone (did you call setCurrentLatLon()?)", node_name_.c_str());
+      return false;
+    }
+
+    std::string utm_frame_name = resolveFrameName("utm_origin");
+
+    mrs_lib::TransformStamped start_to_utm_origin_tf;
+    if (getTransform(tf.from(), utm_frame_name, tf.stamp(), start_to_utm_origin_tf)) {
+
+      if (transformPoseImpl(start_to_utm_origin_tf, pose)) {
+
+        std::scoped_lock lock(mutex_utm_zone_);
+
+        double lat, lon;
+
+        mrs_lib::UTMtoLL(pose.pose.position.y, pose.pose.position.x, utm_zone_, lat, lon);
+
+        pose.pose.position.x = lat;
+        pose.pose.position.y = lon;
+
+        return true;
+
+      } else {
+        return false;
+      }
+
+    } else {
+
+      return false;
+    }
+
+  } else {
+
+    // create the pose message
+    geometry_msgs::PoseStamped pose_transformed = pose;
+
+    try {
+      geometry_msgs::TransformStamped transform = tf.getTransform();
+
+      tf2::doTransform(pose_transformed, pose_transformed, transform);
+
+      // copy the new transformed data back
+      pose = pose_transformed;
+
+      return true;
+    }
+    catch (...) {
+      ROS_WARN("[%s]: Transformer: Error during transform from \"%s\" frame to \"%s\" frame.", node_name_.c_str(), tf.from().c_str(), tf.to().c_str());
+      return false;
+    }
   }
-  catch (...) {
-    ROS_WARN("[%s]: Transformer: Error during transform from \"%s\" frame to \"%s\" frame.", node_name_.c_str(), tf.from().c_str(), tf.to().c_str());
-    return false;
-  }
+}
+
+//}
+
+/* transformPose() //{ */
+
+bool Transformer::transformPose(const mrs_lib::TransformStamped& tf, geometry_msgs::PoseStamped& pose) {
+
+  return transformPoseImpl(tf, pose);
 }
 
 //}
@@ -320,8 +402,16 @@ bool Transformer::getTransform(const std::string from_frame, const std::string t
     return false;
   }
 
-  std::string to_frame_resolved   = resolveFrameName(to_frame);
-  std::string from_frame_resolved = resolveFrameName(from_frame);
+  std::string to_frame_resolved     = resolveFrameName(to_frame);
+  std::string from_frame_resolved   = resolveFrameName(from_frame);
+  std::string latlon_frame_resolved = resolveFrameName(LATLON_ORIGIN);
+
+  // check for latlon transform
+  if (from_frame_resolved.compare(latlon_frame_resolved) == STRING_EQUAL || to_frame_resolved.compare(latlon_frame_resolved) == STRING_EQUAL) {
+
+    tf = mrs_lib::TransformStamped(from_frame_resolved, to_frame_resolved, time_stamp);
+    return true;
+  }
 
   std::string tf_frame_combined = to_frame_resolved + "->" + from_frame_resolved;
 
@@ -339,7 +429,7 @@ bool Transformer::getTransform(const std::string from_frame, const std::string t
 
       if (tf_age < cache_timeout_) {
 
-        tf = mrs_lib::TransformStamped(from_frame_resolved, to_frame_resolved, it->second.tf);
+        tf = mrs_lib::TransformStamped(from_frame_resolved, to_frame_resolved, time_stamp, it->second.tf);
         return true;
       }
 
@@ -365,7 +455,7 @@ bool Transformer::getTransform(const std::string from_frame, const std::string t
     it->second.tf    = transform;
 
     // return it
-    tf = mrs_lib::TransformStamped(from_frame_resolved, to_frame_resolved, transform);
+    tf = mrs_lib::TransformStamped(from_frame_resolved, to_frame_resolved, ros::Time::now(), transform);
 
     return true;
   }
@@ -385,7 +475,7 @@ bool Transformer::getTransform(const std::string from_frame, const std::string t
     it->second.tf    = transform;
 
     // return it
-    tf = mrs_lib::TransformStamped(from_frame_resolved, to_frame_resolved, transform);
+    tf = mrs_lib::TransformStamped(from_frame_resolved, to_frame_resolved, ros::Time::now(), transform);
 
     return true;
   }
@@ -453,6 +543,23 @@ void Transformer::setCurrentControlFrame(const std::string in) {
 
 //}
 
+/* setCurrentLatLon() //{ */
+
+void Transformer::setCurrentLatLon(const double lat, const double lon) {
+
+  double utm_x, utm_y;
+
+  {
+    std::scoped_lock lock(mutex_utm_zone_);
+
+    LLtoUTM(lat, lon, utm_y, utm_x, utm_zone_);
+
+    got_utm_zone_ = true;
+  }
+}
+
+//}
+
 // | --------------- TransformStamped wrapper ---------------- |
 
 /* TransformStamped() //{ */
@@ -460,17 +567,20 @@ void Transformer::setCurrentControlFrame(const std::string in) {
 TransformStamped::TransformStamped() {
 }
 
-TransformStamped::TransformStamped(const std::string from_frame, const std::string to_frame) {
+TransformStamped::TransformStamped(const std::string from_frame, const std::string to_frame, ros::Time stamp) {
 
   this->from_frame_ = from_frame;
   this->to_frame_   = to_frame;
+  this->stamp_      = stamp;
 }
 
-TransformStamped::TransformStamped(const std::string from_frame, const std::string to_frame, const geometry_msgs::TransformStamped transform_stamped) {
+TransformStamped::TransformStamped(const std::string from_frame, const std::string to_frame, ros::Time stamp,
+                                   const geometry_msgs::TransformStamped transform_stamped) {
 
   this->from_frame_        = from_frame;
   this->to_frame_          = to_frame;
   this->transform_stamped_ = transform_stamped;
+  this->stamp_             = stamp;
 }
 
 //}
@@ -489,6 +599,15 @@ std::string TransformStamped::from(void) const {
 std::string TransformStamped::to(void) const {
 
   return to_frame_;
+}
+
+//}
+
+/* stamp() //{ */
+
+ros::Time TransformStamped::stamp(void) const {
+
+  return stamp_;
 }
 
 //}

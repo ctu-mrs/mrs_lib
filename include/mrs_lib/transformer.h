@@ -49,11 +49,12 @@ class TransformStamped {
 
 public:
   TransformStamped();
-  TransformStamped(const std::string from_frame, const std::string to_frame);
-  TransformStamped(const std::string from_frame, const std::string to_frame, const geometry_msgs::TransformStamped transform_stamped);
+  TransformStamped(const std::string from_frame, const std::string to_frame, const ros::Time stamp);
+  TransformStamped(const std::string from_frame, const std::string to_frame, const ros::Time stamp, const geometry_msgs::TransformStamped transform_stamped);
 
-  std::string from(void) const;
-  std::string to(void) const;
+  std::string                     from(void) const;
+  std::string                     to(void) const;
+  ros::Time                       stamp(void) const;
   geometry_msgs::TransformStamped getTransform(void) const;
 
 private:
@@ -61,6 +62,7 @@ private:
 
   std::string from_frame_;
   std::string to_frame_;
+  ros::Time   stamp_;
 };
 
 /**
@@ -85,6 +87,10 @@ private:
   bool               got_current_control_frame_ = false;
   mutable std::mutex mutex_current_control_frame_;
 
+  bool       got_utm_zone_ = false;
+  char       utm_zone_[10];
+  std::mutex mutex_utm_zone_;
+
   /**
    * @brief deduced the full frame_id from a shortened or empty string
    *
@@ -103,6 +109,8 @@ private:
   // it is pulled from a cache
   std::map<std::string, TransformCache_t> transformer_cache_;
   std::mutex                              mutex_transformer_cache_;
+
+  bool transformPoseImpl(const mrs_lib::TransformStamped& tf, geometry_msgs::PoseStamped& pose);
 
   /**
    * @brief keeps track whether a non-basic constructor was launched and the transform listener was initialized
@@ -174,6 +182,17 @@ public:
    * @param in the frame_id name
    */
   void setCurrentControlFrame(const std::string in);
+
+  /**
+   * @brief set the curret lattitu and longitu
+   *
+   * The transformer uses this to deduce the current fly zone,
+   * so it could transform stuff back to latlon_origin.
+   *
+   * @param lat latitude in degrees
+   * @param lon longitude in degrees
+   */
+  void setCurrentLatLon(const double lat, const double lon);
 
   /**
    * @brief transform mrs_msgs::ReferenceStamped message to new frame
