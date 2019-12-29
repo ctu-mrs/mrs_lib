@@ -118,7 +118,7 @@ Routine::Routine(std::string name, std::string node_name, double expected_rate, 
   double dt = msg_out_.real_start - msg_out_.expected_start;
 
   if (dt > _threshold_) {
-    ROS_WARN_THROTTLE(1.0, "[%s]: routine '%s' was lauched late by %.2f s!", _node_name_.c_str(), _routine_name_.c_str(), dt - _threshold_);
+    ROS_WARN_THROTTLE(1.0, "[%s]: routine '%s' was lauched late by %.3f s!", _node_name_.c_str(), _routine_name_.c_str(), dt - _threshold_);
   }
 
   {
