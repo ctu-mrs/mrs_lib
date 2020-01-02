@@ -625,6 +625,68 @@ public:
   };
   //}
 
+  /* load_param specializations for ros::Duration type //{ */
+
+  /*!
+    * \brief An overload for loading ros::Duration.
+    *
+    * The duration will be loaded as a \p double, representing a number of seconds, and then converted to ros::Duration.
+    *
+    * \param name          Name of the parameter in the rosparam server.
+    * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
+    */
+  void load_param(const std::string& name, ros::Duration& ret)
+  {
+    ret = load_param2(name);
+  }
+
+  /*!
+    * \brief An overload for loading ros::Duration.
+    *
+    * The duration will be loaded as a \p double, representing a number of seconds, and then converted to ros::Duration.
+    *
+    * \param name          Name of the parameter in the rosparam server.
+    * \return              The loaded parameter value.
+    */
+  ros::Duration load_param2(const std::string& name)
+  {
+    const double secs = load_param2<double>(name);
+    const ros::Duration ret(secs);
+    return ret;
+  }
+
+  /*!
+    * \brief An overload for loading ros::Duration.
+    *
+    * The duration will be loaded as a \p double, representing a number of seconds, and then converted to ros::Duration.
+    *
+    * \param name          Name of the parameter in the rosparam server.
+    * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
+    * \param default_value This value will be used if the parameter name is not found in the rosparam server.
+    */
+  void load_param(const std::string& name, ros::Duration& ret, const ros::Duration& default_value)
+  {
+    ret = load_param2(name, default_value);
+  }
+
+  /*!
+    * \brief An overload for loading ros::Duration.
+    *
+    * The duration will be loaded as a \p double, representing a number of seconds, and then converted to ros::Duration.
+    *
+    * \param name          Name of the parameter in the rosparam server.
+    * \param default_value This value will be used if the parameter name is not found in the rosparam server.
+    * \return              The loaded parameter value.
+    */
+  ros::Duration load_param2(const std::string& name, const ros::Duration& default_value)
+  {
+    const double secs = load_param2<double>(name, default_value.toSec());
+    const ros::Duration ret(secs);
+    return ret;
+  }
+  
+  //}
+
   /* load_param specializations and convenience functions for Eigen::MatrixXd type //{ */
 
   /*!
