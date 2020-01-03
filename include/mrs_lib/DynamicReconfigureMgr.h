@@ -132,9 +132,12 @@ private:
     for (auto& descr : descrs)
     {
       std::string name = descr->name;
-      const size_t pos = name.find("__");
-      if (pos != name.npos)
+      size_t pos = name.find("__");
+      while (pos != name.npos)
+      {
         name.replace(pos, 2, "/");
+        pos = name.find("__");
+      }
 
       if (descr->type == "bool")
         load_param<bool>(name, descr, new_config);
