@@ -6,11 +6,23 @@
 #ifndef MUTEX_H
 #define MUTEX_H
 
+#include <iostream>
 #include <mutex>
 #include <tuple>
 
 namespace mrs_lib
 {
+
+template <class... GetArgs, class... SetArgs>
+std::tuple<GetArgs...> get_set_mutexed(std::mutex& mut, std::tuple<GetArgs&...> get, std::tuple<SetArgs&...> to_set, std::tuple<SetArgs...> from_set) {
+
+  std::scoped_lock lock(mut);
+
+  std::tuple<GetArgs...> result = get;
+  to_set = from_set;
+
+  return result;
+}
 
 /**
  * @brief thread-safe getter for values of variables (args)

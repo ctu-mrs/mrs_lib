@@ -116,6 +116,12 @@ target_link_libraries(Profiler
   ${Eigen_LIBRARIES}
   )
 
+add_executable(mutex_tests src/mutex/mutex_tests.cpp)
+target_link_libraries(mutex_tests
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
 add_library(MrsLibTransformer src/transformer/transformer.cpp)
 target_link_libraries(MrsLibTransformer
   ${catkin_LIBRARIES}
