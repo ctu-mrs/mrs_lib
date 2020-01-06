@@ -13,6 +13,18 @@
 namespace mrs_lib
 {
 
+/**
+ * @brief thread-safe getter and setter for values of variables (args)
+ *
+ * @tparam GetArgs types of the variables to get
+ * @tparam SetArgs types of the variables to set
+ * @param mut mutex which protects the variables
+ * @param get tuple of variable references to obtain the values from
+ * @param to_set tuple of variable references to set the new values from \p from_set
+ * @param from_set tuple of the new values to be set to \p to_set
+ *
+ * @return tuple of the values from \p get
+ */
 template <class... GetArgs, class... SetArgs>
 std::tuple<GetArgs...> get_set_mutexed(std::mutex& mut, std::tuple<GetArgs&...> get, std::tuple<SetArgs&...> to_set, std::tuple<SetArgs...> from_set) {
 
