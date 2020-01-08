@@ -26,7 +26,7 @@ namespace mrs_lib
  * @return tuple of the values from \p get
  */
 template <class... GetArgs, class... SetArgs>
-std::tuple<GetArgs...> get_set_mutexed(std::mutex& mut, std::tuple<GetArgs&...> get, std::tuple<SetArgs&...> to_set, std::tuple<SetArgs...> from_set) {
+std::tuple<GetArgs...> get_set_mutexed(std::mutex& mut, std::tuple<GetArgs&...> get, std::tuple<SetArgs...> from_set, std::tuple<SetArgs&...> to_set) {
 
   std::scoped_lock lock(mut);
 
@@ -96,7 +96,7 @@ void set_mutexed_impl(const T what, T& where) {
  * @param args the remaining arguments
  */
 template <class T, class... Args>
-void set_mutexed_impl(const T what, T& where, Args&... args) {
+void set_mutexed_impl(const T what, T& where, Args... args) {
 
   where = what;
 
@@ -129,7 +129,7 @@ auto set_mutexed(std::mutex& mut, const T what, T& where) {
  * example:
  *   set_mutexed(my_mutex_, a, a_, b, b_, c, c_);
  *   where a, b, c are the values to be set
- *         a_, b_, c_ are the updated variables
+ *         a_, b_, c_ are the variables to be updated
  *
  * @tparam Args types of the variables
  * @param mut mutex to be locked
