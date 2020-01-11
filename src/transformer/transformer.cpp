@@ -451,7 +451,7 @@ bool Transformer::getTransform(const std::string from_frame, const std::string t
     geometry_msgs::TransformStamped transform = tf_buffer_.lookupTransform(to_frame_resolved, from_frame_resolved, time_stamp);
 
     // put it in the cache
-    it->second.stamp = ros::Time::now();
+    it->second.stamp = time_stamp;
     it->second.tf    = transform;
 
     // return it
