@@ -425,9 +425,9 @@ bool Transformer::getTransform(const std::string from_frame, const std::string t
 
     if (it != transformer_cache_.end()) {  // found in the cache
 
-      double tf_age = (ros::Time::now() - it->second.stamp).toSec();
+      double tf_time_diff = fabs((time_stamp - it->second.stamp).toSec());
 
-      if (tf_age < cache_timeout_) {
+      if (tf_time_diff < cache_timeout_) {
 
         tf = mrs_lib::TransformStamped(from_frame_resolved, to_frame_resolved, time_stamp, it->second.tf);
         return true;
@@ -471,7 +471,7 @@ bool Transformer::getTransform(const std::string from_frame, const std::string t
 
     geometry_msgs::TransformStamped transform = tf_buffer_.lookupTransform(to_frame_resolved, from_frame_resolved, ros::Time(0));
 
-    it->second.stamp = ros::Time::now();
+    it->second.stamp = time_stamp;
     it->second.tf    = transform;
 
     // return it
