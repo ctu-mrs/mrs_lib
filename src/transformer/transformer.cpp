@@ -415,44 +415,12 @@ bool Transformer::getTransform(const std::string from_frame, const std::string t
 
   std::string tf_frame_combined = to_frame_resolved + "->" + from_frame_resolved;
 
-  // check the cache
-  std::map<std::string, TransformCache_t>::iterator it;
-
-  {
-    std::scoped_lock lock(mutex_transformer_cache_);
-
-    it = transformer_cache_.find(tf_frame_combined);
-
-    if (it != transformer_cache_.end()) {  // found in the cache
-
-      double tf_time_diff = fabs((time_stamp - it->second.stamp).toSec());
-
-      if (tf_time_diff < cache_timeout_) {
-
-        tf = mrs_lib::TransformStamped(from_frame_resolved, to_frame_resolved, time_stamp, it->second.tf);
-        return true;
-      }
-
-    } else {
-
-      TransformCache_t new_tf;
-      new_tf.stamp = ros::Time(0);
-      transformer_cache_.insert(std::pair<std::string, TransformCache_t>(tf_frame_combined, new_tf));
-
-      it = transformer_cache_.find(tf_frame_combined);
-    }
-  }
-
   try {
 
     std::scoped_lock lock(mutex_tf_buffer_);
 
     // get the transform
     geometry_msgs::TransformStamped transform = tf_buffer_.lookupTransform(to_frame_resolved, from_frame_resolved, time_stamp);
-
-    // put it in the cache
-    it->second.stamp = time_stamp;
-    it->second.tf    = transform;
 
     // return it
     tf = mrs_lib::TransformStamped(from_frame_resolved, to_frame_resolved, ros::Time::now(), transform);
@@ -470,9 +438,6 @@ bool Transformer::getTransform(const std::string from_frame, const std::string t
     std::scoped_lock lock(mutex_tf_buffer_);
 
     geometry_msgs::TransformStamped transform = tf_buffer_.lookupTransform(to_frame_resolved, from_frame_resolved, ros::Time(0));
-
-    it->second.stamp = time_stamp;
-    it->second.tf    = transform;
 
     // return it
     tf = mrs_lib::TransformStamped(from_frame_resolved, to_frame_resolved, ros::Time::now(), transform);
@@ -511,8 +476,7 @@ std::string Transformer::resolveFrameName(const std::string in) {
     }
   }
 
-  size_t found = in.find("/");
-  if (found == std::string::npos) {
+  if (in.substr(0, 3).compare("uav") != STRING_EQUAL) {
 
     if (got_uav_name_) {
 
