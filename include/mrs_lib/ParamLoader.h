@@ -438,17 +438,19 @@ private:
   // the flag 'load_successful' is set to false and a ROS_ERROR message
   // is printer.
   // If 'unique' flag is set to false then the parameter is not checked
-  // for being loaded twice
+  // for being loaded twice.
+  // Returns a tuple, containing either the loaded or the default value and a bool,
+  // indicating if the value was loaded (true) or the default value was used (false).
   template <typename T>
-  T load(const std::string& name, const T& default_value, optional_t optional = OPTIONAL, unique_t unique = UNIQUE)
+  std::pair<T, bool> load(const std::string& name, const T& default_value, optional_t optional = OPTIONAL, unique_t unique = UNIQUE)
   {
     T loaded = default_value;
     if (unique && check_duplicit_loading(name))
-      return loaded;
+      return {loaded, false};
 
     bool cur_load_successful = true;
     // try to load the parameter
-    bool success = m_nh.getParam(name, loaded);
+    const bool success = m_nh.getParam(name, loaded);
     if (!success)
     {
       // if it was not loaded, set the default value
@@ -473,7 +475,7 @@ private:
       m_load_successful = false;
     }
     // finally, return the resulting value
-    return loaded;
+    return {loaded, success};
   };
   //}
 
@@ -537,11 +539,14 @@ public:
     * \param name          Name of the parameter in the rosparam server.
     * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
+    * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
     */
   template <typename T>
-  void load_param(const std::string& name, T& out_value, const T& default_value)
+  bool load_param(const std::string& name, T& out_value, const T& default_value)
   {
-    out_value = load_param2<T>(name, default_value);
+    const auto [ret, success] = load<T>(name, default_value, OPTIONAL, UNIQUE);
+    out_value = ret;
+    return success;
   };
   /*!
     * \brief Loads a parameter from the rosparam server with a default value.
@@ -557,7 +562,8 @@ public:
   template <typename T>
   T load_param2(const std::string& name, const T& default_value)
   {
-    return load<T>(name, default_value, OPTIONAL, UNIQUE);
+    const auto loaded = load<T>(name, default_value, OPTIONAL, UNIQUE);
+    return loaded.first;
   };
   /*!
     * \brief Loads a parameter from the rosparam server with a default value.
@@ -573,7 +579,8 @@ public:
   template <typename T>
   T load_param_reusable(const std::string& name, const T& default_value)
   {
-    return load<T>(name, default_value, OPTIONAL, REUSABLE);
+    const auto loaded = load<T>(name, default_value, OPTIONAL, REUSABLE);
+    return loaded.first;
   };
   //}
 
@@ -587,11 +594,14 @@ public:
     *
     * \param name          Name of the parameter in the rosparam server.
     * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
+    * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
     */
   template <typename T>
-  void load_param(const std::string& name, T& out_value)
+  bool load_param(const std::string& name, T& out_value)
   {
-    out_value = load_param2<T>(name);
+    const auto [ret, success] = load<T>(name, T(), COMPULSORY, UNIQUE);
+    out_value = ret;
+    return success;
   };
   /*!
     * \brief Loads a compulsory parameter from the rosparam server.
@@ -606,7 +616,8 @@ public:
   template <typename T>
   T load_param2(const std::string& name)
   {
-    return load<T>(name, T(), COMPULSORY, UNIQUE);
+    const auto loaded = load<T>(name, T(), COMPULSORY, UNIQUE);
+    return loaded.first;
   };
   /*!
     * \brief Loads a compulsory parameter from the rosparam server.
@@ -621,7 +632,8 @@ public:
   template <typename T>
   T load_param_reusable(const std::string& name)
   {
-    return load<T>(name, COMPULSORY, REUSABLE);
+    const auto loaded = load<T>(name, T(), COMPULSORY, REUSABLE);
+    return loaded.first;
   };
   //}
 
@@ -634,39 +646,15 @@ public:
     *
     * \param name          Name of the parameter in the rosparam server.
     * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
-    */
-  void load_param(const std::string& name, ros::Duration& ret)
-  {
-    ret = load_param2(name);
-  }
-
-  /*!
-    * \brief An overload for loading ros::Duration.
-    *
-    * The duration will be loaded as a \p double, representing a number of seconds, and then converted to ros::Duration.
-    *
-    * \param name          Name of the parameter in the rosparam server.
-    * \return              The loaded parameter value.
-    */
-  ros::Duration load_param2(const std::string& name)
-  {
-    const double secs = load_param2<double>(name);
-    const ros::Duration ret(secs);
-    return ret;
-  }
-
-  /*!
-    * \brief An overload for loading ros::Duration.
-    *
-    * The duration will be loaded as a \p double, representing a number of seconds, and then converted to ros::Duration.
-    *
-    * \param name          Name of the parameter in the rosparam server.
-    * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
+    * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
     */
-  void load_param(const std::string& name, ros::Duration& ret, const ros::Duration& default_value)
+  bool load_param(const std::string& name, ros::Duration& out, const ros::Duration& default_value)
   {
-    ret = load_param2(name, default_value);
+    double secs;
+    const bool ret = load_param<double>(name, secs, default_value.toSec());
+    out = ros::Duration(secs);
+    return ret;
   }
 
   /*!
@@ -681,6 +669,38 @@ public:
   ros::Duration load_param2(const std::string& name, const ros::Duration& default_value)
   {
     const double secs = load_param2<double>(name, default_value.toSec());
+    const ros::Duration ret(secs);
+    return ret;
+  }
+
+  /*!
+    * \brief An overload for loading ros::Duration.
+    *
+    * The duration will be loaded as a \p double, representing a number of seconds, and then converted to ros::Duration.
+    *
+    * \param name          Name of the parameter in the rosparam server.
+    * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
+    * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
+    */
+  bool load_param(const std::string& name, ros::Duration& out)
+  {
+    double secs;
+    const bool ret = load_param<double>(name, secs);
+    out = ros::Duration(secs);
+    return ret;
+  }
+
+  /*!
+    * \brief An overload for loading ros::Duration.
+    *
+    * The duration will be loaded as a \p double, representing a number of seconds, and then converted to ros::Duration.
+    *
+    * \param name          Name of the parameter in the rosparam server.
+    * \return              The loaded parameter value.
+    */
+  ros::Duration load_param2(const std::string& name)
+  {
+    const double secs = load_param2<double>(name);
     const ros::Duration ret(secs);
     return ret;
   }
