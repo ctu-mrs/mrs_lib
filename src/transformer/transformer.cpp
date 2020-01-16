@@ -92,7 +92,7 @@ Transformer& Transformer::operator=(const Transformer& other) {
 bool Transformer::transformReferenceSingle(const std::string to_frame, mrs_msgs::ReferenceStamped& ref) {
 
   if (!is_initialized_) {
-    ROS_ERROR("[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
+    ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
     return false;
   }
 
@@ -125,7 +125,7 @@ bool Transformer::transformReferenceSingle(const std::string to_frame, mrs_msgs:
 bool Transformer::transformPoseSingle(const std::string to_frame, geometry_msgs::PoseStamped& ref) {
 
   if (!is_initialized_) {
-    ROS_ERROR("[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
+    ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
     return false;
   }
 
@@ -158,7 +158,7 @@ bool Transformer::transformPoseSingle(const std::string to_frame, geometry_msgs:
 bool Transformer::transformVector3Single(const std::string to_frame, geometry_msgs::Vector3Stamped& ref) {
 
   if (!is_initialized_) {
-    ROS_ERROR("[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
+    ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
     return false;
   }
 
@@ -191,7 +191,7 @@ bool Transformer::transformVector3Single(const std::string to_frame, geometry_ms
 bool Transformer::transformReference(const mrs_lib::TransformStamped& tf, mrs_msgs::ReferenceStamped& ref) {
 
   if (!is_initialized_) {
-    ROS_ERROR("[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
+    ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
     return false;
   }
 
@@ -243,7 +243,8 @@ bool Transformer::transformReference(const mrs_lib::TransformStamped& tf, mrs_ms
     }
   }
   catch (...) {
-    ROS_WARN("[%s]: Transformer: Error during transform from \"%s\" frame to \"%s\" frame.", node_name_.c_str(), tf.from().c_str(), tf.to().c_str());
+    ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: Error during transform from \"%s\" frame to \"%s\" frame.", node_name_.c_str(), tf.from().c_str(),
+                      tf.to().c_str());
     return false;
   }
 }
@@ -264,8 +265,6 @@ bool Transformer::transformPoseImpl(const mrs_lib::TransformStamped& tf, geometr
 
   // check for the transform from LAT-LON GPS
   if (tf.from().compare(latlon_frame_name) == STRING_EQUAL) {
-
-    ROS_INFO("[%s]: transforming from latlon", ros::this_node::getName().c_str());
 
     double utm_x, utm_y;
 
@@ -340,7 +339,8 @@ bool Transformer::transformPoseImpl(const mrs_lib::TransformStamped& tf, geometr
       return true;
     }
     catch (...) {
-      ROS_WARN("[%s]: Transformer: Error during transform from \"%s\" frame to \"%s\" frame.", node_name_.c_str(), tf.from().c_str(), tf.to().c_str());
+      ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: Error during transform from \"%s\" frame to \"%s\" frame.", node_name_.c_str(), tf.from().c_str(),
+                        tf.to().c_str());
       return false;
     }
   }
@@ -362,7 +362,7 @@ bool Transformer::transformPose(const mrs_lib::TransformStamped& tf, geometry_ms
 bool Transformer::transformVector3(const mrs_lib::TransformStamped& tf, geometry_msgs::Vector3Stamped& vector3) {
 
   if (!is_initialized_) {
-    ROS_ERROR("[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
+    ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
     return false;
   }
 
@@ -386,7 +386,8 @@ bool Transformer::transformVector3(const mrs_lib::TransformStamped& tf, geometry
     return true;
   }
   catch (...) {
-    ROS_WARN("[%s]: Transformer: Error during transform from \"%s\" frame to \"%s\" frame.", node_name_.c_str(), tf.from().c_str(), tf.to().c_str());
+    ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: Error during transform from \"%s\" frame to \"%s\" frame.", node_name_.c_str(), tf.from().c_str(),
+                      tf.to().c_str());
     return false;
   }
 }
@@ -398,7 +399,7 @@ bool Transformer::transformVector3(const mrs_lib::TransformStamped& tf, geometry
 bool Transformer::getTransform(const std::string from_frame, const std::string to_frame, const ros::Time time_stamp, mrs_lib::TransformStamped& tf) {
 
   if (!is_initialized_) {
-    ROS_ERROR("[%s]: Transformer: cannot provide transform, not initialized", ros::this_node::getName().c_str());
+    ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot provide transform, not initialized", ros::this_node::getName().c_str());
     return false;
   }
 
@@ -446,8 +447,8 @@ bool Transformer::getTransform(const std::string from_frame, const std::string t
   }
   catch (tf2::TransformException& ex) {
     // this does not happen often and when it does, it should be seen
-    ROS_ERROR("[%s]: Transformer: Exception caught while constructing transform from '%s' to '%s': %s", node_name_.c_str(), from_frame_resolved.c_str(),
-              to_frame_resolved.c_str(), ex.what());
+    ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: Exception caught while constructing transform from '%s' to '%s': %s", node_name_.c_str(),
+                       from_frame_resolved.c_str(), to_frame_resolved.c_str(), ex.what());
   }
 
   return false;
@@ -469,8 +470,9 @@ std::string Transformer::resolveFrameName(const std::string in) {
 
     } else {
 
-      ROS_ERROR("[%s]: Transformer: could not resolve an empty frame_id, missing the current control frame (are you calling the setCurrentControlFrame()?)",
-                node_name_.c_str());
+      ROS_ERROR_THROTTLE(
+          1.0, "[%s]: Transformer: could not resolve an empty frame_id, missing the current control frame (are you calling the setCurrentControlFrame()?)",
+          node_name_.c_str());
 
       return "";
     }
@@ -484,8 +486,8 @@ std::string Transformer::resolveFrameName(const std::string in) {
 
     } else {
 
-      ROS_ERROR("[%s]: Transformer: could not deduce a namespaced frame_id '%s' (did you instanced the Transformer with the uav_name argument?)",
-                node_name_.c_str(), in.c_str());
+      ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: could not deduce a namespaced frame_id '%s' (did you instanced the Transformer with the uav_name argument?)",
+                         node_name_.c_str(), in.c_str());
     }
   }
 
