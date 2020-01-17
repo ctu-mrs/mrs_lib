@@ -292,7 +292,7 @@ bool Transformer::transformPoseImpl(const mrs_lib::TransformStamped& tf, geometr
 
     if (!got_utm_zone_) {
 
-      ROS_ERROR_THROTTLE(1.0, "[%s]: cannot transform to latlong, missing UTM zone (did you call setCurrentLatLon()?)", node_name_.c_str());
+      ROS_WARN_THROTTLE(1.0, "[%s]: cannot transform to latlong, missing UTM zone (did you call setCurrentLatLon()?)", node_name_.c_str());
       return false;
     }
 
@@ -447,8 +447,8 @@ bool Transformer::getTransform(const std::string from_frame, const std::string t
   }
   catch (tf2::TransformException& ex) {
     // this does not happen often and when it does, it should be seen
-    ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: Exception caught while constructing transform from '%s' to '%s': %s", node_name_.c_str(),
-                       from_frame_resolved.c_str(), to_frame_resolved.c_str(), ex.what());
+    ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: Exception caught while constructing transform from '%s' to '%s': %s", node_name_.c_str(),
+                      from_frame_resolved.c_str(), to_frame_resolved.c_str(), ex.what());
   }
 
   return false;
@@ -470,7 +470,7 @@ std::string Transformer::resolveFrameName(const std::string in) {
 
     } else {
 
-      ROS_ERROR_THROTTLE(
+      ROS_WARN_THROTTLE(
           1.0, "[%s]: Transformer: could not resolve an empty frame_id, missing the current control frame (are you calling the setCurrentControlFrame()?)",
           node_name_.c_str());
 
@@ -486,8 +486,8 @@ std::string Transformer::resolveFrameName(const std::string in) {
 
     } else {
 
-      ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: could not deduce a namespaced frame_id '%s' (did you instanced the Transformer with the uav_name argument?)",
-                         node_name_.c_str(), in.c_str());
+      ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: could not deduce a namespaced frame_id '%s' (did you instanced the Transformer with the uav_name argument?)",
+                        node_name_.c_str(), in.c_str());
     }
   }
 
