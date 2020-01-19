@@ -128,6 +128,13 @@ target_link_libraries(MrsLibTransformer
   ${Eigen_LIBRARIES}
   )
 
+add_executable(transformer_tests src/transformer/transformer.cpp src/transformer/transformer_tests.cpp)
+target_link_libraries(transformer_tests
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  ${GAZEBO_INCLUDE_DIRS}
+  )
+
 add_library(Utils src/utils/utils.cpp)
 target_link_libraries(Utils
   ${catkin_LIBRARIES}
