@@ -1,4 +1,16 @@
 
+/* transformImpl() //{ */
+
+template <class T>
+std::optional<T> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const T& what)
+{
+  const auto tmp_result = prepareMessage(what);
+  const auto result_opt = doTransform(tf, tmp_result);
+  return postprocessMessage(result_opt.value());
+}
+
+//}
+
 /* transformSingle() //{ */
 
 template <class T>
@@ -48,18 +60,6 @@ bool Transformer::transformSingle(const std::string& to_frame, const T& what, T&
 
 //}
 
-/* transformImpl() //{ */
-
-template <class T>
-std::optional<T> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const T& what)
-{
-  const auto tmp_result = prepareMessage(what);
-  const auto result_opt = doTransform(tf, tmp_result);
-  return postprocessMessage(result_opt.value());
-}
-
-//}
-
 /* transform() //{ */
 
 template <class T>
@@ -88,7 +88,7 @@ std::optional<T> Transformer::transform(const mrs_lib::TransformStamped& tf, con
 template <class T>
 bool Transformer::transform(const mrs_lib::TransformStamped& to_frame, const T& what, T& output)
 {
-  const auto result_opt = transformSingle(to_frame, what);
+  const auto result_opt = transform(to_frame, what, output);
   if (result_opt.has_value())
   {
     output = result_opt.value();
