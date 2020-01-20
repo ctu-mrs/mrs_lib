@@ -31,12 +31,12 @@ std::optional<T> Transformer::transformSingle(const std::string& to_frame, const
     return ret;
   }
 
-  mrs_lib::TransformStamped tf;
-
   // get the transform
   const auto tf_opt = getTransform(from_frame_resolved, to_frame_resolved, what.header.stamp);
   if (!tf_opt.has_value())
     return std::nullopt;
+
+  mrs_lib::TransformStamped tf = tf_opt.value();
 
   // do the transformation
   const auto result_opt = transform(tf, what);
