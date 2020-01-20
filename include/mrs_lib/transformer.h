@@ -290,6 +290,8 @@ private:
    * @return resolved frame_id
    */
   std::string resolveFrameName(const std::string& in);
+
+  std::string getUAVFramePrefix(const std::string& in);
   
   // caches the last calculated transforms
   // if someone asks for tf which was calculated within the last 1 ms

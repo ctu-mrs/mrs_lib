@@ -107,7 +107,8 @@ std::optional<geometry_msgs::PoseStamped> Transformer::transformImpl(const mrs_l
     mrs_lib::UTM(ret.pose.position.x, ret.pose.position.y, &utm_x, &utm_y);
 
     // utm_x and utm_y are now in 'utm_origin' frame
-    const std::string utm_frame_name = resolveFrameName("utm_origin");
+    const std::string uav_prefix = getUAVFramePrefix(tf.from());
+    const std::string utm_frame_name = uav_prefix + "/utm_origin";
     ret.header.frame_id = utm_frame_name;
     ret.pose.position.x = utm_x;
     ret.pose.position.y = utm_y;
@@ -129,7 +130,8 @@ std::optional<geometry_msgs::PoseStamped> Transformer::transformImpl(const mrs_l
     }
 
     // first, transform from the desired frame to 'utm_origin'
-    std::string utm_frame_name = resolveFrameName("utm_origin");
+    const std::string uav_prefix = getUAVFramePrefix(tf.to());
+    std::string utm_frame_name = uav_prefix + "/utm_origin";
     const auto start_to_utm_origin_tf_opt = getTransform(tf.from(), tf.to(), what.header.stamp);
     if (!start_to_utm_origin_tf_opt.has_value())
       return std::nullopt;
@@ -310,6 +312,21 @@ std::string Transformer::resolveFrameName(const std::string& in) {
   }
 
   return in;
+}
+
+//}
+
+/* checkUAVFramePrefix() //{ */
+
+std::string Transformer::getUAVFramePrefix(const std::string& in)
+{
+  if (in.substr(0, 3) != "uav")
+    std::string();
+  const auto slashpos = in.find("/", 3);
+  if (slashpos == std::string::npos)
+    return in;
+  else
+    return in.substr(0, slashpos);
 }
 
 //}
