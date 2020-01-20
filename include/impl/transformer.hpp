@@ -88,7 +88,7 @@ std::optional<T> Transformer::transform(const mrs_lib::TransformStamped& tf, con
 template <class T>
 bool Transformer::transform(const mrs_lib::TransformStamped& to_frame, const T& what, T& output)
 {
-  const auto result_opt = transform(to_frame, what, output);
+  const auto result_opt = transform(to_frame, what);
   if (result_opt.has_value())
   {
     output = result_opt.value();
