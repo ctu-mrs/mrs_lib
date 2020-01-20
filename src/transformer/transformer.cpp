@@ -260,19 +260,19 @@ std::optional<mrs_lib::TransformStamped> Transformer::getTransform(const std::st
   return std::nullopt;
 }
 
-bool Transformer::getTransform(const std::string& from_frame, const std::string& to_frame, const ros::Time& time_stamp, mrs_lib::TransformStamped& output)
-{
-  const auto result_opt = getTransform(from_frame, to_frame, time_stamp);
-  if (result_opt.has_value())
-  {
-    output = result_opt.value();
-    return true;
-  }
-  else
-  {
-    return false;
-  }
-}
+/* bool Transformer::getTransform(const std::string& from_frame, const std::string& to_frame, const ros::Time& time_stamp, mrs_lib::TransformStamped& output) */
+/* { */
+/*   const auto result_opt = getTransform(from_frame, to_frame, time_stamp); */
+/*   if (result_opt.has_value()) */
+/*   { */
+/*     output = result_opt.value(); */
+/*     return true; */
+/*   } */
+/*   else */
+/*   { */
+/*     return false; */
+/*   } */
+/* } */
 
 //}
 

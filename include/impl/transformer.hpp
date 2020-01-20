@@ -43,20 +43,20 @@ std::optional<T> Transformer::transformSingle(const std::string& to_frame, const
   return result_opt;
 }
 
-template <class T>
-bool Transformer::transformSingle(const std::string& to_frame, const T& what, T& output)
-{
-  const auto result_opt = transformSingle(to_frame, what);
-  if (result_opt.has_value())
-  {
-    output = result_opt.value();
-    return true;
-  }
-  else
-  {
-    return false;
-  }
-}
+/* template <class T> */
+/* bool Transformer::transformSingle(const std::string& to_frame, const T& what, T& output) */
+/* { */
+/*   const auto result_opt = transformSingle(to_frame, what); */
+/*   if (result_opt.has_value()) */
+/*   { */
+/*     output = result_opt.value(); */
+/*     return true; */
+/*   } */
+/*   else */
+/*   { */
+/*     return false; */
+/*   } */
+/* } */
 
 //}
 
@@ -85,20 +85,20 @@ std::optional<T> Transformer::transform(const mrs_lib::TransformStamped& tf, con
   return result_opt;
 }
 
-template <class T>
-bool Transformer::transform(const mrs_lib::TransformStamped& to_frame, const T& what, T& output)
-{
-  const auto result_opt = transform(to_frame, what);
-  if (result_opt.has_value())
-  {
-    output = result_opt.value();
-    return true;
-  }
-  else
-  {
-    return false;
-  }
-}
+/* template <class T> */
+/* bool Transformer::transform(const mrs_lib::TransformStamped& to_frame, const T& what, T& output) */
+/* { */
+/*   const auto result_opt = transform(to_frame, what); */
+/*   if (result_opt.has_value()) */
+/*   { */
+/*     output = result_opt.value(); */
+/*     return true; */
+/*   } */
+/*   else */
+/*   { */
+/*     return false; */
+/*   } */
+/* } */
 
 //}
 

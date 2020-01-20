@@ -2,8 +2,8 @@
 #include <geometry_msgs/PointStamped.h>
 
 using test_t = geometry_msgs::PointStamped;
-template bool mrs_lib::Transformer::transform<test_t>(const mrs_lib::TransformStamped& to_frame, const test_t& what, test_t& output);
-template bool mrs_lib::Transformer::transformSingle<test_t>(const std::string& to_frame, const test_t& what, test_t& output);
+template std::optional<test_t> mrs_lib::Transformer::transform<test_t>(const mrs_lib::TransformStamped& to_frame, const test_t& what);
+template std::optional<test_t> mrs_lib::Transformer::transformSingle<test_t>(const std::string& to_frame, const test_t& what);
 
 int main(int argc, char **argv)
 {
