@@ -102,7 +102,10 @@ namespace mrs_lib
   {
     const auto tmp_result = prepareMessage(what);
     const auto result_opt = transformImpl(tf, tmp_result);
-    return postprocessMessage(result_opt.value());
+    if (result_opt.has_value())
+      return postprocessMessage(result_opt.value());
+    else
+      return std::nullopt;
   }
 
   std::optional<geometry_msgs::PoseStamped> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const geometry_msgs::PoseStamped& what)
