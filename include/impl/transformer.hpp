@@ -4,9 +4,7 @@
 template <class T>
 std::optional<T> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const T& what)
 {
-  const auto tmp_result = prepareMessage(what);
-  const auto result_opt = doTransform(tf, tmp_result);
-  return postprocessMessage(result_opt.value());
+  return doTransform(tf, what);
 }
 
 //}
@@ -120,26 +118,6 @@ std::optional<T> Transformer::doTransform(const mrs_lib::TransformStamped& tf, c
                       tf.to().c_str(), ex.what());
     return std::nullopt;
   }
-}
-
-//}
-
-/* prepareMessage() //{ */
-
-template <class T>
-T Transformer::prepareMessage(const T& what)
-{
-  return what;
-}
-
-//}
-
-/* postprocessMessage() //{ */
-
-template <class T>
-T Transformer::postprocessMessage(const T& what)
-{
-  return what;
 }
 
 //}

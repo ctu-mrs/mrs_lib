@@ -302,17 +302,14 @@ private:
   
   template <class T>
   std::optional<T> transformImpl(const mrs_lib::TransformStamped& tf, const T& what);
+  std::optional<mrs_msgs::ReferenceStamped> transformImpl(const mrs_lib::TransformStamped& tf, const mrs_msgs::ReferenceStamped& what);
   std::optional<geometry_msgs::PoseStamped> transformImpl(const mrs_lib::TransformStamped& tf, const geometry_msgs::PoseStamped& what);
+
   template <class T>
   std::optional<T> doTransform(const mrs_lib::TransformStamped& tf, const T& what);
   
-  template <class T>
-  T prepareMessage(const T& what);
   geometry_msgs::PoseStamped prepareMessage(const mrs_msgs::ReferenceStamped& what);
-  
-  template <class T>
-  T postprocessMessage(const T& what);
-  mrs_msgs::ReferenceStamped postprocessMessage(const geometry_msgs::PoseStamped & what);
+  mrs_msgs::ReferenceStamped postprocessMessage(const geometry_msgs::PoseStamped& what);
   
   /**
    * @brief keeps track whether a non-basic constructor was launched and the transform listener was initialized

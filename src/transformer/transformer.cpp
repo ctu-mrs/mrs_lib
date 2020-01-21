@@ -1,6 +1,10 @@
 #include <mrs_lib/transformer.h>
 #include <mrs_lib/GpsConversions.h>
 
+using test_t = mrs_msgs::ReferenceStamped;
+template std::optional<test_t> mrs_lib::Transformer::transform<test_t>(const mrs_lib::TransformStamped& to_frame, const test_t& what);
+template std::optional<test_t> mrs_lib::Transformer::transformSingle<test_t>(const std::string& to_frame, const test_t& what);
+
 namespace mrs_lib
 {
 
@@ -89,6 +93,13 @@ Transformer& Transformer::operator=(const Transformer& other) {
 
 /* transformImpl() //{ */
 
+std::optional<mrs_msgs::ReferenceStamped> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const mrs_msgs::ReferenceStamped& what)
+{
+  const auto tmp_result = prepareMessage(what);
+  const auto result_opt = transformImpl(tf, tmp_result);
+  return postprocessMessage(result_opt.value());
+}
+
 std::optional<geometry_msgs::PoseStamped> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const geometry_msgs::PoseStamped& what)
 {
   geometry_msgs::PoseStamped ret = what;
@@ -114,7 +125,7 @@ std::optional<geometry_msgs::PoseStamped> Transformer::transformImpl(const mrs_l
     ret.pose.position.y = utm_y;
 
     // transform from 'utm_origin' to the desired frame
-    const auto utm_origin_to_end_tf_opt = getTransform(tf.from(), tf.to(), what.header.stamp);
+    const auto utm_origin_to_end_tf_opt = getTransform(utm_frame_name, tf.to(), what.header.stamp);
     if (!utm_origin_to_end_tf_opt.has_value())
       return std::nullopt;
     return doTransform(utm_origin_to_end_tf_opt.value(), ret);
@@ -132,7 +143,7 @@ std::optional<geometry_msgs::PoseStamped> Transformer::transformImpl(const mrs_l
     // first, transform from the desired frame to 'utm_origin'
     const std::string uav_prefix = getUAVFramePrefix(tf.to());
     std::string utm_frame_name = uav_prefix + "/utm_origin";
-    const auto start_to_utm_origin_tf_opt = getTransform(tf.from(), tf.to(), what.header.stamp);
+    const auto start_to_utm_origin_tf_opt = getTransform(tf.from(), utm_frame_name, what.header.stamp);
     if (!start_to_utm_origin_tf_opt.has_value())
       return std::nullopt;
     const auto pose_opt = doTransform(start_to_utm_origin_tf_opt.value(), ret);
@@ -144,6 +155,7 @@ std::optional<geometry_msgs::PoseStamped> Transformer::transformImpl(const mrs_l
       std::scoped_lock lock(mutex_utm_zone_);
       double lat, lon;
       mrs_lib::UTMtoLL(what.pose.position.y, what.pose.position.x, utm_zone_, lat, lon);
+      ret.header.frame_id = latlon_frame_name;
       ret.pose.position.x = lat;
       ret.pose.position.y = lon;
       return ret;
@@ -184,9 +196,10 @@ geometry_msgs::PoseStamped Transformer::prepareMessage(const mrs_msgs::Reference
 
 /* postprocessMessage() //{ */
 
-mrs_msgs::ReferenceStamped Transformer::postprocessMessage(const geometry_msgs::PoseStamped & what)
+mrs_msgs::ReferenceStamped Transformer::postprocessMessage(const geometry_msgs::PoseStamped& what)
 {
   mrs_msgs::ReferenceStamped ret;
+  ret.header = what.header;
   // copy the new transformed data back
   ret.reference.position.x = what.pose.position.x;
   ret.reference.position.y = what.pose.position.y;
@@ -251,7 +264,8 @@ std::optional<mrs_lib::TransformStamped> Transformer::getTransform(const std::st
     // return it
     return mrs_lib::TransformStamped(from_frame_resolved, to_frame_resolved, ros::Time::now(), transform);
   }
-  catch (tf2::TransformException& ex) {
+  catch (tf2::TransformException& ex)
+  {
     // this does not happen often and when it does, it should be seen
     ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: Exception caught while constructing transform from '%s' to '%s': %s", node_name_.c_str(),
                       from_frame_resolved.c_str(), to_frame_resolved.c_str(), ex.what());
