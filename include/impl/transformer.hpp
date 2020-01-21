@@ -1,10 +1,11 @@
+// clang: MatousFormat
 
 /* transformImpl() //{ */
 
 template <class T>
 std::optional<T> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const T& what)
 {
-  std::string latlon_frame_name  = resolveFrameName(LATLON_ORIGIN);
+  std::string latlon_frame_name = resolveFrameName(LATLON_ORIGIN);
   // by default, transformation from/to LATLON is undefined
   if (tf.from() == latlon_frame_name || tf.to() == latlon_frame_name)
     return std::nullopt;
@@ -18,12 +19,13 @@ std::optional<T> Transformer::transformImpl(const mrs_lib::TransformStamped& tf,
 template <class T>
 std::optional<T> Transformer::transformSingle(const std::string& to_frame, const T& what)
 {
-  if (!is_initialized_) {
+  if (!is_initialized_)
+  {
     ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
     return std::nullopt;
   }
 
-  std::string from_frame_resolved  = resolveFrameName(what.header.frame_id);
+  std::string from_frame_resolved = resolveFrameName(what.header.frame_id);
   std::string to_frame_resolved = resolveFrameName(to_frame);
 
   if (from_frame_resolved == to_frame_resolved)

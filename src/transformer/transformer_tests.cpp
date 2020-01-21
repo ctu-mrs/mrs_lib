@@ -11,7 +11,7 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "transformer_tests");
   ros::NodeHandle nh = ros::NodeHandle("~");
 
-  auto tfr = mrs_lib::Transformer("transformer_tests", "uav666", 666);
+  auto tfr = mrs_lib::Transformer("transformer_tests", "uav666");
 
   return 0;
 }
