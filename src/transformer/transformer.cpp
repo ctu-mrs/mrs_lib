@@ -101,11 +101,10 @@ std::optional<mrs_msgs::ReferenceStamped> Transformer::transformImpl(const mrs_l
 
 std::optional<geometry_msgs::PoseStamped> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const geometry_msgs::PoseStamped& what) {
   geometry_msgs::PoseStamped ret = what;
-  ret.header.frame_id            = resolveFrameName(ret.header.frame_id);
   std::string latlon_frame_name  = resolveFrameName(LATLON_ORIGIN);
 
   // if it is already in the target frame
-  if (ret.header.frame_id == tf.to())
+  if (tf.from() == tf.to())
     return ret;
 
   // check for transformation from LAT-LON GPS
@@ -122,7 +121,7 @@ std::optional<geometry_msgs::PoseStamped> Transformer::transformImpl(const mrs_l
     ret.pose.position.y              = utm_y;
 
     // transform from 'utm_origin' to the desired frame
-    const auto utm_origin_to_end_tf_opt = getTransform(utm_frame_name, tf.to(), what.header.stamp);
+    const auto utm_origin_to_end_tf_opt = getTransform(utm_frame_name, tf.to(), tf.stamp());
     if (!utm_origin_to_end_tf_opt.has_value())
       return std::nullopt;
     return doTransform(utm_origin_to_end_tf_opt.value(), ret);
@@ -139,7 +138,7 @@ std::optional<geometry_msgs::PoseStamped> Transformer::transformImpl(const mrs_l
     const std::string uav_prefix     = getUAVFramePrefix(tf.to());
     std::string       utm_frame_name = uav_prefix + "/utm_origin";
 
-    const auto start_to_utm_origin_tf_opt = getTransform(tf.from(), utm_frame_name, what.header.stamp);
+    const auto start_to_utm_origin_tf_opt = getTransform(tf.from(), utm_frame_name, tf.stamp());
 
     if (!start_to_utm_origin_tf_opt.has_value())
       return std::nullopt;
@@ -159,7 +158,6 @@ std::optional<geometry_msgs::PoseStamped> Transformer::transformImpl(const mrs_l
       mrs_lib::UTMtoLL(ret.pose.position.y, ret.pose.position.x, utm_zone_, lat, lon);
 
       ret.header.frame_id = latlon_frame_name;
-
       ret.pose.position.x = lat;
       ret.pose.position.y = lon;
 
@@ -232,8 +230,6 @@ std::optional<mrs_lib::TransformStamped> Transformer::getTransform(const std::st
   // check for latlon transform
   if (from_frame_resolved == latlon_frame_resolved || to_frame_resolved == latlon_frame_resolved)
     return mrs_lib::TransformStamped(from_frame_resolved, to_frame_resolved, time_stamp);
-
-  const std::string tf_frame_combined = to_frame_resolved + "->" + from_frame_resolved;
 
   // first try to get transform at the requested time
   try {

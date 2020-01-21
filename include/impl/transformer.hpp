@@ -4,6 +4,10 @@
 template <class T>
 std::optional<T> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const T& what)
 {
+  std::string latlon_frame_name  = resolveFrameName(LATLON_ORIGIN);
+  // by default, transformation from/to LATLON is undefined
+  if (tf.from() == latlon_frame_name || tf.to() == latlon_frame_name)
+    return std::nullopt;
   return doTransform(tf, what);
 }
 
@@ -22,7 +26,7 @@ std::optional<T> Transformer::transformSingle(const std::string& to_frame, const
   std::string from_frame_resolved  = resolveFrameName(what.header.frame_id);
   std::string to_frame_resolved = resolveFrameName(to_frame);
 
-  if (from_frame_resolved == to_frame_resolved )
+  if (from_frame_resolved == to_frame_resolved)
   {
     T ret = what;
     ret.header.frame_id = from_frame_resolved;
@@ -33,28 +37,12 @@ std::optional<T> Transformer::transformSingle(const std::string& to_frame, const
   const auto tf_opt = getTransform(from_frame_resolved, to_frame_resolved, what.header.stamp);
   if (!tf_opt.has_value())
     return std::nullopt;
-
   mrs_lib::TransformStamped tf = tf_opt.value();
 
   // do the transformation
   const auto result_opt = transform(tf, what);
   return result_opt;
 }
-
-/* template <class T> */
-/* bool Transformer::transformSingle(const std::string& to_frame, const T& what, T& output) */
-/* { */
-/*   const auto result_opt = transformSingle(to_frame, what); */
-/*   if (result_opt.has_value()) */
-/*   { */
-/*     output = result_opt.value(); */
-/*     return true; */
-/*   } */
-/*   else */
-/*   { */
-/*     return false; */
-/*   } */
-/* } */
 
 //}
 
@@ -69,34 +57,17 @@ std::optional<T> Transformer::transform(const mrs_lib::TransformStamped& tf, con
     return std::nullopt;
   }
 
-  std::string from_frame_resolved  = resolveFrameName(what.header.frame_id);
-
-  if (from_frame_resolved == tf.to())
+  if (tf.from() == tf.to())
   {
     T ret = what;
-    ret.header.frame_id = from_frame_resolved;
-    ret.header.stamp = tf.getTransform().header.stamp;
+    ret.header.frame_id = tf.from();
+    ret.header.stamp = tf.stamp();
     return ret;
   }
 
   const auto result_opt = transformImpl(tf, what);
   return result_opt;
 }
-
-/* template <class T> */
-/* bool Transformer::transform(const mrs_lib::TransformStamped& to_frame, const T& what, T& output) */
-/* { */
-/*   const auto result_opt = transform(to_frame, what); */
-/*   if (result_opt.has_value()) */
-/*   { */
-/*     output = result_opt.value(); */
-/*     return true; */
-/*   } */
-/*   else */
-/*   { */
-/*     return false; */
-/*   } */
-/* } */
 
 //}
 
