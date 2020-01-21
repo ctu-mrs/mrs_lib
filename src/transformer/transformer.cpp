@@ -93,36 +93,33 @@ Transformer& Transformer::operator=(const Transformer& other) {
 
 /* transformImpl() //{ */
 
-std::optional<mrs_msgs::ReferenceStamped> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const mrs_msgs::ReferenceStamped& what)
-{
+std::optional<mrs_msgs::ReferenceStamped> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const mrs_msgs::ReferenceStamped& what) {
   const auto tmp_result = prepareMessage(what);
   const auto result_opt = transformImpl(tf, tmp_result);
   return postprocessMessage(result_opt.value());
 }
 
-std::optional<geometry_msgs::PoseStamped> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const geometry_msgs::PoseStamped& what)
-{
+std::optional<geometry_msgs::PoseStamped> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const geometry_msgs::PoseStamped& what) {
   geometry_msgs::PoseStamped ret = what;
-  ret.header.frame_id = resolveFrameName(ret.header.frame_id);
-  std::string latlon_frame_name = resolveFrameName(LATLON_ORIGIN);
+  ret.header.frame_id            = resolveFrameName(ret.header.frame_id);
+  std::string latlon_frame_name  = resolveFrameName(LATLON_ORIGIN);
 
   // if it is already in the target frame
   if (ret.header.frame_id == tf.to())
     return ret;
 
   // check for transformation from LAT-LON GPS
-  if (tf.from() == latlon_frame_name)
-  {
+  if (tf.from() == latlon_frame_name) {
     // convert LAT-LON to UTM
     double utm_x, utm_y;
     mrs_lib::UTM(ret.pose.position.x, ret.pose.position.y, &utm_x, &utm_y);
 
     // utm_x and utm_y are now in 'utm_origin' frame
-    const std::string uav_prefix = getUAVFramePrefix(tf.from());
+    const std::string uav_prefix     = getUAVFramePrefix(tf.from());
     const std::string utm_frame_name = uav_prefix + "/utm_origin";
-    ret.header.frame_id = utm_frame_name;
-    ret.pose.position.x = utm_x;
-    ret.pose.position.y = utm_y;
+    ret.header.frame_id              = utm_frame_name;
+    ret.pose.position.x              = utm_x;
+    ret.pose.position.y              = utm_y;
 
     // transform from 'utm_origin' to the desired frame
     const auto utm_origin_to_end_tf_opt = getTransform(utm_frame_name, tf.to(), what.header.stamp);
@@ -131,50 +128,55 @@ std::optional<geometry_msgs::PoseStamped> Transformer::transformImpl(const mrs_l
     return doTransform(utm_origin_to_end_tf_opt.value(), ret);
   }
   // check for transformation to LAT-LON GPS
-  else if (tf.to() == latlon_frame_name)
-  {
+  else if (tf.to() == latlon_frame_name) {
     // if no UTM zone was specified by the user, we don't know which one to use...
-    if (!got_utm_zone_) 
-    {
+    if (!got_utm_zone_) {
       ROS_WARN_THROTTLE(1.0, "[%s]: cannot transform to latlong, missing UTM zone (did you call setCurrentLatLon()?)", node_name_.c_str());
       return std::nullopt;
     }
 
     // first, transform from the desired frame to 'utm_origin'
-    const std::string uav_prefix = getUAVFramePrefix(tf.to());
-    std::string utm_frame_name = uav_prefix + "/utm_origin";
+    const std::string uav_prefix     = getUAVFramePrefix(tf.to());
+    std::string       utm_frame_name = uav_prefix + "/utm_origin";
+
     const auto start_to_utm_origin_tf_opt = getTransform(tf.from(), utm_frame_name, what.header.stamp);
+
     if (!start_to_utm_origin_tf_opt.has_value())
       return std::nullopt;
+
     const auto pose_opt = doTransform(start_to_utm_origin_tf_opt.value(), ret);
+
     if (!pose_opt.has_value())
       return std::nullopt;
+
+    ret = pose_opt.value();
 
     // now apply the nonlinear transformation from UTM to LAT-LON
     {
       std::scoped_lock lock(mutex_utm_zone_);
-      double lat, lon;
-      mrs_lib::UTMtoLL(what.pose.position.y, what.pose.position.x, utm_zone_, lat, lon);
+      double           lat, lon;
+
+      mrs_lib::UTMtoLL(ret.pose.position.y, ret.pose.position.x, utm_zone_, lat, lon);
+
       ret.header.frame_id = latlon_frame_name;
+
       ret.pose.position.x = lat;
       ret.pose.position.y = lon;
+
       return ret;
     }
   }
   // if nothing interesting is requested, just do the plain old linear transformation
-  else
-  {
+  else {
     return doTransform(tf, ret);
   }
 }
-
 
 //}
 
 /* prepareMessage() //{ */
 
-geometry_msgs::PoseStamped Transformer::prepareMessage(const mrs_msgs::ReferenceStamped& what)
-{
+geometry_msgs::PoseStamped Transformer::prepareMessage(const mrs_msgs::ReferenceStamped& what) {
   // create the pose message
   geometry_msgs::PoseStamped pose;
   pose.header = what.header;
@@ -184,10 +186,10 @@ geometry_msgs::PoseStamped Transformer::prepareMessage(const mrs_msgs::Reference
   pose.pose.position.z = what.reference.position.z;
 
   const tf::Quaternion quat = tf::createQuaternionFromRPY(0, 0, what.reference.yaw);
-  pose.pose.orientation.x = quat.getX();
-  pose.pose.orientation.y = quat.getY();
-  pose.pose.orientation.z = quat.getZ();
-  pose.pose.orientation.w = quat.getW();
+  pose.pose.orientation.x   = quat.getX();
+  pose.pose.orientation.y   = quat.getY();
+  pose.pose.orientation.z   = quat.getZ();
+  pose.pose.orientation.w   = quat.getW();
 
   return pose;
 }
@@ -196,8 +198,7 @@ geometry_msgs::PoseStamped Transformer::prepareMessage(const mrs_msgs::Reference
 
 /* postprocessMessage() //{ */
 
-mrs_msgs::ReferenceStamped Transformer::postprocessMessage(const geometry_msgs::PoseStamped& what)
-{
+mrs_msgs::ReferenceStamped Transformer::postprocessMessage(const geometry_msgs::PoseStamped& what) {
   mrs_msgs::ReferenceStamped ret;
   ret.header = what.header;
   // copy the new transformed data back
@@ -208,7 +209,7 @@ mrs_msgs::ReferenceStamped Transformer::postprocessMessage(const geometry_msgs::
   tf::Quaternion quat;
   tf::quaternionMsgToTF(what.pose.orientation, quat);
   tf::Matrix3x3 m(quat);
-  double roll, pitch;
+  double        roll, pitch;
   m.getRPY(roll, pitch, ret.reference.yaw);
 
   return ret;
@@ -218,10 +219,8 @@ mrs_msgs::ReferenceStamped Transformer::postprocessMessage(const geometry_msgs::
 
 /* getTransform() //{ */
 
-std::optional<mrs_lib::TransformStamped> Transformer::getTransform(const std::string& from_frame, const std::string& to_frame, const ros::Time& time_stamp)
-{
-  if (!is_initialized_)
-  {
+std::optional<mrs_lib::TransformStamped> Transformer::getTransform(const std::string& from_frame, const std::string& to_frame, const ros::Time& time_stamp) {
+  if (!is_initialized_) {
     ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot provide transform, not initialized", ros::this_node::getName().c_str());
     return std::nullopt;
   }
@@ -237,8 +236,7 @@ std::optional<mrs_lib::TransformStamped> Transformer::getTransform(const std::st
   const std::string tf_frame_combined = to_frame_resolved + "->" + from_frame_resolved;
 
   // first try to get transform at the requested time
-  try
-  {
+  try {
     std::scoped_lock lock(mutex_tf_buffer_);
 
     // get the transform
@@ -247,16 +245,14 @@ std::optional<mrs_lib::TransformStamped> Transformer::getTransform(const std::st
     // return it
     return mrs_lib::TransformStamped(from_frame_resolved, to_frame_resolved, ros::Time::now(), transform);
   }
-  catch (tf2::TransformException& ex)
-  {
+  catch (tf2::TransformException& ex) {
     // this happens often -> DEBUG
     ROS_DEBUG("[%s]: Transformer: Exception caught while constructing transform from '%s' to '%s': %s", node_name_.c_str(), from_frame_resolved.c_str(),
               to_frame_resolved.c_str(), ex.what());
   }
 
   // otherwise get the newest one
-  try
-  {
+  try {
     std::scoped_lock lock(mutex_tf_buffer_);
 
     geometry_msgs::TransformStamped transform = tf_buffer_.lookupTransform(to_frame_resolved, from_frame_resolved, ros::Time(0));
@@ -264,8 +260,7 @@ std::optional<mrs_lib::TransformStamped> Transformer::getTransform(const std::st
     // return it
     return mrs_lib::TransformStamped(from_frame_resolved, to_frame_resolved, ros::Time::now(), transform);
   }
-  catch (tf2::TransformException& ex)
-  {
+  catch (tf2::TransformException& ex) {
     // this does not happen often and when it does, it should be seen
     ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: Exception caught while constructing transform from '%s' to '%s': %s", node_name_.c_str(),
                       from_frame_resolved.c_str(), to_frame_resolved.c_str(), ex.what());
@@ -332,8 +327,7 @@ std::string Transformer::resolveFrameName(const std::string& in) {
 
 /* checkUAVFramePrefix() //{ */
 
-std::string Transformer::getUAVFramePrefix(const std::string& in)
-{
+std::string Transformer::getUAVFramePrefix(const std::string& in) {
   if (in.substr(0, 3) != "uav")
     std::string();
   const auto slashpos = in.find("/", 3);
