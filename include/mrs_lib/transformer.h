@@ -163,18 +163,6 @@ namespace mrs_lib
     template <class T>
     std::optional<T> transformSingle(const std::string& to_frame, const T& what);
 
-    /**
-     * @brief transform a message to new frame
-     *
-     * @param to_frame target frame name
-     * @param what the object to be transformed
-     * @param output the result will be set to this reference
-     *
-     * @return true if successful, false otherwise
-     */
-    template <class T>
-    bool transformSingle(const std::string& to_frame, const T& what, T& output);
-
     //}
 
     /* transform() //{ */
@@ -189,18 +177,6 @@ namespace mrs_lib
      */
     template <class T>
     std::optional<T> transform(const mrs_lib::TransformStamped& tf, const T& what);
-
-    /**
-     * @brief transform a message to new frame, given a particular tf
-     *
-     * @param tf the tf to be used
-     * @param what the object to be transformed
-     * @param output the result will be set to this reference
-     *
-     * @return true if successful, false otherwise
-     */
-    template <class T>
-    bool transform(const mrs_lib::TransformStamped& tf, const T& what, T& output);
 
     //}
 
@@ -218,20 +194,6 @@ namespace mrs_lib
      * @return \p std::nullopt if failed, optional containing the requested transform otherwise
      */
     std::optional<mrs_lib::TransformStamped> getTransform(const std::string& from_frame, const std::string& to_frame, const ros::Time& time_stamp);
-
-    /**
-     * @brief gets a transform between two frames in a given time
-     *
-     * if it fails to find it for the particular time stamp, it uses the last available time
-     *
-     * @param from_frame the original frame
-     * @param to_frame the target frame
-     * @param time_stamp the time stamped to be used
-     * @param output the result will be set to this reference
-     *
-     * @return \p std::nullopt if failed, optional containing the requested transform otherwise
-     */
-    bool getTransform(const std::string& from_frame, const std::string& to_frame, const ros::Time& time_stamp, mrs_lib::TransformStamped& output);
 
     //}
 
