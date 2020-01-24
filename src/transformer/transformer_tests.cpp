@@ -12,6 +12,9 @@ int main(int argc, char **argv)
   ros::NodeHandle nh = ros::NodeHandle("~");
 
   auto tfr = mrs_lib::Transformer("transformer_tests", "uav666");
+  const auto tf = tfr.getTransform("fcu", "local_origin", ros::Time::now());
+  if (tf.has_value())
+    std::cout << tf.value().getTransform();
 
   return 0;
 }

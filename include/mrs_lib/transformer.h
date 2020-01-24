@@ -161,7 +161,7 @@ namespace mrs_lib
      * @return \p std::nullopt if failed, optional containing the transformed object otherwise
      */
     template <class T>
-    std::optional<T> transformSingle(const std::string& to_frame, const T& what);
+    [[nodiscard]] std::optional<T> transformSingle(const std::string& to_frame, const T& what);
 
     //}
 
@@ -176,7 +176,7 @@ namespace mrs_lib
      * @return \p std::nullopt if failed, optional containing the transformed object otherwise
      */
     template <class T>
-    std::optional<T> transform(const mrs_lib::TransformStamped& tf, const T& what);
+    [[nodiscard]] std::optional<T> transform(const mrs_lib::TransformStamped& tf, const T& what);
 
     //}
 
@@ -193,7 +193,7 @@ namespace mrs_lib
      *
      * @return \p std::nullopt if failed, optional containing the requested transform otherwise
      */
-    std::optional<mrs_lib::TransformStamped> getTransform(const std::string& from_frame, const std::string& to_frame, const ros::Time& time_stamp);
+    [[nodiscard]] std::optional<mrs_lib::TransformStamped> getTransform(const std::string& from_frame, const std::string& to_frame, const ros::Time& time_stamp);
 
     //}
 
