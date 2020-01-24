@@ -20,6 +20,8 @@
   <depend>tf</depend>
   <depend>cmake_modules</depend>
   <depend>mrs_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>opencv</depend>
 
   <export>
   </export>

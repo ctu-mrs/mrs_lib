@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   mrs_msgs
   tf
+  cv_bridge
   )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O3 -Wall")
@@ -27,6 +28,8 @@ find_package(Eigen3 REQUIRED)
 set(Eigen_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIRS})
 set(Eigen_LIBRARIES ${EIGEN3_LIBRARIES})
 
+#include OpenCV
+find_package(OpenCV REQUIRED HINTS /usr/local/lib)
 ###################################
 ## catkin specific configuration ##
 ###################################
@@ -35,7 +38,8 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs mrs_msgs
   DEPENDS Eigen
-  LIBRARIES Lkf Ukf ConvexPolygon SafetyZone Profiler Utils ParamLoader MedianFilter Repredictor geometry_utils MrsLibTransformer
+  LIBRARIES Lkf Ukf ConvexPolygon SafetyZone Profiler Utils ParamLoader MedianFilter Repredictor geometry_utils MrsLibTransformer ImagePublisher
+
   )
 
 ###########
@@ -49,6 +53,7 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${Eigen_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
   )
 
 add_library(Repredictor src/repredictor/Repredictor.cpp src/repredictor/MRS_odom_repredictor.cpp)
@@ -187,6 +192,14 @@ add_library(geometry_utils src/geometry_utils/geometry_utils.cpp)
 target_link_libraries(geometry_utils
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
+  ${GAZEBO_INCLUDE_DIRS}
+  )
+
+add_library(ImagePublisher src/image_publisher/image_publisher.cpp)
+target_link_libraries(ImagePublisher
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  ${OpenCV_LIBRARIES} 
   ${GAZEBO_INCLUDE_DIRS}
   )
 
