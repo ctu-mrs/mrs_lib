@@ -1,35 +1,5 @@
 #include <mrs_lib/image_publisher.h>
 
-/* MACROS //{ */
-#define IMPUB_DEFINE_LOCATION(cond ) \
-  static ::ros::console::LogLocation __rosconsole_define_location__loc = {false, false, ::ros::console::levels::Count, NULL}; /* Initialized at compile-time */ \
-  if (ROS_UNLIKELY(!__rosconsole_define_location__loc.initialized_)) \
-  { \
-    initializeLogLocation(&__rosconsole_define_location__loc, "IMPUB", ::ros::console::levels::Info); \
-  } \
-  if (ROS_UNLIKELY(__rosconsole_define_location__loc.level_ != ::ros::console::levels::Info)) \
-  { \
-    setLogLocationLevel(&__rosconsole_define_location__loc, ::ros::console::levels::Info); \
-    checkLogLocationEnabled(&__rosconsole_define_location__loc); \
-  } \
-  bool __impub_define_location__enabled = __rosconsole_define_location__loc.logger_enabled_ && (cond);
-
-#define IMPUB_THROTTLE(period, ...) \
-  do \
-  { \
-    IMPUB_DEFINE_LOCATION(true); \
-    static double __impub_throttle_last_hit__ = 0.0; \
-    double __impub_throttle_now__ = ::ros::Time::now().toSec(); \
-    if (ROS_UNLIKELY(__impub_define_location__enabled) && ROSCONSOLE_THROTTLE_CHECK(__impub_throttle_now__, __impub_throttle_last_hit__, period))\
-    { \
-      __impub_throttle_last_hit__ = __impub_throttle_now__; \
-    } \
-    else \
-      return false; \
-  } while(false)
-
-//}
-
 namespace mrs_lib {
   /* Constructor //{ */
   ImagePublisher::ImagePublisher(ros::NodeHandlePtr nh_){
@@ -42,8 +12,6 @@ namespace mrs_lib {
   bool ImagePublisher::publish(std::string topic_name, double throttle_period, cv::Mat& image, bool bgr_order){
     std::scoped_lock lock(main_pub_mutex);
 
-    IMPUB_THROTTLE(throttle_period);
-
     /* ROS_INFO_STREAM("curr. topic count: " << imagePublishers.size()); */
     int match_index = -1;
     for (int i=0; i<(int)(imagePublishers.size());i++){
@@ -54,10 +22,13 @@ namespace mrs_lib {
       }
     }
 
+    if (throttle(match_index, throttle_period))
+      return false;
+
     if (match_index == -1){
       ROS_INFO("[ImagePublisher]: creating new image publisher %s",topic_name.c_str());
       image_transport::Publisher new_publisher = transport->advertise(topic_name,1);
-      imagePublishers.push_back({.publisher = new_publisher, .topic_name = topic_name, .pub_mutex = new std::mutex});
+      imagePublishers.push_back({.publisher = new_publisher, .topic_name = topic_name, .pub_mutex = new std::mutex, .last_hit = ros::Time::now()});
       match_index = (int)(imagePublishers.size()) - 1;
       /* pub_mutex.push_back(); */
     }
@@ -69,6 +40,7 @@ namespace mrs_lib {
     msg = outputImage.toImageMsg();
     msg->header.stamp = ros::Time::now();
     /* ROS_INFO("Here D"); */
+
 
     try{
       std::scoped_lock lock(*(imagePublishers[match_index].pub_mutex));
@@ -97,6 +69,18 @@ namespace mrs_lib {
         return "";
         break;
     }
+  }
+  //}
+
+  /* throttle /{ */
+  bool ImagePublisher::throttle(int index, double throttle_period){
+    if (index < 0)
+      return false;
+
+    if ((ros::Time::now() - imagePublishers[index].last_hit).toSec() < throttle_period)
+      return true;
+    else
+      return false;
   }
   //}
 }

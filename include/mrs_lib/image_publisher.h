@@ -13,6 +13,7 @@ namespace mrs_lib {
     image_transport::Publisher publisher;
     std::string topic_name;
     std::mutex* pub_mutex;
+    ros::Time last_hit;
   };
 
   class ImagePublisher{
@@ -22,6 +23,7 @@ namespace mrs_lib {
     
     private:
       std::string getEncoding(cv::Mat& input, bool bgr_order);
+      bool throttle(int index, double throttle_period);
 
       ros::NodeHandlePtr nh;
       std::vector<ImagePubliserData> imagePublishers;
