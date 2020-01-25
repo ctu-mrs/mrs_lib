@@ -24,6 +24,8 @@
     { \
       __impub_throttle_last_hit__ = __impub_throttle_now__; \
     } \
+    else \
+      return false; \
   } while(false)
 
 //}
@@ -38,10 +40,15 @@ namespace mrs_lib {
 
   /* publish //{ */
   bool ImagePublisher::publish(std::string topic_name, double throttle_period, cv::Mat& image, bool bgr_order){
+    std::scoped_lock lock(main_pub_mutex);
+
+    IMPUB_THROTTLE(throttle_period);
+
+    /* ROS_INFO_STREAM("curr. topic count: " << imagePublishers.size()); */
     int match_index = -1;
     for (int i=0; i<(int)(imagePublishers.size());i++){
-      /* ROS_INFO_STREAM("curr. topic: " << imagePublishers[i].getTopic()); */
-      if ( ("/"+topic_name) == imagePublishers[i].getTopic() ) {
+      /* ROS_INFO_STREAM("curr. topic: " << imagePublishers[i].topic_name); */
+      if ( (topic_name) == (imagePublishers[i].topic_name) ) {
         match_index = i;
         break;
       }
@@ -50,9 +57,9 @@ namespace mrs_lib {
     if (match_index == -1){
       ROS_INFO("[ImagePublisher]: creating new image publisher %s",topic_name.c_str());
       image_transport::Publisher new_publisher = transport->advertise(topic_name,1);
-      imagePublishers.push_back(new_publisher);
+      imagePublishers.push_back({.publisher = new_publisher, .topic_name = topic_name, .pub_mutex = new std::mutex});
       match_index = (int)(imagePublishers.size()) - 1;
-      pub_mutex.push_back(new std::mutex);
+      /* pub_mutex.push_back(); */
     }
 
     /* ROS_INFO("Here A"); */
@@ -63,10 +70,9 @@ namespace mrs_lib {
     msg->header.stamp = ros::Time::now();
     /* ROS_INFO("Here D"); */
 
-    IMPUB_THROTTLE(throttle_period);
     try{
-      std::scoped_lock lock(*pub_mutex[match_index]);
-      imagePublishers[match_index].publish(msg);
+      std::scoped_lock lock(*(imagePublishers[match_index].pub_mutex));
+      imagePublishers[match_index].publisher.publish(msg);
     } catch (const std::exception& e) {
       ROS_ERROR_STREAM("[ImagePublisher]: error msg " << e.what());
       return false;
