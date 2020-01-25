@@ -32,6 +32,8 @@ namespace mrs_lib {
       match_index = (int)(imagePublishers.size()) - 1;
       /* pub_mutex.push_back(); */
     }
+    else
+      imagePublishers[match_index].last_hit = ros::Time::now();
 
     /* ROS_INFO("Here A"); */
     outputImage = cv_bridge::CvImage(std_msgs::Header(), getEncoding(image, bgr_order), image);
