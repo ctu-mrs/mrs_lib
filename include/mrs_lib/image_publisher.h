@@ -10,9 +10,14 @@
 namespace mrs_lib {
 
   struct ImagePubliserData{
+    ImagePubliserData(const image_transport::Publisher& publisher, const std::string& topic_name, const ros::Time& last_hit)
+      :
+      publisher(publisher),
+      topic_name(topic_name),
+      last_hit(last_hit) {};
     image_transport::Publisher publisher;
     std::string topic_name;
-    std::mutex* pub_mutex;
+    std::mutex pub_mutex;
     ros::Time last_hit;
   };
 
@@ -26,8 +31,8 @@ namespace mrs_lib {
       bool throttle(int index, double throttle_period);
 
       ros::NodeHandlePtr nh;
-      std::vector<ImagePubliserData> imagePublishers;
-      image_transport::ImageTransport* transport;
+      std::vector<std::unique_ptr<ImagePubliserData>> imagePublishers;
+      std::unique_ptr<image_transport::ImageTransport> transport;
       cv_bridge::CvImage outputImage;
       sensor_msgs::ImagePtr msg;
       bool throttle_pass;
