@@ -27,7 +27,7 @@ namespace mrs_lib {
 
     if (match_index == -1){
       ROS_INFO("[ImagePublisher]: creating new image publisher %s",topic_name.c_str());
-      image_transport::Publisher new_publisher = transport->advertise("/debug_topics/"+topic_name,1);
+      image_transport::Publisher new_publisher = transport->advertise("/debug_topics/"+nh->getNamespace()+"/"+topic_name,1);
       imagePublishers.push_back(std::make_unique<ImagePubliserData>(new_publisher, topic_name, ros::Time::now()));
       match_index = (int)(imagePublishers.size()) - 1;
       /* pub_mutex.push_back(); */
