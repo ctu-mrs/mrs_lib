@@ -134,18 +134,77 @@ namespace mrs_lib
         * \param f_dzdx                a function, returning the jacobian matrix of partial derivations of \f$ \mathbf{z}\left( \mathbf{x} \right) \f$ by \f$ \mathbf{x} \f$, evaluated at \f$ \mathbf{x} \f$.
         * \param min_dtheta            if the difference of \f$ \mathbf{\theta}_{k} \f$ and \f$ \mathbf{\theta}_{k-1} \f$ is smaller than this number, the iteration is stopped.
         * \param max_its               if the iteration is stopped after this number of iterations.
-        * \param timeout               if the calculation takes longer than this time, the iteration is stopped.
-        * \param debug_nth_it          a debug message will be printed every \p debug_nth_it th iteration (negative number disables debug).
         */
-        RHEIV(const f_z_t& f_z, const f_dzdx_t& f_dzdx, const double min_dtheta = 1e-15, const unsigned max_its = 100, const ms_t& timeout = ms_t::zero(), const int debug_nth_it = -1)
+        RHEIV(const f_z_t& f_z, const f_dzdx_t& f_dzdx, const double min_dtheta = 1e-15, const unsigned max_its = 100)
           : 
             m_initialized(true),
             m_f_z(f_z),
             m_f_dzdx(f_dzdx),
             m_min_dtheta(min_dtheta),
             m_max_its(max_its),
-            m_timeout(timeout),
+            m_timeout(ms_t::zero()),
+            m_debug_nth_it(-1),
+            m_ALS_theta_set(false),
+            m_last_theta_set(false)
+        {};
+
+      /*!
+        * \brief The main constructor.
+        *
+        * The \p dzdx parameter gives the relation between \f$ \mathbf{z}\left( \mathbf{x} \right) \f$ and \f$ \mathbf{x} \f$. It is the full jacobian matrix
+        * \f$ \partial_{\mathbf{x}} \mathbf{z}\left( \mathbf{x} \right) \f$.
+        *
+        * The optimization algorithm is iterative with two possible stopping conditions:
+        * - if change of the estimate of \f$ \mathbf{\theta} \f$ between two iterations is smaller than a defined threshold, or
+        * - if a maximal number of iterations was reached.
+        *
+        * \param f_z                   the mapping function \f$ \mathbf{z}\left( \mathbf{x} \right) \f$.
+        * \param f_dzdx                a function, returning the jacobian matrix of partial derivations of \f$ \mathbf{z}\left( \mathbf{x} \right) \f$ by \f$ \mathbf{x} \f$, evaluated at \f$ \mathbf{x} \f$.
+        * \param min_dtheta            if the difference of \f$ \mathbf{\theta}_{k} \f$ and \f$ \mathbf{\theta}_{k-1} \f$ is smaller than this number, the iteration is stopped.
+        * \param max_its               if the iteration is stopped after this number of iterations.
+        * \param timeout               if the calculation takes longer than this time, the iteration is stopped.
+        * \param debug_nth_it          a debug message will be printed every \p debug_nth_it th iteration (negative number disables debug).
+        */
+        template <typename time_t>
+        RHEIV(const f_z_t& f_z, const f_dzdx_t& f_dzdx, const double min_dtheta = 1e-15, const unsigned max_its = 100, const time_t& timeout = std::chrono::duration_cast<time_t>(ms_t::zero()), const int debug_nth_it = -1)
+          : 
+            m_initialized(true),
+            m_f_z(f_z),
+            m_f_dzdx(f_dzdx),
+            m_min_dtheta(min_dtheta),
+            m_max_its(max_its),
+            m_timeout(std::chrono::duration_cast<ms_t>(timeout)),
             m_debug_nth_it(debug_nth_it),
+            m_ALS_theta_set(false),
+            m_last_theta_set(false)
+        {};
+
+      /*!
+        * \brief A convenience constructor constructor.
+        *
+        * This constructor differs from the main one only in the parameters it takes. Instead of the function f_dzdx, it takes directly the dzdx matrix. This variant is meant to be used
+        * for systems where the jacobian matrix \f$ \mathbf{z}\left( \mathbf{x} \right) \f$ by \f$ \mathbf{x} \f$ does not depend on \f$ \mathbf{x} \f$.
+        *
+        * \param f_z                   the mapping function \f$ \mathbf{z}\left( \mathbf{x} \right) \f$.
+        * \param dzdx                  the jacobian matrix of partial derivations of \f$ \mathbf{z}\left( \mathbf{x} \right) \f$ by \f$ \mathbf{x} \f$.
+        * \param min_dtheta            if the difference of \f$ \mathbf{\theta}_{k} \f$ and \f$ \mathbf{\theta}_{k-1} \f$ is smaller than this number, the iteration is stopped.
+        */
+        RHEIV(const f_z_t& f_z, const dzdx_t& dzdx, const double min_dtheta = 1e-15, const unsigned max_its = 100)
+          : 
+            m_initialized(true),
+            m_f_z(f_z),
+            // define a helper function which just returns the constant dzdx
+            m_f_dzdx(
+                {
+                [dzdx](const x_t&)
+                  {
+                    return dzdx;
+                  }
+                }),
+            m_min_dtheta(min_dtheta),
+            m_max_its(max_its),
+            m_timeout(ms_t::zero()),
+            m_debug_nth_it(-1),
             m_ALS_theta_set(false),
             m_last_theta_set(false)
         {};
@@ -163,7 +222,8 @@ namespace mrs_lib
         * \param max_its               if the iteration is stopped after this number of iterations.
         * \param debug_nth_it          a debug message will be printed every \p debug_nth_it th iteration (negative number disables debug).
         */
-        RHEIV(const f_z_t& f_z, const dzdx_t& dzdx, const double min_dtheta = 1e-15, const unsigned max_its = 100, const ms_t& timeout = ms_t::zero(), const int debug_nth_it = -1)
+        template <typename time_t>
+        RHEIV(const f_z_t& f_z, const dzdx_t& dzdx, const double min_dtheta = 1e-15, const unsigned max_its = 100, const time_t& timeout = std::chrono::duration_cast<time_t>(ms_t::zero()), const int debug_nth_it = -1)
           : 
             m_initialized(true),
             m_f_z(f_z),
@@ -177,7 +237,7 @@ namespace mrs_lib
                 }),
             m_min_dtheta(min_dtheta),
             m_max_its(max_its),
-            m_timeout(timeout),
+            m_timeout(std::chrono::duration_cast<ms_t>(timeout)),
             m_debug_nth_it(debug_nth_it),
             m_ALS_theta_set(false),
             m_last_theta_set(false)
