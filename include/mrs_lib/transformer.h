@@ -193,9 +193,23 @@ namespace mrs_lib
      *
      * @return \p std::nullopt if failed, optional containing the requested transform otherwise
      */
-    [[nodiscard]] std::optional<mrs_lib::TransformStamped> getTransform(const std::string& from_frame, const std::string& to_frame, const ros::Time& time_stamp);
+    [[nodiscard]] std::optional<mrs_lib::TransformStamped> getTransform(const std::string& from_frame, const std::string& to_frame,
+                                                                        const ros::Time& time_stamp);
 
     //}
+
+    /**
+     * @brief deduced the full frame_id from a shortened or empty string
+     *
+     * example:
+     *   "" -> "uav1/gps_origin" (if the UAV is currently controlled in the gps_origin)
+     *   "local_origin" -> "uav1/local_origin"
+     *
+     * @param in the frame_id to be resolved
+     *
+     * @return resolved frame_id
+     */
+    std::string resolveFrameName(const std::string& in);
 
   private:
     /* private members, methods etc //{ */
@@ -216,19 +230,6 @@ namespace mrs_lib
     bool got_utm_zone_ = false;
     char utm_zone_[10];
     std::mutex mutex_utm_zone_;
-
-    /**
-     * @brief deduced the full frame_id from a shortened or empty string
-     *
-     * example:
-     *   "" -> "uav1/gps_origin" (if the UAV is currently controlled in the gps_origin)
-     *   "local_origin" -> "uav1/local_origin"
-     *
-     * @param in the frame_id to be resolved
-     *
-     * @return resolved frame_id
-     */
-    std::string resolveFrameName(const std::string& in);
 
     std::string getUAVFramePrefix(const std::string& in);
 
