@@ -9,6 +9,7 @@
 
 #include <Eigen/Dense>
 #include <iostream>
+#include <chrono>
 
 namespace mrs_lib
 {
@@ -94,6 +95,7 @@ namespace mrs_lib
     using M_t = A_t;                                    /*!< \brief Type of the matrix \f$m \mathbf{M} 1\f$, used in the generalized eigen vector problem, \f$l_r \times l_r\f$ */
     using N_t = A_t;                                    /*!< \brief Type of the matrix \f$m \mathbf{N} 1\f$, used in the generalized eigen vector problem, \f$l_r \times l_r\f$ */
     using betas_t = Eigen::Matrix<double, 1, -1>;       /*!< \brief Container type for an array of coefficients \p beta, corresponding to the input data */
+    using ms_t = std::chrono::milliseconds;
     
     //}
 
@@ -108,6 +110,12 @@ namespace mrs_lib
         RHEIV()
           :
             m_initialized(false),
+            m_f_z(),
+            m_f_dzdx(),
+            m_min_dtheta(),
+            m_max_its(),
+            m_timeout(),
+            m_debug_nth_it(),
             m_ALS_theta_set(false),
             m_last_theta_set(false)
         {};
@@ -126,15 +134,46 @@ namespace mrs_lib
         * \param f_dzdx                a function, returning the jacobian matrix of partial derivations of \f$ \mathbf{z}\left( \mathbf{x} \right) \f$ by \f$ \mathbf{x} \f$, evaluated at \f$ \mathbf{x} \f$.
         * \param min_dtheta            if the difference of \f$ \mathbf{\theta}_{k} \f$ and \f$ \mathbf{\theta}_{k-1} \f$ is smaller than this number, the iteration is stopped.
         * \param max_its               if the iteration is stopped after this number of iterations.
-        * \param debug_nth_it          a debug message will be printed every \p debug_nth_it th iteration (negative number disables debug).
         */
-        RHEIV(const f_z_t& f_z, const f_dzdx_t& f_dzdx, const double min_dtheta = 1e-15, const unsigned max_its = 100, const int debug_nth_it = -1)
+        RHEIV(const f_z_t& f_z, const f_dzdx_t& f_dzdx, const double min_dtheta = 1e-15, const unsigned max_its = 100)
           : 
             m_initialized(true),
             m_f_z(f_z),
             m_f_dzdx(f_dzdx),
             m_min_dtheta(min_dtheta),
             m_max_its(max_its),
+            m_timeout(ms_t::zero()),
+            m_debug_nth_it(-1),
+            m_ALS_theta_set(false),
+            m_last_theta_set(false)
+        {};
+
+      /*!
+        * \brief The main constructor.
+        *
+        * The \p dzdx parameter gives the relation between \f$ \mathbf{z}\left( \mathbf{x} \right) \f$ and \f$ \mathbf{x} \f$. It is the full jacobian matrix
+        * \f$ \partial_{\mathbf{x}} \mathbf{z}\left( \mathbf{x} \right) \f$.
+        *
+        * The optimization algorithm is iterative with two possible stopping conditions:
+        * - if change of the estimate of \f$ \mathbf{\theta} \f$ between two iterations is smaller than a defined threshold, or
+        * - if a maximal number of iterations was reached.
+        *
+        * \param f_z                   the mapping function \f$ \mathbf{z}\left( \mathbf{x} \right) \f$.
+        * \param f_dzdx                a function, returning the jacobian matrix of partial derivations of \f$ \mathbf{z}\left( \mathbf{x} \right) \f$ by \f$ \mathbf{x} \f$, evaluated at \f$ \mathbf{x} \f$.
+        * \param min_dtheta            if the difference of \f$ \mathbf{\theta}_{k} \f$ and \f$ \mathbf{\theta}_{k-1} \f$ is smaller than this number, the iteration is stopped.
+        * \param max_its               if the iteration is stopped after this number of iterations.
+        * \param timeout               if the calculation takes longer than this time, the iteration is stopped.
+        * \param debug_nth_it          a debug message will be printed every \p debug_nth_it th iteration (negative number disables debug).
+        */
+        template <typename time_t>
+        RHEIV(const f_z_t& f_z, const f_dzdx_t& f_dzdx, const double min_dtheta = 1e-15, const unsigned max_its = 100, const time_t& timeout = std::chrono::duration_cast<time_t>(ms_t::zero()), const int debug_nth_it = -1)
+          : 
+            m_initialized(true),
+            m_f_z(f_z),
+            m_f_dzdx(f_dzdx),
+            m_min_dtheta(min_dtheta),
+            m_max_its(max_its),
+            m_timeout(std::chrono::duration_cast<ms_t>(timeout)),
             m_debug_nth_it(debug_nth_it),
             m_ALS_theta_set(false),
             m_last_theta_set(false)
@@ -149,28 +188,60 @@ namespace mrs_lib
         * \param f_z                   the mapping function \f$ \mathbf{z}\left( \mathbf{x} \right) \f$.
         * \param dzdx                  the jacobian matrix of partial derivations of \f$ \mathbf{z}\left( \mathbf{x} \right) \f$ by \f$ \mathbf{x} \f$.
         * \param min_dtheta            if the difference of \f$ \mathbf{\theta}_{k} \f$ and \f$ \mathbf{\theta}_{k-1} \f$ is smaller than this number, the iteration is stopped.
-        * \param max_its               if the iteration is stopped after this number of iterations.
-        * \param debug_nth_it          a debug message will be printed every \p debug_nth_it th iteration (negative number disables debug).
         */
-        RHEIV(const f_z_t& f_z, const dzdx_t& dzdx, const double min_dtheta = 1e-15, const unsigned max_its = 100, const int debug_nth_it = -1)
+        RHEIV(const f_z_t& f_z, const dzdx_t& dzdx, const double min_dtheta = 1e-15, const unsigned max_its = 100)
           : 
             m_initialized(true),
             m_f_z(f_z),
+            // define a helper function which just returns the constant dzdx
+            m_f_dzdx(
+                {
+                [dzdx](const x_t&)
+                  {
+                    return dzdx;
+                  }
+                }),
             m_min_dtheta(min_dtheta),
             m_max_its(max_its),
+            m_timeout(ms_t::zero()),
+            m_debug_nth_it(-1),
+            m_ALS_theta_set(false),
+            m_last_theta_set(false)
+        {};
+
+      /*!
+        * \brief A convenience constructor constructor.
+        *
+        * This constructor differs from the main one only in the parameters it takes. Instead of the function f_dzdx, it takes directly the dzdx matrix. This variant is meant to be used
+        * for systems where the jacobian matrix \f$ \mathbf{z}\left( \mathbf{x} \right) \f$ by \f$ \mathbf{x} \f$ does not depend on \f$ \mathbf{x} \f$.
+        *
+        * \param f_z                   the mapping function \f$ \mathbf{z}\left( \mathbf{x} \right) \f$.
+        * \param dzdx                  the jacobian matrix of partial derivations of \f$ \mathbf{z}\left( \mathbf{x} \right) \f$ by \f$ \mathbf{x} \f$.
+        * \param min_dtheta            if the difference of \f$ \mathbf{\theta}_{k} \f$ and \f$ \mathbf{\theta}_{k-1} \f$ is smaller than this number, the iteration is stopped.
+        * \param timeout               if the calculation takes longer than this time, the iteration is stopped.
+        * \param max_its               if the iteration is stopped after this number of iterations.
+        * \param debug_nth_it          a debug message will be printed every \p debug_nth_it th iteration (negative number disables debug).
+        */
+        template <typename time_t>
+        RHEIV(const f_z_t& f_z, const dzdx_t& dzdx, const double min_dtheta = 1e-15, const unsigned max_its = 100, const time_t& timeout = std::chrono::duration_cast<time_t>(ms_t::zero()), const int debug_nth_it = -1)
+          : 
+            m_initialized(true),
+            m_f_z(f_z),
+            // define a helper function which just returns the constant dzdx
+            m_f_dzdx(
+                {
+                [dzdx](const x_t&)
+                  {
+                    return dzdx;
+                  }
+                }),
+            m_min_dtheta(min_dtheta),
+            m_max_its(max_its),
+            m_timeout(std::chrono::duration_cast<ms_t>(timeout)),
             m_debug_nth_it(debug_nth_it),
             m_ALS_theta_set(false),
             m_last_theta_set(false)
-        {
-          // define a helper function which just returns the constant dzdx
-          m_f_dzdx =
-              {
-              [dzdx](const x_t&)
-                {
-                  return dzdx;
-                }
-              };
-        };
+        {};
       //}
 
       /* fit() method //{ */
@@ -191,6 +262,7 @@ namespace mrs_lib
         {
           assert(m_initialized);
           assert((size_t)xs.cols() == Ps.size());
+          const std::chrono::system_clock::time_point fit_start = std::chrono::system_clock::now();
       
           const zs_t zs = m_f_z(xs);
           const dzdxs_t dzdxs = precalculate_dxdzs(xs, m_f_dzdx);
@@ -203,15 +275,23 @@ namespace mrs_lib
       
           for (unsigned it = 0; it < m_max_its; it++)
           {
-              const theta_t prev_theta = m_last_theta;
-              const auto [M, N, zc] = calc_MN(eta, zs, Ps, dzdxs);
-              eta = calc_min_eigvec(M, N);
-              m_last_theta = calc_theta(eta, zc);
-              const double dtheta = calc_dtheta(prev_theta, m_last_theta);
-              if (m_debug_nth_it > 0 && it % m_debug_nth_it == 0)
-                std::cout << "[RHEIV]: iteration " << it << " (max " << m_max_its << "), dtheta: " << dtheta << " (min " << m_min_dtheta << ") " << std::endl;
-              if (dtheta < m_min_dtheta)
-                  break;
+            const std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+            const auto fit_dur = now - fit_start;
+            if (m_timeout > ms_t::zero() && fit_dur > m_timeout)
+            {
+              if (m_debug_nth_it > 0)
+                std::cerr << "[RHEIV]: Ending at iteration " << it << " (max " << m_max_its << ") - timed out." << std::endl;
+              break;
+            }
+            const theta_t prev_theta = m_last_theta;
+            const auto [M, N, zc] = calc_MN(eta, zs, Ps, dzdxs);
+            eta = calc_min_eigvec(M, N);
+            m_last_theta = calc_theta(eta, zc);
+            const double dtheta = calc_dtheta(prev_theta, m_last_theta);
+            if (m_debug_nth_it > 0 && it % m_debug_nth_it == 0)
+              std::cout << "[RHEIV]: iteration " << it << " (max " << m_max_its << "), dtheta: " << dtheta << " (min " << m_min_dtheta << ") " << std::endl;
+            if (dtheta < m_min_dtheta)
+                break;
           }
           return m_last_theta;
         }
@@ -312,6 +392,7 @@ namespace mrs_lib
     f_dzdx_t m_f_dzdx;
     double m_min_dtheta;
     unsigned m_max_its;
+    ms_t m_timeout;
     int m_debug_nth_it;
 
   private:
@@ -395,7 +476,7 @@ namespace mrs_lib
     theta_t calc_theta(const eta_t& eta, const z_t& zc) const
     {
       const double alpha = -zc.transpose()*eta;
-      const theta_t theta( (theta_t() << eta, alpha).finished().normalized());
+      const theta_t theta( (theta_t() << eta, alpha).finished().normalized() );
       return theta;
     }
     //}

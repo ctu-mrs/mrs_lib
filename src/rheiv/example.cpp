@@ -54,7 +54,7 @@ int main()
     Ps.push_back(P);
 
   std::cout << "initializing object:" << std::endl;
-  mrs_lib::rheiv_t rheiv(f_z, dzdx, 1e-15, 10);
+  mrs_lib::rheiv_t rheiv(f_z, dzdx, 1e-15, 10, std::chrono::milliseconds(1), 1);
   std::cout << "running fit" << std::endl;
   mrs_lib::theta_t theta;
   try
