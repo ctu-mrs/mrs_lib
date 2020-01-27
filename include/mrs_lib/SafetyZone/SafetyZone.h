@@ -9,46 +9,50 @@
 
 namespace mrs_lib
 {
-class SafetyZone {
-public:
-  SafetyZone(Polygon outerBorder, std::vector<Polygon> innerObstacles, std::vector<PointObstacle> pointObstacles);
-  ~SafetyZone();
-
-  SafetyZone(Eigen::MatrixXd& outerBorderMatrix, std::vector<Eigen::MatrixXd>& innerObstaclesMatrixes, std::vector<Eigen::MatrixXd>& pointObstaclesMatrixes);
-
-  bool                       isPointValid(const double px, const double py);
-  bool                       isPathValid(const double p1x, const double p1y, const double p2x, const double p2y);
-  Polygon                    getBorder();
-  std::vector<Polygon>       getObstacles();
-  std::vector<PointObstacle> getPointObstacles();
-
-private:
-  Polygon*                   outerBorder;
-  std::vector<Polygon>       innerObstacles;
-  std::vector<PointObstacle> pointObstacles;
-
-public:
-  struct BorderError : public std::exception
+  class SafetyZone
   {
-    const char* what() const throw() {
-      return "SafeZone: Wrong configuration for the border";
-    }
-  };
+  public:
+    SafetyZone(Polygon outerBorder, std::vector<Polygon> innerObstacles, std::vector<PointObstacle> pointObstacles);
+    ~SafetyZone();
 
-  struct PolygonObstacleError : public std::exception
-  {
-    const char* what() const throw() {
-      return "SafeZone: Wrong configuration for one of the polygon obstacles";
-    }
-  };
+    SafetyZone(Eigen::MatrixXd& outerBorderMatrix, std::vector<Eigen::MatrixXd>& innerObstaclesMatrixes, std::vector<Eigen::MatrixXd>& pointObstaclesMatrixes);
 
-  struct PointObstacleError : public std::exception
-  {
-    const char* what() const throw() {
-      return "SafeZone: Wrong configuration for one of the point obstacles";
-    }
+    bool isPointValid(const double px, const double py, const double pz);
+    bool isPathValid(const double p1x, const double p1y, const double p1z, const double p2x, const double p2y, const double p2z);
+    Polygon getBorder();
+    std::vector<Polygon> getObstacles();
+    std::vector<PointObstacle> getPointObstacles();
+
+  private:
+    Polygon* outerBorder;
+    std::vector<Polygon> innerObstacles;
+    std::vector<PointObstacle> pointObstacles;
+
+  public:
+    struct BorderError : public std::exception
+    {
+      const char* what() const throw()
+      {
+        return "SafeZone: Wrong configuration for the border";
+      }
+    };
+
+    struct PolygonObstacleError : public std::exception
+    {
+      const char* what() const throw()
+      {
+        return "SafeZone: Wrong configuration for one of the polygon obstacles";
+      }
+    };
+
+    struct PointObstacleError : public std::exception
+    {
+      const char* what() const throw()
+      {
+        return "SafeZone: Wrong configuration for one of the point obstacles";
+      }
+    };
   };
-};
 }  // namespace mrs_lib
 
 #endif  // MRS_LIB_SAFETYZONE_H
