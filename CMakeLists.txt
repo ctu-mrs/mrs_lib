@@ -38,7 +38,7 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs mrs_msgs
   DEPENDS Eigen
-  LIBRARIES Lkf Ukf ConvexPolygon SafetyZone Profiler Utils ParamLoader MedianFilter Repredictor geometry_utils MrsLibTransformer ImagePublisher
+  LIBRARIES Lkf Ukf ConvexPolygon SafetyZone Profiler Utils ParamLoader MedianFilter Repredictor geometry_utils MrsLibTransformer MrsImagePublisher
 
   )
 
@@ -105,10 +105,10 @@ target_link_libraries(ConvexPolygon
   )
 
 add_library(SafetyZone src/safety_zone/safety_zone.cpp
-        src/safety_zone/point_obstacle/point_obstacle.cpp
-        src/safety_zone/lineOperations.cpp
-        src/safety_zone/polygon/polygon.cpp
-        )
+  src/safety_zone/point_obstacle/point_obstacle.cpp
+  src/safety_zone/lineOperations.cpp
+  src/safety_zone/polygon/polygon.cpp
+  )
 
 target_link_libraries(SafetyZone
   ${catkin_LIBRARIES}
@@ -195,11 +195,11 @@ target_link_libraries(geometry_utils
   ${GAZEBO_INCLUDE_DIRS}
   )
 
-add_library(ImagePublisher src/image_publisher/image_publisher.cpp)
-target_link_libraries(ImagePublisher
+add_library(MrsImagePublisher src/image_publisher/image_publisher.cpp)
+target_link_libraries(MrsImagePublisher
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
-  ${OpenCV_LIBRARIES} 
+  ${OpenCV_LIBRARIES}
   ${GAZEBO_INCLUDE_DIRS}
   )
 
