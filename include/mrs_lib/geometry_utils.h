@@ -38,6 +38,29 @@ namespace mrs_lib
   /* Rotation and angle related functions //{ */
 
   /*!
+    * \brief Normalizes the \p angle to the range \f$ < \mathrm{from}, \mathrm{from} + 2\pi > \f$.
+    *
+    * \param angle the angle to be normalized.
+    * \param from  start of the interval into which the angle shall be normalized.
+    *
+    * \returns     the normalized angle.
+    *
+    */
+    double normalize_angle(const double angle, const double from = -M_PI);
+
+  /*!
+    * \brief Normalizes the \p angle to the range \f$ < \mathrm{from}, \mathrm{to} > \f$.
+    *
+    * \param angle the angle to be normalized.
+    * \param from  start of the interval into which the angle shall be normalized.
+    * \param to    end of the interval into which the angle shall be normalized.
+    *
+    * \returns     the normalized angle.
+    *
+    */
+    double normalize_angle(const double angle, const double from, const double to);
+
+  /*!
     * \brief Implementation of cross product for 2D vectors.
     *
     * Useful e.g. for finding the sine of an angle between two 2D vectors.
