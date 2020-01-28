@@ -15,7 +15,7 @@ namespace mrs_lib
     SafetyZone(Polygon outerBorder, std::vector<Polygon> innerObstacles, std::vector<PointObstacle> pointObstacles);
     ~SafetyZone();
 
-    SafetyZone(Eigen::MatrixXd& outerBorderMatrix, std::vector<Eigen::MatrixXd>& innerObstaclesMatrixes, std::vector<Eigen::MatrixXd>& pointObstaclesMatrixes);
+    SafetyZone(const Eigen::MatrixXd& outerBorderMatrix, const std::vector<Eigen::MatrixXd>& innerObstaclesMatrixes, const std::vector<Eigen::MatrixXd>& pointObstaclesMatrixes);
 
     bool isPointValid(const double px, const double py, const double pz);
     bool isPathValid(const double p1x, const double p1y, const double p1z, const double p2x, const double p2y, const double p2z);

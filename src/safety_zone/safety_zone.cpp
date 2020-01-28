@@ -24,8 +24,8 @@ namespace mrs_lib
 
   /* SafetyZone() //{ */
 
-  SafetyZone::SafetyZone(Eigen::MatrixXd& outerBorderMatrix, std::vector<Eigen::MatrixXd>& innerObstaclesMatrixes,
-                         std::vector<Eigen::MatrixXd>& pointObstaclesMatrixes)
+  SafetyZone::SafetyZone(const Eigen::MatrixXd& outerBorderMatrix, const std::vector<Eigen::MatrixXd>& innerObstaclesMatrixes,
+                         const std::vector<Eigen::MatrixXd>& pointObstaclesMatrixes)
   {
     try
     {
