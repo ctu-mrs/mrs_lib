@@ -1,4 +1,3 @@
-// clang: MatousFormat
 #include "mrs_lib/SafetyZone/lineOperations.h"
 
 /* getScale() //{ */
