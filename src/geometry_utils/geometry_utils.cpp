@@ -8,6 +8,24 @@ namespace mrs_lib
   vec_t<3+1> to_homogenous(const vec_t<3>& vec);
   vec_t<2+1> to_homogenous(const vec_t<2>& vec);
 
+  /* double normalize_angle(const double angle, const double from) //{ */
+  
+  double normalize_angle(const double angle, const double from)
+  {
+    return from + std::fmod(angle, 2.0*M_PI);
+  }
+  
+  //}
+
+  /* double normalize_angle(const double angle, const double from, const double to) //{ */
+  
+  double normalize_angle(const double angle, const double from, const double to)
+  {
+    return from + std::fmod(angle, to - from);
+  }
+  
+  //}
+
   /* double cross(const vec2_t& vec1, const vec2_t vec2) //{ */
   
   double cross(const vec2_t& vec1, const vec2_t vec2)
