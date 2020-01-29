@@ -56,9 +56,6 @@ namespace mrs_lib
   *
   * For more information, see \cite FNSandHEIV.
   *
-  * Example usage:
-  * \include src/rheiv/example.cpp
-  *
   */
   template <int n_states, int n_params>
   class RHEIV

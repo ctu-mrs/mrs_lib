@@ -30,9 +30,6 @@ namespace mrs_lib
   * of Eigen, the code is arguably more readable when you use aliases to the specific Matrix instances instead of
   * having Eigen::MatrixXd and Eigen::VectorXd everywhere.
   *
-  * Example usage:
-  * \include src/ukf/example.cpp
-  *
   * \tparam n_states         number of states of the system (length of the \f$ \mathbf{x} \f$ vector).
   * \tparam n_inputs         number of inputs of the system (length of the \f$ \mathbf{u} \f$ vector).
   * \tparam n_measurements   number of measurements of the system (length of the \f$ \mathbf{z} \f$ vector).

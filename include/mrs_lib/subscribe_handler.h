@@ -148,9 +148,6 @@ namespace mrs_lib
   * This class serves to instantiate objects of the SubscribeHandler.
   * Use the create_handler() method to create new SubscribeHandler objects.
   *
-  * Example usage:
-  * \include src/subscribe_handler/example.cpp
-  *
   */
   class SubscribeMgr
   {

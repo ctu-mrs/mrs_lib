@@ -1,4 +1,10 @@
 // clang: MatousFormat
+/**  \file
+     \brief Defines various general utility functions.
+     \author Matouš Vrba - vrbamato@fel.cvut.cz
+     \author Viktor Walter - walver.viktor@fel.cvut.cz
+     \author Tomáš Báča - baca.tomas@fel.cvut.cz
+ */
 #ifndef UTILS_H
 #define UTILS_H
 
@@ -13,7 +19,6 @@ namespace mrs_lib
   /**
   * \brief Convenience class for converting container ranges to strings (e.g. for printing).
   *
-  * \tparam Iterator    type of the container iterator.
   * \param begin        first element of the container that will be converted to \p std::string.
   * \param end          one-after-the-last element of the container that will be converted to \p std::string.
   * \param delimiter    will be used to separate the elements in the output.
@@ -38,7 +43,6 @@ namespace mrs_lib
   /**
   * \brief Convenience class for converting container ranges to strings (e.g. for printing).
   *
-  * \tparam Iterator    type of the container iterator.
   * \param begin        first element of the container that will be converted to \p std::string.
   * \param end          one-after-the-last element of the container that will be converted to \p std::string.
   * \param delimiter    will be used to separate the elements in the output.
@@ -54,7 +58,6 @@ namespace mrs_lib
   /**
   * \brief Convenience class for converting containers to strings (e.g. for printing).
   *
-  * \tparam Container   type of the container.
   * \param cont         the container that will be converted to \p std::string.
   * \param delimiter    will be used to separate the elements in the output.
   * \return             elements of the container from \p begin to \p end (excluding), converted to string and separated by \p delimiter.
@@ -69,7 +72,6 @@ namespace mrs_lib
   /**
   * \brief Convenience class for converting containers to strings (e.g. for printing).
   *
-  * \tparam Container   type of the container.
   * \param cont         the container that will be converted to \p std::string.
   * \param delimiter    will be used to separate the elements in the output.
   * \return             elements of the container from \p begin to \p end (excluding), converted to string and separated by \p delimiter.

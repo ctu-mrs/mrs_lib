@@ -1,9 +1,16 @@
 // clang: MatousFormat
-
 /**  \file
      \brief Example file for the LKF implementation
      \author Matouš Vrba - vrbamato@fel.cvut.cz
-     This example may be run after building *mrs_lib* by executing 'rosrun mrs_lib lkf_example'.
+
+     This example may be run after building *mrs_lib* by executing `rosrun mrs_lib lkf_example`.
+
+     See \ref lkf/example.cpp.
+ */
+
+/**  \example "lkf/example.cpp"
+
+     This example may be run after building *mrs_lib* by executing `rosrun mrs_lib lkf_example`.
  */
 
 // Include the LKF header

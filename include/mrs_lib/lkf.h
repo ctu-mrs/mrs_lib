@@ -1,8 +1,7 @@
 // clang: MatousFormat
-/**  \file
+/**  \file LKF
      \brief Defines LKF - a class, implementing the Linear Kalman Filter \cite LKF, as well as a few specialized variants.
      \author Matouš Vrba - vrbamato@fel.cvut.cz
-     \page handle LKF
  */
 #ifndef LKFSYSTEMMODELS_H
 #define LKFSYSTEMMODELS_H
@@ -28,9 +27,6 @@ namespace mrs_lib
   * a lower chance of crashing at runtime) and enabling more effective optimalizations during compilation. Also in case
   * of Eigen, the code is arguably more readable when you use aliases to the specific Matrix instances instead of
   * having Eigen::MatrixXd and Eigen::VectorXd everywhere.
-  *
-  * Example usage:
-  * \include src/lkf/example.cpp
   *
   * \tparam n_states         number of states of the system (length of the \f$ \mathbf{x} \f$ vector).
   * \tparam n_inputs         number of inputs of the system (length of the \f$ \mathbf{u} \f$ vector).

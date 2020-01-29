@@ -32,9 +32,6 @@ namespace mrs_lib
 * for user convenience. Special cases such as loading of Eigen matrices or loading
 * of std::vectors of various values are also provided.
 *
-* Example usage:
-* \include src/param_loader/example.cpp
-*
 */
 class ParamLoader
 {

@@ -1,7 +1,6 @@
 /**  \file
      \brief Defines helper routines for getting and setting variables under mutex locks
      \author Tomas Baca - tomas.baca@fel.cvut.cz
-     \page handle mutex
  */
 #ifndef MUTEX_H
 #define MUTEX_H

@@ -1,5 +1,21 @@
-#include <std_msgs/Bool.h>
+// clang: MatousFormat
+/**  \file
+     \brief Example file for the SubscribeHandler convenience class
+     \author Matouš Vrba - vrbamato@fel.cvut.cz
+
+     This example may be run after building *mrs_lib* by executing `rosrun mrs_lib subscribe_handler_example`.
+
+     See \ref subscribe_handler/example.cpp.
+ */
+
+/**  \example "subscribe_handler/example.cpp"
+
+     This example may be run after building *mrs_lib* by executing `rosrun mrs_lib subscribe_handler_example`.
+ */
+
+// Include the SubscribeHandler header
 #include <mrs_lib/subscribe_handler.h>
+#include <std_msgs/Bool.h>
 
 void timeout_callback(const std::string& topic, const ros::Time& last_msg, const int n_pubs)
 {

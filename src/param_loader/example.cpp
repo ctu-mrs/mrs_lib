@@ -1,3 +1,21 @@
+// clang: MatousFormat
+/**  \file
+     \brief Example file for the ParamLoader convenience class.
+     \author Matouš Vrba - vrbamato@fel.cvut.cz
+
+     This example may be run after building *mrs_lib* by executing `rosrun mrs_lib param_loader_example`.
+
+     See \ref param_loader/example.cpp.
+ */
+
+/**  \example "param_loader/example.cpp"
+
+     This example may be run after building *mrs_lib* by executing `rosrun mrs_lib param_loader_example`.
+
+     Example code for using the \ref ParamLoader (see documentation of the ParamLoader class):
+ */
+
+/* Include the ParamLoader header */
 #include <mrs_lib/ParamLoader.h>
 
 int main(int argc, char **argv)

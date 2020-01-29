@@ -1,8 +1,18 @@
 // clang: MatousFormat
-
 /**  \file
      \brief Example file for the UKF implementation
      \author Matouš Vrba - vrbamato@fel.cvut.cz
+
+     This example may be run after building *mrs_lib* by executing `rosrun mrs_lib ukf_example`.
+
+     See \ref ukf/example.cpp.
+ */
+
+/**  \example "ukf/example.cpp"
+
+     This example may be run after building *mrs_lib* by executing `rosrun mrs_lib ukf_example`.
+
+     Example code for using the UKF implementation (see documentation of the UKF class):
  */
 
 // Include the UKF header

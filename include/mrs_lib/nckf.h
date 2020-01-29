@@ -1,8 +1,7 @@
 // clang: MatousFormat
-/**  \file
+/**  \file NCKF
      \brief Defines NCLKF - a class, implementing the Norm-constrained Linear Kalman Filter \cite NCLKF and NCUKF for the Norm-constrained Unscented Kalman Filter \cite NCUKF.
      \author Matouš Vrba - vrbamato@fel.cvut.cz
- *   \page handle NCKF
  */
 #ifndef NCKFSYSTEMMODELS_H
 #define NCKFSYSTEMMODELS_H

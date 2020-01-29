@@ -1,10 +1,19 @@
 // clang: MatousFormat
-
 /**  \file
      \brief Example file for the RHEIV implementation
      \author Matouš Vrba - vrbamato@fel.cvut.cz
 
-     This example may be run after building *mrs_lib* by executing 'rosrun mrs_lib rheiv_example'.
+     This example may be run after building *mrs_lib* by executing `rosrun mrs_lib rheiv_example`.
+
+     A plane surface model in the cartesian form \f$ a x + b y + c z + d = 0 \f$ will be used in this example.
+     The parameters \f$ a \f$, \f$ b \f$, \f$ c \f$ and \f$ d \f$ are elements of the parameter vector \f$ \mathbf{ \theta } \f$.
+
+     See \ref rheiv/example.cpp.
+ */
+
+/**  \example "rheiv/example.cpp"
+
+     This example may be run after building *mrs_lib* by executing `rosrun mrs_lib rheiv_example`.
 
      A plane surface model in the cartesian form \f$ a x + b y + c z + d = 0 \f$ will be used in this example.
      The parameters \f$ a \f$, \f$ b \f$, \f$ c \f$ and \f$ d \f$ are elements of the parameter vector \f$ \mathbf{ \theta } \f$.
