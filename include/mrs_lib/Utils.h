@@ -51,6 +51,36 @@ namespace mrs_lib
     return containerToString(begin, end, std::string(delimiter));
   }
   
+  /**
+  * \brief Convenience class for converting containers to strings (e.g. for printing).
+  *
+  * \tparam Container   type of the container.
+  * \param cont         the container that will be converted to \p std::string.
+  * \param delimiter    will be used to separate the elements in the output.
+  * \return             elements of the container from \p begin to \p end (excluding), converted to string and separated by \p delimiter.
+  *
+  */
+  template<typename Container>
+  std::string containerToString(const Container& cont, const std::string& delimiter = ", ")
+  {
+    return containerToString(std::begin(cont), std::end(cont), delimiter);
+  }
+  
+  /**
+  * \brief Convenience class for converting containers to strings (e.g. for printing).
+  *
+  * \tparam Container   type of the container.
+  * \param cont         the container that will be converted to \p std::string.
+  * \param delimiter    will be used to separate the elements in the output.
+  * \return             elements of the container from \p begin to \p end (excluding), converted to string and separated by \p delimiter.
+  *
+  */
+  template<typename Container>
+  std::string containerToString(const Container& cont, const char* delimiter = ", ")
+  {
+    return containerToString(std::begin(cont), std::end(cont), std::string(delimiter));
+  }
+  
   //}
 
   /* remove_const() function //{ */
