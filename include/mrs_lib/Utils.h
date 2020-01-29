@@ -4,36 +4,65 @@
 
 #include <iterator>
 #include <vector>
-#include <iostream>
-#include <boost/array.hpp>
+#include <sstream>
 
 namespace mrs_lib
 {
-  //This could probaby be polymorphised more elegantly by somehow taking general input with iterator, but I can't be bothered to research this
-  template<typename T, typename A>
-  std::string vectorToString(std::vector<T,A> const& input, const std::string& delimiter){
+  /* containerToString() function //{ */
+  
+  /**
+  * \brief Convenience class for converting container ranges to strings (e.g. for printing).
+  *
+  * \tparam Iterator    type of the container iterator.
+  * \param begin        first element of the container that will be converted to \p std::string.
+  * \param end          one-after-the-last element of the container that will be converted to \p std::string.
+  * \param delimiter    will be used to separate the elements in the output.
+  * \return             elements of the container from \p begin to \p end (excluding), converted to string and separated by \p delimiter.
+  *
+  */
+  template<typename Iterator>
+  std::string containerToString(const Iterator begin, const Iterator end, const std::string& delimiter = ", ")
+  {
     bool first = true;
     std::ostringstream output;
-    for (auto e : input){
+    for (Iterator it = begin; it != end; it++)
+    {
       if (!first)
-      output << delimiter;
-      output << e;
-        first = false;
+        output << delimiter;
+      output << *it;
+      first = false;
     }
     return output.str();
   }
-  template<typename T, typename A>
-  std::string vectorToString(const std::vector<T,A>& input, const char* delimiter){
-    return vectorToString(input, std::string(delimiter));
+  
+  /**
+  * \brief Convenience class for converting container ranges to strings (e.g. for printing).
+  *
+  * \tparam Iterator    type of the container iterator.
+  * \param begin        first element of the container that will be converted to \p std::string.
+  * \param end          one-after-the-last element of the container that will be converted to \p std::string.
+  * \param delimiter    will be used to separate the elements in the output.
+  * \return             elements of the container from \p begin to \p end (excluding), converted to string and separated by \p delimiter.
+  *
+  */
+  template<typename Iterator>
+  std::string containerToString(const Iterator begin, const Iterator end, const char* delimiter)
+  {
+    return containerToString(begin, end, std::string(delimiter));
   }
-  template< class T, std::size_t N >
-  std::string vectorToString(const boost::array<T,N>& input, const char* delimiter){
-    return vectorToString(std::vector<T>(input.begin(), input.end()), std::string(delimiter));
-  }
+  
+  //}
 
-  /* remove_cons() function //{ */
-  // TODO what does this do?
+  /* remove_const() function //{ */
 
+  /**
+  * \brief Convenience class for removing const-ness from a container iterator.
+  *
+  * \param it    the iterator from which const-ness should be removed.
+  * \param cont  the corresponding container of the iterator.
+  * \return      a non-const iterator, pointing to the same element as \p it.
+  *
+  */
   template <typename T>
   typename T::iterator remove_const(const typename T::const_iterator& it, T& cont)
   {

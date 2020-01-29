@@ -147,6 +147,12 @@ target_link_libraries(Utils
   ${Eigen_LIBRARIES}
   )
 
+add_executable(utils_tests src/utils/utils_tests.cpp src/utils/utils.cpp)
+target_link_libraries(utils_tests
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
 add_library(ParamLoader src/param_loader/ParamLoader.cpp)
 target_link_libraries(ParamLoader
   ${catkin_LIBRARIES}
