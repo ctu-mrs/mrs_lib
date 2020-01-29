@@ -13,6 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   mrs_msgs
   tf
+  tf2
+  tf2_geometry_msgs
   cv_bridge
   image_transport
   )

@@ -49,6 +49,7 @@ namespace mrs_lib
     std::string from(void) const;
     std::string to(void) const;
     ros::Time stamp(void) const;
+    TransformStamped inverse(void) const;
     geometry_msgs::TransformStamped getTransform(void) const;
 
   private:

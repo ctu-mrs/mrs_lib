@@ -456,6 +456,22 @@ namespace mrs_lib
 
   //}
 
+  /* inverse() //{ */
+
+  TransformStamped TransformStamped::inverse(void) const
+  {
+    geometry_msgs::TransformStamped tf = getTransform();
+    tf2::Transform tf2;
+    tf2::fromMsg(tf.transform, tf2);
+    tf2 = tf2.inverse();
+    tf.transform = tf2::toMsg(tf2);
+    std::swap(tf.header.frame_id, tf.child_frame_id);
+    TransformStamped ret(to(), from(), stamp(), tf);
+    return ret;
+  }
+
+  //}
+
   /* getTransform() //{ */
 
   geometry_msgs::TransformStamped TransformStamped::getTransform(void) const
