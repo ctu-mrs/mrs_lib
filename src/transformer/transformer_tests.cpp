@@ -13,9 +13,9 @@ int main(int argc, char **argv)
 
   auto tfr = mrs_lib::Transformer("transformer_tests", "uav62");
   std::optional<mrs_lib::TransformStamped> tf_opt;
-  for (int it = 0; it < 10000; it++)
+  for (int it = 0; it < 10000 && ros::ok(); it++)
   {
-    tf_opt = tfr.getTransform("fcu", "local_origin", ros::Time::now());
+    tf_opt = tfr.getTransform("fcu", "local_origin");
     if (tf_opt.has_value())
       break;
     ros::Duration(0.1).sleep();

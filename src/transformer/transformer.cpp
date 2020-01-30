@@ -18,10 +18,6 @@ namespace mrs_lib
   {
   }
 
-  Transformer::~Transformer()
-  {
-  }
-
   Transformer::Transformer(const std::string& node_name, const std::string& uav_name)
   {
 
@@ -97,6 +93,138 @@ namespace mrs_lib
   //}
 
   /* transformImpl() //{ */
+  
+  /* Eigen::MatrixXd //{ */
+  
+  std::optional<Eigen::MatrixXd> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what)
+  {
+    if (what.rows() == 2)
+    {
+      const Eigen::Matrix<double, 3, -1> mat = what;
+      const auto tmp = transformImpl(tf, mat);
+      if (tmp.has_value())
+        return tmp.value();
+      else
+        return std::nullopt;
+    }
+    else if (what.rows() == 3)
+    {
+      const Eigen::Matrix<double, 2, -1> mat = what;
+      const auto tmp = transformImpl(tf, mat);
+      if (tmp.has_value())
+        return tmp.value();
+      else
+        return std::nullopt;
+    }
+    else
+    {
+      ROS_ERROR_THROTTLE(1.0, "[%s]: transformation of a %ldx%ld matrix is not implemented!", node_name_.c_str(), what.rows(), what.cols());
+      return std::nullopt;
+    }
+  }
+  
+  //}
+  
+  /* Eigen::Matrix<double, 2, -1> //{ */
+  
+  std::optional<Eigen::Matrix<double, 2, -1>> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const Eigen::Matrix<double, 2, -1>& what)
+  {
+    Eigen::Matrix<double, 3, -1> mat = Eigen::Matrix<double, 3, -1>::Zero(3, what.cols());
+    mat.block(0, 0, 2, what.cols()) = what;
+    const auto tmp = transformImpl(tf, mat);
+    if (tmp.has_value())
+      return tmp.value().block(0, 0, 2, what.cols());
+    else
+      return std::nullopt;
+  }
+  
+  //}
+
+  /* Eigen::Matrix<double, 3, -1> //{ */
+  
+  std::optional<Eigen::Matrix<double, 3, -1>> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const Eigen::Matrix<double, 3, -1>& what)
+  {
+    auto ret = what;
+    std::string latlon_frame_name = resolveFrameName(LATLON_ORIGIN);
+  
+    // check for transformation from LAT-LON GPS
+    /* transformation from LAT-LON GPS //{ */
+  
+    if (tf.from() == latlon_frame_name)
+    {
+      // utm_x and utm_y are now in 'utm_origin' frame
+      const std::string uav_prefix = getUAVFramePrefix(tf.from());
+      const std::string utm_frame_name = uav_prefix + "/utm_origin";
+  
+      // transform from 'utm_origin' to the desired frame
+      const auto utm_origin_to_end_tf_opt = getTransform(utm_frame_name, tf.to(), tf.stamp());
+      if (!utm_origin_to_end_tf_opt.has_value())
+        return std::nullopt;
+      const auto tf_eig = utm_origin_to_end_tf_opt.value().getTransformEigen();
+  
+      for (int it = 0; it < ret.cols(); it++)
+      {
+        auto vec = ret.col(it);
+        // convert LAT-LON to UTM
+        mrs_lib::UTM(vec.x(), vec.y(), &vec.x(), &vec.y());
+        // transform to the desired target frame
+        ret.col(it) = tf_eig*vec;
+      }
+    }
+  
+    //}
+    // check for transformation to LAT-LON GPS
+    /* transformation to LAT-LON GPS //{ */
+  
+    else if (tf.to() == latlon_frame_name)
+    {
+      std::string utm_zone;
+      {
+        std::scoped_lock lock(mutex_utm_zone_);
+        // if no UTM zone was specified by the user, we don't know which one to use...
+        if (!got_utm_zone_)
+        {
+          ROS_WARN_THROTTLE(1.0, "[%s]: cannot transform to latlong, missing UTM zone (did you call setCurrentLatLon()?)", node_name_.c_str());
+          return std::nullopt;
+        }
+        utm_zone = utm_zone_;
+      }
+  
+      // first, transform from the desired frame to 'utm_origin'
+      const std::string uav_prefix = getUAVFramePrefix(tf.to());
+      std::string utm_frame_name = uav_prefix + "/utm_origin";
+  
+      const auto start_to_utm_origin_tf_opt = getTransform(tf.from(), utm_frame_name, tf.stamp());
+      if (!start_to_utm_origin_tf_opt.has_value())
+        return std::nullopt;
+      const auto tf_eig = start_to_utm_origin_tf_opt.value().getTransformEigen();
+  
+      for (int it = 0; it < ret.cols(); it++)
+      {
+        // transform to the intermediate (UTM) target frame
+        auto vec = tf_eig*ret.col(it);
+        // now apply the nonlinear transformation from UTM to LAT-LON
+        mrs_lib::UTMtoLL(vec.y(), vec.x(), utm_zone, vec.x(), vec.y());
+        ret.col(it) = vec;
+      }
+    }
+  
+    //}
+    // in case of a normal transformation just transform each vector separately
+    /* regular transformation //{ */
+  
+    else
+    {
+      const auto tf_eig = tf.getTransformEigen();
+      for (int it = 0; it < ret.cols(); it++)
+        ret.col(it) = tf_eig*ret.col(it);
+    }
+  
+    //}
+    return ret;
+  }
+  
+  //}
 
   std::optional<mrs_msgs::ReferenceStamped> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const mrs_msgs::ReferenceStamped& what)
   {
@@ -112,10 +240,6 @@ namespace mrs_lib
   {
     geometry_msgs::PoseStamped ret = what;
     std::string latlon_frame_name = resolveFrameName(LATLON_ORIGIN);
-
-    // if it is already in the target frame
-    if (tf.from() == tf.to())
-      return ret;
 
     // check for transformation from LAT-LON GPS
     if (tf.from() == latlon_frame_name)
@@ -258,7 +382,7 @@ namespace mrs_lib
       geometry_msgs::TransformStamped transform = tf_buffer_.lookupTransform(to_frame_resolved, from_frame_resolved, time_stamp);
 
       // return it
-      return mrs_lib::TransformStamped(from_frame_resolved, to_frame_resolved, ros::Time::now(), transform);
+      return mrs_lib::TransformStamped(from_frame_resolved, to_frame_resolved, time_stamp, transform);
     }
     catch (tf2::TransformException& ex)
     {
@@ -480,5 +604,14 @@ namespace mrs_lib
     return transform_stamped_;
   }
 
+  //}
+
+  /* getTransformEigen() //{ */
+  
+  Eigen::Affine3d TransformStamped::getTransformEigen(void) const
+  {
+    return tf2::transformToEigen(getTransform().transform);
+  }
+  
   //}
 }  // namespace mrs_lib

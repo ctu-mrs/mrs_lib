@@ -48,7 +48,14 @@ std::optional<T> Transformer::transformSingle(const std::string& to_frame, const
 
 //}
 
-/* transform() //{ */
+/* /1* transform() //{ *1/ */
+
+template <typename Mat>
+std::optional<typename Mat::PlainObject> Transformer::transformVecs(const mrs_lib::TransformStamped& tf, const Eigen::MatrixBase<Mat>& what)
+{
+  const typename Mat::PlainObject mat(what);
+  return Transformer::transformImpl(tf, mat);
+}
 
 template <class T>
 std::optional<T> Transformer::transform(const mrs_lib::TransformStamped& tf, const T& what)
@@ -71,7 +78,7 @@ std::optional<T> Transformer::transform(const mrs_lib::TransformStamped& tf, con
   return result_opt;
 }
 
-//}
+/* //} */
 
 /* doTransform() //{ */
 

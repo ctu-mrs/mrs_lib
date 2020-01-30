@@ -51,6 +51,7 @@ namespace mrs_lib
     ros::Time stamp(void) const;
     TransformStamped inverse(void) const;
     geometry_msgs::TransformStamped getTransform(void) const;
+    Eigen::Affine3d getTransformEigen(void) const;
 
   private:
     geometry_msgs::TransformStamped transform_stamped_;
@@ -116,15 +117,6 @@ namespace mrs_lib
 
     //}
 
-    /* Destructor //{ */
-
-    /**
-     * @brief the basic destructor
-     */
-    ~Transformer();
-
-    //}
-
     /* setCurrentControlFrame() //{ */
 
     /**
@@ -169,6 +161,37 @@ namespace mrs_lib
     /* transform() //{ */
 
     /**
+     * @brief transform an eigen matrix (interpreted as a set of column vectors) to new frame, given a particular tf
+     *
+     * @param tf the tf to be used
+     * @param what the vectors to be transformed
+     *
+     * @return \p std::nullopt if failed, optional containing the transformed object otherwise
+     */
+    /* [[nodiscard]] std::optional<Eigen::Matrix<double, 2, -1>> transform(const mrs_lib::TransformStamped& tf, const Eigen::Matrix<double, 2, -1>& what); */
+
+    /**
+     * @brief transform an eigen matrix (interpreted as a set of column vectors) to new frame, given a particular tf
+     *
+     * @param tf the tf to be used
+     * @param what the vectors to be transformed
+     *
+     * @return \p std::nullopt if failed, optional containing the transformed object otherwise
+     */
+    /* [[nodiscard]] std::optional<Eigen::Matrix<double, 3, -1>> transform(const mrs_lib::TransformStamped& tf, const Eigen::Matrix<double, 3, -1>& what); */
+
+    /**
+     * @brief transform an eigen matrix (interpreted as a set of column vectors) to new frame, given a particular tf
+     *
+     * @param tf the tf to be used
+     * @param what the vectors to be transformed
+     *
+     * @return \p std::nullopt if failed, optional containing the transformed object otherwise
+     */
+    template <typename Mat>
+    [[nodiscard]] std::optional<typename Mat::PlainObject> transformVecs(const mrs_lib::TransformStamped& tf, const Eigen::MatrixBase<Mat>& what);
+
+    /**
      * @brief transform a message to new frame, given a particular tf
      *
      * @param tf the tf to be used
@@ -195,7 +218,7 @@ namespace mrs_lib
      * @return \p std::nullopt if failed, optional containing the requested transform otherwise
      */
     [[nodiscard]] std::optional<mrs_lib::TransformStamped> getTransform(const std::string& from_frame, const std::string& to_frame,
-                                                                        const ros::Time& time_stamp);
+                                                                        const ros::Time& time_stamp = ros::Time(0));
 
     //}
 
@@ -238,6 +261,9 @@ namespace mrs_lib
     std::optional<T> transformImpl(const mrs_lib::TransformStamped& tf, const T& what);
     std::optional<mrs_msgs::ReferenceStamped> transformImpl(const mrs_lib::TransformStamped& tf, const mrs_msgs::ReferenceStamped& what);
     std::optional<geometry_msgs::PoseStamped> transformImpl(const mrs_lib::TransformStamped& tf, const geometry_msgs::PoseStamped& what);
+    std::optional<Eigen::Matrix<double, 3, -1>> transformImpl(const mrs_lib::TransformStamped& tf, const Eigen::Matrix<double, 3, -1>& what);
+    std::optional<Eigen::Matrix<double, 2, -1>> transformImpl(const mrs_lib::TransformStamped& tf, const Eigen::Matrix<double, 2, -1>& what);
+    std::optional<Eigen::MatrixXd> transformImpl(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what);
 
     template <class T>
     std::optional<T> doTransform(const mrs_lib::TransformStamped& tf, const T& what);
