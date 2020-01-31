@@ -41,7 +41,7 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs mrs_msgs
   DEPENDS Eigen
-  LIBRARIES Lkf Ukf ConvexPolygon SafetyZone Profiler Utils ParamLoader MedianFilter Repredictor geometry_utils MrsLibTransformer MrsImagePublisher
+  LIBRARIES Lkf ConvexPolygon SafetyZone Profiler Utils ParamLoader MedianFilter Repredictor geometry_utils MrsLibTransformer MrsImagePublisher
 
   )
 
@@ -71,11 +71,11 @@ target_link_libraries(Lkf
   ${Eigen_LIBRARIES}
   )
 
-add_library(Ukf src/ukf/ukf.cpp)
-target_link_libraries(Ukf
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  )
+# add_library(Ukf src/ukf/ukf.cpp)
+# target_link_libraries(Ukf
+#   ${catkin_LIBRARIES}
+#   ${Eigen_LIBRARIES}
+#   )
 
 add_executable(lkf_example src/lkf/example.cpp)
 target_link_libraries(lkf_example
@@ -83,11 +83,11 @@ target_link_libraries(lkf_example
   ${Eigen_LIBRARIES}
   )
 
-add_executable(ukf_tests src/ukf/ukf_tests.cpp src/ukf/ukf.cpp)
-target_link_libraries(ukf_tests
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  )
+# add_executable(ukf_tests src/ukf/ukf_tests.cpp src/ukf/ukf.cpp)
+# target_link_libraries(ukf_tests
+#   ${catkin_LIBRARIES}
+#   ${Eigen_LIBRARIES}
+#   )
 
 add_executable(ukf_example src/ukf/example.cpp)
 target_link_libraries(ukf_example
