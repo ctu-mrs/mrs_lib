@@ -320,6 +320,75 @@ namespace mrs_lib
     }
   }
 
+  std::optional<geometry_msgs::Point> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const geometry_msgs::Point& what)
+  {
+    geometry_msgs::Point ret = what;
+    std::string latlon_frame_name = resolveFrameName(LATLON_ORIGIN);
+
+    // check for transformation from LAT-LON GPS
+    if (tf.from() == latlon_frame_name)
+    {
+      // convert LAT-LON to UTM
+      double utm_x, utm_y;
+      mrs_lib::UTM(ret.x, ret.y, &utm_x, &utm_y);
+
+      // utm_x and utm_y are now in 'utm_origin' frame
+      const std::string uav_prefix = getUAVFramePrefix(tf.from());
+      const std::string utm_frame_name = uav_prefix + "/utm_origin";
+      ret.x = utm_x;
+      ret.y = utm_y;
+
+      // transform from 'utm_origin' to the desired frame
+      const auto utm_origin_to_end_tf_opt = getTransform(utm_frame_name, tf.to(), tf.stamp());
+      if (!utm_origin_to_end_tf_opt.has_value())
+        return std::nullopt;
+      return doTransform(utm_origin_to_end_tf_opt.value(), ret);
+    }
+    // check for transformation to LAT-LON GPS
+    else if (tf.to() == latlon_frame_name)
+    {
+      // if no UTM zone was specified by the user, we don't know which one to use...
+      if (!got_utm_zone_)
+      {
+        ROS_WARN_THROTTLE(1.0, "[%s]: cannot transform to latlong, missing UTM zone (did you call setCurrentLatLon()?)", node_name_.c_str());
+        return std::nullopt;
+      }
+
+      // first, transform from the desired frame to 'utm_origin'
+      const std::string uav_prefix = getUAVFramePrefix(tf.to());
+      std::string utm_frame_name = uav_prefix + "/utm_origin";
+
+      const auto start_to_utm_origin_tf_opt = getTransform(tf.from(), utm_frame_name, tf.stamp());
+
+      if (!start_to_utm_origin_tf_opt.has_value())
+        return std::nullopt;
+
+      const auto pose_opt = doTransform(start_to_utm_origin_tf_opt.value(), ret);
+
+      if (!pose_opt.has_value())
+        return std::nullopt;
+
+      ret = pose_opt.value();
+
+      // now apply the nonlinear transformation from UTM to LAT-LON
+      {
+        std::scoped_lock lock(mutex_utm_zone_);
+        double lat, lon;
+
+        mrs_lib::UTMtoLL(ret.y, ret.x, utm_zone_, lat, lon);
+        ret.x = lat;
+        ret.y = lon;
+
+        return ret;
+      }
+    }
+    // if nothing interesting is requested, just do the plain old linear transformation
+    else
+    {
+      return doTransform(tf, ret);
+    }
+  }
+
   //}
 
   /* prepareMessage() //{ */

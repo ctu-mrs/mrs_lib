@@ -73,6 +73,26 @@ std::optional<T> Transformer::transform(const mrs_lib::TransformStamped& tf, con
 
 /* //} */
 
+/* transformHeaderless() //{ */
+
+template <class T>
+std::optional<T> Transformer::transformHeaderless(const mrs_lib::TransformStamped& tf, const T& what)
+{
+  if (!is_initialized_)
+  {
+    ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
+    return std::nullopt;
+  }
+
+  if (tf.from() == tf.to())
+    return what;
+
+  const auto result_opt = transformImpl(tf, what);
+  return result_opt;
+}
+
+/* //} */
+
 /* doTransform() //{ */
 
 template <class T>

@@ -184,6 +184,17 @@ namespace mrs_lib
     template <class T>
     [[nodiscard]] std::optional<T> transform(const mrs_lib::TransformStamped& tf, const T& what);
 
+    /**
+     * @brief transform a message (without a header) to new frame, given a particular tf
+     *
+     * @param tf the tf to be used
+     * @param what the object to be transformed
+     *
+     * @return \p std::nullopt if failed, optional containing the transformed object otherwise
+     */
+    template <class T>
+    [[nodiscard]] std::optional<T> transformHeaderless(const mrs_lib::TransformStamped& tf, const T& what);
+
     //}
 
     /* getTransform() //{ */
@@ -243,9 +254,10 @@ namespace mrs_lib
     std::optional<T> transformImpl(const mrs_lib::TransformStamped& tf, const T& what);
     std::optional<mrs_msgs::ReferenceStamped> transformImpl(const mrs_lib::TransformStamped& tf, const mrs_msgs::ReferenceStamped& what);
     std::optional<geometry_msgs::PoseStamped> transformImpl(const mrs_lib::TransformStamped& tf, const geometry_msgs::PoseStamped& what);
-    std::optional<Eigen::MatrixXd> transformImpl(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what);
-    std::optional<Eigen::MatrixXd> transformMat2(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what);
-    std::optional<Eigen::MatrixXd> transformMat3(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what);
+    std::optional<geometry_msgs::Point> transformImpl(const mrs_lib::TransformStamped& tf, const geometry_msgs::Point& what);
+    /* std::optional<Eigen::MatrixXd> transformImpl(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what); */
+    /* std::optional<Eigen::MatrixXd> transformMat2(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what); */
+    /* std::optional<Eigen::MatrixXd> transformMat3(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what); */
 
     template <class T>
     std::optional<T> doTransform(const mrs_lib::TransformStamped& tf, const T& what);
