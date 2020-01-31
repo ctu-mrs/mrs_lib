@@ -7,6 +7,9 @@
 #ifndef TRANSFORMER_H
 #define TRANSFORMER_H
 
+/* #define EIGEN_DONT_VECTORIZE */
+/* #define EIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT */
+
 /* includes //{ */
 
 #include <ros/ros.h>
@@ -168,7 +171,7 @@ namespace mrs_lib
      *
      * @return \p std::nullopt if failed, optional containing the transformed object otherwise
      */
-    [[nodiscard]] std::optional<Eigen::MatrixXd> transform(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what);
+    /* [[nodiscard]] std::optional<Eigen::MatrixXd> transform(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what); */
 
     /**
      * @brief transform a message to new frame, given a particular tf
