@@ -168,28 +168,7 @@ namespace mrs_lib
      *
      * @return \p std::nullopt if failed, optional containing the transformed object otherwise
      */
-    /* [[nodiscard]] std::optional<Eigen::Matrix<double, 2, -1>> transform(const mrs_lib::TransformStamped& tf, const Eigen::Matrix<double, 2, -1>& what); */
-
-    /**
-     * @brief transform an eigen matrix (interpreted as a set of column vectors) to new frame, given a particular tf
-     *
-     * @param tf the tf to be used
-     * @param what the vectors to be transformed
-     *
-     * @return \p std::nullopt if failed, optional containing the transformed object otherwise
-     */
-    /* [[nodiscard]] std::optional<Eigen::Matrix<double, 3, -1>> transform(const mrs_lib::TransformStamped& tf, const Eigen::Matrix<double, 3, -1>& what); */
-
-    /**
-     * @brief transform an eigen matrix (interpreted as a set of column vectors) to new frame, given a particular tf
-     *
-     * @param tf the tf to be used
-     * @param what the vectors to be transformed
-     *
-     * @return \p std::nullopt if failed, optional containing the transformed object otherwise
-     */
-    template <typename Mat>
-    [[nodiscard]] std::optional<typename Mat::PlainObject> transformVecs(const mrs_lib::TransformStamped& tf, const Eigen::MatrixBase<Mat>& what);
+    [[nodiscard]] std::optional<Eigen::MatrixXd> transform(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what);
 
     /**
      * @brief transform a message to new frame, given a particular tf
@@ -261,9 +240,9 @@ namespace mrs_lib
     std::optional<T> transformImpl(const mrs_lib::TransformStamped& tf, const T& what);
     std::optional<mrs_msgs::ReferenceStamped> transformImpl(const mrs_lib::TransformStamped& tf, const mrs_msgs::ReferenceStamped& what);
     std::optional<geometry_msgs::PoseStamped> transformImpl(const mrs_lib::TransformStamped& tf, const geometry_msgs::PoseStamped& what);
-    std::optional<Eigen::Matrix<double, 3, -1>> transformImpl(const mrs_lib::TransformStamped& tf, const Eigen::Matrix<double, 3, -1>& what);
-    std::optional<Eigen::Matrix<double, 2, -1>> transformImpl(const mrs_lib::TransformStamped& tf, const Eigen::Matrix<double, 2, -1>& what);
     std::optional<Eigen::MatrixXd> transformImpl(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what);
+    std::optional<Eigen::MatrixXd> transformMat2(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what);
+    std::optional<Eigen::MatrixXd> transformMat3(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what);
 
     template <class T>
     std::optional<T> doTransform(const mrs_lib::TransformStamped& tf, const T& what);

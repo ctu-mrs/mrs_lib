@@ -92,6 +92,16 @@ namespace mrs_lib
 
   //}
 
+  /* transform() //{ */
+
+  std::optional<Eigen::MatrixXd> Transformer::transform(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what)
+  {
+    return transformImpl(tf, what);
+  }
+  
+  
+  //}
+
   /* transformImpl() //{ */
   
   /* Eigen::MatrixXd //{ */
@@ -100,8 +110,7 @@ namespace mrs_lib
   {
     if (what.rows() == 2)
     {
-      const Eigen::Matrix<double, 3, -1> mat = what;
-      const auto tmp = transformImpl(tf, mat);
+      const auto tmp = transformMat2(tf, what);
       if (tmp.has_value())
         return tmp.value();
       else
@@ -109,8 +118,7 @@ namespace mrs_lib
     }
     else if (what.rows() == 3)
     {
-      const Eigen::Matrix<double, 2, -1> mat = what;
-      const auto tmp = transformImpl(tf, mat);
+      const auto tmp = transformMat3(tf, what);
       if (tmp.has_value())
         return tmp.value();
       else
@@ -127,11 +135,12 @@ namespace mrs_lib
   
   /* Eigen::Matrix<double, 2, -1> //{ */
   
-  std::optional<Eigen::Matrix<double, 2, -1>> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const Eigen::Matrix<double, 2, -1>& what)
+  std::optional<Eigen::MatrixXd> Transformer::transformMat2(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what)
   {
-    Eigen::Matrix<double, 3, -1> mat = Eigen::Matrix<double, 3, -1>::Zero(3, what.cols());
+    assert(what.rows() == 2);
+    Eigen::MatrixXd mat = Eigen::MatrixXd::Zero(3, what.cols());
     mat.block(0, 0, 2, what.cols()) = what;
-    const auto tmp = transformImpl(tf, mat);
+    const auto tmp = transformMat3(tf, mat);
     if (tmp.has_value())
       return tmp.value().block(0, 0, 2, what.cols());
     else
@@ -142,10 +151,13 @@ namespace mrs_lib
 
   /* Eigen::Matrix<double, 3, -1> //{ */
   
-  std::optional<Eigen::Matrix<double, 3, -1>> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const Eigen::Matrix<double, 3, -1>& what)
+  std::optional<Eigen::MatrixXd> Transformer::transformMat3(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what)
   {
+    assert(what.rows() == 3);
     auto ret = what;
     std::string latlon_frame_name = resolveFrameName(LATLON_ORIGIN);
+    Eigen::Matrix<double, 3, Eigen::Dynamic> mat(3, what.cols());
+    mat = what;
   
     // check for transformation from LAT-LON GPS
     /* transformation from LAT-LON GPS //{ */
@@ -164,7 +176,7 @@ namespace mrs_lib
   
       for (int it = 0; it < ret.cols(); it++)
       {
-        auto vec = ret.col(it);
+        auto vec = mat.col(it);
         // convert LAT-LON to UTM
         mrs_lib::UTM(vec.x(), vec.y(), &vec.x(), &vec.y());
         // transform to the desired target frame
@@ -199,10 +211,11 @@ namespace mrs_lib
         return std::nullopt;
       const auto tf_eig = start_to_utm_origin_tf_opt.value().getTransformEigen();
   
+      // transform to the intermediate (UTM) target frame
+      mat = tf_eig*mat;
       for (int it = 0; it < ret.cols(); it++)
       {
-        // transform to the intermediate (UTM) target frame
-        auto vec = tf_eig*ret.col(it);
+        auto vec = mat.col(it);
         // now apply the nonlinear transformation from UTM to LAT-LON
         mrs_lib::UTMtoLL(vec.y(), vec.x(), utm_zone, vec.x(), vec.y());
         ret.col(it) = vec;
@@ -216,8 +229,7 @@ namespace mrs_lib
     else
     {
       const auto tf_eig = tf.getTransformEigen();
-      for (int it = 0; it < ret.cols(); it++)
-        ret.col(it) = tf_eig*ret.col(it);
+      ret = tf_eig*mat;
     }
   
     //}
