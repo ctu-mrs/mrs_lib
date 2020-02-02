@@ -66,6 +66,8 @@ namespace mrs_lib {
           return sensor_msgs::image_encodings::BGR8;
         else
           return sensor_msgs::image_encodings::RGB8;
+      case CV_16UC1:
+        return sensor_msgs::image_encodings::MONO16;
       default:
         ROS_ERROR("[ImagePublisher]: Covnersion for the current matrix type is not yet implemented. Implement it yourself in mrs_lib/image_publisher. Sorry.");
         return "";
