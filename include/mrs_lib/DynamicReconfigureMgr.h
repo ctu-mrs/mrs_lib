@@ -145,7 +145,7 @@ private:
         load_param<int>(name, descr, new_config);
       else if (descr->type == "double")
         load_param<double>(name, descr, new_config);
-      else if (descr->type == "string")
+      else if (descr->type == "str")
         load_param<std::string>(name, descr, new_config);
       else
       {
