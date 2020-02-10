@@ -174,8 +174,6 @@ namespace mrs_lib
   visualization_msgs::Marker SafetyZone::toMarker(const double min_height, const double max_height)
   {
     visualization_msgs::Marker safety_area_marker;
-  
-    std::cerr << "SAFETY min " << min_height << "max " << max_height << std::endl;
 
     safety_area_marker.type            = visualization_msgs::Marker::LINE_LIST;
     safety_area_marker.color.a         = 0.15;
