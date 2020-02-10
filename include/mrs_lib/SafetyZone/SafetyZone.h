@@ -19,9 +19,11 @@ namespace mrs_lib
 
     bool isPointValid(const double px, const double py, const double pz);
     bool isPathValid(const double p1x, const double p1y, const double p1z, const double p2x, const double p2y, const double p2z);
+    void inflateBorder(const double amount);
     Polygon getBorder();
     std::vector<Polygon> getObstacles();
     std::vector<PointObstacle> getPointObstacles();
+    visualization_msgs::Marker toMarker(const double min_height, const double max_height);
 
   private:
     Polygon* outerBorder;

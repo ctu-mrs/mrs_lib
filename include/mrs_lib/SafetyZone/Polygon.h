@@ -7,9 +7,20 @@
 #include <geometry_msgs/Point.h>
 #include <mrs_lib/SafetyZone/lineOperations.h>
 
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/geometry/geometries/geometries.hpp>
+
 namespace mrs_lib
 {
 class Polygon {
+private:
+  using point = boost::geometry::model::d2::point_xy<double>;
+  using linestring = boost::geometry::model::linestring<point>;
+  using ring = boost::geometry::model::ring<point>;
+  using polygon = boost::geometry::model::polygon<point>;
+  using mpolygon = boost::geometry::model::multi_polygon<polygon>;
+
 public:
   Polygon(const Eigen::MatrixXd vertices);
 
@@ -21,7 +32,7 @@ public:
   std::vector<geometry_msgs::Point> getPointMessageVector(const double z);
 
 private:
-  Eigen::MatrixXd vertices;
+  ring m_ring;
 
 public:
   // exceptions
@@ -43,6 +54,13 @@ public:
   {
     const char* what() const throw() {
       return "Polygon: useless vertices detected, polygon methods may break!";
+    }
+  };
+
+  struct InvalidInflation : public std::exception
+  {
+    const char* what() const throw() {
+      return "Polygon: inflation broke the polygon!";
     }
   };
 };
