@@ -10,7 +10,7 @@
 
 namespace mrs_lib
 {
-  const int n_states = 4;
+  const int n_states = -1;
   const int n_states_norm_constrained = 2;
   const int n_inputs = 1;
   const int n_measurements = 2;
@@ -18,6 +18,8 @@ namespace mrs_lib
   /* using ukf_t = NCUKF<n_states, n_inputs, n_measurements>; */
   using lkf_t = NCLKF_partial<n_states, n_inputs, n_measurements, n_states_norm_constrained>;
 }
+
+constexpr int n = 4;
 
 using namespace mrs_lib;
 using Q_t = lkf_t::Q_t;
@@ -59,7 +61,7 @@ Eigen::Matrix<double, rows, 1> normal_randmat(const Eigen::Matrix<double, rows, 
     static std::random_device rd{};
     static std::mt19937 gen{rd()};
     static std::normal_distribution<> d{0,1};
-    Eigen::Matrix<double, rows, 1> ret;
+    Eigen::Matrix<double, rows, 1> ret(n, 1);
     for (int row = 0; row < rows; row++)
       ret(row, 0) = d(gen);
     return cov*ret;
@@ -74,7 +76,7 @@ int main()
   const double dt = 1.0;
 
   // Initialize the process noise matrix
-  Q_t Q; Q << 
+  Q_t Q(n,n); Q << 
     1e-3, 0, 0, 0,
     0, 1e-3, 0, 0,
     0, 0, 1e-2, 0,
@@ -86,6 +88,7 @@ int main()
     0, 1e-2;
 
   // Initialize the state transition matrix
+  A = A_t(n,n);
   A << 
     1, dt, 0, 0,
     0, 1, dt, 0,
@@ -93,6 +96,7 @@ int main()
     0, 0, 0, 0.9;
 
   // Initialize the input matrix
+  B = B_t(n, n_inputs);
   B << 
     0,
     0,
@@ -100,16 +104,17 @@ int main()
     1;
 
   // Initialize the observation matrix
+  H = H_t(n_measurements, n);
   H <<
     1, 0, 0, 0,
     0, 1, 0, 0;
 
   // Generate initial state and covariance
-  x_t x0 = 100.0*x_t::Random();
+  x_t x0 = 100.0*x_t::Random(n);
   x0(2) = 0.0;
   x0(3) = 10.0;
   x0 = x0/x0.norm();
-  P_t P_tmp = P_t::Random();
+  P_t P_tmp = P_t::Random(n,n);
   const P_t P0 = 10.0*P_tmp*P_tmp.transpose();
   const lkf_t::statecov_t sc0({x0, P0});
 

@@ -160,17 +160,20 @@ namespace mrs_lib
       : Base_class(A, B, H, l),
         norm_indices(norm_constrained_indices)
     {
-      for (auto& idx : norm_indices)
+      if (n >= 0)
       {
-        if (idx > n)
+        for (auto& idx : norm_indices)
         {
-          ROS_ERROR("[NCLKF_partial]: Index of a norm-constrained state (%d) cannot be higher than the number of states (%d)! Setting it to zero.", idx, n);
-          idx = 0;
-        }
-        if (idx < 0)
-        {
-          ROS_ERROR("[NCLKF_partial]: Index of a norm-constrained state (%d) cannot be less than zero! Setting it to zero.", idx);
-          idx = 0;
+          if (idx > n)
+          {
+            ROS_ERROR("[NCLKF_partial]: Index of a norm-constrained state (%d) cannot be higher than the number of states (%d)! Setting it to zero.", idx, n);
+            idx = 0;
+          }
+          if (idx < 0)
+          {
+            ROS_ERROR("[NCLKF_partial]: Index of a norm-constrained state (%d) cannot be less than zero! Setting it to zero.", idx);
+            idx = 0;
+          }
         }
       }
     };
