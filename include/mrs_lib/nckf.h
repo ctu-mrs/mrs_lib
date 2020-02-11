@@ -132,7 +132,7 @@ namespace mrs_lib
     using H_t = typename Base_class::H_t;                /*!< \brief State to measurement mapping matrix type \f$p \times n\f$ */
     using K_t = typename Base_class::K_t;                /*!< \brief Kalman gain matrix type \f$n \times p\f$ */
 
-    using indices_t = std::array<size_t, nq>;            /*!< \brief Indices of the norm-constrained states type */
+    using indices_t = std::array<int, nq>;            /*!< \brief Indices of the norm-constrained states type */
     using xq_t = Eigen::Matrix<double, nq, 1>;           /*!< \brief Norm-constrained states vector type \f$ n_q \times 1 \f$ */
     using Hq_t = Eigen::Matrix<double, p, nq>;           /*!< \brief Norm-constrained measurement mapping type \f$ p \times n_q \f$ */
     using Kq_t = Eigen::Matrix<double, nq, p>;           /*!< \brief Norm-constrained kalman gain type \f$ n_q \times p \f$ */
@@ -164,7 +164,12 @@ namespace mrs_lib
       {
         if (idx > n)
         {
-          ROS_ERROR("[NCLKF_partial]: Index of a norm-constrained state (%lu) cannot be higher than the number of states (%d)! Setting it to zero.", idx, n);
+          ROS_ERROR("[NCLKF_partial]: Index of a norm-constrained state (%d) cannot be higher than the number of states (%d)! Setting it to zero.", idx, n);
+          idx = 0;
+        }
+        if (idx < 0)
+        {
+          ROS_ERROR("[NCLKF_partial]: Index of a norm-constrained state (%d) cannot be less than zero! Setting it to zero.", idx);
           idx = 0;
         }
       }
@@ -176,10 +181,10 @@ namespace mrs_lib
     /* helper methods for Eigen matrix subscripting //{ */
     
     template <typename T, int rows, int cols, size_t out_rows, size_t out_cols>
-    Eigen::Matrix<T, out_rows, out_cols> select_indices(const Eigen::Matrix<T, rows, cols>& mat, const std::array<size_t, out_rows>& row_indices, const std::array<size_t, out_cols>& col_indices) const
+    Eigen::Matrix<T, out_rows, out_cols> select_indices(const Eigen::Matrix<T, rows, cols>& mat, const std::array<int, out_rows>& row_indices, const std::array<int, out_cols>& col_indices) const
     {
       Eigen::Matrix<T, out_rows, cols> tmp;
-      for (size_t it = 0; it < out_rows; it++)
+      for (int it = 0; it < (int)out_rows; it++)
       {
         const auto row = row_indices[it];
         assert(row < rows);
@@ -187,7 +192,7 @@ namespace mrs_lib
       }
     
       Eigen::Matrix<T, out_rows, out_cols> ret;
-      for (size_t it = 0; it < out_cols; it++)
+      for (int it = 0; it < (int)out_cols; it++)
       {
         const auto col = col_indices[it];
         assert(col < cols);
@@ -198,10 +203,10 @@ namespace mrs_lib
     }
     
     template <typename T, int rows, int cols, size_t out_rows>
-    Eigen::Matrix<T, out_rows, cols> select_rows(const Eigen::Matrix<T, rows, cols>& mat, const std::array<size_t, out_rows>& row_indices) const
+    Eigen::Matrix<T, out_rows, cols> select_rows(const Eigen::Matrix<T, rows, cols>& mat, const std::array<int, out_rows>& row_indices) const
     {
       Eigen::Matrix<T, out_rows, cols> ret;
-      for (size_t it = 0; it < out_rows; it++)
+      for (int it = 0; it < (int)out_rows; it++)
       {
         const auto row = row_indices[it];
         assert(row < rows);
@@ -211,10 +216,10 @@ namespace mrs_lib
     }
     
     template <typename T, int rows, int cols, size_t out_cols>
-    Eigen::Matrix<T, rows, out_cols> select_cols(const Eigen::Matrix<T, rows, cols>& mat, const std::array<size_t, out_cols>& col_indices) const
+    Eigen::Matrix<T, rows, out_cols> select_cols(const Eigen::Matrix<T, rows, cols>& mat, const std::array<int, out_cols>& col_indices) const
     {
       Eigen::Matrix<T, rows, out_cols> ret;
-      for (size_t it = 0; it < out_cols; it++)
+      for (int it = 0; it < (int)out_cols; it++)
       {
         const auto col = col_indices[it];
         assert(col < cols);
@@ -224,15 +229,15 @@ namespace mrs_lib
     }
     
     template <typename T, int rows, size_t out_rows>
-    Eigen::Matrix<T, out_rows, 1> select_indices(const Eigen::Matrix<T, rows, 1>& vec, const std::array<size_t, out_rows>& row_indices) const
+    Eigen::Matrix<T, out_rows, 1> select_indices(const Eigen::Matrix<T, rows, 1>& vec, const std::array<int, out_rows>& row_indices) const
     {
       return select_rows(vec, row_indices);
     }
     
     template <typename T, int rows, int cols, size_t n_rows>
-    void set_rows(const Eigen::Matrix<T, (size_t)n_rows, cols>& from_mat, Eigen::Matrix<T, rows, cols>& to_mat, const std::array<size_t, n_rows>& row_indices) const
+    void set_rows(const Eigen::Matrix<T, (size_t)n_rows, cols>& from_mat, Eigen::Matrix<T, rows, cols>& to_mat, const std::array<int, n_rows>& row_indices) const
     {
-      for (size_t rit = 0; rit < n_rows; rit++)
+      for (int rit = 0; rit < (int)n_rows; rit++)
       {
         const auto ridx = row_indices.at(rit);
         assert(ridx < rows);
