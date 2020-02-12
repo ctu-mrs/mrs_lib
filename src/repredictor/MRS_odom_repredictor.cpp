@@ -11,7 +11,7 @@ namespace mrs_lib
     Base_class::A << 1, dt, 0.5*dt*dt,
                      0, 1, dt,
                      0, 0, 1;
-    Base_class::B << 0, 0, 0;
+    Base_class::B << 0, 0, 1;
     Base_class::H = Hs.at(0);
   };
   //}
