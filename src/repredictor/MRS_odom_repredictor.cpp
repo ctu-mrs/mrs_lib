@@ -10,8 +10,8 @@ namespace mrs_lib
     const double& dt = default_dt;
     Base_class::A << 1, dt, 0.5*dt*dt,
                      0, 1, dt,
-                     0, 0, 1;
-    Base_class::B << 0, 0, 1;
+                     0, 0, 0.9;
+    Base_class::B << 0, 0, 0.1;
     Base_class::H = Hs.at(0);
   };
   //}
@@ -45,7 +45,9 @@ namespace mrs_lib
     double& ddx = ret(2);
     x = x + dt*dx + 0.5*dt*dt*ddx;
     dx = dx + dt*ddx;
-    ddx = ddx + u(0);
+    ddx = 0.9 * ddx + 0.1* u(0);
+    ddx = ddx + dt*u(0);
+    /* ddx = ddx; */
     return ret;
   };
   //}
