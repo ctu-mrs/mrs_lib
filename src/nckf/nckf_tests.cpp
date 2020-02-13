@@ -13,7 +13,7 @@ namespace mrs_lib
   const int n_states = -1;
   const int n_states_norm_constrained = 2;
   const int n_inputs = 1;
-  const int n_measurements = 2;
+  const int n_measurements = 4;
 
   /* using ukf_t = NCUKF<n_states, n_inputs, n_measurements>; */
   using lkf_t = NCLKF_partial<n_states, n_inputs, n_measurements, n_states_norm_constrained>;
@@ -70,7 +70,7 @@ Eigen::Matrix<double, rows, 1> normal_randmat(const Eigen::Matrix<double, rows, 
 int main()
 {
   srand(std::time(0));
-  const double l = 1.0;
+  const double l = 3.0;
 
   // dt will be constant in this example
   const double dt = 1.0;
@@ -83,15 +83,13 @@ int main()
     0, 0, 0, 1e-2;
 
   // Initialize the measurement noise matrix
-  R_t R; R <<
-    1e-2, 0,
-    0, 1e-2;
+  R_t R = 1e-2 * R_t::Ones();
 
   // Initialize the state transition matrix
   A = A_t(n,n);
   A << 
-    1, dt, 0, 0,
-    0, 1, dt, 0,
+    1, dt, 0.5*dt*dt, 0.25*dt*dt*dt,
+    0, 1, dt, 0.5*dt*dt,
     0, 0, 1, dt,
     0, 0, 0, 0.9;
 
@@ -107,7 +105,9 @@ int main()
   H = H_t(n_measurements, n);
   H <<
     1, 0, 0, 0,
-    0, 1, 0, 0;
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1;
 
   // Generate initial state and covariance
   x_t x0 = 100.0*x_t::Random(n);
@@ -118,7 +118,8 @@ int main()
   const P_t P0 = 10.0*P_tmp*P_tmp.transpose();
   const lkf_t::statecov_t sc0({x0, P0});
 
-  lkf_t lkf(A, B, H, l, {0, 1});
+  const lkf_t::indices_t nconst_idxs = {0,1}; // these are the norm-constrained states
+  lkf_t lkf(A, B, H, l, nconst_idxs);
 
   const int n_its = 1e1;
   std::vector<lkf_t::statecov_t> lscs;
@@ -160,7 +161,10 @@ int main()
         lscs.push_back(lsc);
         lsc = lkf.correct(lsc, z, R);
         std::cout << "lkf_new  corre:" << std::endl << lsc.x.transpose() << std::endl;
-        std::cout << "lkf_new  corre norm:" << lsc.x.block<2, 1>(0, 0).norm() << std::endl;
+        double sum2 = 0.0;
+        for (const auto it : nconst_idxs)
+          sum2 += lsc.x(it)*lsc.x(it);
+        std::cout << "lkf_new  corre norm:" << std::sqrt(sum2) << std::endl;
         lscs.push_back(lsc);
       }
       catch (const std::exception& e)

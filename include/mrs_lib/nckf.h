@@ -65,10 +65,10 @@ namespace mrs_lib
     * \param H                         State to measurement mapping matrix of the system (p x n).
     * \param l                         The norm constraint, applied to the specified states.
     */
-    NCLKF(const A_t& A, const B_t& B, const H_t& H, const double l) : Base_class(A, B, H), l_sqrt(sqrt(l)) {};
+    NCLKF(const A_t& A, const B_t& B, const H_t& H, const double l) : Base_class(A, B, H), l(l) {};
 
   protected:
-    double l_sqrt;
+    double l;
 
   protected:
     /* computeKalmanGain() method //{ */
@@ -83,7 +83,7 @@ namespace mrs_lib
       const double inn_scale = inn.transpose() * W_inv * inn;
       
       const double x_norm = x.norm();
-      const K_t K = K_orig + (l_sqrt/x_norm - 1.0) * x * (inn.transpose() * W_inv) / inn_scale;
+      const K_t K = K_orig + (l/x_norm - 1.0) * x * (inn.transpose() * W_inv) / inn_scale;
     
       return K;
     }
@@ -190,7 +190,7 @@ namespace mrs_lib
       for (int it = 0; it < (int)out_rows; it++)
       {
         const auto row = row_indices[it];
-        assert(row < rows);
+        assert(rows < 0 || row < rows);
         tmp.row(it) = mat.row(row);
       }
     
@@ -198,7 +198,7 @@ namespace mrs_lib
       for (int it = 0; it < (int)out_cols; it++)
       {
         const auto col = col_indices[it];
-        assert(col < cols);
+        assert(cols < 0 || col < cols);
         tmp.col(it) = tmp.col(col);
       }
     
@@ -212,7 +212,7 @@ namespace mrs_lib
       for (int it = 0; it < (int)out_rows; it++)
       {
         const auto row = row_indices[it];
-        assert(row < rows);
+        assert(rows < 0 || row < rows);
         ret.row(it) = mat.row(row);
       }
       return ret;
@@ -225,7 +225,7 @@ namespace mrs_lib
       for (int it = 0; it < (int)out_cols; it++)
       {
         const auto col = col_indices[it];
-        assert(col < cols);
+        assert(cols < 0 || col < cols);
         ret.col(it) = mat.col(col);
       }
       return ret;
@@ -243,7 +243,7 @@ namespace mrs_lib
       for (int rit = 0; rit < (int)n_rows; rit++)
       {
         const auto ridx = row_indices.at(rit);
-        assert(ridx < rows);
+        assert(rows < 0 || ridx < rows);
         to_mat.row(ridx) = from_mat.row(rit);
       }
     }
@@ -268,7 +268,7 @@ namespace mrs_lib
         const double inn_scale = inn.transpose() * W_inv * inn;
         
         const double x_norm = x.norm();
-        const Kq_t Kq = K_orig + (Base_class::l_sqrt/x_norm - 1.0) * x * (inn.transpose() * W_inv) / inn_scale;
+        const Kq_t Kq = K_orig + (Base_class::l/x_norm - 1.0) * x * (inn.transpose() * W_inv) / inn_scale;
         set_rows(Kq, K, norm_indices);
       }
     
@@ -311,7 +311,7 @@ namespace mrs_lib
     NCUKF(){};
 
     NCUKF(const transition_model_t& transition_model, const observation_model_t& observation_model, const double l, const double alpha = 1e-3, const double kappa = 1, const double beta = 2)
-     : Base_class(transition_model, observation_model, alpha, kappa, beta), l_sqrt(sqrt(l)) {};
+     : Base_class(transition_model, observation_model, alpha, kappa, beta), l(l) {};
 
   public:
     /* correct() method //{ */
@@ -370,7 +370,7 @@ namespace mrs_lib
     //}
 
   protected:
-    double l_sqrt;
+    double l;
 
   protected:
     /* computeKalmanGain() method //{ */
@@ -383,7 +383,7 @@ namespace mrs_lib
       const double inn_scale = inn.transpose() * Pzz_inv * inn;
       
       const double x_norm = x_pred.norm();
-      const K_t K = K_orig + (l_sqrt/x_norm - 1.0) * x_pred * (inn.transpose() * Pzz_inv) / inn_scale;
+      const K_t K = K_orig + (l/x_norm - 1.0) * x_pred * (inn.transpose() * Pzz_inv) / inn_scale;
     
       return K;
     }

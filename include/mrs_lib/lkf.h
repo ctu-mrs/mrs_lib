@@ -7,6 +7,7 @@
 #define LKFSYSTEMMODELS_H
 
 #include <mrs_lib/kalman_filter.h>
+#include <iostream>
 
 namespace mrs_lib
 {
