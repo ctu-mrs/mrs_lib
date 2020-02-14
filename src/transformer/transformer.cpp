@@ -438,7 +438,8 @@ namespace mrs_lib
 
   /* getTransform() //{ */
 
-  std::optional<mrs_lib::TransformStamped> Transformer::getTransform(const std::string& from_frame, const std::string& to_frame, const ros::Time& time_stamp)
+  std::optional<mrs_lib::TransformStamped> Transformer::getTransform(const std::string& from_frame, const std::string& to_frame, const ros::Time& time_stamp,
+                                                                     const bool quiet)
   {
     if (!is_initialized_)
     {
@@ -484,9 +485,15 @@ namespace mrs_lib
     }
     catch (tf2::TransformException& ex)
     {
-      // this does not happen often and when it does, it should be seen
-      ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: Exception caught while constructing transform from '%s' to '%s': %s", node_name_.c_str(),
-                        from_frame_resolved.c_str(), to_frame_resolved.c_str(), ex.what());
+      if (quiet)
+      {
+        ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: Exception caught while constructing transform from '%s' to '%s': %s", node_name_.c_str(),
+                          from_frame_resolved.c_str(), to_frame_resolved.c_str(), ex.what());
+      } else
+      {
+        ROS_DEBUG("[%s]: Transformer: Exception caught while constructing transform from '%s' to '%s': %s", node_name_.c_str(), from_frame_resolved.c_str(),
+                  to_frame_resolved.c_str(), ex.what());
+      }
     }
 
     return std::nullopt;
