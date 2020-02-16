@@ -408,11 +408,11 @@ namespace mrs_lib
   //}
 
   /* class LKF_MRS_odom //{ */
-  class LKF_MRS_odom : public LKF_multiH<6, 1, 1>
+  class LKF_MRS_odom : public LKF_multiH<3, 1, 1>
   {
   public:
     /* LKF definitions (typedefs, constants etc) //{ */
-    static const int n = 6;
+    static const int n = 3;
     static const int m = 1;
     static const int p = 1;
     using Base_class = LKF_multiH<n, m, p>;

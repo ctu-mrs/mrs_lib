@@ -207,11 +207,12 @@ namespace mrs_lib
      * @param from_frame the original frame
      * @param to_frame the target frame
      * @param time_stamp the time stamped to be used
+     * @param quiet should not print excessively
      *
      * @return \p std::nullopt if failed, optional containing the requested transform otherwise
      */
     [[nodiscard]] std::optional<mrs_lib::TransformStamped> getTransform(const std::string& from_frame, const std::string& to_frame,
-                                                                        const ros::Time& time_stamp = ros::Time(0));
+                                                                        const ros::Time& time_stamp = ros::Time(0), const bool quiet = false);
 
     //}
 

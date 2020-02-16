@@ -98,14 +98,14 @@ namespace mrs_lib
   /* { */
   /*   return transformImpl(tf, what); */
   /* } */
-  
-  
+
+
   /* //} */
 
   /* transformImpl() //{ */
-  
+
   /* /1* Eigen::MatrixXd //{ *1/ */
-  
+
   /* std::optional<Eigen::MatrixXd> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what) */
   /* { */
   /*   if (what.rows() == 2) */
@@ -130,11 +130,11 @@ namespace mrs_lib
   /*     return std::nullopt; */
   /*   } */
   /* } */
-  
+
   /* //} */
-  
+
   /* /1* Eigen::Matrix<double, 2, -1> //{ *1/ */
-  
+
   /* std::optional<Eigen::MatrixXd> Transformer::transformMat2(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what) */
   /* { */
   /*   assert(what.rows() == 2); */
@@ -146,11 +146,11 @@ namespace mrs_lib
   /*   else */
   /*     return std::nullopt; */
   /* } */
-  
+
   /* //} */
 
   /* /1* Eigen::Matrix<double, 3, -1> //{ *1/ */
-  
+
   /* std::optional<Eigen::MatrixXd> Transformer::transformMat3(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what) */
   /* { */
   /*   assert(what.rows() == 3); */
@@ -158,22 +158,22 @@ namespace mrs_lib
   /*   std::string latlon_frame_name = resolveFrameName(LATLON_ORIGIN); */
   /*   Eigen::Matrix<double, 3, Eigen::Dynamic, Eigen::DontAlign> mat(what); */
   /*   /1* mat = what; *1/ */
-  
+
   /*   // check for transformation from LAT-LON GPS */
   /*   /1* transformation from LAT-LON GPS //{ *1/ */
-  
+
   /*   if (tf.from() == latlon_frame_name) */
   /*   { */
   /*     // utm_x and utm_y are now in 'utm_origin' frame */
   /*     const std::string uav_prefix = getUAVFramePrefix(tf.from()); */
   /*     const std::string utm_frame_name = uav_prefix + "/utm_origin"; */
-  
+
   /*     // transform from 'utm_origin' to the desired frame */
   /*     const auto utm_origin_to_end_tf_opt = getTransform(utm_frame_name, tf.to(), tf.stamp()); */
   /*     if (!utm_origin_to_end_tf_opt.has_value()) */
   /*       return std::nullopt; */
   /*     const Eigen::Affine3d tf_eig = utm_origin_to_end_tf_opt.value().getTransformEigen(); */
-  
+
   /*     for (int it = 0; it < ret.cols(); it++) */
   /*     { */
   /*       Eigen::Vector3d vec = mat.col(it); */
@@ -183,11 +183,11 @@ namespace mrs_lib
   /*       ret.col(it) = tf_eig*vec; */
   /*     } */
   /*   } */
-  
+
   /*   //} */
   /*   // check for transformation to LAT-LON GPS */
   /*   /1* transformation to LAT-LON GPS //{ *1/ */
-  
+
   /*   else if (tf.to() == latlon_frame_name) */
   /*   { */
   /*     std::string utm_zone; */
@@ -201,16 +201,16 @@ namespace mrs_lib
   /*       } */
   /*       utm_zone = utm_zone_; */
   /*     } */
-  
+
   /*     // first, transform from the desired frame to 'utm_origin' */
   /*     const std::string uav_prefix = getUAVFramePrefix(tf.to()); */
   /*     std::string utm_frame_name = uav_prefix + "/utm_origin"; */
-  
+
   /*     const auto start_to_utm_origin_tf_opt = getTransform(tf.from(), utm_frame_name, tf.stamp()); */
   /*     if (!start_to_utm_origin_tf_opt.has_value()) */
   /*       return std::nullopt; */
   /*     const Eigen::Affine3d tf_eig = start_to_utm_origin_tf_opt.value().getTransformEigen(); */
-  
+
   /*     // transform to the intermediate (UTM) target frame */
   /*     mat = tf_eig*mat; */
   /*     for (int it = 0; it < ret.cols(); it++) */
@@ -221,21 +221,21 @@ namespace mrs_lib
   /*       ret.col(it) = vec; */
   /*     } */
   /*   } */
-  
+
   /*   //} */
   /*   // in case of a normal transformation just transform each vector separately */
   /*   /1* regular transformation //{ *1/ */
-  
+
   /*   else */
   /*   { */
   /*     const Eigen::Affine3d tf_eig = tf.getTransformEigen(); */
   /*     ret = tf_eig*mat; */
   /*   } */
-  
+
   /*   //} */
   /*   return ret; */
   /* } */
-  
+
   /* //} */
 
   std::optional<mrs_msgs::ReferenceStamped> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const mrs_msgs::ReferenceStamped& what)
@@ -438,7 +438,8 @@ namespace mrs_lib
 
   /* getTransform() //{ */
 
-  std::optional<mrs_lib::TransformStamped> Transformer::getTransform(const std::string& from_frame, const std::string& to_frame, const ros::Time& time_stamp)
+  std::optional<mrs_lib::TransformStamped> Transformer::getTransform(const std::string& from_frame, const std::string& to_frame, const ros::Time& time_stamp,
+                                                                     const bool quiet)
   {
     if (!is_initialized_)
     {
@@ -484,9 +485,15 @@ namespace mrs_lib
     }
     catch (tf2::TransformException& ex)
     {
-      // this does not happen often and when it does, it should be seen
-      ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: Exception caught while constructing transform from '%s' to '%s': %s", node_name_.c_str(),
-                        from_frame_resolved.c_str(), to_frame_resolved.c_str(), ex.what());
+      if (quiet)
+      {
+        ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: Exception caught while constructing transform from '%s' to '%s': %s", node_name_.c_str(),
+                          from_frame_resolved.c_str(), to_frame_resolved.c_str(), ex.what());
+      } else
+      {
+        ROS_DEBUG("[%s]: Transformer: Exception caught while constructing transform from '%s' to '%s': %s", node_name_.c_str(), from_frame_resolved.c_str(),
+                  to_frame_resolved.c_str(), ex.what());
+      }
     }
 
     return std::nullopt;
@@ -688,11 +695,11 @@ namespace mrs_lib
   //}
 
   /* getTransformEigen() //{ */
-  
+
   Eigen::Affine3d TransformStamped::getTransformEigen(void) const
   {
     return tf2::transformToEigen(getTransform().transform);
   }
-  
+
   //}
 }  // namespace mrs_lib
