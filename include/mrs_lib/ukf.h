@@ -155,6 +155,24 @@ namespace mrs_lib
     void setConstants(const double alpha, const double kappa, const double beta);
     //}
 
+    /* setTransitionModel() method //{ */
+  /*!
+    * \brief Changes the transition model function.
+    *
+    * \param transition_model   the new transition model
+    */
+    void setTransitionModel(const transition_model_t& transition_model);
+    //}
+
+    /* setObservationModel() method //{ */
+  /*!
+    * \brief Changes the observation model function.
+    *
+    * \param observation_model   the new observation model
+    */
+    void setObservationModel(const observation_model_t& observation_model);
+    //}
+
   protected:
     /* protected methods and member variables //{ */
 

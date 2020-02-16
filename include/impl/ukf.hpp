@@ -69,6 +69,26 @@ namespace mrs_lib
 
   //}
 
+    /* setTransitionModel() method //{ */
+
+    template <int n_states, int n_inputs, int n_measurements>
+    void UKF<n_states, n_inputs, n_measurements>::setTransitionModel(const transition_model_t& transition_model)
+    {
+      m_transition_model = transition_model;
+    }
+
+    //}
+
+    /* setObservationModel() method //{ */
+
+    template <int n_states, int n_inputs, int n_measurements>
+    void UKF<n_states, n_inputs, n_measurements>::setObservationModel(const observation_model_t& observation_model)
+    {
+      m_observation_model = observation_model;
+    }
+
+    //}
+
   /* computePaSqrt() method //{ */
   template <int n_states, int n_inputs, int n_measurements>
   typename UKF<n_states, n_inputs, n_measurements>::P_t UKF<n_states, n_inputs, n_measurements>::computePaSqrt(const P_t& P) const
@@ -102,7 +122,7 @@ namespace mrs_lib
     if (!qr.isInvertible())
     {
       // add some stuff to the tmp matrix diagonal to make it invertible
-      Pzz_t tmp = Pzz + 1e-9*Pzz_t::Identity();
+      Pzz_t tmp = Pzz + 1e-9*Pzz_t::Identity(Pzz.rows(), Pzz.cols());
       qr.compute(tmp);
       if (!qr.isInvertible())
       {
@@ -207,21 +227,21 @@ namespace mrs_lib
     const X_t S = computeSigmas(x, P);
 
     // propagate sigmas through the observation model
-    Z_t Z_exp;
+    Z_t Z_exp(z.rows(), w);
     for (int i = 0; i < w; i++)
     {
       Z_exp.col(i) = m_observation_model(S.col(i));
     }
 
     // compute expected measurement
-    z_t z_exp = z_t::Zero();
+    z_t z_exp = z_t::Zero(z.rows());
     for (int i = 0; i < w; i++)
     {
       z_exp += m_Wm(i) * Z_exp.col(i);
     }
 
     // compute the covariance of measurement
-    Pzz_t Pzz = Pzz_t::Zero();
+    Pzz_t Pzz = Pzz_t::Zero(z.rows(), z.rows());
     for (int i = 0; i < w; i++)
     {
       Pzz += m_Wc(i) * (Z_exp.col(i) - z_exp) * (Z_exp.col(i) - z_exp).transpose();
@@ -229,7 +249,7 @@ namespace mrs_lib
     Pzz += R;
 
     // compute cross covariance
-    K_t Pxz = K_t::Zero();
+    K_t Pxz = K_t::Zero(n, z.rows());
     for (int i = 0; i < w; i++)
     {
       Pxz += m_Wc(i) * (S.col(i) - x) * (Z_exp.col(i) - z_exp).transpose();
