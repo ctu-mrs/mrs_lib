@@ -12,7 +12,7 @@ namespace mrs_lib
   
   double normalize_angle(const double angle, const double from)
   {
-    return from + std::fmod(angle, 2.0*M_PI);
+    return normalize_angle(angle, from, 2.0*M_PI);
   }
   
   //}
@@ -21,7 +21,11 @@ namespace mrs_lib
   
   double normalize_angle(const double angle, const double from, const double to)
   {
-    return from + std::fmod(angle, to - from);
+    const double range = to - from;
+    double ret = std::fmod(angle - from, range);
+    if (ret < 0.0)
+      ret += range;
+    return ret + from;
   }
   
   //}

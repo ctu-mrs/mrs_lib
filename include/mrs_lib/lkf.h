@@ -183,7 +183,7 @@ namespace mrs_lib
       if (!qr.isInvertible())
       {
         // add some stuff to the tmp matrix diagonal to make it invertible
-        R_t ident = R_t::Identity();
+        R_t ident = R_t::Identity(W.rows(), W.cols());
         W += 1e-9 * ident;
         qr.compute(W);
         if (!qr.isInvertible())
