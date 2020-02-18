@@ -2,8 +2,8 @@
 Changelog for package mrs_lib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.4 (2020-02-18)
+------------------
 * [lkf]: fix for dynamic-sized state vector, [geometry_utils]: fixed normalize_angle!
 * udpated ukf - now works for dynamic-sized observation, transition and observation models can be changed after object initialization
 * Transformer: added quiet param to getTransform()
