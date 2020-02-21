@@ -39,9 +39,9 @@ namespace mrs_lib
   {
   public:
     /* LKF definitions (typedefs, constants etc) //{ */
-    static const int n = n_states;            /*!< \brief Length of the state vector of the system. */
-    static const int m = n_inputs;            /*!< \brief Length of the input vector of the system. */
-    static const int p = n_measurements;      /*!< \brief Length of the measurement vector of the system. */
+    static constexpr int n = n_states;            /*!< \brief Length of the state vector of the system. */
+    static constexpr int m = n_inputs;            /*!< \brief Length of the input vector of the system. */
+    static constexpr int p = n_measurements;      /*!< \brief Length of the measurement vector of the system. */
     using Base_class = KalmanFilter<n, m, p>; /*!< \brief Base class of this class. */
 
     using x_t = typename Base_class::x_t;                /*!< \brief State vector type \f$n \times 1\f$ */
