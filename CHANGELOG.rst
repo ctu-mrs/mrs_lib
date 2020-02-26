@@ -2,6 +2,11 @@
 Changelog for package mrs_lib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fixed lkf for building without optimalization (static const to static constexpr)
+* Contributors: Matouš Vrba
+
 0.0.4 (2020-02-18)
 ------------------
 * [lkf]: fix for dynamic-sized state vector, [geometry_utils]: fixed normalize_angle!
