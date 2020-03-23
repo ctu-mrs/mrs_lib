@@ -113,19 +113,22 @@ namespace mrs_lib
   bool SafetyZone::isPathValid(const double p1x, const double p1y, const double p1z, const double p2x, const double p2y, const double p2z)
   {
 
-    if (outerBorder->doesSectionIntersect(p1x, p1y, p2x, p2y))
+    if (outerBorder->doesSectionIntersect(p1x, p1y, p2x, p2y)) {
       return false;
+    }
 
     for (auto& el : innerObstacles)
     {
-      if (el.doesSectionIntersect(p1x, p1y, p1z, p2x))
+      if (el.doesSectionIntersect(p1x, p1y, p2x, p2y)) {
         return false;
+      }
     }
 
     for (auto& el : pointObstacles)
     {
-      if (el.doesSectionIntersect(p1x, p1y, p1z, p2x, p2y, p2z))
+      if (el.doesSectionIntersect(p1x, p1y, p1z, p2x, p2y, p2z)) {
         return false;
+      }
     }
 
     return true;

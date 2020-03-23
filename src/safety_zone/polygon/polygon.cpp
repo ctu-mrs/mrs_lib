@@ -72,11 +72,13 @@ bool Polygon::doesSectionIntersect(const double startX, const double startY, con
   Eigen::RowVector2d end{endX, endY};
 
   for (int i = 0; i < vertices.rows(); ++i) {
+
     Eigen::RowVector2d edgeStart = vertices.row(i);
     Eigen::RowVector2d edgeEnd   = vertices.row((i + 1) % vertices.rows());
 
-    if (sectionIntersect(start, end, edgeStart, edgeEnd).intersect)
+    if (sectionIntersect(start, end, edgeStart, edgeEnd).intersect) {
       return true;
+    }
   }
 
   return false;
