@@ -11,6 +11,15 @@
 #include <cmath>
 #include <Eigen/Dense>
 
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_eigen/tf2_eigen.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf/transform_datatypes.h>
+#include <tf_conversions/tf_eigen.h>
+
+#include <iostream>
+
 namespace mrs_lib
 {
   template <int dims>
@@ -288,6 +297,207 @@ namespace mrs_lib
 
     Eigen::MatrixXd cone_axis_projector;
     Ray cone_ray;
+  };
+
+  //}
+
+  // | ----------------------- conversions ---------------------- |
+
+  /* class EulerAttitude //{ */
+
+  class EulerAttitude
+  {
+  public:
+    EulerAttitude(const double& r, const double& p, const double& y) : r(r), p(p), y(y){};
+
+    double roll(void) const
+    {
+      return r;
+    }
+
+    double pitch(void) const
+    {
+      return p;
+    }
+
+    double yaw(void) const
+    {
+      return y;
+    }
+
+  private:
+    double r, p, y;
+  };
+
+  //}
+
+  /* class AttitudeConvertor //{ */
+
+  class AttitudeConvertor
+  {
+  public:
+    AttitudeConvertor(const double& roll, const double& pitch, const double& yaw)
+    {
+      tf2_quaternion.setRPY(roll, pitch, yaw);
+    }
+
+    AttitudeConvertor(const tf::Quaternion quaternion)
+    {
+      tf2_quaternion.setX(quaternion.x());
+      tf2_quaternion.setY(quaternion.y());
+      tf2_quaternion.setZ(quaternion.z());
+      tf2_quaternion.setW(quaternion.w());
+    }
+
+    AttitudeConvertor(const geometry_msgs::Quaternion quaternion)
+    {
+      tf2_quaternion.setX(quaternion.x);
+      tf2_quaternion.setY(quaternion.y);
+      tf2_quaternion.setZ(quaternion.z);
+      tf2_quaternion.setW(quaternion.w);
+    }
+
+    AttitudeConvertor(const mrs_lib::EulerAttitude& euler_attitude)
+    {
+      tf2_quaternion.setRPY(euler_attitude.roll(), euler_attitude.pitch(), euler_attitude.yaw());
+    }
+
+    AttitudeConvertor(const Eigen::Quaterniond quaternion)
+    {
+      tf2_quaternion.setX(quaternion.x());
+      tf2_quaternion.setY(quaternion.y());
+      tf2_quaternion.setZ(quaternion.z());
+      tf2_quaternion.setW(quaternion.w());
+    }
+
+    AttitudeConvertor(const Eigen::Matrix3d matrix)
+    {
+      Eigen::Quaterniond quaternion = Eigen::Quaterniond(matrix);
+
+      tf2_quaternion.setX(quaternion.x());
+      tf2_quaternion.setY(quaternion.y());
+      tf2_quaternion.setZ(quaternion.z());
+      tf2_quaternion.setW(quaternion.w());
+    }
+
+    template <class T>
+    AttitudeConvertor(const Eigen::AngleAxis<T> angle_axis)
+    {
+      double angle = angle_axis.angle();
+      tf2::Vector3 axis(angle_axis.axis()[0], angle_axis.axis()[1], angle_axis.axis()[2]);
+
+      tf2_quaternion.setRotation(axis, angle);
+    }
+
+    AttitudeConvertor(const tf2::Quaternion quaternion)
+    {
+
+      tf2_quaternion = quaternion;
+    }
+
+    operator tf2::Transform() const
+    {
+      return tf2::Transform(tf2_quaternion);
+    }
+
+    operator tf2::Quaternion() const
+    {
+      return tf2_quaternion;
+    }
+
+    operator tf::Quaternion() const
+    {
+      tf::Quaternion tf_quaternion;
+
+      tf_quaternion.setX(tf2_quaternion.x());
+      tf_quaternion.setY(tf2_quaternion.y());
+      tf_quaternion.setZ(tf2_quaternion.z());
+      tf_quaternion.setW(tf2_quaternion.w());
+
+      return tf_quaternion;
+    }
+
+    operator geometry_msgs::Quaternion() const
+    {
+      geometry_msgs::Quaternion geom_quaternion;
+
+      geom_quaternion.x = tf2_quaternion.x();
+      geom_quaternion.y = tf2_quaternion.y();
+      geom_quaternion.z = tf2_quaternion.z();
+      geom_quaternion.w = tf2_quaternion.w();
+
+      return geom_quaternion;
+    }
+
+    operator EulerAttitude() const
+    {
+
+      double roll, pitch, yaw;
+      tf2::Matrix3x3(tf2_quaternion).getRPY(roll, pitch, yaw);
+
+      return EulerAttitude(roll, pitch, yaw);
+    }
+
+    template <class T>
+    operator Eigen::AngleAxis<T>() const
+    {
+
+      double angle = tf2_quaternion.getAngle();
+      Eigen::Vector3d axis(tf2_quaternion.getAxis()[0], tf2_quaternion.getAxis()[1], tf2_quaternion.getAxis()[2]);
+
+      Eigen::AngleAxis<T> angle_axis(angle, axis);
+
+      return angle_axis;
+    }
+
+    template <class T>
+    operator Eigen::Quaternion<T>() const
+    {
+
+      return Eigen::Quaternion<T>(tf2_quaternion.w(), tf2_quaternion.x(), tf2_quaternion.y(), tf2_quaternion.z());
+    }
+
+    operator Eigen::Matrix3d() const
+    {
+      Eigen::Quaterniond quaternion(tf2_quaternion.w(), tf2_quaternion.x(), tf2_quaternion.y(), tf2_quaternion.z());
+
+      return quaternion.toRotationMatrix();
+    }
+
+    std::tuple<double, double, double> getRPY()
+    {
+      double roll, pitch, yaw;
+      tf2::Matrix3x3(tf2_quaternion).getRPY(roll, pitch, yaw);
+
+      return std::tuple(roll, pitch, yaw);
+    }
+
+    double getYaw()
+    {
+      double roll, pitch, yaw;
+      tf2::Matrix3x3(tf2_quaternion).getRPY(roll, pitch, yaw);
+
+      return yaw;
+    }
+
+    /* double getRoll() */
+    /* { */
+    /*   double roll, pitch, yaw; */
+    /*   tf2::Matrix3x3(tf2_quaternion).getRPY(roll, pitch, yaw); */
+
+    /*   return roll; */
+    /* } */
+
+    /* double getPitch() */
+    /* { */
+    /*   double roll, pitch, yaw; */
+    /*   tf2::Matrix3x3(tf2_quaternion).getRPY(roll, pitch, yaw); */
+
+    /*   return pitch; */
+    /* } */
+
+  private:
+    tf2::Quaternion tf2_quaternion;
   };
 
   //}

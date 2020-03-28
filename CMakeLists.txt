@@ -218,3 +218,10 @@ target_link_libraries(geometry_utils_tests
   ${Eigen_LIBRARIES}
   ${GAZEBO_INCLUDE_DIRS}
   )
+
+add_executable(attitude_convertor_test src/geometry_utils/geometry_utils.cpp src/geometry_utils/attitude_convertor_test.cpp)
+target_link_libraries(attitude_convertor_test
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  ${GAZEBO_INCLUDE_DIRS}
+  )

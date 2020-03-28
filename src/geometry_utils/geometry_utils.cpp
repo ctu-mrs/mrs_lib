@@ -299,10 +299,6 @@ namespace mrs_lib
 
   //}
 
-  // | ----------------------- conversions ---------------------- |
-
-  // TODO quaterion <-> Euler
-
   // | --------------------- angle routines --------------------- |
 
   /* haversin() //{ */
