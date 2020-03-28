@@ -1,24 +1,26 @@
 // clang: MatousFormat
 #include <mrs_lib/geometry_utils.h>
 
+using quat_t = Eigen::Quaterniond;
+
 namespace mrs_lib
 {
 
   // instantiation of common template values
-  vec_t<3+1> to_homogenous(const vec_t<3>& vec);
-  vec_t<2+1> to_homogenous(const vec_t<2>& vec);
+  vec_t<3 + 1> to_homogenous(const vec_t<3>& vec);
+  vec_t<2 + 1> to_homogenous(const vec_t<2>& vec);
 
   /* double normalize_angle(const double angle, const double from) //{ */
-  
+
   double normalize_angle(const double angle, const double from)
   {
-    return normalize_angle(angle, from, 2.0*M_PI);
+    return normalize_angle(angle, from, 2.0 * M_PI);
   }
-  
+
   //}
 
   /* double normalize_angle(const double angle, const double from, const double to) //{ */
-  
+
   double normalize_angle(const double angle, const double from, const double to)
   {
     const double range = to - from;
@@ -27,16 +29,16 @@ namespace mrs_lib
       ret += range;
     return ret + from;
   }
-  
+
   //}
 
   /* double cross(const vec2_t& vec1, const vec2_t vec2) //{ */
-  
+
   double cross(const vec2_t& vec1, const vec2_t vec2)
   {
-    return vec1.x()*vec2.y() - vec1.y()*vec2.x();
+    return vec1.x() * vec2.y() - vec1.y() * vec2.x();
   }
-  
+
   //}
 
   /* double angle_between(const vec2_t& vec1, const vec2_t& vec2) and overloads //{ */
@@ -48,7 +50,7 @@ namespace mrs_lib
     const double angle = std::atan2(sin_12, cos_12);
     return angle;
   }
-  
+
   double angle_between(const vec2_t& vec1, const vec2_t& vec2)
   {
     const double sin_12 = cross(vec1, vec2);
@@ -56,7 +58,27 @@ namespace mrs_lib
     const double angle = std::atan2(sin_12, cos_12);
     return angle;
   }
-  
+
+  //}
+
+  /* dist2d //{ */
+
+  double dist2d(const double& ax, const double& ay, const double& bx, const double& by)
+  {
+
+    return sqrt(pow(ax - bx, 2) + pow(ay - by, 2));
+  }
+
+  //}
+
+  /* dist3d //{ */
+
+  double dist3d(const double& ax, const double& ay, const double& az, const double& bx, const double& by, const double& bz)
+  {
+
+    return sqrt(pow(ax - bx, 2) + pow(ay - by, 2) + +pow(az - bz, 2));
+  }
+
   //}
 
   /* Eigen::AngleAxisd angleaxis_between(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2, const double tolerance) //{ */
@@ -102,94 +124,6 @@ namespace mrs_lib
     return ret;
   }
 
-  //}
-
-  /* UNUSED //{ */
-  
-  /* /1* ConicSection constructor //{ *1/ */
-  /* ConicSection::ConicSection(const double A, const double B, const double C, const double D, const double E, const double F, const double tolerance) */
-  /* { */
-  /*   // determinant of the 2x2 submatrix (the discriminant) */
-  /*   alpha = B*B - 4*A*C; */
-  
-  /*   // determinant of the 3x3 matrix */
-  /*   beta = (B*E*D - C*D*D - A*E*E - F*alpha)/4.0; */
-  
-  /*   conic_type = classify_conic_section(alpha, beta, tolerance); */
-  /* } */
-  /* //} */
-  
-  /* /1* classify_conic_section() method //{ *1/ */
-  /* ConicSection::conic_type_t ConicSection::classify_conic_section(const double alpha, const double beta, const double tolerance) */
-  /* { */
-  /*   conic_type_t conic_type; */
-  /*   if (abs(beta) < tolerance) */
-  /*   { */
-  /*     if (abs(alpha) < tolerance) */
-  /*       conic_type = parallel_lines; */
-  /*     else if (alpha < 0.0) */
-  /*       conic_type = point; */
-  /*     else // (alpha > 0.0) */
-  /*       conic_type = intersecting_lines; */
-  /*   } else */
-  /*   { */
-  /*     if (abs(alpha) < tolerance) */
-  /*       conic_type = parabola; */
-  /*     else if (alpha < 0.0) */
-  /*     { */
-  /*       if (abs(A-C) < tolerance && abs(B) < tolerance) */
-  /*         conic_type = circle; */
-  /*       else */
-  /*         conic_type = ellipse; */
-  /*     } */
-  /*     else // (alpha > 0.0) */
-  /*     { */
-  /*       if (abs(A+C) < tolerance) */
-  /*         conic_type = rectangular_hyperbola; */
-  /*       else */
-  /*         conic_type = hyperbola; */
-  /*     } */
-  /*   } */
-  /*   return conic_type; */
-  /* } */
-  /* //} */
-  
-  // THIS IS WRONG!! It's actually pretty complicated stuff!!
-  /* double ConicSection::closest_point_on_ellipse_param(const pt2_t& to_point, const central_conic_params_t& ellipse_params) */
-  /* { */
-  /*   // transform the point to a frame where the ellipse is centered and has axes aligned with the frame axes */
-  /*   const Eigen::Rotation2Dd rot(-ellipse_params.theta); */
-  /*   const pt2_t pt_tfd = rot*(to_point - vec2_t(ellipse_params.x0, ellipse_params.y0)); */
-  /*   // calculate the `t` parameter of the ellipse, corresponding to the angle in which the point lies */
-  /*   const double t = atan2(ellipse_params.a*pt_tfd.y(), ellipse_params.b*pt_tfd.x()); */
-  /*   return t; */
-  /* } */
-  
-  /* /1* calc_central_conic_params() method //{ *1/ */
-  /* ConicSection::central_conic_params_t ConicSection::calc_central_conic_params() */
-  /* { */
-  /*   assert(conic_type & basic_type_mask == ellipse || conic_type & basic_type_mask == hyperbola); */
-  /*   const double tmp1 = 2*(A*E*E + C*D*D - B*D*E + alpha*F); */
-  /*   const double tmp2 = sqrt((A - C)*(A - C) + B*B); */
-  /*   const double atmp = tmp1*((A + C) + tmp2); */
-  /*   const double btmp = tmp1*((A + C) - tmp2); */
-  /*   const double a = sqrt(abs(atmp))/alpha; */
-  /*   const double b = sqrt(abs(btmp))/alpha; */
-  /*   const double x0 = (2*C*D - B*E)/alpha; */
-  /*   const double y0 = (2*A*E - B*D)/alpha; */
-  /*   double th = atan2(C - A - tmp2, B); */
-  /*   if (A < C) */
-  /*     th += M_PI_2; */
-  /*   central_conic_params_t ret; */
-  /*   ret.a = a; */
-  /*   ret.b = b; */
-  /*   ret.x0 = x0; */
-  /*   ret.y0 = y0; */
-  /*   ret.theta = th; */
-  /*   return ret; */
-  /* } */
-  /* //} */
-  
   //}
 
   /* Ray //{ */
@@ -313,72 +247,6 @@ namespace mrs_lib
 
   //}
 
-  /* Angle routines //{ */
-
-  double haversin(double angle)
-  {
-    return (1.0 - std::cos(angle)) / 2.0;
-  }
-
-  double invHaversin(double angle)
-  {
-    return 2.0 * std::asin(std::sqrt(angle));
-  }
-
-  double triangleArea(double a, double b, double c)
-  {
-    double s = (a + b + c) / 2.0;
-    return std::sqrt(s * (s - a) * (s - b) * (s - c));
-  }
-
-  double vectorAngle(Eigen::Vector3d v1, Eigen::Vector3d v2)
-  {
-    return acos(v1.dot(v2) / (v1.norm() * v2.norm()));
-  }
-
-  double solidAngle(double a, double b, double c)
-  {
-    return invHaversin((haversin(c) - haversin(a - b)) / (std::sin(a) * std::sin(b)));
-  }
-
-  double sphericalTriangleArea(Eigen::Vector3d a, Eigen::Vector3d b, Eigen::Vector3d c)
-  {
-    double ab = vectorAngle(a, b);
-    double bc = vectorAngle(b, c);
-    double ca = vectorAngle(c, a);
-
-    if (ab < 1e-3 and bc < 1e-3 and ca < 1e-3)
-    {
-      return triangleArea(ab, bc, ca);
-    }
-
-    double A = solidAngle(ca, ab, bc);
-    double B = solidAngle(ab, bc, ca);
-    double C = solidAngle(bc, ca, ab);
-
-    return A + B + C - M_PI;
-  }
-
-  double rectSolidAngle(Rectangle r, Eigen::Vector3d center)
-  {
-    Eigen::Vector3d a = r.points[0] - center;
-    Eigen::Vector3d b = r.points[1] - center;
-    Eigen::Vector3d c = r.points[2] - center;
-    Eigen::Vector3d d = r.points[3] - center;
-
-    a.normalize();
-    b.normalize();
-    c.normalize();
-    d.normalize();
-
-    double t1 = sphericalTriangleArea(a, b, c);
-    double t2 = sphericalTriangleArea(c, d, a);
-
-    return t1 + t2;
-  }
-
-  //}
-
   /* Cone //{ */
 
   Cone::Cone(Eigen::Vector3d position, Eigen::Vector3d direction, double angle)
@@ -428,6 +296,297 @@ namespace mrs_lib
       return this->position;
     }
   }
+
+  //}
+
+  // | ----------------------- conversions ---------------------- |
+
+  // TODO quaterion <-> Euler
+
+  // | --------------------- angle routines --------------------- |
+
+  /* haversin() //{ */
+
+  double haversin(const double& angle)
+  {
+    return (1.0 - std::cos(angle)) / 2.0;
+  }
+
+  //}
+
+  /* invHaversin() //{ */
+
+  double invHaversin(const double& angle)
+  {
+    return 2.0 * std::asin(std::sqrt(angle));
+  }
+
+  //}
+
+  /* triangleArea() //{ */
+
+  double triangleArea(const double& a, const double& b, const double& c)
+  {
+    double s = (a + b + c) / 2.0;
+    return std::sqrt(s * (s - a) * (s - b) * (s - c));
+  }
+
+  //}
+
+  /* vectorAngle() //{ */
+
+  double vectorAngle(const Eigen::Vector3d& v1, const Eigen::Vector3d& v2)
+  {
+    return acos(v1.dot(v2) / (v1.norm() * v2.norm()));
+  }
+
+  //}
+
+  /* solidAngle() //{ */
+
+  double solidAngle(const double& a, const double& b, const double& c)
+  {
+    return invHaversin((haversin(c) - haversin(a - b)) / (std::sin(a) * std::sin(b)));
+  }
+
+  //}
+
+  /* sphericalTriangleArea() //{ */
+
+  double sphericalTriangleArea(const Eigen::Vector3d& a, const Eigen::Vector3d& b, const Eigen::Vector3d& c)
+  {
+    double ab = vectorAngle(a, b);
+    double bc = vectorAngle(b, c);
+    double ca = vectorAngle(c, a);
+
+    if (ab < 1e-3 and bc < 1e-3 and ca < 1e-3)
+    {
+      return triangleArea(ab, bc, ca);
+    }
+
+    double A = solidAngle(ca, ab, bc);
+    double B = solidAngle(ab, bc, ca);
+    double C = solidAngle(bc, ca, ab);
+
+    return A + B + C - M_PI;
+  }
+
+  //}
+
+  /* rectSolidAngle() //{ */
+
+  double rectSolidAngle(const Rectangle& r, const Eigen::Vector3d& center)
+  {
+    Eigen::Vector3d a = r.points[0] - center;
+    Eigen::Vector3d b = r.points[1] - center;
+    Eigen::Vector3d c = r.points[2] - center;
+    Eigen::Vector3d d = r.points[3] - center;
+
+    a.normalize();
+    b.normalize();
+    c.normalize();
+    d.normalize();
+
+    double t1 = sphericalTriangleArea(a, b, c);
+    double t2 = sphericalTriangleArea(c, d, a);
+
+    return t1 + t2;
+  }
+
+  //}
+
+  /* unwrapAngle() //{ */
+
+  double unwrapAngle(const double& yaw, const double& yaw_previous)
+  {
+
+    double yaw_out = yaw;
+
+    while (yaw_out - yaw_previous > M_PI)
+    {
+      yaw_out -= 2 * M_PI;
+    }
+    while (yaw_out - yaw_previous < -M_PI)
+    {
+      yaw_out += 2 * M_PI;
+    }
+
+    return yaw_out;
+  }
+
+  //}
+
+  /* wrapAngle() //{ */
+
+  double wrapAngle(const double& angle_in)
+  {
+
+    double angle_wrapped = angle_in;
+
+    while (angle_wrapped > M_PI)
+    {
+      angle_wrapped -= 2 * M_PI;
+    }
+
+    while (angle_wrapped < -M_PI)
+    {
+      angle_wrapped += 2 * M_PI;
+    }
+
+    return angle_wrapped;
+  }
+
+  //}
+
+  /* disambiguateAngle() //{ */
+
+  double disambiguateAngle(const double& yaw, const double& yaw_previous)
+  {
+
+    if (yaw - yaw_previous > M_PI / 2)
+    {
+      return yaw - M_PI;
+    } else if (yaw - yaw_previous < -M_PI / 2)
+    {
+      return yaw + M_PI;
+    }
+
+    return yaw;
+  }
+
+  //}
+
+  /* angleBetween() //{ */
+
+  double angleBetween(const double& a, const double& b)
+  {
+
+    double temp = a - b;
+
+    return atan2(sin(temp), cos(temp));
+  }
+
+  //}
+
+  /* interpolateAngles() //{ */
+
+  double interpolateAngles(const double& a1, const double& a2, const double& coeff)
+  {
+
+    // interpolate the yaw
+    Eigen::Vector3d axis = Eigen::Vector3d(0, 0, 1);
+
+    Eigen::Quaterniond quat1 = Eigen::Quaterniond(Eigen::AngleAxis<double>(a1, axis));
+    Eigen::Quaterniond quat2 = Eigen::Quaterniond(Eigen::AngleAxis<double>(a2, axis));
+
+    quat_t new_quat = quat1.slerp(coeff, quat2);
+
+    Eigen::Vector3d vecx = new_quat * Eigen::Vector3d(1, 0, 0);
+
+    return atan2(vecx[1], vecx[0]);
+  }
+
+  //}
+
+  /* rotateVector2d() //{ */
+
+  Eigen::Vector2d rotateVector2d(const Eigen::Vector2d& vector_in, const double& angle)
+  {
+
+    Eigen::Rotation2D<double> rot2(angle);
+
+    return rot2.toRotationMatrix() * vector_in;
+  }
+
+  //}
+
+  // | ------------ not finished / not used / broken ------------ |
+
+  /* UNUSED //{ */
+
+  /* /1* ConicSection constructor //{ *1/ */
+  /* ConicSection::ConicSection(const double A, const double B, const double C, const double D, const double E, const double F, const double tolerance) */
+  /* { */
+  /*   // determinant of the 2x2 submatrix (the discriminant) */
+  /*   alpha = B*B - 4*A*C; */
+
+  /*   // determinant of the 3x3 matrix */
+  /*   beta = (B*E*D - C*D*D - A*E*E - F*alpha)/4.0; */
+
+  /*   conic_type = classify_conic_section(alpha, beta, tolerance); */
+  /* } */
+  /* //} */
+
+  /* /1* classify_conic_section() method //{ *1/ */
+  /* ConicSection::conic_type_t ConicSection::classify_conic_section(const double alpha, const double beta, const double tolerance) */
+  /* { */
+  /*   conic_type_t conic_type; */
+  /*   if (abs(beta) < tolerance) */
+  /*   { */
+  /*     if (abs(alpha) < tolerance) */
+  /*       conic_type = parallel_lines; */
+  /*     else if (alpha < 0.0) */
+  /*       conic_type = point; */
+  /*     else // (alpha > 0.0) */
+  /*       conic_type = intersecting_lines; */
+  /*   } else */
+  /*   { */
+  /*     if (abs(alpha) < tolerance) */
+  /*       conic_type = parabola; */
+  /*     else if (alpha < 0.0) */
+  /*     { */
+  /*       if (abs(A-C) < tolerance && abs(B) < tolerance) */
+  /*         conic_type = circle; */
+  /*       else */
+  /*         conic_type = ellipse; */
+  /*     } */
+  /*     else // (alpha > 0.0) */
+  /*     { */
+  /*       if (abs(A+C) < tolerance) */
+  /*         conic_type = rectangular_hyperbola; */
+  /*       else */
+  /*         conic_type = hyperbola; */
+  /*     } */
+  /*   } */
+  /*   return conic_type; */
+  /* } */
+  /* //} */
+
+  // THIS IS WRONG!! It's actually pretty complicated stuff!!
+  /* double ConicSection::closest_point_on_ellipse_param(const pt2_t& to_point, const central_conic_params_t& ellipse_params) */
+  /* { */
+  /*   // transform the point to a frame where the ellipse is centered and has axes aligned with the frame axes */
+  /*   const Eigen::Rotation2Dd rot(-ellipse_params.theta); */
+  /*   const pt2_t pt_tfd = rot*(to_point - vec2_t(ellipse_params.x0, ellipse_params.y0)); */
+  /*   // calculate the `t` parameter of the ellipse, corresponding to the angle in which the point lies */
+  /*   const double t = atan2(ellipse_params.a*pt_tfd.y(), ellipse_params.b*pt_tfd.x()); */
+  /*   return t; */
+  /* } */
+
+  /* /1* calc_central_conic_params() method //{ *1/ */
+  /* ConicSection::central_conic_params_t ConicSection::calc_central_conic_params() */
+  /* { */
+  /*   assert(conic_type & basic_type_mask == ellipse || conic_type & basic_type_mask == hyperbola); */
+  /*   const double tmp1 = 2*(A*E*E + C*D*D - B*D*E + alpha*F); */
+  /*   const double tmp2 = sqrt((A - C)*(A - C) + B*B); */
+  /*   const double atmp = tmp1*((A + C) + tmp2); */
+  /*   const double btmp = tmp1*((A + C) - tmp2); */
+  /*   const double a = sqrt(abs(atmp))/alpha; */
+  /*   const double b = sqrt(abs(btmp))/alpha; */
+  /*   const double x0 = (2*C*D - B*E)/alpha; */
+  /*   const double y0 = (2*A*E - B*D)/alpha; */
+  /*   double th = atan2(C - A - tmp2, B); */
+  /*   if (A < C) */
+  /*     th += M_PI_2; */
+  /*   central_conic_params_t ret; */
+  /*   ret.a = a; */
+  /*   ret.b = b; */
+  /*   ret.x0 = x0; */
+  /*   ret.y0 = y0; */
+  /*   ret.theta = th; */
+  /*   return ret; */
+  /* } */
+  /* //} */
 
   //}
 

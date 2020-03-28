@@ -1,3 +1,4 @@
+// clang: MatousFormat
 #include <mrs_lib/geometry_utils.h>
 
 #include <iostream>
