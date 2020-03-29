@@ -21,7 +21,10 @@ int main() {
   Eigen::Matrix3d           eig_matrix      = AttitudeConverter(eig_angle_axis);
   EulerAttitude             euler_angles    = AttitudeConverter(eig_matrix);
   auto [roll2, pitch2, yaw2]                = AttitudeConverter(euler_angles);
-  tie(roll, pitch, yaw)                     = AttitudeConverter(roll2, pitch2, yaw2);
+  tie(roll2, pitch2, yaw2)                  = AttitudeConverter(roll2, pitch2, yaw2);
+  double roll3                              = AttitudeConverter(roll2, pitch2, yaw2).getRoll();
+  double pitch3                             = AttitudeConverter(roll2, pitch2, yaw2).getPitch();
+  double yaw3                               = AttitudeConverter(roll2, pitch2, yaw2).getYaw();
 
   std::stringstream ss;
   ss << std::setprecision(2);
@@ -36,6 +39,7 @@ int main() {
   ss << "rotational matrix: [" << eig_matrix << "]" << endl;
   ss << "euler_angles: [" << euler_angles.roll() << ", " << euler_angles.pitch() << ", " << euler_angles.yaw() << "]" << endl;
   ss << "out: [" << roll2 << ", " << pitch2 << ", " << yaw2 << "]" << endl;
+  ss << "out2: [" << roll3 << ", " << pitch3 << ", " << yaw3 << "]" << endl;
 
   cout << ss.str();
 

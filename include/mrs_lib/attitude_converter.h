@@ -70,7 +70,7 @@ private:
 
 /**
  * @brief The main convertor class. Instantiate with any type in constructor and get the value in any other type by assigning the instance to your variable, as:
- *   tf::Quaternion tf1_quaternion = AttitudeConverter(roll, pitch, yaw);
+ *   tf::Quaternion tf1_quaternion = AttitudeConverter(roll, pitch, yaw); All the default Euler angles are in the extrinsic RPY notation.
  */
 class AttitudeConverter {
 public:
@@ -209,9 +209,9 @@ public:
   operator Eigen::Matrix3d() const;
 
   /**
-   * @brief typecase to tuple of Euler angles. This makes the std::tie work.
+   * @brief typecase to tuple of Euler angles in extrinsic RPY
    *
-   * @return std::tuple with can be bound with std::tie()
+   * @return std::tuple of extrinsic RPY
    */
   operator std::tuple<double&, double&, double&>();
 
