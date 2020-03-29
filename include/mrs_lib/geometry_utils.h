@@ -9,14 +9,8 @@
 
 #include <vector>
 #include <cmath>
+#include <math.h>
 #include <Eigen/Dense>
-
-#include <tf2_ros/transform_listener.h>
-#include <tf2_ros/buffer.h>
-#include <tf2_eigen/tf2_eigen.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include <tf/transform_datatypes.h>
-#include <tf_conversions/tf_eigen.h>
 
 #include <iostream>
 
@@ -36,6 +30,97 @@ namespace mrs_lib
     const Eigen::Matrix<double, dims + 1, 1> ret((Eigen::Matrix<double, dims + 1, 1>() << vec, 1).finished());
     return ret;
   }
+
+  /* class Ray //{ */
+
+  class Ray
+  {
+  public:
+    Ray();
+    ~Ray();
+    Ray(Eigen::Vector3d origin, Eigen::Vector3d direction, double energy = 0.0);
+
+    double energy;
+    Eigen::Vector3d origin;
+    Eigen::Vector3d direction;
+
+    static Ray twopointCast(Eigen::Vector3d pointFrom, Eigen::Vector3d pointTo)
+    {
+      Eigen::Vector3d origin = pointFrom;
+      Eigen::Vector3d direction = (pointTo - pointFrom);
+      /* direction.normalize(); */
+      return Ray(origin, direction);
+    }
+    static Ray directionCast(Eigen::Vector3d origin, Eigen::Vector3d direction)
+    {
+      return Ray(origin, direction);
+    }
+  };
+
+  //}
+
+  /* class Plane //{ */
+
+  class Plane
+  {
+  public:
+    Plane();
+    ~Plane();
+    Plane(Eigen::Vector3d point, Eigen::Vector3d normal);
+
+    Eigen::Vector3d point;
+    Eigen::Vector3d normal;
+
+    std::optional<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-16);
+  };
+
+  //}
+
+  /* class Rectangle //{ */
+
+  class Rectangle
+  {
+  public:
+    Rectangle();
+    ~Rectangle();
+    Rectangle(Eigen::Vector3d A, Eigen::Vector3d B, Eigen::Vector3d C, Eigen::Vector3d D);
+
+    Eigen::Vector3d normal_vector;
+
+    Eigen::Matrix3d basis;
+    Eigen::Matrix3d projector;
+
+    Plane plane;
+    std::vector<Eigen::Vector3d> points;
+
+    std::optional<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-16);
+  };
+
+  //}
+
+  /* class Cone //{ */
+
+  class Cone
+  {
+
+  public:
+    Cone(Eigen::Vector3d position, Eigen::Vector3d direction, double angle);
+    ~Cone();
+    Eigen::Vector3d ProjectPoint(Eigen::Vector3d point);
+
+    /* NOT FINISHED //{ */
+    std::optional<Eigen::Vector3d> ProjectPointOnPlane(Plane plane, Eigen::Vector3d point);
+    //}
+
+  private:
+    Eigen::Vector3d position, direction;
+    double angle;
+
+    Eigen::MatrixXd cone_axis_projector;
+    Ray cone_ray;
+  };
+
+  //}
 
   /* Rotation and angle related functions //{ */
 
@@ -144,7 +229,64 @@ namespace mrs_lib
    */
   Eigen::Matrix3d rotation_between(const vec3_t& a, const vec3_t& b, const double tolerance = 1e-9);
 
+  double haversin(const double& angle);
+
+  double invHaversin(const double& angle);
+
+  double vectorAngle(const Eigen::Vector3d& v1, const Eigen::Vector3d& v2);
+
+  double solidAngle(const double& a, const double& b, const double& c);
+
+  double unwrapAngle(const double& yaw, const double& yaw_previous);
+
+  double wrapAngle(const double& angle_in);
+
+  double disambiguateAngle(const double& yaw, const double& yaw_previous);
+
+  double angleBetween(const double& a, const double& b);
+
+  double interpolateAngles(const double& a1, const double& a2, const double& coeff);
+
+  double rectSolidAngle(const Rectangle& r, const Eigen::Vector3d& center);
+
   //}
+
+  /* Distances, Norms and Areas //{ */
+
+  /**
+   * @brief calculate the distance between two points in 2d
+   *
+   * @param ax
+   * @param ay
+   * @param bx
+   * @param by
+   *
+   * @return the distance
+   */
+  double dist2d(const double& ax, const double& ay, const double& bx, const double& by);
+
+  /**
+   * @brief calculate the distance between two points in 3d
+   *
+   * @param ax
+   * @param ay
+   * @param az
+   * @param bx
+   * @param by
+   * @param
+   *
+   * @return
+   */
+  double dist3d(const double& ax, const double& ay, const double& az, const double& bx, const double& by, const double& bz);
+
+  double triangleArea(const double& a, const double& b, const double& c);
+  double sphericalTriangleArea(const Eigen::Vector3d& a, const Eigen::Vector3d& b, const Eigen::Vector3d& c);
+
+  Eigen::Vector2d rotateVector2d(const Eigen::Vector2d& vector_in, const double& angle);
+
+  //}
+
+  // | ------------------------- unused ------------------------- |
 
   /* UNUSED //{ */
 
@@ -209,341 +351,6 @@ namespace mrs_lib
   /* }; */
 
   //}
-
-  /* class Ray //{ */
-
-  class Ray
-  {
-  public:
-    Ray();
-    ~Ray();
-    Ray(Eigen::Vector3d origin, Eigen::Vector3d direction, double energy = 0.0);
-
-    double energy;
-    Eigen::Vector3d origin;
-    Eigen::Vector3d direction;
-
-    static Ray twopointCast(Eigen::Vector3d pointFrom, Eigen::Vector3d pointTo)
-    {
-      Eigen::Vector3d origin = pointFrom;
-      Eigen::Vector3d direction = (pointTo - pointFrom);
-      /* direction.normalize(); */
-      return Ray(origin, direction);
-    }
-    static Ray directionCast(Eigen::Vector3d origin, Eigen::Vector3d direction)
-    {
-      return Ray(origin, direction);
-    }
-  };
-
-  //}
-
-  /* class Plane //{ */
-
-  class Plane
-  {
-  public:
-    Plane();
-    ~Plane();
-    Plane(Eigen::Vector3d point, Eigen::Vector3d normal);
-
-    Eigen::Vector3d point;
-    Eigen::Vector3d normal;
-
-    std::optional<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-16);
-  };
-
-  //}
-
-  /* class Rectangle //{ */
-
-  class Rectangle
-  {
-  public:
-    Rectangle();
-    ~Rectangle();
-    Rectangle(Eigen::Vector3d A, Eigen::Vector3d B, Eigen::Vector3d C, Eigen::Vector3d D);
-
-    Eigen::Vector3d normal_vector;
-
-    Eigen::Matrix3d basis;
-    Eigen::Matrix3d projector;
-
-    Plane plane;
-    std::vector<Eigen::Vector3d> points;
-
-    std::optional<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-16);
-  };
-
-  //}
-
-  /* class Cone //{ */
-
-  class Cone
-  {
-
-  public:
-    Cone(Eigen::Vector3d position, Eigen::Vector3d direction, double angle);
-    ~Cone();
-    Eigen::Vector3d ProjectPoint(Eigen::Vector3d point);
-
-    /* NOT FINISHED //{ */
-    std::optional<Eigen::Vector3d> ProjectPointOnPlane(Plane plane, Eigen::Vector3d point);
-    //}
-
-  private:
-    Eigen::Vector3d position, direction;
-    double angle;
-
-    Eigen::MatrixXd cone_axis_projector;
-    Ray cone_ray;
-  };
-
-  //}
-
-  // | ----------------------- conversions ---------------------- |
-
-  /* class EulerAttitude //{ */
-
-  class EulerAttitude
-  {
-  public:
-    EulerAttitude(const double& r, const double& p, const double& y) : r(r), p(p), y(y){};
-
-    double roll(void) const
-    {
-      return r;
-    }
-
-    double pitch(void) const
-    {
-      return p;
-    }
-
-    double yaw(void) const
-    {
-      return y;
-    }
-
-  private:
-    double r, p, y;
-  };
-
-  //}
-
-  /* class AttitudeConvertor //{ */
-
-  class AttitudeConvertor
-  {
-  public:
-    AttitudeConvertor(const double& roll, const double& pitch, const double& yaw)
-    {
-      tf2_quaternion.setRPY(roll, pitch, yaw);
-    }
-
-    AttitudeConvertor(const tf::Quaternion quaternion)
-    {
-      tf2_quaternion.setX(quaternion.x());
-      tf2_quaternion.setY(quaternion.y());
-      tf2_quaternion.setZ(quaternion.z());
-      tf2_quaternion.setW(quaternion.w());
-    }
-
-    AttitudeConvertor(const geometry_msgs::Quaternion quaternion)
-    {
-      tf2_quaternion.setX(quaternion.x);
-      tf2_quaternion.setY(quaternion.y);
-      tf2_quaternion.setZ(quaternion.z);
-      tf2_quaternion.setW(quaternion.w);
-    }
-
-    AttitudeConvertor(const mrs_lib::EulerAttitude& euler_attitude)
-    {
-      tf2_quaternion.setRPY(euler_attitude.roll(), euler_attitude.pitch(), euler_attitude.yaw());
-    }
-
-    AttitudeConvertor(const Eigen::Quaterniond quaternion)
-    {
-      tf2_quaternion.setX(quaternion.x());
-      tf2_quaternion.setY(quaternion.y());
-      tf2_quaternion.setZ(quaternion.z());
-      tf2_quaternion.setW(quaternion.w());
-    }
-
-    AttitudeConvertor(const Eigen::Matrix3d matrix)
-    {
-      Eigen::Quaterniond quaternion = Eigen::Quaterniond(matrix);
-
-      tf2_quaternion.setX(quaternion.x());
-      tf2_quaternion.setY(quaternion.y());
-      tf2_quaternion.setZ(quaternion.z());
-      tf2_quaternion.setW(quaternion.w());
-    }
-
-    template <class T>
-    AttitudeConvertor(const Eigen::AngleAxis<T> angle_axis)
-    {
-      double angle = angle_axis.angle();
-      tf2::Vector3 axis(angle_axis.axis()[0], angle_axis.axis()[1], angle_axis.axis()[2]);
-
-      tf2_quaternion.setRotation(axis, angle);
-    }
-
-    AttitudeConvertor(const tf2::Quaternion quaternion)
-    {
-
-      tf2_quaternion = quaternion;
-    }
-
-    operator tf2::Transform() const
-    {
-      return tf2::Transform(tf2_quaternion);
-    }
-
-    operator tf2::Quaternion() const
-    {
-      return tf2_quaternion;
-    }
-
-    operator tf::Quaternion() const
-    {
-      tf::Quaternion tf_quaternion;
-
-      tf_quaternion.setX(tf2_quaternion.x());
-      tf_quaternion.setY(tf2_quaternion.y());
-      tf_quaternion.setZ(tf2_quaternion.z());
-      tf_quaternion.setW(tf2_quaternion.w());
-
-      return tf_quaternion;
-    }
-
-    operator geometry_msgs::Quaternion() const
-    {
-      geometry_msgs::Quaternion geom_quaternion;
-
-      geom_quaternion.x = tf2_quaternion.x();
-      geom_quaternion.y = tf2_quaternion.y();
-      geom_quaternion.z = tf2_quaternion.z();
-      geom_quaternion.w = tf2_quaternion.w();
-
-      return geom_quaternion;
-    }
-
-    operator EulerAttitude() const
-    {
-
-      double roll, pitch, yaw;
-      tf2::Matrix3x3(tf2_quaternion).getRPY(roll, pitch, yaw);
-
-      return EulerAttitude(roll, pitch, yaw);
-    }
-
-    template <class T>
-    operator Eigen::AngleAxis<T>() const
-    {
-
-      double angle = tf2_quaternion.getAngle();
-      Eigen::Vector3d axis(tf2_quaternion.getAxis()[0], tf2_quaternion.getAxis()[1], tf2_quaternion.getAxis()[2]);
-
-      Eigen::AngleAxis<T> angle_axis(angle, axis);
-
-      return angle_axis;
-    }
-
-    template <class T>
-    operator Eigen::Quaternion<T>() const
-    {
-
-      return Eigen::Quaternion<T>(tf2_quaternion.w(), tf2_quaternion.x(), tf2_quaternion.y(), tf2_quaternion.z());
-    }
-
-    operator Eigen::Matrix3d() const
-    {
-      Eigen::Quaterniond quaternion(tf2_quaternion.w(), tf2_quaternion.x(), tf2_quaternion.y(), tf2_quaternion.z());
-
-      return quaternion.toRotationMatrix();
-    }
-
-    std::tuple<double, double, double> getRPY()
-    {
-      double roll, pitch, yaw;
-      tf2::Matrix3x3(tf2_quaternion).getRPY(roll, pitch, yaw);
-
-      return std::tuple(roll, pitch, yaw);
-    }
-
-    double getYaw()
-    {
-      double roll, pitch, yaw;
-      tf2::Matrix3x3(tf2_quaternion).getRPY(roll, pitch, yaw);
-
-      return yaw;
-    }
-
-    /* double getRoll() */
-    /* { */
-    /*   double roll, pitch, yaw; */
-    /*   tf2::Matrix3x3(tf2_quaternion).getRPY(roll, pitch, yaw); */
-
-    /*   return roll; */
-    /* } */
-
-    /* double getPitch() */
-    /* { */
-    /*   double roll, pitch, yaw; */
-    /*   tf2::Matrix3x3(tf2_quaternion).getRPY(roll, pitch, yaw); */
-
-    /*   return pitch; */
-    /* } */
-
-  private:
-    tf2::Quaternion tf2_quaternion;
-  };
-
-  //}
-
-  /**
-   * @brief calculate the distance between two points in 2d
-   *
-   * @param ax
-   * @param ay
-   * @param bx
-   * @param by
-   *
-   * @return the distance
-   */
-  double dist2d(const double& ax, const double& ay, const double& bx, const double& by);
-
-  /**
-   * @brief calculate the distance between two points in 3d
-   *
-   * @param ax
-   * @param ay
-   * @param az
-   * @param bx
-   * @param by
-   * @param
-   *
-   * @return
-   */
-  double dist3d(const double& ax, const double& ay, const double& az, const double& bx, const double& by, const double& bz);
-
-  double haversin(const double& angle);
-  double invHaversin(const double& angle);
-
-  double vectorAngle(const Eigen::Vector3d& v1, const Eigen::Vector3d& v2);
-  double solidAngle(const double& a, const double& b, const double& c);
-  double rectSolidAngle(const Rectangle& r, const Eigen::Vector3d& center);
-
-  double triangleArea(const double& a, const double& b, const double& c);
-  double sphericalTriangleArea(const Eigen::Vector3d& a, const Eigen::Vector3d& b, const Eigen::Vector3d& c);
-
-  double unwrapAngle(const double& yaw, const double& yaw_previous);
-  double wrapAngle(const double& angle_in);
-  double disambiguateAngle(const double& yaw, const double& yaw_previous);
-  double angleBetween(const double& a, const double& b);
-  double interpolateAngles(const double& a1, const double& a2, const double& coeff);
-  Eigen::Vector2d rotateVector2d(const Eigen::Vector2d& vector_in, const double& angle);
 
 }  // namespace mrs_lib
 

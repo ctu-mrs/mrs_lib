@@ -41,8 +41,7 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs mrs_msgs
   DEPENDS Eigen
-  LIBRARIES Lkf ConvexPolygon SafetyZone Profiler Utils ParamLoader MedianFilter Repredictor geometry_utils MrsLibTransformer MrsImagePublisher
-
+  LIBRARIES Lkf ConvexPolygon SafetyZone Profiler Utils ParamLoader MedianFilter Repredictor geometry_utils attitude_converter MrsLibTransformer MrsImagePublisher
   )
 
 ###########
@@ -219,9 +218,14 @@ target_link_libraries(geometry_utils_tests
   ${GAZEBO_INCLUDE_DIRS}
   )
 
-add_executable(attitude_convertor_test src/geometry_utils/geometry_utils.cpp src/geometry_utils/attitude_convertor_test.cpp)
-target_link_libraries(attitude_convertor_test
+add_library(attitude_converter src/attitude_converter/attitude_converter.cpp)
+target_link_libraries(attitude_converter
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
-  ${GAZEBO_INCLUDE_DIRS}
+  )
+
+add_executable(attitude_converter_test src/attitude_converter/attitude_converter.cpp src/attitude_converter/attitude_converter_test.cpp)
+target_link_libraries(attitude_converter_test
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
   )

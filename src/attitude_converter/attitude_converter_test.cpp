@@ -1,4 +1,6 @@
-#include <mrs_lib/geometry_utils.h>
+// clang: TomasFormat
+
+#include <mrs_lib/attitude_converter.h>
 
 #include <iostream>
 
@@ -11,14 +13,15 @@ int main() {
   double pitch = 0.2;
   double yaw   = 0.8;
 
-  tf2::Quaternion           tf1_quaternion  = AttitudeConvertor(roll, pitch, yaw);
-  tf2::Quaternion           tf2_quaternion  = AttitudeConvertor(tf1_quaternion);
-  geometry_msgs::Quaternion geom_quaternion = AttitudeConvertor(tf1_quaternion);
-  Eigen::Quaterniond        eig_quaternion  = AttitudeConvertor(geom_quaternion);
-  Eigen::AngleAxis<double>  eig_angle_axis  = AttitudeConvertor(eig_quaternion);
-  EulerAttitude             euler_angles    = AttitudeConvertor(eig_angle_axis);
-  auto [roll2, pitch2, yaw2]                = AttitudeConvertor(euler_angles).getRPY();
-  tie(roll, pitch, yaw)                     = AttitudeConvertor(roll2, pitch2, yaw2).getRPY();
+  tf::Quaternion            tf1_quaternion  = AttitudeConverter(roll, pitch, yaw);
+  tf2::Quaternion           tf2_quaternion  = AttitudeConverter(tf1_quaternion);
+  geometry_msgs::Quaternion geom_quaternion = AttitudeConverter(tf1_quaternion);
+  Eigen::Quaterniond        eig_quaternion  = AttitudeConverter(geom_quaternion);
+  Eigen::AngleAxis<double>  eig_angle_axis  = AttitudeConverter(eig_quaternion);
+  Eigen::Matrix3d           eig_matrix      = AttitudeConverter(eig_angle_axis);
+  EulerAttitude             euler_angles    = AttitudeConverter(eig_matrix);
+  auto [roll2, pitch2, yaw2]                = AttitudeConverter(euler_angles);
+  tie(roll, pitch, yaw)                     = AttitudeConverter(roll2, pitch2, yaw2);
 
   std::stringstream ss;
   ss << std::setprecision(2);
@@ -30,8 +33,9 @@ int main() {
   ss << "eigen quat: [" << eig_quaternion.x() << ", " << eig_quaternion.y() << ", " << eig_quaternion.z() << ", " << eig_quaternion.w() << "]" << endl;
   ss << "eigen angle_axis: [angle: " << eig_angle_axis.angle() << ", axis: " << eig_angle_axis.axis()[0] << " " << eig_angle_axis.axis()[1] << " "
      << eig_angle_axis.axis()[2] << "]" << endl;
-  ss << "euler_angles: [ " << euler_angles.roll() << ", " << euler_angles.pitch() << ", " << euler_angles.yaw() << "]" << endl;
-  ss << "out: [ " << roll2 << ", " << pitch2 << ", " << yaw2 << "]" << endl;
+  ss << "rotational matrix: [" << eig_matrix << "]" << endl;
+  ss << "euler_angles: [" << euler_angles.roll() << ", " << euler_angles.pitch() << ", " << euler_angles.yaw() << "]" << endl;
+  ss << "out: [" << roll2 << ", " << pitch2 << ", " << yaw2 << "]" << endl;
 
   cout << ss.str();
 
