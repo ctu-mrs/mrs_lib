@@ -135,20 +135,23 @@ target_link_libraries(MrsLibAttitudeConverter
   ${Eigen_LIBRARIES}
   )
 
-add_executable(MrsLibAttitudeConverterTest src/attitude_converter/attitude_converter.cpp src/attitude_converter/attitude_converter_test.cpp)
+add_executable(MrsLibAttitudeConverterTest src/attitude_converter/attitude_converter_test.cpp)
 target_link_libraries(MrsLibAttitudeConverterTest
+  MrsLibAttitudeConverter
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
 
-add_library(MrsLibTransformer src/attitude_converter/attitude_converter.cpp src/transformer/transformer.cpp)
+add_library(MrsLibTransformer src/transformer/transformer.cpp)
 target_link_libraries(MrsLibTransformer
+  MrsLibAttitudeConverter
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
 
-add_executable(transformer_tests src/attitude_converter/attitude_converter.cpp src/transformer/transformer.cpp src/transformer/transformer_tests.cpp)
+add_executable(transformer_tests src/transformer/transformer_tests.cpp)
 target_link_libraries(transformer_tests
+  MrsLibTransformer
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
@@ -222,8 +225,9 @@ target_link_libraries(MrsImagePublisher
   ${GAZEBO_INCLUDE_DIRS}
   )
 
-add_executable(geometry_utils_tests src/geometry_utils/geometry_utils.cpp src/geometry_utils/geometry_utils_tests.cpp)
+add_executable(geometry_utils_tests src/geometry_utils/geometry_utils.cpp)
 target_link_libraries(geometry_utils_tests
+  geometry_utils
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   ${GAZEBO_INCLUDE_DIRS}
