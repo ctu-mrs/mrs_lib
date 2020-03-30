@@ -229,3 +229,15 @@ target_link_libraries(attitude_converter_test
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
+
+add_library(icp src/icp/icp.cpp)
+target_link_libraries(icp
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_executable(icp_test src/icp/icp.cpp src/icp/test_icp.cpp)
+target_link_libraries(icp_test
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
