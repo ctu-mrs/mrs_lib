@@ -147,7 +147,7 @@ target_link_libraries(MrsLibTransformer
   ${Eigen_LIBRARIES}
   )
 
-add_executable(transformer_tests src/transformer/transformer.cpp src/transformer/transformer_tests.cpp)
+add_executable(transformer_tests src/attitude_converter/attitude_converter.cpp src/transformer/transformer.cpp src/transformer/transformer_tests.cpp)
 target_link_libraries(transformer_tests
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
