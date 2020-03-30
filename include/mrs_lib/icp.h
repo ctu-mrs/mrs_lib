@@ -11,6 +11,7 @@ namespace icp {
       static double totalError(std::vector<std::pair<e::Vector2d,e::Vector2d>> ref_shape, std::vector<e::Vector2d> input);
       static double optimizeRotation(std::vector<e::Vector2d> input, std::vector<std::pair<e::Vector2d,e::Vector2d>> shape, e::Vector2d center);
       static double optimizeFull(std::vector<e::Vector2d> input, std::vector<std::pair<e::Vector2d,e::Vector2d>> shape, e::Vector2d &center, e::Vector3d &gradient);
+      static e::Vector3d matchShape(std::vector<e::Vector3d> input, std::vector<std::pair<e::Vector2d,e::Vector2d>> shape, e::Vector3d &gradient);
       static e::Vector3d matchSquare(std::vector<e::Vector3d> input, double side, e::Vector3d &gradient);
       static e::Vector3d matchTriangle(std::vector<e::Vector3d> input, double side, e::Vector3d &gradient);
       static e::Vector3d matchLine(std::vector<e::Vector3d> input, double side, e::Vector3d &gradient);
