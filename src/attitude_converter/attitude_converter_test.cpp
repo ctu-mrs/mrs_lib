@@ -9,6 +9,9 @@ using namespace std;
 
 int main() {
 
+  std::stringstream ss;
+  ss << std::setprecision(3);
+
   double roll  = 0.1;
   double pitch = 0.2;
   double yaw   = 0.8;
@@ -25,9 +28,15 @@ int main() {
   double roll3                              = AttitudeConverter(roll2, pitch2, yaw2).getRoll();
   double pitch3                             = AttitudeConverter(roll2, pitch2, yaw2).getPitch();
   double yaw3                               = AttitudeConverter(roll2, pitch2, yaw2).getYaw();
+  double heading1                           = AttitudeConverter(0, 0, 1.57).getHeading();
 
-  std::stringstream ss;
-  ss << std::setprecision(2);
+  double errored_heading = 999;
+  try {
+    errored_heading = AttitudeConverter(0, M_PI_2, 0).getHeading();
+  }
+  catch (mrs_lib::AttitudeConverter::HeadingException e) {
+    ss << "exception correctly caught: " << e.what() << endl;
+  }
 
   ss << "in: [" << roll << ", " << pitch << ", " << yaw << "]" << endl;
   ss << "tf: [" << tf1_quaternion.x() << ", " << tf1_quaternion.y() << ", " << tf1_quaternion.z() << ", " << tf1_quaternion.w() << "]" << endl;
@@ -40,6 +49,8 @@ int main() {
   ss << "euler_angles: [" << euler_angles.roll() << ", " << euler_angles.pitch() << ", " << euler_angles.yaw() << "]" << endl;
   ss << "out: [" << roll2 << ", " << pitch2 << ", " << yaw2 << "]" << endl;
   ss << "out2: [" << roll3 << ", " << pitch3 << ", " << yaw3 << "]" << endl;
+  ss << "heading1: [" << heading1 << "]" << endl;
+  ss << "errored heading: [" << errored_heading << "]" << endl;
 
   cout << ss.str();
 

@@ -148,6 +148,20 @@ double AttitudeConverter::getPitch(void) {
   return pitch_;
 }
 
+double AttitudeConverter::getHeading(void) {
+
+  tf2::Vector3 x_orig = tf2::Vector3(1, 0, 0);
+
+  tf2::Vector3 x_new = tf2::Transform(tf2_quaternion_) * x_orig;
+
+  if (fabs(x_new[0]) <= 1e-6 && fabs(x_new[1]) <= 1e-6) {
+    throw HeadingException();
+  }
+
+  return atan2(x_new[1], x_new[0]);
+  ;
+}
+
 //}
 
 void AttitudeConverter::calculateRPY(void) {

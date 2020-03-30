@@ -74,6 +74,18 @@ private:
  */
 class AttitudeConverter {
 public:
+  /* exceptions //{ */
+
+  //! is thrown when calculating of heading is not possible due to atan2 exception
+  struct HeadingException : public std::exception
+  {
+    const char* what() const throw() {
+      return "AttitudeConverter: can not calculate the heading, the rotated x-axis is parallel to the world's z-axis";
+    }
+  };
+
+  //}
+
   /* constructors //{ */
 
 
@@ -239,6 +251,13 @@ public:
    * @return yaw
    */
   double getYaw(void);
+
+  /**
+   * @brief get the angle of the rotated x-axis in the original XY plane, a.k.a
+   *
+   * @return heading
+   */
+  double getHeading(void);
 
   //}
 
