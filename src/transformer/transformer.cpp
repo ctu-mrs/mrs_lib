@@ -403,11 +403,7 @@ namespace mrs_lib
     pose.pose.position.y = what.reference.position.y;
     pose.pose.position.z = what.reference.position.z;
 
-    const tf::Quaternion quat = tf::createQuaternionFromRPY(0, 0, what.reference.yaw);
-    pose.pose.orientation.x = quat.getX();
-    pose.pose.orientation.y = quat.getY();
-    pose.pose.orientation.z = quat.getZ();
-    pose.pose.orientation.w = quat.getW();
+    pose.pose.orientation = mrs_lib::AttitudeConverter(0, 0, what.reference.heading);
 
     return pose;
   }
@@ -420,16 +416,21 @@ namespace mrs_lib
   {
     mrs_msgs::ReferenceStamped ret;
     ret.header = what.header;
+
     // copy the new transformed data back
     ret.reference.position.x = what.pose.position.x;
     ret.reference.position.y = what.pose.position.y;
     ret.reference.position.z = what.pose.position.z;
 
-    tf::Quaternion quat;
-    tf::quaternionMsgToTF(what.pose.orientation, quat);
-    tf::Matrix3x3 m(quat);
-    double roll, pitch;
-    m.getRPY(roll, pitch, ret.reference.yaw);
+    try
+    {
+      ret.reference.heading = mrs_lib::AttitudeConverter(what.pose.orientation).getHeading();
+    }
+    catch (mrs_lib::AttitudeConverter::HeadingException e)
+    {
+      ROS_ERROR_THROTTLE(1.0, "[%s]: exception caught while transforming mrs_msgs::Reference's heading: %s", node_name_.c_str(), e.what());
+      throw mrs_lib::Transformer::TransformException();
+    }
 
     return ret;
   }

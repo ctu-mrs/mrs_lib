@@ -41,7 +41,7 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs mrs_msgs
   DEPENDS Eigen
-  LIBRARIES Lkf ConvexPolygon SafetyZone Profiler Utils ParamLoader MedianFilter Repredictor geometry_utils attitude_converter MrsLibTransformer MrsImagePublisher
+  LIBRARIES Lkf ConvexPolygon SafetyZone Profiler Utils ParamLoader MedianFilter Repredictor geometry_utils MrsLibAttitudeConverter MrsLibTransformer MrsImagePublisher
   )
 
 ###########
@@ -129,7 +129,19 @@ target_link_libraries(mutex_tests
   ${Eigen_LIBRARIES}
   )
 
-add_library(MrsLibTransformer src/transformer/transformer.cpp)
+add_library(MrsLibAttitudeConverter src/attitude_converter/attitude_converter.cpp)
+target_link_libraries(MrsLibAttitudeConverter
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_executable(MrsLibAttitudeConverterTest src/attitude_converter/attitude_converter.cpp src/attitude_converter/attitude_converter_test.cpp)
+target_link_libraries(MrsLibAttitudeConverterTest
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_library(MrsLibTransformer src/attitude_converter/attitude_converter.cpp src/transformer/transformer.cpp)
 target_link_libraries(MrsLibTransformer
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
@@ -139,7 +151,6 @@ add_executable(transformer_tests src/transformer/transformer.cpp src/transformer
 target_link_libraries(transformer_tests
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
-  ${GAZEBO_INCLUDE_DIRS}
   )
 
 add_library(Utils src/utils/utils.cpp)
@@ -216,16 +227,4 @@ target_link_libraries(geometry_utils_tests
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   ${GAZEBO_INCLUDE_DIRS}
-  )
-
-add_library(attitude_converter src/attitude_converter/attitude_converter.cpp)
-target_link_libraries(attitude_converter
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  )
-
-add_executable(attitude_converter_test src/attitude_converter/attitude_converter.cpp src/attitude_converter/attitude_converter_test.cpp)
-target_link_libraries(attitude_converter_test
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
   )

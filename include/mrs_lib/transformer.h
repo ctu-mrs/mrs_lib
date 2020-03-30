@@ -26,6 +26,8 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Vector3Stamped.h>
 
+#include <mrs_lib/attitude_converter.h>
+
 #include <mutex>
 
 //}
@@ -74,6 +76,15 @@ namespace mrs_lib
 
   class Transformer
   {
+
+    //! is thrown when calculating of heading is not possible due to atan2 exception
+    struct TransformException : public std::exception
+    {
+      const char* what() const throw()
+      {
+        return "The object could not be transformed.";
+      }
+    };
 
   public:
     /* Constructor and overloads //{ */
