@@ -26,8 +26,21 @@
 #include <tf/transform_datatypes.h>
 #include <tf_conversions/tf_eigen.h>
 
+#include <mrs_lib/geometry_utils.h>
+
 namespace mrs_lib
 {
+
+// type of the object we are grasping
+typedef enum
+{
+
+  RPY_INTRINSIC = 1,
+  RPY_EXTRINSIC = 2,
+
+} RPY_convention_t;
+
+/* class EulerAttitude //{ */
 
 /**
  * @brief A small class for storing the Euler angles.
@@ -68,19 +81,55 @@ private:
   double roll_, pitch_, yaw_;
 };
 
+//}
+
+/* class Vector3Converter //{ */
+
+class Vector3Converter {
+public:
+  Vector3Converter(const tf2::Vector3& vector3) : vector3_(vector3){};
+
+  Vector3Converter(const Eigen::Vector3d& vector3);
+
+  operator tf2::Vector3() const;
+
+  operator Eigen::Vector3d() const;
+
+private:
+  tf2::Vector3 vector3_;
+};
+
+//}
+
 /**
- * @brief The main convertor class. Instantiate with any type in constructor and get the value in any other type by assigning the instance to your variable, as:
- *   tf::Quaternion tf1_quaternion = AttitudeConverter(roll, pitch, yaw); All the default Euler angles are in the extrinsic RPY notation.
+ * @brief The main convertor class. Instantiate with any type in constructor and get the value in any other type by assigning the instance to your variable,
+ * as: tf::Quaternion tf1_quaternion = AttitudeConverter(roll, pitch, yaw); All the default Euler angles are in the extrinsic RPY notation.
  */
 class AttitudeConverter {
 public:
   /* exceptions //{ */
 
   //! is thrown when calculating of heading is not possible due to atan2 exception
-  struct HeadingException : public std::exception
+  struct GetHeadingException : public std::exception
   {
     const char* what() const throw() {
       return "AttitudeConverter: can not calculate the heading, the rotated x-axis is parallel to the world's z-axis";
+    }
+  };
+
+  //! is thrown when the Euler angle format is set wrongly
+  struct EulerFormatException : public std::exception
+  {
+    const char* what() const throw() {
+      return "AttitudeConverter: invalid Euler angle format";
+    }
+  };
+
+  //! is thrown when the heading cannot be set to an existing attitude
+  struct SetHeadingByYawException : public std::exception
+  {
+    const char* what() const throw() {
+      return "AttitudeConverter: cannot set the desired heading, the thrust vector's Z component is 0";
     }
   };
 
@@ -95,8 +144,9 @@ public:
    * @param roll
    * @param pitch
    * @param yaw
+   * @param format optional, Euler angle convention, {"extrinsic", "intrinsic"}, defaults to "extrinsic"
    */
-  AttitudeConverter(const double& roll, const double& pitch, const double& yaw);
+  AttitudeConverter(const double& roll, const double& pitch, const double& yaw, const RPY_convention_t& format = RPY_EXTRINSIC);
 
   /**
    * @brief tf::Quaternion constructor
@@ -258,6 +308,49 @@ public:
    * @return heading
    */
   double getHeading(void);
+
+  /**
+   * @brief get a unit vector pointing in the X direction
+   *
+   * @return the vector
+   */
+  Vector3Converter getVectorX(void);
+
+  /**
+   * @brief get a unit vector pointing in the Y direction
+   *
+   * @return the vector
+   */
+  Vector3Converter getVectorY(void);
+
+  /**
+   * @brief get a unit vector pointing in the Z direction
+   *
+   * @return the vector
+   */
+  Vector3Converter getVectorZ(void);
+
+  /**
+   * @brief get the Roll, Pitch, Yaw angles in the Intrinsic convention
+   *
+   * @return RPY
+   */
+  std::tuple<double, double, double> getIntrinsicRPY();
+
+  /**
+   * @brief get the Roll, Pitch, Yaw angles in the Extrinsic convention. The same as the default AttitudeConverter assignment.
+   *
+   * @return RPY
+   */
+  std::tuple<double, double, double> getExtrinsicRPY();
+
+  //}
+
+  /* setters //{ */
+
+  AttitudeConverter setHeadingByYaw(const double& heading);
+
+  AttitudeConverter setYaw(const double& new_yaw);
 
   //}
 

@@ -333,7 +333,13 @@ namespace mrs_lib
 
   double vectorAngle(const Eigen::Vector3d& v1, const Eigen::Vector3d& v2)
   {
-    return acos(v1.dot(v2) / (v1.norm() * v2.norm()));
+    Eigen::Vector3d v1_norm = v1;
+    Eigen::Vector3d v2_norm = v2;
+
+    v1_norm.normalize();
+    v2_norm.normalize();
+
+    return acos(v1_norm.dot(v2_norm));
   }
 
   //}
