@@ -333,13 +333,20 @@ namespace mrs_lib
 
   double vectorAngle(const Eigen::Vector3d& v1, const Eigen::Vector3d& v2)
   {
-    Eigen::Vector3d v1_norm = v1;
-    Eigen::Vector3d v2_norm = v2;
+    double scalar = v1.dot(v2) / (v1.norm() * v2.norm());
 
-    v1_norm.normalize();
-    v2_norm.normalize();
+    Eigen::Vector3d axis = v1.cross(v2);
 
-    return acos(v1_norm.dot(v2_norm));
+    double dir = v2.dot(axis.cross(v1));
+    double sgn = sign(dir);
+
+    // singularities
+    if (scalar > 1.0)
+      return 0;
+    else if (scalar < -1.0)
+      return sgn * M_PI;
+
+    return sgn * acos(scalar);
   }
 
   //}
