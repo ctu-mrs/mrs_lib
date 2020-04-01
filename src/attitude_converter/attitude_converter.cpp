@@ -273,6 +273,8 @@ AttitudeConverter AttitudeConverter::setYaw(const double& new_yaw) {
 
   auto [roll, pitch, yaw] = *this;
 
+  std::ignore = yaw;
+
   return AttitudeConverter(roll, pitch, new_yaw);
 }
 
