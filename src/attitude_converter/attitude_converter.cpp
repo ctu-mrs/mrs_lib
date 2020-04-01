@@ -269,14 +269,14 @@ AttitudeConverter AttitudeConverter::setHeadingByYaw(const double& heading) {
   return AttitudeConverter(new_attitude);
 }
 
-//}
-
 AttitudeConverter AttitudeConverter::setYaw(const double& new_yaw) {
 
   auto [roll, pitch, yaw] = *this;
 
   return AttitudeConverter(roll, pitch, new_yaw);
 }
+
+//}
 
 // | ------------------------ internal ------------------------ |
 
