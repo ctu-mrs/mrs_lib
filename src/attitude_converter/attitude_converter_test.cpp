@@ -98,9 +98,9 @@ int main() {
   {
     printf("Testing setHeadingByYaw():\n");
 
-    double roll  = 0.52;
-    double pitch = 0.52;
-    double yaw   = 0;
+    double roll  = 0.0;
+    double pitch = 0.0;
+    double yaw   = 0.0;
 
     tf2::Quaternion old_attitude = AttitudeConverter(roll, pitch, yaw);
 
@@ -110,7 +110,7 @@ int main() {
     printf("original input: heading: %1.2f, yaw: %1.2f, z vec: [%1.2f, %1.2f, %1.2f]\n", old_heading, yaw, old_z_vec[0], old_z_vec[1], old_z_vec[2]);
 
     {
-      double new_desired_heading = 1.57;
+      double new_desired_heading = -1.58;
       printf("setting heading to %1.2f:\n", new_desired_heading);
       printf("this is the propper way how to update the heading part of an existing orientation without chaning the Z axis direction\n");
 
@@ -124,7 +124,7 @@ int main() {
     }
 
     {
-      double new_desired_yaw = 1.57;
+      double new_desired_yaw = -1.57;
       printf("setting yaw to %1.2f:\n", new_desired_yaw);
       printf("this should not work, setting yaw directly will result in change of the Z axis direction\n");
 

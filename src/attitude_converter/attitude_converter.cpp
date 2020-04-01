@@ -235,7 +235,7 @@ std::tuple<double, double, double> AttitudeConverter::getIntrinsicRPY(void) {
 
 //}
 
-/* setters() //{ */
+/* setters //{ */
 
 AttitudeConverter AttitudeConverter::setHeadingByYaw(const double& heading) {
 
@@ -258,7 +258,7 @@ AttitudeConverter AttitudeConverter::setHeadingByYaw(const double& heading) {
   double yaw_diff = mrs_lib::vectorAngle(b1, heading_vec_sklop);
 
   // get the rotation around b3 about yaw_diff
-  Eigen::Matrix3d rotator = Eigen::AngleAxisd(yaw_diff, b3).toRotationMatrix();
+  Eigen::Matrix3d rotator = Eigen::AngleAxisd(-yaw_diff, b3).toRotationMatrix();
 
   // get the original rotation in the matrix form
   Eigen::Matrix3d original_attitude = *this;
