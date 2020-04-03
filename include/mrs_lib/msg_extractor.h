@@ -11,6 +11,14 @@
 namespace mrs_lib
 {
 
+
+/**
+ * @brief get position and heading from mrs_msgs::PositionCommand
+ *
+ * @param data position command
+ *
+ * @return x, y, z, heading
+ */
 std::tuple<double, double, double, double> getPose(const mrs_msgs::PositionCommand& data) {
 
   double x = data.position.x;
@@ -32,6 +40,14 @@ std::tuple<double, double, double, double> getPose(const mrs_msgs::PositionComma
   return std::tuple(x, y, z, heading);
 }
 
+
+/**
+ * @brief get position and heading from mrs_msgs::PositionCommandConstPtr
+ *
+ * @param data position command (ConstPtr)
+ *
+ * @return x, y, z, heading
+ */
 std::tuple<double, double, double, double> getPose(const mrs_msgs::PositionCommandConstPtr& data) {
 
   double x = data->position.x;
@@ -53,6 +69,14 @@ std::tuple<double, double, double, double> getPose(const mrs_msgs::PositionComma
   return std::tuple(x, y, z, heading);
 }
 
+
+/**
+ * @brief get velocity data from mrs_msgs::PositionCommand
+ *
+ * @param data position command
+ *
+ * @return x, y, z speed
+ */
 std::tuple<double, double, double> getVelocity(const mrs_msgs::PositionCommand& data) {
 
   double x = data.velocity.x;
@@ -62,6 +86,13 @@ std::tuple<double, double, double> getVelocity(const mrs_msgs::PositionCommand& 
   return std::tuple(x, y, z);
 }
 
+/**
+ * @brief get velocity data from mrs_msgs::PositionCommandConstPtr
+ *
+ * @param data position command (ConstPtr)
+ *
+ * @return x, y, z speed
+ */
 std::tuple<double, double, double> getVelocity(const mrs_msgs::PositionCommandConstPtr& data) {
 
   double x = data->velocity.x;
@@ -71,6 +102,14 @@ std::tuple<double, double, double> getVelocity(const mrs_msgs::PositionCommandCo
   return std::tuple(x, y, z);
 }
 
+
+/**
+ * @brief get position and heading from nav_msgs::Odometry
+ *
+ * @param data odometry
+ *
+ * @return x, y, z, heading
+ */
 std::tuple<double, double, double, double> getPose(const nav_msgs::Odometry& data) {
 
   double x = data.pose.pose.position.x;
@@ -89,6 +128,13 @@ std::tuple<double, double, double, double> getPose(const nav_msgs::Odometry& dat
   return std::tuple(x, y, z, heading);
 }
 
+/**
+ * @brief get position and heading from nav_msgs::OdometryConstPtr
+ *
+ * @param data odometry (ConstPtr)
+ *
+ * @return x, y, z, heading
+ */
 std::tuple<double, double, double, double> getPose(const nav_msgs::OdometryConstPtr& data) {
 
   double x = data->pose.pose.position.x;
@@ -107,6 +153,13 @@ std::tuple<double, double, double, double> getPose(const nav_msgs::OdometryConst
   return std::tuple(x, y, z, heading);
 }
 
+/**
+ * @brief get velocity from nav_msgs::Odometry
+ *
+ * @param data odometry
+ *
+ * @return x, y, z speed
+ */
 std::tuple<double, double, double> getVelocity(const nav_msgs::Odometry& data) {
 
   double x = data.twist.twist.linear.x;
@@ -116,6 +169,13 @@ std::tuple<double, double, double> getVelocity(const nav_msgs::Odometry& data) {
   return std::tuple(x, y, z);
 }
 
+/**
+ * @brief get velocity from nav_msgs::OdometryConstPtr
+ *
+ * @param data odometry (ConstPtr)
+ *
+ * @return x, y, z speed
+ */
 std::tuple<double, double, double> getVelocity(const nav_msgs::OdometryConstPtr& data) {
 
   double x = data->twist.twist.linear.x;
