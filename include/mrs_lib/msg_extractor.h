@@ -21,7 +21,12 @@ std::tuple<double, double, double, double> getPose(const mrs_msgs::PositionComma
   if (data.use_heading) {
     heading = data.heading;
   } else if (data.use_orientation) {
-    heading = mrs_lib::AttitudeConverter(data.orientation).getHeading();
+    try {
+      heading = mrs_lib::AttitudeConverter(data.orientation).getHeading();
+    }
+    catch (mrs_lib::AttitudeConverter::GetHeadingException e) {
+      ROS_ERROR_THROTTLE(1.0, "[%s]: error while extracting heading from PositionCommand: %s", ros::this_node::getName().c_str(), e.what());
+    }
   }
 
   return std::tuple(x, y, z, heading);
@@ -37,7 +42,12 @@ std::tuple<double, double, double, double> getPose(const mrs_msgs::PositionComma
   if (data->use_heading) {
     heading = data->heading;
   } else if (data->use_orientation) {
-    heading = mrs_lib::AttitudeConverter(data->orientation).getHeading();
+    try {
+      heading = mrs_lib::AttitudeConverter(data->orientation).getHeading();
+    }
+    catch (mrs_lib::AttitudeConverter::GetHeadingException e) {
+      ROS_ERROR_THROTTLE(1.0, "[%s]: error while extracting heading from PositionCommand: %s", ros::this_node::getName().c_str(), e.what());
+    }
   }
 
   return std::tuple(x, y, z, heading);
@@ -63,20 +73,36 @@ std::tuple<double, double, double> getVelocity(const mrs_msgs::PositionCommandCo
 
 std::tuple<double, double, double, double> getPose(const nav_msgs::Odometry& data) {
 
-  double x       = data.pose.pose.position.x;
-  double y       = data.pose.pose.position.y;
-  double z       = data.pose.pose.position.z;
-  double heading = mrs_lib::AttitudeConverter(data.pose.pose.orientation).getHeading();
+  double x = data.pose.pose.position.x;
+  double y = data.pose.pose.position.y;
+  double z = data.pose.pose.position.z;
+
+  double heading = 0;
+
+  try {
+    heading = mrs_lib::AttitudeConverter(data.pose.pose.orientation).getHeading();
+  }
+  catch (mrs_lib::AttitudeConverter::GetHeadingException e) {
+    ROS_ERROR_THROTTLE(1.0, "[%s]: error while extracting heading from Odometry: %s", ros::this_node::getName().c_str(), e.what());
+  }
 
   return std::tuple(x, y, z, heading);
 }
 
 std::tuple<double, double, double, double> getPose(const nav_msgs::OdometryConstPtr& data) {
 
-  double x       = data->pose.pose.position.x;
-  double y       = data->pose.pose.position.y;
-  double z       = data->pose.pose.position.z;
-  double heading = mrs_lib::AttitudeConverter(data->pose.pose.orientation).getHeading();
+  double x = data->pose.pose.position.x;
+  double y = data->pose.pose.position.y;
+  double z = data->pose.pose.position.z;
+
+  double heading = 0;
+
+  try {
+    heading = mrs_lib::AttitudeConverter(data->pose.pose.orientation).getHeading();
+  }
+  catch (mrs_lib::AttitudeConverter::GetHeadingException e) {
+    ROS_ERROR_THROTTLE(1.0, "[%s]: error while extracting heading from Odometry: %s", ros::this_node::getName().c_str(), e.what());
+  }
 
   return std::tuple(x, y, z, heading);
 }
