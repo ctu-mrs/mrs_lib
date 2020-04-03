@@ -1,4 +1,8 @@
 // clang: TomasFormat
+/**  \file
+ *   \brief utility functions for getting stuff from ROS msgs
+ *   \author Tomas Baca - tomas.baca@fel.cvut.cz
+ */
 #ifndef MRS_LIB_MSG_EXTRACTOR_H
 #define MRS_LIB_MSG_EXTRACTOR_H
 
