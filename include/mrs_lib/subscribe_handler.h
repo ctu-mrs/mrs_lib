@@ -379,6 +379,120 @@ namespace mrs_lib
           );
       }
 
+    /*!
+      * \brief An overload of the factory method for easier use with object methods. A variant without the timeout callback.
+      *
+      * \tparam time_consistent     Whether the handler should discard messages with time stamp earlier than the latest message (enforce time consistency of messages).
+      *
+      * \param topic_name           Name of the topic the new object will be handling (subscribe to).
+      * \param message_callback     The callback method to call when receiving a new message.
+      * \param obj2                 Object to bind the \p message_callback method to.
+      * \param threadsafe           Whether the handler should be mutexed.
+      * \param autostart            Whether the handler should be automatically started after construction (callbacks will be enabled immediately).
+      * \param queue_size           Will be passed to the ROS NodeHandle when subscribing (see ROS docs for explanation).
+      * \param transport_hints      Will be passed to the ROS NodeHandle when subscribing (see ROS docs for explanation).
+      *
+      * \returns                    std::shared_ptr to the new SubscribeHandler object. When the object is destroyed, the callbacks will not be called anymore.
+      */
+      template <typename MessageType, bool time_consistent=false, class ObjectType2>
+      SubscribeHandlerPtr<MessageType> create_handler(
+            const std::string& topic_name,
+            void (ObjectType2::*const message_callback) (SubscribeHandlerPtr<MessageType>),
+            ObjectType2* const obj2,
+            const bool threadsafe = true,
+            const bool autostart = true,
+            const uint32_t queue_size = 10,
+            const ros::TransportHints& transport_hints = ros::TransportHints()
+          )
+      {
+        const auto msg_cbk = message_callback == nullptr ? message_callback_t<MessageType>() :std::bind(message_callback, obj2, std::placeholders::_1);
+        return create_handler<MessageType, time_consistent>(
+            topic_name,
+            mrs_lib::no_timeout,
+            timeout_callback_t(),
+            msg_cbk,
+            threadsafe,
+            autostart,
+            queue_size,
+            transport_hints
+          );
+      }
+
+    /*!
+      * \brief An overload of the factory method for easier use with object methods. A variant without the message callback.
+      *
+      * \tparam time_consistent     Whether the handler should discard messages with time stamp earlier than the latest message (enforce time consistency of messages).
+      *
+      * \param topic_name           Name of the topic the new object will be handling (subscribe to).
+      * \param no_message_timeout   After this duration has passed without receiving any new messages on the handled topic, the \p timeout_callback will be called.
+      * \param timeout_callback     The method to call if no messages have arrived for \p no_message_timeout. If empty a throttled ROS warning will be prited instead of calling \p timeout_callback.
+      * \param obj1                 Object to bind the \p timeout_callback method to.
+      * \param threadsafe           Whether the handler should be mutexed.
+      * \param autostart            Whether the handler should be automatically started after construction (callbacks will be enabled immediately).
+      * \param queue_size           Will be passed to the ROS NodeHandle when subscribing (see ROS docs for explanation).
+      * \param transport_hints      Will be passed to the ROS NodeHandle when subscribing (see ROS docs for explanation).
+      *
+      * \returns                    std::shared_ptr to the new SubscribeHandler object. When the object is destroyed, the callbacks will not be called anymore.
+      */
+      template <typename MessageType, bool time_consistent=false, class ObjectType1>
+      SubscribeHandlerPtr<MessageType> create_handler(
+            const std::string& topic_name,
+            const ros::Duration& no_message_timeout,
+            void (ObjectType1::*const timeout_callback) (const std::string&, const ros::Time&, const int),
+            ObjectType1* const obj1,
+            const bool threadsafe = true,
+            const bool autostart = true,
+            const uint32_t queue_size = 10,
+            const ros::TransportHints& transport_hints = ros::TransportHints()
+          )
+      {
+        const auto tim_cbk = timeout_callback == nullptr ? timeout_callback_t() : std::bind(timeout_callback, obj1, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        return create_handler<MessageType, time_consistent>(
+            topic_name,
+            no_message_timeout,
+            tim_cbk,
+            message_callback_t<MessageType>(),
+            threadsafe,
+            autostart,
+            queue_size,
+            transport_hints
+          );
+      }
+
+    /*!
+      * \brief An overload of the factory method for easier use with object methods.
+      *
+      * \tparam time_consistent     Whether the handler should discard messages with time stamp earlier than the latest message (enforce time consistency of messages).
+      *
+      * \param topic_name           Name of the topic the new object will be handling (subscribe to).
+      * \param threadsafe           Whether the handler should be mutexed.
+      * \param autostart            Whether the handler should be automatically started after construction (callbacks will be enabled immediately).
+      * \param queue_size           Will be passed to the ROS NodeHandle when subscribing (see ROS docs for explanation).
+      * \param transport_hints      Will be passed to the ROS NodeHandle when subscribing (see ROS docs for explanation).
+      *
+      * \returns                    std::shared_ptr to the new SubscribeHandler object. When the object is destroyed, the callbacks will not be called anymore.
+      */
+      template <typename MessageType, bool time_consistent=false>
+      SubscribeHandlerPtr<MessageType> create_handler(
+            const std::string& topic_name,
+            const bool threadsafe = true,
+            const bool autostart = true,
+            const uint32_t queue_size = 10,
+            const ros::TransportHints& transport_hints = ros::TransportHints()
+          )
+      {
+        return create_handler<MessageType, time_consistent>(
+            topic_name,
+            mrs_lib::no_timeout,
+            timeout_callback_t(),
+            message_callback_t<MessageType>(),
+            threadsafe,
+            autostart,
+            queue_size,
+            transport_hints
+          );
+      }
+
       //}
 
     private:
