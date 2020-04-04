@@ -7,6 +7,8 @@
 #define MRS_LIB_MSG_EXTRACTOR_H
 
 #include <mrs_msgs/PositionCommand.h>
+#include <mrs_msgs/Reference.h>
+#include <mrs_msgs/ReferenceStamped.h>
 
 #include <nav_msgs/Odometry.h>
 
@@ -187,6 +189,74 @@ std::tuple<double, double, double> getVelocity(const nav_msgs::OdometryConstPtr&
   double z = data->twist.twist.linear.z;
 
   return std::tuple(x, y, z);
+}
+
+/**
+ * @brief get position and heading from mrs_msgs::Reference
+ *
+ * @param data reference
+ *
+ * @return x, y, z, heading
+ */
+std::tuple<double, double, double, double> getPose(const mrs_msgs::Reference& data) {
+
+  double x       = data.position.x;
+  double y       = data.position.y;
+  double z       = data.position.z;
+  double heading = data.heading;
+
+  return std::tuple(x, y, z, heading);
+}
+
+/**
+ * @brief get position and heading from mrs_msgs::Reference
+ *
+ * @param data reference (ContrPtr)
+ *
+ * @return x, y, z, heading
+ */
+std::tuple<double, double, double, double> getPose(const mrs_msgs::ReferenceConstPtr& data) {
+
+  double x       = data->position.x;
+  double y       = data->position.y;
+  double z       = data->position.z;
+  double heading = data->heading;
+
+  return std::tuple(x, y, z, heading);
+}
+
+/**
+ * @brief get position and heading from mrs_msgs::ReferenceStamped
+ *
+ * @param data reference
+ *
+ * @return x, y, z, heading
+ */
+std::tuple<double, double, double, double> getPose(const mrs_msgs::ReferenceStamped& data) {
+
+  double x       = data.reference.position.x;
+  double y       = data.reference.position.y;
+  double z       = data.reference.position.z;
+  double heading = data.reference.heading;
+
+  return std::tuple(x, y, z, heading);
+}
+
+/**
+ * @brief get position and heading from mrs_msgs::ReferenceStampedConstrPtr
+ *
+ * @param data reference (ContPtr)
+ *
+ * @return x, y, z, heading
+ */
+std::tuple<double, double, double, double> getPose(const mrs_msgs::ReferenceStampedConstPtr& data) {
+
+  double x       = data->reference.position.x;
+  double y       = data->reference.position.y;
+  double z       = data->reference.position.z;
+  double heading = data->reference.heading;
+
+  return std::tuple(x, y, z, heading);
 }
 
 }  // namespace mrs_lib
