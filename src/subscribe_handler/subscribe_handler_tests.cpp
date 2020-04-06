@@ -10,9 +10,9 @@ void timeout_callback(const std::string& topic, const ros::Time& last_msg, const
   ROS_ERROR_STREAM("Have not received message from topic '" << topic << "' for " << (ros::Time::now()-last_msg).toSec() << " seconds (" << n_pubs << " publishers on topic)");
 }
 
-void message_callback(mrs_lib::SubscribeHandlerPtr<message_type> sh_ptr)
+void message_callback(message_type::ConstPtr msg)
 {
-  ROS_INFO_STREAM("RECEIVED '" << *(sh_ptr->get_data()) << "'");
+  ROS_INFO_STREAM("RECEIVED '" << msg << "'");
 }
 
 mrs_lib::SubscribeHandlerPtr<message_type> sh_ptr;

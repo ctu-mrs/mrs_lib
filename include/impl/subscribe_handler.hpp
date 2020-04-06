@@ -227,7 +227,7 @@ namespace mrs_lib
         uint32_t m_queue_size;
         ros::TransportHints m_transport_hints;
 
-        static void dummy_message_callback([[maybe_unused]] SubscribeHandlerPtr<MessageType> sh_ptr) {};
+        static void dummy_message_callback([[maybe_unused]] typename MessageType::ConstPtr) {};
 
       protected:
         /* default_timeout_callback() method //{ */
@@ -284,7 +284,7 @@ namespace mrs_lib
         void data_callback_unchecked(const typename MessageType::ConstPtr& msg, const ros::Time& time)
         {
           process_new_message(msg, time);
-          m_message_callback(std::shared_ptr(m_ptr));
+          m_message_callback(msg);
         }
     };
     //}
