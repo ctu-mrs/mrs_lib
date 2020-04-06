@@ -51,35 +51,39 @@ int main(int argc, char **argv)
   /* name of the topic to be handled */
   const std::string topic_name = "test_topic";
   /* after this duration without receiving messages on the handled topic, the timeout_callback will be called */
-  const ros::Duration no_message_timeout = ros::Duration(5.0);
+  const ros::Duration no_message_timeout = ros::Duration(1.0);
   /* whether mutexes should be used to prevent data races (set to true in a multithreaded scenario such as nodelets) */
   const bool threadsafe = false;
 
   ROS_INFO("[%s]: Creating SubscribeHandlers using SubscribeMgr.", node_name.c_str());
-  mrs_lib::SubscribeMgr smgr(nh);
 
-  /* This is how a new SubscribeHandler object is initialized. */ 
-  mrs_lib::SubscribeHandler<std_msgs::String> handler1 = smgr.create_handler<std_msgs::String>(
-            topic_name,
-            no_message_timeout,
-            timeout_callback,
-            message_callback,
-            threadsafe
-            );
+  mrs_lib::SubscribeHandlerOptions shopts
+  {
+    .nh = nh,
+    .node_name = node_name,
+    .topic_name = topic_name,
+    .no_message_timeout = no_message_timeout,
+    .threadsafe = threadsafe
+  };
 
-  /* /1* A variation of the factory method for easier use with objects also exists. *1/ */ 
-  /* mrs_lib::SubscribeHandler<std_msgs::String> handler2 = smgr.create_handler<std_msgs::String>( */
-  /*           topic_name, */
-  /*           no_message_timeout, */
-  /*           &SubObject::timeout_method, &sub_obj, */
-  /*           &SubObject::callback_method, &sub_obj, */
-  /*           threadsafe */
+  /* /1* This is how a new SubscribeHandler object is initialized. *1/ */ 
+  /* mrs_lib::SubscribeHandler<std_msgs::String> handler1( */
+  /*           shopts, */
+  /*           timeout_callback, */
+  /*           message_callback */
   /*           ); */
 
   /* Type of the message may be accessed by C++11 decltype in case of need */ 
   /* using message_type = mrs_lib::message_type<decltype(handler1)>; */
   using message_type = std_msgs::String;
   ros::Publisher pub = nh.advertise<message_type>(topic_name, 5);
+
+  /* A variation of the factory method for easier use with objects also exists. */ 
+  mrs_lib::SubscribeHandler<std_msgs::String> handler2(
+            shopts,
+            &SubObject::timeout_method, &sub_obj,
+            &SubObject::callback_method, &sub_obj
+            );
 
   /* Now let's just spin to process calbacks until the user decides to stop the program. */ 
   ros::Rate r(2);

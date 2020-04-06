@@ -20,42 +20,33 @@ namespace mrs_lib
         using data_callback_t = std::function<void(const typename MessageType::ConstPtr&)>;
 
       private:
-        friend class SubscribeMgr;
         friend class SubscribeHandler<MessageType>;
 
       public:
         /* constructor //{ */
         SubscribeHandler_impl(
-              ros::NodeHandle& nh,
-              const std::string& topic_name,
-              const std::string& node_name = std::string(),
-              const message_callback_t& message_callback = message_callback_t(),
-              const ros::Duration& no_message_timeout = mrs_lib::no_timeout,
+              const SubscribeHandlerOptions& options,
               const timeout_callback_t& timeout_callback = timeout_callback_t(),
-              const uint32_t queue_size = 10,
-              const ros::TransportHints& transport_hints = ros::TransportHints()
+              const message_callback_t& message_callback = message_callback_t()
             )
-          : m_nh(nh),
-            m_no_message_timeout(no_message_timeout),
-            m_topic_name(topic_name),
-            m_node_name(node_name),
+          : m_nh(options.nh),
+            m_no_message_timeout(options.no_message_timeout),
+            m_topic_name(options.topic_name),
+            m_node_name(options.node_name),
             m_got_data(false),
             m_new_data(false),
             m_used_data(false),
             m_last_msg_received(ros::Time::now()),
             m_timeout_callback(timeout_callback),
             m_message_callback(message_callback),
-            m_queue_size(queue_size),
-            m_transport_hints(transport_hints)
+            m_queue_size(options.queue_size),
+            m_transport_hints(options.transport_hints)
         {
-          if (!m_message_callback)
-            m_message_callback = dummy_message_callback;
-        
           if (!m_timeout_callback)
             m_timeout_callback = std::bind(&SubscribeHandler_impl<MessageType>::default_timeout_callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
         
-          if (no_message_timeout != mrs_lib::no_timeout)
-            m_timeout_check_timer = m_nh.createTimer(no_message_timeout, &SubscribeHandler_impl<MessageType>::check_timeout, this, true /*oneshot*/, false /*autostart*/);
+          if (options.no_message_timeout != mrs_lib::no_timeout)
+            m_timeout_check_timer = m_nh.createTimer(options.no_message_timeout, &SubscribeHandler_impl<MessageType>::check_timeout, this, true /*oneshot*/, false /*autostart*/);
         
           const std::string msg = "Subscribed to topic '" + m_topic_name + "' -> '" + resolved_topic_name() + "'";
           if (m_node_name.empty())
@@ -227,8 +218,6 @@ namespace mrs_lib
         uint32_t m_queue_size;
         ros::TransportHints m_transport_hints;
 
-        static void dummy_message_callback([[maybe_unused]] typename MessageType::ConstPtr) {};
-
       protected:
         /* default_timeout_callback() method //{ */
         void default_timeout_callback(const std::string& topic, const ros::Time& last_msg, const int n_pubs)
@@ -284,7 +273,11 @@ namespace mrs_lib
         void data_callback_unchecked(const typename MessageType::ConstPtr& msg, const ros::Time& time)
         {
           process_new_message(msg, time);
-          m_message_callback(msg);
+          if (m_message_callback)
+          {
+            m_new_data = false;
+            m_message_callback(msg);
+          }
         }
     };
     //}
@@ -300,21 +293,15 @@ namespace mrs_lib
         using timeout_callback_t = typename impl_class_t::timeout_callback_t;
         using message_callback_t = typename impl_class_t::message_callback_t;
 
-        friend class SubscribeMgr;
         friend class SubscribeHandler<MessageType>;
 
       public:
         SubscribeHandler_threadsafe(
-              ros::NodeHandle& nh,
-              const std::string& topic_name,
-              const std::string& node_name = std::string(),
-              const message_callback_t& message_callback = message_callback_t(),
-              const ros::Duration& no_message_timeout = mrs_lib::no_timeout,
+              const SubscribeHandlerOptions& options,
               const timeout_callback_t& timeout_callback = timeout_callback_t(),
-              const uint32_t queue_size = 10,
-              const ros::TransportHints& transport_hints = ros::TransportHints()
+              const message_callback_t& message_callback = message_callback_t()
             )
-          : impl_class_t::SubscribeHandler_impl(nh, topic_name, node_name, message_callback, no_message_timeout, timeout_callback, queue_size, transport_hints)
+          : impl_class_t::SubscribeHandler_impl(options, timeout_callback, message_callback)
         {
         }
 
