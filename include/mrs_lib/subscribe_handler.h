@@ -22,12 +22,6 @@ namespace mrs_lib
   template <typename MessageType>
   using SubscribeHandlerPtr = std::shared_ptr<SubscribeHandler<MessageType>>;
 
-/*!
-  * \brief Helper alias for convenient extraction of handled message type from a SubscribeHandlerPtr.
-  */
-  template<typename SubscribeHandlerPtr>
-  using message_type = typename SubscribeHandlerPtr::element_type::message_type;
-
   struct SubscribeHandlerOptions
   {
     ros::NodeHandle nh;
@@ -163,7 +157,6 @@ namespace mrs_lib
               message_callback
             );
         }
-
         m_pimpl->template set_data_callback<false>();
         if (options.autostart)
           start();
@@ -235,6 +228,20 @@ namespace mrs_lib
   };
   //}
 
+/*!
+  * \brief Helper alias for convenient extraction of handled message type from a SubscribeHandlerPtr.
+  */
+  template<typename SubscribeHandler>
+  using message_type = typename SubscribeHandler::message_type;
+
+  template<typename Class, class ... Types>
+  void construct_object(
+        Class& object,
+        Types ... args
+      )
+  {
+    object = Class(args...);
+  };
 }
 
 #endif // SUBRSCRIBE_HANDLER_H

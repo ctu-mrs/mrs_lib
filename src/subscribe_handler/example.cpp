@@ -79,10 +79,14 @@ int main(int argc, char **argv)
   ros::Publisher pub = nh.advertise<message_type>(topic_name, 5);
 
   /* A variation of the factory method for easier use with objects also exists. */ 
-  mrs_lib::SubscribeHandler<std_msgs::String> handler2(
+  mrs_lib::SubscribeHandler<std_msgs::String> handler2;
+  mrs_lib::construct_object(
+            handler2,
             shopts,
-            &SubObject::timeout_method, &sub_obj,
-            &SubObject::callback_method, &sub_obj
+            timeout_callback,
+            message_callback
+            /* &SubObject::timeout_method, &sub_obj, */
+            /* &SubObject::callback_method, &sub_obj */
             );
 
   /* Now let's just spin to process calbacks until the user decides to stop the program. */ 
