@@ -17,162 +17,352 @@
 namespace mrs_lib
 {
 
+/* geometry_msgs::Point //{ */
 
 /**
- * @brief get position and heading from mrs_msgs::PositionCommand
+ * @brief get XYZ from geometry_msgs::Point
  *
- * @param data position command
+ * @param data point
  *
- * @return x, y, z, heading
+ * @return x, y, z
  */
-std::tuple<double, double, double, double> getPose(const mrs_msgs::PositionCommand& data) {
+std::tuple<double, double, double> getXYZ(const geometry_msgs::Point& data) {
 
-  double x = data.position.x;
-  double y = data.position.y;
-  double z = data.position.z;
-
-  double heading = 0;
-  if (data.use_heading) {
-    heading = data.heading;
-  } else if (data.use_orientation) {
-    try {
-      heading = mrs_lib::AttitudeConverter(data.orientation).getHeading();
-    }
-    catch (mrs_lib::AttitudeConverter::GetHeadingException e) {
-      ROS_ERROR_THROTTLE(1.0, "[%s]: error while extracting heading from PositionCommand: %s", ros::this_node::getName().c_str(), e.what());
-    }
-  }
-
-  return std::tuple(x, y, z, heading);
-}
-
-
-/**
- * @brief get position and heading from mrs_msgs::PositionCommandConstPtr
- *
- * @param data position command (ConstPtr)
- *
- * @return x, y, z, heading
- */
-std::tuple<double, double, double, double> getPose(const mrs_msgs::PositionCommandConstPtr& data) {
-
-  double x = data->position.x;
-  double y = data->position.y;
-  double z = data->position.z;
-
-  double heading = 0;
-  if (data->use_heading) {
-    heading = data->heading;
-  } else if (data->use_orientation) {
-    try {
-      heading = mrs_lib::AttitudeConverter(data->orientation).getHeading();
-    }
-    catch (mrs_lib::AttitudeConverter::GetHeadingException e) {
-      ROS_ERROR_THROTTLE(1.0, "[%s]: error while extracting heading from PositionCommand: %s", ros::this_node::getName().c_str(), e.what());
-    }
-  }
-
-  return std::tuple(x, y, z, heading);
-}
-
-
-/**
- * @brief get velocity data from mrs_msgs::PositionCommand
- *
- * @param data position command
- *
- * @return x, y, z speed
- */
-std::tuple<double, double, double> getVelocity(const mrs_msgs::PositionCommand& data) {
-
-  double x = data.velocity.x;
-  double y = data.velocity.y;
-  double z = data.velocity.z;
+  double x = data.x;
+  double y = data.y;
+  double z = data.z;
 
   return std::tuple(x, y, z);
 }
 
 /**
- * @brief get velocity data from mrs_msgs::PositionCommandConstPtr
+ * @brief get XYZ from geometry_msgs::PointConstPtr
  *
- * @param data position command (ConstPtr)
+ * @param data point (ConstPtr)
  *
- * @return x, y, z speed
+ * @return x, y, z
  */
-std::tuple<double, double, double> getVelocity(const mrs_msgs::PositionCommandConstPtr& data) {
+std::tuple<double, double, double> getXYZ(const geometry_msgs::PointConstPtr& data) {
 
-  double x = data->velocity.x;
-  double y = data->velocity.y;
-  double z = data->velocity.z;
+  return getXYZ(*data);
+}
+
+//}
+
+/* geometry_msgs::Vector3 //{ */
+
+/**
+ * @brief get XYZ from geometry_msgs::Vector3
+ *
+ * @param data vector3
+ *
+ * @return x, y, z
+ */
+std::tuple<double, double, double> getXYZ(const geometry_msgs::Vector3& data) {
+
+  double x = data.x;
+  double y = data.y;
+  double z = data.z;
 
   return std::tuple(x, y, z);
 }
 
+/**
+ * @brief get XYZ from geometry_msgs::Vector3ConstPtr
+ *
+ * @param data vector3 (ConstPtr)
+ *
+ * @return x, y, z
+ */
+std::tuple<double, double, double> getXYZ(const geometry_msgs::Vector3ConstPtr& data) {
+
+  return getXYZ(*data);
+}
+
+//}
+
+/* geometry_msgs::Pose //{ */
+
+/* getPosition() //{ */
 
 /**
- * @brief get position and heading from nav_msgs::Odometry
+ * @brief get position from geometry_msgs::Pose
+ *
+ * @param data pose
+ *
+ * @return x, y, z
+ */
+std::tuple<double, double, double> getPosition(const geometry_msgs::Pose& data) {
+
+  return getXYZ(data.position);
+}
+
+/**
+ * @brief get position from geometry_msgs::PoseConstPtr
+ *
+ * @param data pose (ConstPtr)
+ *
+ * @return x, y, z
+ */
+std::tuple<double, double, double> getPosition(const geometry_msgs::PoseConstPtr& data) {
+
+  return getPosition(*data);
+}
+
+//}
+
+/* getHeading() //{ */
+
+/**
+ * @brief get heading from geometry_msgs::Pose
+ *
+ * @param data pose
+ *
+ * @return heading
+ */
+double getHeading(const geometry_msgs::Pose& data) {
+
+  return mrs_lib::AttitudeConverter(data.orientation).getHeading();
+}
+
+/**
+ * @brief get heading from geometry_msgs::PoseConstPtr
+ *
+ * @param data pose (ConstPtr)
+ *
+ * @return heading
+ */
+double getHeading(const geometry_msgs::PoseConstPtr& data) {
+
+  return getHeading(*data);
+}
+
+//}
+
+/* getYaw() //{ */
+
+/**
+ * @brief get yaw from geometry_msgs::Pose
+ *
+ * @param data pose
+ *
+ * @return yaw
+ */
+double getYaw(const geometry_msgs::Pose& data) {
+
+  return mrs_lib::AttitudeConverter(data.orientation).getYaw();
+}
+
+/**
+ * @brief get yaw from geometry_msgs::PoseConstPtr
+ *
+ * @param data pose (ConstPtr)
+ *
+ * @return yaw
+ */
+double getYaw(const geometry_msgs::PoseConstPtr& data) {
+
+  return getYaw(*data);
+}
+
+//}
+
+//}
+
+/* geometry_msgs::PoseWithCovariance //{ */
+
+/* getPosition() //{ */
+
+/**
+ * @brief get position from geometry_msgs::PoseWithCovariance
+ *
+ * @param data pose with covariance
+ *
+ * @return x, y, z
+ */
+std::tuple<double, double, double> getPosition(const geometry_msgs::PoseWithCovariance& data) {
+
+  return getPosition(data.pose);
+}
+
+/**
+ * @brief get position from geometry_msgs::PoseWithCovarianceConstPtr
+ *
+ * @param data pose with covariance (ConstPtr)
+ *
+ * @return x, y, z
+ */
+std::tuple<double, double, double> getPosition(const geometry_msgs::PoseWithCovarianceConstPtr& data) {
+
+  return getPosition(*data);
+}
+
+//}
+
+/* getHeading() //{ */
+
+/**
+ * @brief get heading from geometry_msgs::PoseWithCovariance
+ *
+ * @param data pose with covariance
+ *
+ * @return heading
+ */
+double getHeading(const geometry_msgs::PoseWithCovariance& data) {
+
+  return getHeading(data.pose);
+}
+
+/**
+ * @brief get heading from geometry_msgs::PoseWithCovarianceConstPtr
+ *
+ * @param data pose with covariance (ConstPtr)
+ *
+ * @return heading
+ */
+double getHeading(const geometry_msgs::PoseWithCovarianceConstPtr& data) {
+
+  return getHeading(*data);
+}
+
+//}
+
+/* getYaw() //{ */
+
+/**
+ * @brief get yaw from geometry_msgs::PoseWithCovariance
+ *
+ * @param data pose with covariance
+ *
+ * @return yaw
+ */
+double getYaw(const geometry_msgs::PoseWithCovariance& data) {
+
+  return getYaw(data.pose);
+}
+
+/**
+ * @brief get yaw from geometry_msgs::PoseWithCovarianceConstPtr
+ *
+ * @param data pose with covariance (ConstPtr)
+ *
+ * @return yaw
+ */
+double getYaw(const geometry_msgs::PoseWithCovarianceConstPtr& data) {
+
+  return getYaw(*data);
+}
+
+//}
+
+//}
+
+/* geometry_msgs::Twist //{ */
+
+/* getVelocity() //{ */
+
+/**
+ * @brief get velocity from geometry_msgs::Twist
+ *
+ * @param data twist
+ *
+ * @return x, y, z
+ */
+std::tuple<double, double, double> getVelocity(const geometry_msgs::Twist& data) {
+
+  return getXYZ(data.linear);
+}
+
+/**
+ * @brief get position from geometry_msgs::TwistConstPtr
+ *
+ * @param data twist (ConstPtr)
+ *
+ * @return x, y, z
+ */
+std::tuple<double, double, double> getPosition(const geometry_msgs::TwistConstPtr& data) {
+
+  return getVelocity(*data);
+}
+
+//}
+
+//}
+
+/* geometry_msgs::TwistWithCovariance //{ */
+
+/* getVelocity() //{ */
+
+/**
+ * @brief get velocity from geometry_msgs::TwistWithCovariance
+ *
+ * @param data twistwithcovariance
+ *
+ * @return x, y, z
+ */
+std::tuple<double, double, double> getVelocity(const geometry_msgs::TwistWithCovariance& data) {
+
+  return getVelocity(data.twist);
+}
+
+/**
+ * @brief get position from geometry_msgs::TwistWithCovarianceConstPtr
+ *
+ * @param data twistwithcovariance (ConstPtr)
+ *
+ * @return x, y, z
+ */
+std::tuple<double, double, double> getPosition(const geometry_msgs::TwistWithCovarianceConstPtr& data) {
+
+  return getVelocity(*data);
+}
+
+//}
+
+//}
+
+/* nav_msgs::Odometry //{ */
+
+/* getPosition() //{ */
+
+/**
+ * @brief get position from nav_msgs::Odometry
  *
  * @param data odometry
  *
- * @return x, y, z, heading
+ * @return x, y, z
  */
-std::tuple<double, double, double, double> getPose(const nav_msgs::Odometry& data) {
+std::tuple<double, double, double> getPosition(const nav_msgs::Odometry& data) {
 
-  double x = data.pose.pose.position.x;
-  double y = data.pose.pose.position.y;
-  double z = data.pose.pose.position.z;
-
-  double heading = 0;
-
-  try {
-    heading = mrs_lib::AttitudeConverter(data.pose.pose.orientation).getHeading();
-  }
-  catch (mrs_lib::AttitudeConverter::GetHeadingException e) {
-    ROS_ERROR_THROTTLE(1.0, "[%s]: error while extracting heading from Odometry: %s", ros::this_node::getName().c_str(), e.what());
-  }
-
-  return std::tuple(x, y, z, heading);
+  return getPosition(data.pose);
 }
 
 /**
- * @brief get position and heading from nav_msgs::OdometryConstPtr
+ * @brief get position from nav_msgs::OdometryConstPtr
  *
  * @param data odometry (ConstPtr)
  *
- * @return x, y, z, heading
+ * @return x, y, z
  */
-std::tuple<double, double, double, double> getPose(const nav_msgs::OdometryConstPtr& data) {
+std::tuple<double, double, double> getPosition(const nav_msgs::OdometryConstPtr& data) {
 
-  double x = data->pose.pose.position.x;
-  double y = data->pose.pose.position.y;
-  double z = data->pose.pose.position.z;
-
-  double heading = 0;
-
-  try {
-    heading = mrs_lib::AttitudeConverter(data->pose.pose.orientation).getHeading();
-  }
-  catch (mrs_lib::AttitudeConverter::GetHeadingException e) {
-    ROS_ERROR_THROTTLE(1.0, "[%s]: error while extracting heading from Odometry: %s", ros::this_node::getName().c_str(), e.what());
-  }
-
-  return std::tuple(x, y, z, heading);
+  return getPosition(*data);
 }
 
+//}
+
+/* getVelocity() //{ */
+
 /**
- * @brief get velocity from nav_msgs::Odometry
+ * @brief get position from nav_msgs::Odometry
  *
  * @param data odometry
  *
- * @return x, y, z speed
+ * @return x, y, z
  */
 std::tuple<double, double, double> getVelocity(const nav_msgs::Odometry& data) {
 
-  double x = data.twist.twist.linear.x;
-  double y = data.twist.twist.linear.y;
-  double z = data.twist.twist.linear.z;
-
-  return std::tuple(x, y, z);
+  return getVelocity(data.twist);
 }
 
 /**
@@ -180,85 +370,294 @@ std::tuple<double, double, double> getVelocity(const nav_msgs::Odometry& data) {
  *
  * @param data odometry (ConstPtr)
  *
- * @return x, y, z speed
+ * @return x, y, z
  */
 std::tuple<double, double, double> getVelocity(const nav_msgs::OdometryConstPtr& data) {
 
-  double x = data->twist.twist.linear.x;
-  double y = data->twist.twist.linear.y;
-  double z = data->twist.twist.linear.z;
+  return getVelocity(*data);
+}
 
-  return std::tuple(x, y, z);
+//}
+
+/* getHeading() //{ */
+
+/**
+ * @brief get heading from nav_msgs::Odometry
+ *
+ * @param data odometry
+ *
+ * @return heading
+ */
+double getHeading(const nav_msgs::Odometry& data) {
+
+  return getHeading(data.pose);
 }
 
 /**
- * @brief get position and heading from mrs_msgs::Reference
+ * @brief get heading from nav_msgs::OdometryConstPtr
+ *
+ * @param data odometry (ConstPtr)
+ *
+ * @return heading
+ */
+double getHeading(const nav_msgs::OdometryConstPtr& data) {
+
+  return getHeading(*data);
+}
+
+//}
+
+/* getYaw() //{ */
+
+/**
+ * @brief get yaw from nav_msgs::Odometry
+ *
+ * @param data odometry
+ *
+ * @return yaw
+ */
+double getYaw(const nav_msgs::Odometry& data) {
+
+  return getYaw(data.pose);
+}
+
+/**
+ * @brief get yaw from nav_msgs::OdometryConstPtr
+ *
+ * @param data odometry (ConstPtr)
+ *
+ * @return yaw
+ */
+double getYaw(const nav_msgs::OdometryConstPtr& data) {
+
+  return getYaw(*data);
+}
+
+//}
+
+//}
+
+/* mrs_msgs::PositionCommand //{ */
+
+/* getPosition() //{ */
+
+/**
+ * @brief get position data from mrs_msgs::PositionCommand
+ *
+ * @param data position command
+ *
+ * @return x, y, z
+ */
+std::tuple<double, double, double> getPosition(const mrs_msgs::PositionCommand& data) {
+
+  return getXYZ(data.position);
+}
+
+/**
+ * @brief get position data from mrs_msgs::PositionCommandConstPtr
+ *
+ * @param data position command (ConstPtr)
+ *
+ * @return x, y, z
+ */
+std::tuple<double, double, double> getPosition(const mrs_msgs::PositionCommandConstPtr& data) {
+
+  return getPosition(*data);
+}
+
+//}
+
+/* getVelocity() //{ */
+
+/**
+ * @brief get velocity data from mrs_msgs::PositionCommand
+ *
+ * @param data position command
+ *
+ * @return x, y, z
+ */
+std::tuple<double, double, double> getVelocity(const mrs_msgs::PositionCommand& data) {
+
+  return getXYZ(data.velocity);
+}
+
+/**
+ * @brief get velocity data from mrs_msgs::PositionCommandConstPtr
+ *
+ * @param data position command (ConstPtr)
+ *
+ * @return x, y, z
+ */
+std::tuple<double, double, double> getVelocity(const mrs_msgs::PositionCommandConstPtr& data) {
+
+  return getVelocity(*data);
+}
+
+//}
+
+/* getHeading() //{ */
+
+/**
+ * @brief get heading from mrs_msgs::PositionCommand
+ *
+ * @param data position command
+ *
+ * @return heading
+ */
+double getHeading(const mrs_msgs::PositionCommand& data) {
+
+  double heading = 0;
+
+  if (data.use_heading) {
+
+    heading = data.heading;
+
+  } else if (data.use_orientation) {
+
+    heading = mrs_lib::AttitudeConverter(data.orientation).getHeading();
+  }
+
+  return heading;
+}
+
+/**
+ * @brief get heading from mrs_msgs::PositionCommandConstPtr
+ *
+ * @param data position command (ConstPtr)
+ *
+ * @return heading
+ */
+double getHeading(const mrs_msgs::PositionCommandConstPtr& data) {
+
+  return getHeading(*data);
+}
+
+//}
+
+//}
+
+/* mrs_msgs::Reference //{ */
+
+/* getPosition() //{ */
+
+/**
+ * @brief get position from mrs_msgs::Reference
  *
  * @param data reference
  *
- * @return x, y, z, heading
+ * @return x, y, z
  */
-std::tuple<double, double, double, double> getPose(const mrs_msgs::Reference& data) {
+std::tuple<double, double, double> getPosition(const mrs_msgs::Reference& data) {
 
-  double x       = data.position.x;
-  double y       = data.position.y;
-  double z       = data.position.z;
-  double heading = data.heading;
-
-  return std::tuple(x, y, z, heading);
+  return getXYZ(data.position);
 }
 
 /**
- * @brief get position and heading from mrs_msgs::Reference
+ * @brief get position from mrs_msgs::ReferenceConstPtr
  *
  * @param data reference (ContrPtr)
  *
- * @return x, y, z, heading
+ * @return x, y, z
  */
-std::tuple<double, double, double, double> getPose(const mrs_msgs::ReferenceConstPtr& data) {
+std::tuple<double, double, double> getPosition(const mrs_msgs::ReferenceConstPtr& data) {
 
-  double x       = data->position.x;
-  double y       = data->position.y;
-  double z       = data->position.z;
-  double heading = data->heading;
-
-  return std::tuple(x, y, z, heading);
+  return getPosition(*data);
 }
 
+//}
+
+/* getHeading() //{ */
+
 /**
- * @brief get position and heading from mrs_msgs::ReferenceStamped
+ * @brief get heading from mrs_msgs::Reference
  *
  * @param data reference
  *
- * @return x, y, z, heading
+ * @return heading
  */
-std::tuple<double, double, double, double> getPose(const mrs_msgs::ReferenceStamped& data) {
+double getHeading(const mrs_msgs::Reference& data) {
 
-  double x       = data.reference.position.x;
-  double y       = data.reference.position.y;
-  double z       = data.reference.position.z;
-  double heading = data.reference.heading;
-
-  return std::tuple(x, y, z, heading);
+  return data.heading;
 }
 
 /**
- * @brief get position and heading from mrs_msgs::ReferenceStampedConstrPtr
+ * @brief get heading from mrs_msgs::ReferenceConstPtr
  *
- * @param data reference (ContPtr)
+ * @param data reference (ContrPtr)
  *
- * @return x, y, z, heading
+ * @return heading
  */
-std::tuple<double, double, double, double> getPose(const mrs_msgs::ReferenceStampedConstPtr& data) {
+double getHeading(const mrs_msgs::ReferenceConstPtr& data) {
 
-  double x       = data->reference.position.x;
-  double y       = data->reference.position.y;
-  double z       = data->reference.position.z;
-  double heading = data->reference.heading;
-
-  return std::tuple(x, y, z, heading);
+  return getHeading(*data);
 }
 
+//}
+
+//}
+
+/* mrs_msgs::ReferenceStamped //{ */
+
+/* getPosition() //{ */
+
+/**
+ * @brief get position from mrs_msgs::ReferenceStamped
+ *
+ * @param data reference stamped
+ *
+ * @return x, y, z
+ */
+std::tuple<double, double, double> getPosition(const mrs_msgs::ReferenceStamped& data) {
+
+  return getPosition(data.reference);
+}
+
+/**
+ * @brief get position from mrs_msgs::ReferenceStampedConstPtr
+ *
+ * @param data reference stamped (ContrPtr)
+ *
+ * @return x, y, z
+ */
+std::tuple<double, double, double> getPosition(const mrs_msgs::ReferenceStampedConstPtr& data) {
+
+  return getPosition(*data);
+}
+
+//}
+
+/* getHeading() //{ */
+
+/**
+ * @brief get heading from mrs_msgs::ReferenceStamped
+ *
+ * @param data referencestamped
+ *
+ * @return heading
+ */
+double getHeading(const mrs_msgs::ReferenceStamped& data) {
+
+  return getHeading(data.reference);
+}
+
+/**
+ * @brief get heading from mrs_msgs::ReferenceStampedConstPtr
+ *
+ * @param data referencestamped (ContrPtr)
+ *
+ * @return heading
+ */
+double getHeading(const mrs_msgs::ReferenceStampedConstPtr& data) {
+
+  return getHeading(*data);
+}
+
+//}
+
+//}
+
 }  // namespace mrs_lib
+
+//}
 
 #endif  // MRS_LIB_MSG_EXTRACTOR_H
