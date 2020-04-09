@@ -57,14 +57,10 @@ int main(int argc, char **argv)
 
   ROS_INFO("[%s]: Creating SubscribeHandlers using SubscribeMgr.", node_name.c_str());
 
-  mrs_lib::SubscribeHandlerOptions shopts
-  {
-    .nh = nh,
-    .node_name = node_name,
-    .topic_name = topic_name,
-    .no_message_timeout = no_message_timeout,
-    .threadsafe = threadsafe
-  };
+  mrs_lib::SubscribeHandlerOptions shopts;
+  shopts.nh = nh;
+  shopts.node_name = node_name;
+  shopts.threadsafe = threadsafe;
 
   /* /1* This is how a new SubscribeHandler object is initialized. *1/ */ 
   /* mrs_lib::SubscribeHandler<std_msgs::String> handler1( */
@@ -83,6 +79,8 @@ int main(int argc, char **argv)
   mrs_lib::construct_object(
             handler2,
             shopts,
+            topic_name,
+            no_message_timeout,
             timeout_callback,
             message_callback
             /* &SubObject::timeout_method, &sub_obj, */

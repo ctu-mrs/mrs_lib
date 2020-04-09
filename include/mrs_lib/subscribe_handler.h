@@ -26,12 +26,13 @@ namespace mrs_lib
   {
     ros::NodeHandle nh;
     std::string node_name = {};
-    std::string topic_name;
     ros::Duration no_message_timeout = mrs_lib::no_timeout;
     bool threadsafe = true;
     bool autostart = true;
     uint32_t queue_size = 10;
     ros::TransportHints transport_hints = ros::TransportHints();
+
+    std::string topic_name;
   };
 }
 
@@ -219,6 +220,52 @@ namespace mrs_lib
             options,
             timeout_callback == nullptr ? timeout_callback_t() : std::bind(timeout_callback, obj1, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
             message_callback == nullptr ? message_callback_t() : std::bind(message_callback, obj2, std::placeholders::_1)
+            )
+      {
+      };
+
+    /*!
+      * \brief Convenience constructor overload.
+      *
+      */
+      template<class ... Types>
+      SubscribeHandler(
+            const SubscribeHandlerOptions& options,
+            const ros::Duration& no_message_timeout,
+            Types ... args
+          )
+      :
+        SubscribeHandler(
+            [options, no_message_timeout]()
+            {
+              SubscribeHandlerOptions opts = options;
+              opts.no_message_timeout = no_message_timeout;
+              return opts;
+            }(),
+            args...
+            )
+      {
+      };
+
+    /*!
+      * \brief Convenience constructor overload.
+      *
+      */
+      template<class ... Types>
+      SubscribeHandler(
+            const SubscribeHandlerOptions& options,
+            const std::string& topic_name,
+            Types ... args
+          )
+      :
+        SubscribeHandler(
+            [options, topic_name]()
+            {
+              SubscribeHandlerOptions opts = options;
+              opts.topic_name = topic_name;
+              return opts;
+            }(),
+            args...
             )
       {
       };
