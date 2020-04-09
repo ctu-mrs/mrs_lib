@@ -275,8 +275,10 @@ namespace mrs_lib
           process_new_message(msg, time);
           if (m_message_callback)
           {
-            m_new_data = false;
-            m_message_callback(msg);
+            MessageWrapper<MessageType> wrp(msg);
+            m_message_callback(wrp);
+            if (wrp.used_data())
+              m_new_data = false;
           }
         }
     };

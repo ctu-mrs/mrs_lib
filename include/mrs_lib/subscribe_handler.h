@@ -34,6 +34,19 @@ namespace mrs_lib
 
     std::string topic_name;
   };
+
+  template <typename MessageType>
+  struct MessageWrapper
+  {
+    public:
+      MessageWrapper(const typename MessageType::ConstPtr msg_ptr) : m_msg_ptr(msg_ptr), m_msg_used(false) {}
+      typename MessageType::ConstPtr get_data() {m_msg_used = true; return m_msg_ptr;}
+      typename MessageType::ConstPtr peek_data() {return m_msg_ptr;}
+      bool used_data() {return m_msg_used;}
+    private:
+      const typename MessageType::ConstPtr m_msg_ptr;
+      bool m_msg_used;
+  };
 }
 
 #include <impl/subscribe_handler.hpp>
@@ -66,7 +79,7 @@ namespace mrs_lib
     /*!
       * \brief Convenience type for the message callback function.
       */
-      using message_callback_t = std::function<void(typename MessageType::ConstPtr)>;
+      using message_callback_t = std::function<void(MessageWrapper<MessageType>&)>;
 
     public:
     /*!
