@@ -26,7 +26,6 @@ namespace mrs_lib
         /* constructor //{ */
         SubscribeHandler_impl(
               const SubscribeHandlerOptions& options,
-              const timeout_callback_t& timeout_callback = timeout_callback_t(),
               const message_callback_t& message_callback = message_callback_t()
             )
           : m_nh(options.nh),
@@ -37,7 +36,7 @@ namespace mrs_lib
             m_new_data(false),
             m_used_data(false),
             m_last_msg_received(ros::Time::now()),
-            m_timeout_callback(timeout_callback),
+            m_timeout_callback(options.timeout_callback),
             m_message_callback(message_callback),
             m_queue_size(options.queue_size),
             m_transport_hints(options.transport_hints)
@@ -300,10 +299,9 @@ namespace mrs_lib
       public:
         SubscribeHandler_threadsafe(
               const SubscribeHandlerOptions& options,
-              const timeout_callback_t& timeout_callback = timeout_callback_t(),
               const message_callback_t& message_callback = message_callback_t()
             )
-          : impl_class_t::SubscribeHandler_impl(options, timeout_callback, message_callback)
+          : impl_class_t::SubscribeHandler_impl(options, message_callback)
         {
         }
 

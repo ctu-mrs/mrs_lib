@@ -32,7 +32,8 @@ namespace mrs_lib
     uint32_t queue_size = 10;
     ros::TransportHints transport_hints = ros::TransportHints();
 
-    std::string topic_name;
+    std::string topic_name = {};
+    std::function<void(const std::string&, const ros::Time&, const int)> timeout_callback = {};
   };
 
   template <typename MessageType>
@@ -149,7 +150,6 @@ namespace mrs_lib
       */
       SubscribeHandler(
             const SubscribeHandlerOptions& options,
-            const timeout_callback_t& timeout_callback = {},
             const message_callback_t& message_callback = {}
           )
       {
@@ -158,7 +158,6 @@ namespace mrs_lib
           m_pimpl = std::make_unique<impl::SubscribeHandler_threadsafe<MessageType>>
             (
               options,
-              timeout_callback,
               message_callback
             );
         }
@@ -167,7 +166,6 @@ namespace mrs_lib
           m_pimpl = std::make_unique<impl::SubscribeHandler_impl<MessageType>>
             (
               options,
-              timeout_callback,
               message_callback
             );
         }
@@ -180,18 +178,45 @@ namespace mrs_lib
       * \brief Convenience constructor overload.
       *
       */
-      template <class ObjectType1>
+      template <class ... Types>
+      SubscribeHandler(
+            const SubscribeHandlerOptions& options,
+            const timeout_callback_t& timeout_callback,
+            Types ... args
+          )
+      :
+        SubscribeHandler(
+            [options, timeout_callback]()
+            {
+              SubscribeHandlerOptions opts = options;
+              opts.timeout_callback = timeout_callback;
+              return opts;
+            }(),
+            args...
+            )
+      {
+      };
+
+    /*!
+      * \brief Convenience constructor overload.
+      *
+      */
+      template <class ObjectType1, class ... Types>
       SubscribeHandler(
             const SubscribeHandlerOptions& options,
             void (ObjectType1::*const timeout_callback) (const std::string&, const ros::Time&, const int),
             ObjectType1* const obj1,
-            const message_callback_t& message_callback = {}
+            Types ... args
           )
       :
         SubscribeHandler(
-            options,
-            timeout_callback == nullptr ? timeout_callback_t() : std::bind(timeout_callback, obj1, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
-            message_callback
+            [options, timeout_callback, obj1]()
+            {
+              SubscribeHandlerOptions opts = options;
+              opts.timeout_callback = timeout_callback == nullptr ? timeout_callback_t() : std::bind(timeout_callback, obj1, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+              return opts;
+            }(),
+            args...
             )
       {
       };
@@ -200,18 +225,18 @@ namespace mrs_lib
       * \brief Convenience constructor overload.
       *
       */
-      template <class ObjectType2>
+      template <class ObjectType2, class ... Types>
       SubscribeHandler(
             const SubscribeHandlerOptions& options,
-            const timeout_callback_t& timeout_callback,
-            void (ObjectType2::*const message_callback) (typename MessageType::ConstPtr),
-            ObjectType2* const obj2
+            void (ObjectType2::*const message_callback) (MessageWrapper<MessageType>&),
+            ObjectType2* const obj2,
+            Types ... args
           )
       :
         SubscribeHandler(
             options,
-            timeout_callback,
-            message_callback == nullptr ? message_callback_t() : std::bind(message_callback, obj2, std::placeholders::_1)
+            message_callback == nullptr ? message_callback_t() : std::bind(message_callback, obj2, std::placeholders::_1),
+            args...
             )
       {
       };
@@ -220,22 +245,28 @@ namespace mrs_lib
       * \brief Convenience constructor overload.
       *
       */
-      template <class ObjectType1, class ObjectType2>
-      SubscribeHandler(
-            const SubscribeHandlerOptions& options,
-            void (ObjectType1::* timeout_callback) (const std::string&, const ros::Time&, const int),
-            ObjectType1* obj1,
-            void (ObjectType2::* message_callback) (typename MessageType::ConstPtr),
-            ObjectType2* obj2
-          )
-      :
-        SubscribeHandler(
-            options,
-            timeout_callback == nullptr ? timeout_callback_t() : std::bind(timeout_callback, obj1, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
-            message_callback == nullptr ? message_callback_t() : std::bind(message_callback, obj2, std::placeholders::_1)
+     template <class ObjectType1, class ObjectType2, class ... Types>
+     SubscribeHandler(
+           const SubscribeHandlerOptions& options,
+           void (ObjectType2::*const message_callback) (MessageWrapper<MessageType>&),
+           ObjectType2* const obj2,
+           void (ObjectType1::*const timeout_callback) (const std::string&, const ros::Time&, const int),
+           ObjectType1* const obj1,
+           Types ... args
+         )
+     :
+       SubscribeHandler(
+            [options, timeout_callback, obj1]()
+            {
+              SubscribeHandlerOptions opts = options;
+              opts.timeout_callback = timeout_callback == nullptr ? timeout_callback_t() : std::bind(timeout_callback, obj1, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+              return opts;
+            }(),
+            message_callback == nullptr ? message_callback_t() : std::bind(message_callback, obj2, std::placeholders::_1),
+            args...
             )
-      {
-      };
+     {
+     };
 
     /*!
       * \brief Convenience constructor overload.

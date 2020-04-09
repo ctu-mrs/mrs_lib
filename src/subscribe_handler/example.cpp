@@ -30,7 +30,7 @@ void message_callback(mrs_lib::MessageWrapper<std_msgs::String>& wrp)
 class SubObject
 {
   public:
-    void callback_method(mrs_lib::MessageWrapper<std_msgs::String> wrp)
+    void callback_method(mrs_lib::MessageWrapper<std_msgs::String>& wrp)
     {
       ROS_INFO_STREAM("Object received: '" << wrp.get_data()->data << "'");
     }
@@ -62,12 +62,13 @@ int main(int argc, char **argv)
   shopts.node_name = node_name;
   shopts.threadsafe = threadsafe;
 
-  /* /1* This is how a new SubscribeHandler object is initialized. *1/ */ 
-  /* mrs_lib::SubscribeHandler<std_msgs::String> handler1( */
-  /*           shopts, */
-  /*           timeout_callback, */
-  /*           message_callback */
-  /*           ); */
+  /* This is how a new SubscribeHandler object is initialized. */ 
+  mrs_lib::SubscribeHandler<std_msgs::String> handler1(
+            shopts,
+            topic_name,
+            timeout_callback,
+            message_callback
+            );
 
   /* Type of the message may be accessed by C++11 decltype in case of need */ 
   /* using message_type = mrs_lib::message_type<decltype(handler1)>; */
@@ -81,10 +82,23 @@ int main(int argc, char **argv)
             shopts,
             topic_name,
             no_message_timeout,
-            timeout_callback,
-            message_callback
-            /* &SubObject::timeout_method, &sub_obj, */
-            /* &SubObject::callback_method, &sub_obj */
+            /* timeout_callback, */
+            /* message_callback */
+            &SubObject::timeout_method, &sub_obj,
+            &SubObject::callback_method, &sub_obj
+            );
+
+  /* A variation of the factory method for easier use with objects also exists. */ 
+  mrs_lib::SubscribeHandler<std_msgs::String> handler3;
+  mrs_lib::construct_object(
+            handler2,
+            shopts,
+            topic_name,
+            no_message_timeout,
+            /* timeout_callback, */
+            /* message_callback */
+            &SubObject::callback_method, &sub_obj,
+            &SubObject::timeout_method, &sub_obj
             );
 
   /* Now let's just spin to process calbacks until the user decides to stop the program. */ 
