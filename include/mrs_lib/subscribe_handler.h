@@ -40,12 +40,14 @@ namespace mrs_lib
   struct MessageWrapper
   {
     public:
-      MessageWrapper(const typename MessageType::ConstPtr msg_ptr) : m_msg_ptr(msg_ptr), m_msg_used(false) {}
-      typename MessageType::ConstPtr get_data() {m_msg_used = true; return m_msg_ptr;}
-      typename MessageType::ConstPtr peek_data() {return m_msg_ptr;}
-      bool used_data() {return m_msg_used;}
+      MessageWrapper(const typename MessageType::ConstPtr msg_ptr, const std::string topic_name) : m_msg_ptr(msg_ptr), m_topic_name(topic_name), m_msg_used(false) {}
+      typename MessageType::ConstPtr getMsg() {m_msg_used = true; return m_msg_ptr;}
+      typename MessageType::ConstPtr peekMsg() const {return m_msg_ptr;}
+      bool usedMsg() const {return m_msg_used;}
+      std::string topicName() const {return m_topic_name;};
     private:
       const typename MessageType::ConstPtr m_msg_ptr;
+      const std::string m_topic_name;
       bool m_msg_used;
   };
 }
@@ -88,42 +90,49 @@ namespace mrs_lib
       *
       * \return the last received message.
       */
-      typename MessageType::ConstPtr get_data() {assert(m_pimpl); return m_pimpl->get_data();};
+      typename MessageType::ConstPtr getMsg() {assert(m_pimpl); return m_pimpl->getMsg();};
 
     /*!
-      * \brief Returns the last received message on the topic without resetting the new_data() or used_data() flags.
+      * \brief Returns the last received message on the topic without resetting the newMsg() or usedMsg() flags.
       *
       * \return the last received message.
       */
-      typename MessageType::ConstPtr peek_data() {assert(m_pimpl); return m_pimpl->peek_data();};
+      typename MessageType::ConstPtr peekMsg() {assert(m_pimpl); return m_pimpl->peekMsg();};
 
     /*!
       * \brief Used to check whether at least one message has been received on the handled topic.
       *
       * \return true if at least one message was received, otherwise false.
       */
-      bool has_data() const {assert(m_pimpl); return m_pimpl->has_data();};
+      bool hasMsg() const {assert(m_pimpl); return m_pimpl->hasMsg();};
 
     /*!
-      * \brief Used to check whether at least one message has been received on the handled topic since the last call to get_data().
+      * \brief Used to check whether at least one message has been received on the handled topic since the last call to getMsg().
       *
       * \return true if at least one message was received, otherwise false.
       */
-      bool new_data() const {assert(m_pimpl); return m_pimpl->new_data();};
+      bool newMsg() const {assert(m_pimpl); return m_pimpl->newMsg();};
 
     /*!
-      * \brief Used to check whether get_data() was called at least once on this SubscribeHandler.
+      * \brief Used to check whether getMsg() was called at least once on this SubscribeHandler.
       *
-      * \return true if get_data() was called at least once, otherwise false.
+      * \return true if getMsg() was called at least once, otherwise false.
       */
-      bool used_data() const {assert(m_pimpl); return m_pimpl->used_data();};
+      bool usedMsg() const {assert(m_pimpl); return m_pimpl->usedMsg();};
 
     /*!
       * \brief Returns time of the last received message on the topic, handled by this SubscribeHandler.
       *
       * \return time when the last message was received.
       */
-      ros::Time last_message_time() const {assert(m_pimpl); return m_pimpl->last_message_time();};
+      ros::Time lastMsgTime() const {assert(m_pimpl); return m_pimpl->lastMsgTime();};
+
+    /*!
+      * \brief Returns the name of the topic, handled by this SubscribeHandler.
+      *
+      * \return name of the handled topic.
+      */
+      std::string topicName() const {assert(m_pimpl); return m_pimpl->topicName();};
 
     /*!
       * \brief Enables the callbacks for the handled topic.

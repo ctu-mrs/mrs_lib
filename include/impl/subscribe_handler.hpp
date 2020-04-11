@@ -10,7 +10,7 @@ namespace mrs_lib
   {
     
     /* SubscribeHandler_impl class //{ */
-    // implements the constructor, get_data() method and data_callback method (non-thread-safe)
+    // implements the constructor, getMsg() method and data_callback method (non-thread-safe)
     template <typename MessageType>
     class SubscribeHandler_impl
     {
@@ -56,41 +56,41 @@ namespace mrs_lib
         //}
 
       protected:
-        /* get_data() method //{ */
-        virtual typename MessageType::ConstPtr get_data()
+        /* getMsg() method //{ */
+        virtual typename MessageType::ConstPtr getMsg()
         {
           m_new_data = false;
           m_used_data = true;
-          return peek_data();
+          return peekMsg();
         }
         //}
 
-        /* peek_data() method //{ */
-        virtual typename MessageType::ConstPtr peek_data()
+        /* peekMsg() method //{ */
+        virtual typename MessageType::ConstPtr peekMsg()
         {
           assert(m_got_data);
           if (!m_got_data)
-            ROS_ERROR("[%s]: No data received yet from topic '%s' (forgot to check has_data()?)! Returning empty message.", m_node_name.c_str(), resolved_topic_name().c_str());
+            ROS_ERROR("[%s]: No data received yet from topic '%s' (forgot to check hasMsg()?)! Returning empty message.", m_node_name.c_str(), resolved_topic_name().c_str());
           return m_latest_message;
         }
         //}
 
-        /* has_data() method //{ */
-        virtual bool has_data() const
+        /* hasMsg() method //{ */
+        virtual bool hasMsg() const
         {
           return m_got_data;
         }
         //}
 
-        /* new_data() method //{ */
-        virtual bool new_data() const
+        /* newMsg() method //{ */
+        virtual bool newMsg() const
         {
           return m_new_data;
         }
         //}
 
-        /* used_data() method //{ */
-        virtual bool used_data() const
+        /* usedMsg() method //{ */
+        virtual bool usedMsg() const
         {
           return m_used_data;
         }
@@ -144,11 +144,18 @@ namespace mrs_lib
         }
         //}
 
-        /* last_message_time() method //{ */
-        virtual ros::Time last_message_time() const
+        /* lastMsgTime() method //{ */
+        virtual ros::Time lastMsgTime() const
         {
           std::lock_guard lck(m_last_msg_received_mtx);
           return m_last_msg_received;
+        };
+        //}
+
+        /* topicName() method //{ */
+        virtual std::string topicName() const
+        {
+          return m_topic_name;
         };
         //}
 
@@ -274,9 +281,9 @@ namespace mrs_lib
           process_new_message(msg, time);
           if (m_message_callback)
           {
-            MessageWrapper<MessageType> wrp(msg);
+            MessageWrapper<MessageType> wrp(msg, m_topic_name);
             m_message_callback(wrp);
-            if (wrp.used_data())
+            if (wrp.usedMsg())
               m_new_data = false;
           }
         }
@@ -311,35 +318,40 @@ namespace mrs_lib
           std::lock_guard<std::recursive_mutex> lck(m_mtx);
           impl_class_t::data_callback(msg);
         }
-        virtual bool has_data() const override
+        virtual bool hasMsg() const override
         {
           std::lock_guard<std::recursive_mutex> lck(m_mtx);
-          return impl_class_t::has_data();
+          return impl_class_t::hasMsg();
         }
-        virtual bool new_data() const override
+        virtual bool newMsg() const override
         {
           std::lock_guard<std::recursive_mutex> lck(m_mtx);
-          return impl_class_t::new_data();
+          return impl_class_t::newMsg();
         }
-        virtual bool used_data() const override
+        virtual bool usedMsg() const override
         {
           std::lock_guard<std::recursive_mutex> lck(m_mtx);
-          return impl_class_t::used_data();
+          return impl_class_t::usedMsg();
         }
-        virtual typename MessageType::ConstPtr get_data() override
+        virtual typename MessageType::ConstPtr getMsg() override
         {
           std::lock_guard<std::recursive_mutex> lck(m_mtx);
-          return impl_class_t::get_data();
+          return impl_class_t::getMsg();
         }
-        virtual typename MessageType::ConstPtr peek_data() override
+        virtual typename MessageType::ConstPtr peekMsg() override
         {
           std::lock_guard<std::recursive_mutex> lck(m_mtx);
-          return impl_class_t::peek_data();
+          return impl_class_t::peekMsg();
         }
-        virtual ros::Time last_message_time() const override
+        virtual ros::Time lastMsgTime() const override
         {
           std::lock_guard<std::recursive_mutex> lck(m_mtx);
-          return impl_class_t::last_message_time();
+          return impl_class_t::lastMsgTime();
+        };
+        virtual std::string topicName() const override
+        {
+          std::lock_guard<std::recursive_mutex> lck(m_mtx);
+          return impl_class_t::topicName();
         };
         virtual void start() override
         {

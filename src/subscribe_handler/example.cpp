@@ -24,7 +24,7 @@ void timeout_callback(const std::string& topic, const ros::Time& last_msg, const
 
 void message_callback(mrs_lib::MessageWrapper<std_msgs::String>& wrp)
 {
-  ROS_INFO_STREAM("Received: '" << wrp.get_data()->data << "'");
+  ROS_INFO_STREAM("Received: '" << wrp.getMsg()->data << "' from topic '" << wrp.topicName() << "'");
 }
 
 class SubObject
@@ -32,7 +32,7 @@ class SubObject
   public:
     void callback_method(mrs_lib::MessageWrapper<std_msgs::String>& wrp)
     {
-      ROS_INFO_STREAM("Object received: '" << wrp.get_data()->data << "'");
+      ROS_INFO_STREAM("Object received: '" << wrp.getMsg()->data << "' from topic '" << wrp.topicName() << "'");
     }
 
     void timeout_method(const std::string& topic, const ros::Time& last_msg, const int n_pubs)
@@ -62,23 +62,22 @@ int main(int argc, char **argv)
   shopts.node_name = node_name;
   shopts.threadsafe = threadsafe;
 
+  /* Type of the message may be accessed by C++11 decltype in case of need */ 
+  /* using message_type = mrs_lib::message_type<decltype(handler1)>; */
+  using message_type = std_msgs::String;
+  ros::Publisher pub = nh.advertise<message_type>(topic_name, 5);
+
   /* This is how a new SubscribeHandler object is initialized. */ 
-  mrs_lib::SubscribeHandler<std_msgs::String> handler1(
+  mrs_lib::SubscribeHandler<std_msgs::String> handler(
             shopts,
             topic_name,
             timeout_callback,
             message_callback
             );
 
-  /* Type of the message may be accessed by C++11 decltype in case of need */ 
-  /* using message_type = mrs_lib::message_type<decltype(handler1)>; */
-  using message_type = std_msgs::String;
-  ros::Publisher pub = nh.advertise<message_type>(topic_name, 5);
-
   /* A variation of the factory method for easier use with objects also exists. */ 
-  mrs_lib::SubscribeHandler<std_msgs::String> handler2;
   mrs_lib::construct_object(
-            handler2,
+            handler,
             shopts,
             topic_name,
             no_message_timeout,
@@ -89,9 +88,8 @@ int main(int argc, char **argv)
             );
 
   /* A variation of the factory method for easier use with objects also exists. */ 
-  mrs_lib::SubscribeHandler<std_msgs::String> handler3;
   mrs_lib::construct_object(
-            handler2,
+            handler,
             shopts,
             topic_name,
             no_message_timeout,
