@@ -12,7 +12,7 @@ namespace mrs_lib
     /* SubscribeHandler_impl class //{ */
     // implements the constructor, getMsg() method and data_callback method (non-thread-safe)
     template <typename MessageType>
-    class SubscribeHandler_impl
+    class SubscribeHandler_impl : SubscribeHandler<MessageType>
     {
       public:
         using timeout_callback_t = typename SubscribeHandler<MessageType>::timeout_callback_t;
@@ -55,9 +55,9 @@ namespace mrs_lib
         }
         //}
 
-      protected:
+      public:
         /* getMsg() method //{ */
-        virtual typename MessageType::ConstPtr getMsg()
+        virtual typename MessageType::ConstPtr getMsg() override
         {
           m_new_data = false;
           m_used_data = true;
@@ -66,7 +66,7 @@ namespace mrs_lib
         //}
 
         /* peekMsg() method //{ */
-        virtual typename MessageType::ConstPtr peekMsg()
+        virtual typename MessageType::ConstPtr peekMsg() override
         {
           assert(m_got_data);
           if (!m_got_data)
@@ -76,26 +76,74 @@ namespace mrs_lib
         //}
 
         /* hasMsg() method //{ */
-        virtual bool hasMsg() const
+        virtual bool hasMsg() const override
         {
           return m_got_data;
         }
         //}
 
         /* newMsg() method //{ */
-        virtual bool newMsg() const
+        virtual bool newMsg() const override
         {
           return m_new_data;
         }
         //}
 
         /* usedMsg() method //{ */
-        virtual bool usedMsg() const
+        virtual bool usedMsg() const override
         {
           return m_used_data;
         }
         //}
 
+        /* lastMsgTime() method //{ */
+        virtual ros::Time lastMsgTime() const override
+        {
+          std::lock_guard lck(m_last_msg_received_mtx);
+          return m_last_msg_received;
+        };
+        //}
+
+        /* topicName() method //{ */
+        virtual std::string topicName() const override
+        {
+          return m_topic_name;
+        };
+        //}
+
+        /* start() method //{ */
+        virtual void start() override
+        {
+          m_timeout_check_timer.start();
+          m_sub = m_nh.subscribe(m_topic_name, m_queue_size, &SubscribeHandler_impl<MessageType>::data_callback, this, m_transport_hints);
+        }
+        //}
+
+        /* stop() method //{ */
+        virtual void stop() override
+        {
+          m_timeout_check_timer.stop();
+          m_sub.shutdown();
+        }
+        //}
+
+      public:
+        /* set_owner_ptr() method //{ */
+        void set_owner_ptr(const SubscribeHandlerPtr<MessageType>& ptr)
+        {
+          m_ptr = ptr;
+        }
+        //}
+
+        /* set_data_callback() method //{ */
+        template<bool time_consistent>
+        void set_data_callback()
+        {
+          m_data_callback = std::bind(&SubscribeHandler_impl<MessageType>::template data_callback_impl<time_consistent>, this, std::placeholders::_1);
+        }
+        //}
+
+      protected:
         /* data_callback() method //{ */
         virtual void data_callback(const typename MessageType::ConstPtr& msg)
         {
@@ -141,53 +189,6 @@ namespace mrs_lib
         check_time_consistent(const typename MessageType::ConstPtr& msg)
         {
           return msg->header.stamp >= m_latest_message->header.stamp;
-        }
-        //}
-
-        /* lastMsgTime() method //{ */
-        virtual ros::Time lastMsgTime() const
-        {
-          std::lock_guard lck(m_last_msg_received_mtx);
-          return m_last_msg_received;
-        };
-        //}
-
-        /* topicName() method //{ */
-        virtual std::string topicName() const
-        {
-          return m_topic_name;
-        };
-        //}
-
-        /* start() method //{ */
-        virtual void start()
-        {
-          m_timeout_check_timer.start();
-          m_sub = m_nh.subscribe(m_topic_name, m_queue_size, &SubscribeHandler_impl<MessageType>::data_callback, this, m_transport_hints);
-        }
-        //}
-
-        /* stop() method //{ */
-        virtual void stop()
-        {
-          m_timeout_check_timer.stop();
-          m_sub.shutdown();
-        }
-        //}
-
-      public:
-        /* set_owner_ptr() method //{ */
-        void set_owner_ptr(const SubscribeHandlerPtr<MessageType>& ptr)
-        {
-          m_ptr = ptr;
-        }
-        //}
-
-        /* set_data_callback() method //{ */
-        template<bool time_consistent>
-        void set_data_callback()
-        {
-          m_data_callback = std::bind(&SubscribeHandler_impl<MessageType>::template data_callback_impl<time_consistent>, this, std::placeholders::_1);
         }
         //}
 
@@ -281,10 +282,10 @@ namespace mrs_lib
           process_new_message(msg, time);
           if (m_message_callback)
           {
-            MessageWrapper<MessageType> wrp(msg, m_topic_name);
-            m_message_callback(wrp);
-            if (wrp.usedMsg())
-              m_new_data = false;
+            /* MessageWrapper<MessageType> wrp(msg, m_topic_name); */
+            m_message_callback(*this);
+            /* if (wrp.usedMsg()) */
+            /*   m_new_data = false; */
           }
         }
     };

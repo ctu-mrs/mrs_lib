@@ -35,21 +35,6 @@ namespace mrs_lib
     std::string topic_name = {};
     std::function<void(const std::string&, const ros::Time&, const int)> timeout_callback = {};
   };
-
-  template <typename MessageType>
-  struct MessageWrapper
-  {
-    public:
-      MessageWrapper(const typename MessageType::ConstPtr msg_ptr, const std::string topic_name) : m_msg_ptr(msg_ptr), m_topic_name(topic_name), m_msg_used(false) {}
-      typename MessageType::ConstPtr getMsg() {m_msg_used = true; return m_msg_ptr;}
-      typename MessageType::ConstPtr peekMsg() const {return m_msg_ptr;}
-      bool usedMsg() const {return m_msg_used;}
-      std::string topicName() const {return m_topic_name;};
-    private:
-      const typename MessageType::ConstPtr m_msg_ptr;
-      const std::string m_topic_name;
-      bool m_msg_used;
-  };
 }
 
 #include <impl/subscribe_handler.hpp>
@@ -82,7 +67,7 @@ namespace mrs_lib
     /*!
       * \brief Convenience type for the message callback function.
       */
-      using message_callback_t = std::function<void(MessageWrapper<MessageType>&)>;
+      using message_callback_t = std::function<void(SubscribeHandler<MessageType>&)>;
 
     public:
     /*!
@@ -90,49 +75,49 @@ namespace mrs_lib
       *
       * \return the last received message.
       */
-      typename MessageType::ConstPtr getMsg() {assert(m_pimpl); return m_pimpl->getMsg();};
+      virtual typename MessageType::ConstPtr getMsg() {assert(m_pimpl); return m_pimpl->getMsg();};
 
     /*!
       * \brief Returns the last received message on the topic without resetting the newMsg() or usedMsg() flags.
       *
       * \return the last received message.
       */
-      typename MessageType::ConstPtr peekMsg() {assert(m_pimpl); return m_pimpl->peekMsg();};
+      virtual typename MessageType::ConstPtr peekMsg() {assert(m_pimpl); return m_pimpl->peekMsg();};
 
     /*!
       * \brief Used to check whether at least one message has been received on the handled topic.
       *
       * \return true if at least one message was received, otherwise false.
       */
-      bool hasMsg() const {assert(m_pimpl); return m_pimpl->hasMsg();};
+      virtual bool hasMsg() const {assert(m_pimpl); return m_pimpl->hasMsg();};
 
     /*!
       * \brief Used to check whether at least one message has been received on the handled topic since the last call to getMsg().
       *
       * \return true if at least one message was received, otherwise false.
       */
-      bool newMsg() const {assert(m_pimpl); return m_pimpl->newMsg();};
+      virtual bool newMsg() const {assert(m_pimpl); return m_pimpl->newMsg();};
 
     /*!
       * \brief Used to check whether getMsg() was called at least once on this SubscribeHandler.
       *
       * \return true if getMsg() was called at least once, otherwise false.
       */
-      bool usedMsg() const {assert(m_pimpl); return m_pimpl->usedMsg();};
+      virtual bool usedMsg() const {assert(m_pimpl); return m_pimpl->usedMsg();};
 
     /*!
       * \brief Returns time of the last received message on the topic, handled by this SubscribeHandler.
       *
       * \return time when the last message was received.
       */
-      ros::Time lastMsgTime() const {assert(m_pimpl); return m_pimpl->lastMsgTime();};
+      virtual ros::Time lastMsgTime() const {assert(m_pimpl); return m_pimpl->lastMsgTime();};
 
     /*!
       * \brief Returns the name of the topic, handled by this SubscribeHandler.
       *
       * \return name of the handled topic.
       */
-      std::string topicName() const {assert(m_pimpl); return m_pimpl->topicName();};
+      virtual std::string topicName() const {assert(m_pimpl); return m_pimpl->topicName();};
 
     /*!
       * \brief Enables the callbacks for the handled topic.
@@ -140,7 +125,7 @@ namespace mrs_lib
       * If the SubscribeHandler object is stopped using the stop() method, no callbacks will be called
       * until the start() method is called.
       */
-      void start() const {assert(m_pimpl); return m_pimpl->start();};
+      virtual void start() {assert(m_pimpl); return m_pimpl->start();};
 
     /*!
       * \brief Disables the callbacks for the handled topic.
@@ -148,7 +133,7 @@ namespace mrs_lib
       * All messages after this method is called will be ignored until start() is called again.
       * Timeout checking will also be disabled.
       */
-      void stop() const {assert(m_pimpl); return m_pimpl->stop();};
+      virtual void stop() {assert(m_pimpl); return m_pimpl->stop();};
 
     public:
       SubscribeHandler() {};
@@ -237,7 +222,7 @@ namespace mrs_lib
       template <class ObjectType2, class ... Types>
       SubscribeHandler(
             const SubscribeHandlerOptions& options,
-            void (ObjectType2::*const message_callback) (MessageWrapper<MessageType>&),
+            void (ObjectType2::*const message_callback) (SubscribeHandler<MessageType>&),
             ObjectType2* const obj2,
             Types ... args
           )
@@ -257,7 +242,7 @@ namespace mrs_lib
      template <class ObjectType1, class ObjectType2, class ... Types>
      SubscribeHandler(
            const SubscribeHandlerOptions& options,
-           void (ObjectType2::*const message_callback) (MessageWrapper<MessageType>&),
+           void (ObjectType2::*const message_callback) (SubscribeHandler<MessageType>&),
            ObjectType2* const obj2,
            void (ObjectType1::*const timeout_callback) (const std::string&, const ros::Time&, const int),
            ObjectType1* const obj1,
