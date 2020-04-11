@@ -128,13 +128,6 @@ namespace mrs_lib
         //}
 
       public:
-        /* set_owner_ptr() method //{ */
-        void set_owner_ptr(const SubscribeHandlerPtr<MessageType>& ptr)
-        {
-          m_ptr = ptr;
-        }
-        //}
-
         /* set_data_callback() method //{ */
         template<bool time_consistent>
         void set_data_callback()
@@ -202,7 +195,6 @@ namespace mrs_lib
         std::string m_node_name;
     
       protected:
-        bool m_ok;
         bool m_got_data;  // whether any data was received
         bool m_new_data;  // whether new data was received since last call to get_data
         bool m_used_data; // whether get_data was successfully called at least once
@@ -214,11 +206,8 @@ namespace mrs_lib
         timeout_callback_t m_timeout_callback;
 
       private:
-        std::weak_ptr<SubscribeHandler<MessageType>> m_ptr;
         typename MessageType::ConstPtr m_latest_message;
         message_callback_t m_message_callback;
-
-      public:
         data_callback_t m_data_callback;
 
       private:
@@ -249,7 +238,6 @@ namespace mrs_lib
           {
             std::lock_guard lck(m_last_msg_received_mtx);
             last_msg = m_last_msg_received;
-            m_ok = false;
           }
           const auto n_pubs = m_sub.getNumPublishers();
           m_timeout_check_timer.start();
@@ -267,6 +255,7 @@ namespace mrs_lib
         }
         //}
 
+        /* process_new_message() method //{ */
         void process_new_message(const typename MessageType::ConstPtr& msg, const ros::Time& time)
         {
           m_timeout_check_timer.stop();
@@ -276,18 +265,16 @@ namespace mrs_lib
           m_last_msg_received = time;
           m_timeout_check_timer.start();
         }
+        //}
 
+        /* data_callback_unchecked() method //{ */
         void data_callback_unchecked(const typename MessageType::ConstPtr& msg, const ros::Time& time)
         {
           process_new_message(msg, time);
           if (m_message_callback)
-          {
-            /* MessageWrapper<MessageType> wrp(msg, m_topic_name); */
             m_message_callback(*this);
-            /* if (wrp.usedMsg()) */
-            /*   m_new_data = false; */
-          }
         }
+        //}
     };
     //}
 
@@ -313,12 +300,7 @@ namespace mrs_lib
         {
         }
 
-      protected:
-        virtual void data_callback(const typename MessageType::ConstPtr& msg) override
-        {
-          std::lock_guard<std::recursive_mutex> lck(m_mtx);
-          impl_class_t::data_callback(msg);
-        }
+      public:
         virtual bool hasMsg() const override
         {
           std::lock_guard<std::recursive_mutex> lck(m_mtx);
@@ -365,6 +347,12 @@ namespace mrs_lib
           return impl_class_t::stop();
         }
 
+      protected:
+        virtual void data_callback(const typename MessageType::ConstPtr& msg) override
+        {
+          std::lock_guard<std::recursive_mutex> lck(m_mtx);
+          impl_class_t::data_callback(msg);
+        }
       private:
         mutable std::recursive_mutex m_mtx;
     };

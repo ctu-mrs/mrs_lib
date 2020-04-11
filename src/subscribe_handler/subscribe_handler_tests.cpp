@@ -10,17 +10,20 @@ void timeout_callback(const std::string& topic, const ros::Time& last_msg, const
   ROS_ERROR_STREAM("Have not received message from topic '" << topic << "' for " << (ros::Time::now()-last_msg).toSec() << " seconds (" << n_pubs << " publishers on topic)");
 }
 
-void message_callback(message_type::ConstPtr msg)
+bool started = true;
+void message_callback(mrs_lib::SubscribeHandler<message_type>& sh)
 {
-  ROS_INFO_STREAM("RECEIVED '" << msg << "'");
+  if (!started)
+    ROS_ERROR("NOT STARTED, SHOULDN'T HAVE RECEIVED!");
+  ROS_INFO_STREAM("RECEIVED '" << sh.getMsg() << "'");
 }
 
-mrs_lib::SubscribeHandlerPtr<message_type> sh_ptr;
+mrs_lib::SubscribeHandler<message_type> sh;
 void thread_fcn([[maybe_unused]] const ros::TimerEvent& evt)
 {
-  if (sh_ptr->has_data())
+  if (sh.hasMsg())
   {
-    ROS_INFO_STREAM_THROTTLE(1.0, "time of last message: " << sh_ptr->last_message_time());
+    ROS_INFO_STREAM_THROTTLE(1.0, "time of last message: " << sh.lastMsgTime());
   }
 }
 
@@ -31,31 +34,28 @@ int main(int argc, char **argv)
   ros::init(argc, argv, node_name);
   ros::NodeHandle nh("~");
 
-  /* name of the topic to be handled */
-  const std::string topic_name = "test_topic";
+  mrs_lib::SubscribeHandlerOptions shopts;
+  shopts.autostart = false;
   /* after this duration without receiving messages on the handled topic, the timeout_callback will be called */
-  const ros::Duration no_message_timeout = ros::Duration(2.0);
+  shopts.no_message_timeout = ros::Duration(2.0);
   /* whether mutexes should be used to prevent data races (set to true in a multithreaded scenario such as nodelets) */
-  const bool threadsafe = true;
-  const bool autostart = false;
-  const bool time_consistent = true;
-  const uint32_t queue_size = 5;
-  const ros::TransportHints& transport_hints = ros::TransportHints();
+  shopts.threadsafe = false;
+  shopts.autostart = false;
+  shopts.queue_size = 5;
+  shopts.transport_hints = ros::TransportHints();
 
-  ROS_INFO("[%s]: Creating SubscribeHandlers using SubscribeMgr.", node_name.c_str());
-  mrs_lib::SubscribeMgr smgr(nh, node_name);
+  ROS_INFO("[%s]: Creating SubscribeHandlers.", node_name.c_str());
 
+  /* name of the topic to be handled */
+  const std::string topic_name = "/test_topic/pt";
   /* This is how a new SubscribeHandler object is initialized. */ 
-  sh_ptr = smgr.create_handler<message_type, time_consistent>(
-            topic_name,
-            no_message_timeout,
-            timeout_callback,
-            message_callback,
-            threadsafe,
-            autostart,
-            queue_size,
-            transport_hints
-            );
+  mrs_lib::construct_object(
+      sh,
+      shopts,
+      topic_name,
+      timeout_callback,
+      message_callback
+      );
 
   std::vector<ros::Timer> timers;
   for (int it = 0; it < 200; it++)
@@ -76,11 +76,13 @@ int main(int argc, char **argv)
     if (n % 10 == 0)
     {
       ROS_INFO("[%s]: STARTING handler", ros::this_node::getName().c_str());
-      sh_ptr->start();
+      started = true;
+      sh.start();
     } else if (n % 5 == 0)
     {
       ROS_INFO("[%s]: STOPPING handler", ros::this_node::getName().c_str());
-      sh_ptr->stop();
+      started = false;
+      sh.stop();
     }
 
     if (n % 4 == 0)

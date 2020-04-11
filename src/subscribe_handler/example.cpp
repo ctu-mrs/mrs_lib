@@ -55,17 +55,12 @@ int main(int argc, char **argv)
   /* whether mutexes should be used to prevent data races (set to true in a multithreaded scenario such as nodelets) */
   const bool threadsafe = false;
 
-  ROS_INFO("[%s]: Creating SubscribeHandlers using SubscribeMgr.", node_name.c_str());
+  ROS_INFO("[%s]: Creating SubscribeHandlers.", node_name.c_str());
 
   mrs_lib::SubscribeHandlerOptions shopts;
   shopts.nh = nh;
   shopts.node_name = node_name;
   shopts.threadsafe = threadsafe;
-
-  /* Type of the message may be accessed by C++11 decltype in case of need */ 
-  /* using message_type = mrs_lib::message_type<decltype(handler1)>; */
-  using message_type = std_msgs::String;
-  ros::Publisher pub = nh.advertise<message_type>(topic_name, 5);
 
   /* This is how a new SubscribeHandler object is initialized. */ 
   mrs_lib::SubscribeHandler<std_msgs::String> handler(
@@ -98,6 +93,10 @@ int main(int argc, char **argv)
             &SubObject::callback_method, &sub_obj,
             &SubObject::timeout_method, &sub_obj
             );
+
+  /* Type of the message may be accessed by C++11 decltype in case of need */ 
+  using message_type = mrs_lib::message_type<decltype(handler)>;
+  ros::Publisher pub = nh.advertise<message_type>(topic_name, 5);
 
   /* Now let's just spin to process calbacks until the user decides to stop the program. */ 
   ros::Rate r(2);
