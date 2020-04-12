@@ -16,7 +16,7 @@
  */
 
 /* Include the ParamLoader header */
-#include <mrs_lib/ParamLoader.h>
+#include <mrs_lib/param_loader.h>
 
 int main(int argc, char **argv)
 {
@@ -34,22 +34,22 @@ int main(int argc, char **argv)
   
   /* Most basic way to load a parameter to a variable, which could be a class member */ 
   double test_param_double;
-  pl.load_param("test_param_double", test_param_double);
+  pl.loadParam("test_param_double", test_param_double);
 
   /* Load a parameter and return it */ 
-  const std::vector<int> test_param_vector = pl.load_param2<std::vector<int>>("test_param_vector");
+  const std::vector<int> test_param_vector = pl.loadParam2<std::vector<int>>("test_param_vector");
 
   /* Load a parameter with a default value, which will be used in this case
    * unless you manually push the parameter 'test_param_int' to the rosparam server
    * (e.g. using 'rosparam set test_param_int 15'). */ 
-  [[maybe_unused]] const int test_param_int = pl.load_param2<int>("test_param_int", 4);
+  [[maybe_unused]] const int test_param_int = pl.loadParam2<int>("test_param_int", 4);
 
   /* Load a compulsory parameter - without a default value. This will fail in this
    * case, unless you manually push the parameter to the server. */ 
-  [[maybe_unused]] const bool test_param_bool = pl.load_param2<bool>("test_param_bool");
+  [[maybe_unused]] const bool test_param_bool = pl.loadParam2<bool>("test_param_bool");
 
   /* Check if all parameters were loaded successfully */ 
-  if (!pl.loaded_successfully())
+  if (!pl.loadedSuccessfully())
   {
     /* If not, alert the user and shut the node down */ 
     ROS_ERROR("[%s]: parameter loading failure", node_name.c_str());

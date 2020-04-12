@@ -60,8 +60,8 @@ private:
   std::unordered_set<std::string> loaded_params;
 
   /* printing helper functions //{ */
-  /* print_error and print_warning functions //{*/
-  void print_error(const std::string str)
+  /* printError and print_warning functions //{*/
+  void printError(const std::string str)
   {
     if (m_node_name.empty())
       ROS_ERROR("%s", str.c_str());
@@ -77,10 +77,10 @@ private:
   }
   //}
 
-  /* print_value function and overloads //{ */
+  /* printValue function and overloads //{ */
 
   template <typename T>
-  void print_value(const std::string& name, const T& value)
+  void printValue(const std::string& name, const T& value)
   {
     if (m_node_name.empty())
       std::cout << "\t" << name << ":\t" << value << std::endl;
@@ -89,7 +89,7 @@ private:
   };
 
   template <typename T>
-  void print_value(const std::string& name, const std::vector<T>& value)
+  void printValue(const std::string& name, const std::vector<T>& value)
   {
     std::stringstream strstr;
     if (m_node_name.empty())
@@ -110,7 +110,7 @@ private:
   };
 
   template <typename T1, typename T2>
-  void print_value(const std::string& name, const std::map<T1, T2>& value)
+  void printValue(const std::string& name, const std::map<T1, T2>& value)
   {
     std::stringstream strstr;
     if (m_node_name.empty())
@@ -130,7 +130,7 @@ private:
       ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << strstr.str());
   };
 
-  void print_value(const std::string& name, const Eigen::MatrixXd& value)
+  void printValue(const std::string& name, const Eigen::MatrixXd& value)
   {
     std::stringstream strstr;
     /* const Eigen::IOFormat fmt(4, 0, ", ", "\n", "\t\t[", "]"); */
@@ -143,7 +143,7 @@ private:
       ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << name << "':" << std::endl << strstr.str());
   };
 
-  std::string print_value_recursive(const std::string& name, XmlRpc::XmlRpcValue& value, unsigned depth = 0)
+  std::string printValue_recursive(const std::string& name, XmlRpc::XmlRpcValue& value, unsigned depth = 0)
   {
     std::stringstream strstr;
     for (unsigned it = 0; it < depth; it++)
@@ -157,7 +157,7 @@ private:
           {
             strstr << std::endl;
             const std::string name = "[" + std::to_string(it) + "]";
-            strstr << print_value_recursive(name, value[it], depth+1);
+            strstr << printValue_recursive(name, value[it], depth+1);
           }
           break;
         }
@@ -167,7 +167,7 @@ private:
           for (auto& pair : value)
           {
             strstr << std::endl;
-            strstr << print_value_recursive(pair.first, pair.second, depth+1);
+            strstr << printValue_recursive(pair.first, pair.second, depth+1);
             it++;
           }
           break;
@@ -181,9 +181,9 @@ private:
     return strstr.str();
   };
 
-  void print_value(const std::string& name, XmlRpc::XmlRpcValue& value)
+  void printValue(const std::string& name, XmlRpc::XmlRpcValue& value)
   {
-    const std::string txt = print_value_recursive(name, value);
+    const std::string txt = printValue_recursive(name, value);
     if (m_node_name.empty())
       std::cout << txt << std::endl;
     else
@@ -203,7 +203,7 @@ private:
   {
     if (loaded_params.count(name))
     {
-      print_error(std::string("Tried to load parameter ") + name + std::string(" twice"));
+      printError(std::string("Tried to load parameter ") + name + std::string(" twice"));
       m_load_successful = false;
       return true;
     } else
@@ -213,11 +213,11 @@ private:
   }
   //}
 
-  /* load_matrix_static_internal helper function for loading static Eigen matrices //{ */
+  /* loadMatrixStatic_internal helper function for loading static Eigen matrices //{ */
   template <int rows, int cols>
-  Eigen::Matrix<double, rows, cols> load_matrix_static_internal(const std::string& name, const Eigen::Matrix<double, rows, cols>& default_value, optional_t optional, unique_t unique)
+  Eigen::Matrix<double, rows, cols> loadMatrixStatic_internal(const std::string& name, const Eigen::Matrix<double, rows, cols>& default_value, optional_t optional, unique_t unique)
   {
-    Eigen::MatrixXd dynamic = load_MatrixXd(name, default_value, rows, cols, optional, unique, NO_SWAP);
+    Eigen::MatrixXd dynamic = loadMatrixXd(name, default_value, rows, cols, optional, unique, NO_SWAP);
     if (dynamic.rows() == rows || dynamic.cols() == cols)
       return dynamic;
     else
@@ -226,8 +226,8 @@ private:
   //}
 
   /* helper functions for loading Eigen::MatrixXd matrices //{ */
-  // load_MatrixXd helper function for loading Eigen::MatrixXd matrices //{
-  Eigen::MatrixXd load_MatrixXd(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols = -1, optional_t optional = OPTIONAL, unique_t unique = UNIQUE, swap_t swap = NO_SWAP, bool print_values = true)
+  // loadMatrixXd helper function for loading Eigen::MatrixXd matrices //{
+  Eigen::MatrixXd loadMatrixXd(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols = -1, optional_t optional = OPTIONAL, unique_t unique = UNIQUE, swap_t swap = NO_SWAP, bool printValues = true)
   {
     Eigen::MatrixXd loaded = default_value;
     // first, check if the user already tried to load this parameter
@@ -238,7 +238,7 @@ private:
     if (rows < 0)
     {
       // if the parameter was compulsory, alert the user and set the flag
-      print_error(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name));
+      printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name));
       m_load_successful = false;
       return loaded;
     }
@@ -247,7 +247,7 @@ private:
     {
       if (cols > 0)
       {
-        print_error(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name) + ". One dimension indicates zero matrix, but other expects non-zero.");
+        printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name) + ". One dimension indicates zero matrix, but other expects non-zero.");
         m_load_successful = false;
         return loaded;
       }
@@ -300,7 +300,7 @@ private:
       if (!optional)
       {
         // if the parameter was compulsory, alert the user and set the flag
-        print_error(std::string("Could not load non-optional parameter ") + resolved(name));
+        printError(std::string("Could not load non-optional parameter ") + resolved(name));
         cur_load_successful = false;
       }
     }
@@ -308,8 +308,8 @@ private:
     // check if load was a success
     if (cur_load_successful)
     {
-      if (m_print_values && print_values)
-        print_value(name, loaded);
+      if (m_print_values && printValues)
+        printValue(name, loaded);
       loaded_params.insert(name);
     } else
     {
@@ -320,8 +320,8 @@ private:
   };
   //}
 
-  /* load_matrix_array_internal helper function for loading an array of EigenXd matrices with known dimensions //{ */
-  std::vector<Eigen::MatrixXd> load_matrix_array_internal(const std::string& name, const std::vector<Eigen::MatrixXd>& default_value, optional_t optional, unique_t unique)
+  /* loadMatrixArray_internal helper function for loading an array of EigenXd matrices with known dimensions //{ */
+  std::vector<Eigen::MatrixXd> loadMatrixArray_internal(const std::string& name, const std::vector<Eigen::MatrixXd>& default_value, optional_t optional, unique_t unique)
   {
     int rows;
     std::vector<int> cols;
@@ -337,13 +337,13 @@ private:
 
     if (!success)
     {
-      print_error(std::string("Failed to load ") + resolved(name) + std::string("/rows or ") + resolved(name) + std::string("/cols"));
+      printError(std::string("Failed to load ") + resolved(name) + std::string("/rows or ") + resolved(name) + std::string("/cols"));
       m_load_successful = false;
       return default_value;
     }
     if (rows < 0)
     {
-      print_error(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name) + std::string(" (rows and cols must be >= 0)"));
+      printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name) + std::string(" (rows and cols must be >= 0)"));
       m_load_successful = false;
       return default_value;
     }
@@ -351,7 +351,7 @@ private:
     {
       if (col < 0)
       {
-        print_error(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name) + std::string(" (rows and cols must be >= 0)"));
+        printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name) + std::string(" (rows and cols must be >= 0)"));
         m_load_successful = false;
         return default_value;
       }
@@ -360,7 +360,7 @@ private:
     
     //}
 
-    const Eigen::MatrixXd loaded_matrix = load_MatrixXd(name + "/data", Eigen::MatrixXd(), rows, total_cols, optional, unique, NO_SWAP, false);
+    const Eigen::MatrixXd loaded_matrix = loadMatrixXd(name + "/data", Eigen::MatrixXd(), rows, total_cols, optional, unique, NO_SWAP, false);
     /* std::cout << "loaded_matrix: " << loaded_matrix << std::endl; */
     /* std::cout << "loaded_matrix: " << loaded_matrix.rows() << "x" << loaded_matrix.cols() << std::endl; */
     /* std::cout << "expected dims: " << rows << "x" << total_cols << std::endl; */
@@ -378,37 +378,37 @@ private:
       /* std::cout << "cur_mat: " << cur_mat << std::endl; */
       loaded.push_back(cur_mat);
       cols_loaded += cur_cols;
-      print_value(name + "/matrix#" + std::to_string(it), cur_mat);
+      printValue(name + "/matrix#" + std::to_string(it), cur_mat);
     }
     return loaded;
   }
   //}
 
-  /* load_matrix_static_internal helper function for loading EigenXd matrices with known dimensions //{ */
-  Eigen::MatrixXd load_matrix_static_internal(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols, optional_t optional, unique_t unique)
+  /* loadMatrixStatic_internal helper function for loading EigenXd matrices with known dimensions //{ */
+  Eigen::MatrixXd loadMatrixStatic_internal(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols, optional_t optional, unique_t unique)
   {
     Eigen::MatrixXd loaded = default_value;
     // first, check that at least one dimension is set
     if (rows <= 0 || cols <= 0)
     {
-      print_error(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name) + std::string(" (use load_matrix_dynamic?)"));
+      printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name) + std::string(" (use loadMatrixDynamic?)"));
       m_load_successful = false;
       return loaded;
     }
 
-    return load_MatrixXd(name, default_value, rows, cols, optional, unique, NO_SWAP);
+    return loadMatrixXd(name, default_value, rows, cols, optional, unique, NO_SWAP);
   }
   //}
 
-  /* load_matrix_dynamic_internal helper function for loading Eigen matrices with one dynamic (unspecified) dimension //{ */
-  Eigen::MatrixXd load_matrix_dynamic_internal(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols, optional_t optional, unique_t unique)
+  /* loadMatrixDynamic_internal helper function for loading Eigen matrices with one dynamic (unspecified) dimension //{ */
+  Eigen::MatrixXd loadMatrixDynamic_internal(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols, optional_t optional, unique_t unique)
   {
     Eigen::MatrixXd loaded = default_value;
 
     // next, check that at least one dimension is set
     if (rows <= 0 && cols <= 0)
     {
-      print_error(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name) + std::string(" (at least one dimension must be specified)"));
+      printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name) + std::string(" (at least one dimension must be specified)"));
       m_load_successful = false;
       return loaded;
     }
@@ -421,7 +421,7 @@ private:
       cols = tmp;
       swap = SWAP;
     }
-    return load_MatrixXd(name, default_value, rows, cols, optional, unique, swap);
+    return loadMatrixXd(name, default_value, rows, cols, optional, unique, swap);
   }
   //}
   //}
@@ -429,7 +429,7 @@ private:
   /* load helper function for generic types //{ */
   // This function tries to load a parameter with name 'name' and a default value.
   // You can use the flag 'optional' to not throw a ROS_ERROR when the parameter
-  // cannot be loaded and the flag 'print_values' to set whether the loaded
+  // cannot be loaded and the flag 'printValues' to set whether the loaded
   // value and name of the parameter should be printed to cout.
   // If 'optional' is set to false and the parameter could not be loaded,
   // the flag 'load_successful' is set to false and a ROS_ERROR message
@@ -455,7 +455,7 @@ private:
       if (!optional)
       {
         // if the parameter was compulsory, alert the user and set the flag
-        print_error(std::string("Could not load non-optional parameter ") + resolved(name));
+        printError(std::string("Could not load non-optional parameter ") + resolved(name));
         cur_load_successful = false;
       }
     }
@@ -464,7 +464,7 @@ private:
     {
       // everything is fine and just print the name and value if required
       if (m_print_values)
-        print_value(name, loaded);
+        printValue(name, loaded);
       // mark the param name as successfully loaded
       loaded_params.insert(name);
     } else
@@ -481,12 +481,12 @@ public:
     * \brief Main constructor.
     *
     * \param nh            The parameters will be loaded from rosparam using this node handle.
-    * \param print_values  If true, the loaded values will be printed to stdout using std::cout or ROS_INFO if node_name is not empty.
+    * \param printValues  If true, the loaded values will be printed to stdout using std::cout or ROS_INFO if node_name is not empty.
     * \param node_name     Optional node name used when printing the loaded values or loading errors.
     */
-  ParamLoader(const ros::NodeHandle& nh, bool print_values = true, std::string node_name = std::string())
+  ParamLoader(const ros::NodeHandle& nh, bool printValues = true, std::string node_name = std::string())
       : m_load_successful(true),
-        m_print_values(print_values),
+        m_print_values(printValues),
         m_node_name(node_name),
         m_nh(nh){
             /* std::cout << "Initialized1 ParamLoader for node " << node_name << std::endl; */
@@ -520,12 +520,12 @@ public:
     *
     * \return false if any compulsory parameter was not loaded (is not present at rosparam server). Otherwise returns true.
     */
-  bool loaded_successfully()
+  bool loadedSuccessfully()
   {
     return m_load_successful;
   };
 
-  /* load_param function for optional parameters //{ */
+  /* loadParam function for optional parameters //{ */
   /*!
     * \brief Loads a parameter from the rosparam server with a default value.
     *
@@ -539,7 +539,7 @@ public:
     * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
     */
   template <typename T>
-  bool load_param(const std::string& name, T& out_value, const T& default_value)
+  bool loadParam(const std::string& name, T& out_value, const T& default_value)
   {
     const auto [ret, success] = load<T>(name, default_value, OPTIONAL, UNIQUE);
     out_value = ret;
@@ -557,7 +557,7 @@ public:
     * \return              The loaded parameter value.
     */
   template <typename T>
-  T load_param2(const std::string& name, const T& default_value)
+  T loadParam2(const std::string& name, const T& default_value)
   {
     const auto loaded = load<T>(name, default_value, OPTIONAL, UNIQUE);
     return loaded.first;
@@ -574,14 +574,14 @@ public:
     * \return              The loaded parameter value.
     */
   template <typename T>
-  T load_param_reusable(const std::string& name, const T& default_value)
+  T loadParamReusable(const std::string& name, const T& default_value)
   {
     const auto loaded = load<T>(name, default_value, OPTIONAL, REUSABLE);
     return loaded.first;
   };
   //}
 
-  /* load_param function for compulsory parameters //{ */
+  /* loadParam function for compulsory parameters //{ */
   /*!
     * \brief Loads a compulsory parameter from the rosparam server.
     *
@@ -594,7 +594,7 @@ public:
     * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
     */
   template <typename T>
-  bool load_param(const std::string& name, T& out_value)
+  bool loadParam(const std::string& name, T& out_value)
   {
     const auto [ret, success] = load<T>(name, T(), COMPULSORY, UNIQUE);
     out_value = ret;
@@ -611,7 +611,7 @@ public:
     * \return              The loaded parameter value.
     */
   template <typename T>
-  T load_param2(const std::string& name)
+  T loadParam2(const std::string& name)
   {
     const auto loaded = load<T>(name, T(), COMPULSORY, UNIQUE);
     return loaded.first;
@@ -627,14 +627,14 @@ public:
     * \return              The loaded parameter value.
     */
   template <typename T>
-  T load_param_reusable(const std::string& name)
+  T loadParamReusable(const std::string& name)
   {
     const auto loaded = load<T>(name, T(), COMPULSORY, REUSABLE);
     return loaded.first;
   };
   //}
 
-  /* load_param specializations for ros::Duration type //{ */
+  /* loadParam specializations for ros::Duration type //{ */
 
   /*!
     * \brief An overload for loading ros::Duration.
@@ -646,10 +646,10 @@ public:
     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
     * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
     */
-  bool load_param(const std::string& name, ros::Duration& out, const ros::Duration& default_value)
+  bool loadParam(const std::string& name, ros::Duration& out, const ros::Duration& default_value)
   {
     double secs;
-    const bool ret = load_param<double>(name, secs, default_value.toSec());
+    const bool ret = loadParam<double>(name, secs, default_value.toSec());
     out = ros::Duration(secs);
     return ret;
   }
@@ -663,9 +663,9 @@ public:
     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
     * \return              The loaded parameter value.
     */
-  ros::Duration load_param2(const std::string& name, const ros::Duration& default_value)
+  ros::Duration loadParam2(const std::string& name, const ros::Duration& default_value)
   {
-    const double secs = load_param2<double>(name, default_value.toSec());
+    const double secs = loadParam2<double>(name, default_value.toSec());
     const ros::Duration ret(secs);
     return ret;
   }
@@ -679,10 +679,10 @@ public:
     * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
     * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
     */
-  bool load_param(const std::string& name, ros::Duration& out)
+  bool loadParam(const std::string& name, ros::Duration& out)
   {
     double secs;
-    const bool ret = load_param<double>(name, secs);
+    const bool ret = loadParam<double>(name, secs);
     out = ros::Duration(secs);
     return ret;
   }
@@ -695,21 +695,21 @@ public:
     * \param name          Name of the parameter in the rosparam server.
     * \return              The loaded parameter value.
     */
-  ros::Duration load_param2(const std::string& name)
+  ros::Duration loadParam2(const std::string& name)
   {
-    const double secs = load_param2<double>(name);
+    const double secs = loadParam2<double>(name);
     const ros::Duration ret(secs);
     return ret;
   }
   
   //}
 
-  /* load_param specializations and convenience functions for Eigen::MatrixXd type //{ */
+  /* loadParam specializations and convenience functions for Eigen::MatrixXd type //{ */
 
   /*!
     * \brief An overload for loading Eigen matrices.
     *
-    * For compulsory Eigen matrices, use load_matrix_static() or load_matrix_dynamic().
+    * For compulsory Eigen matrices, use loadMatrixStatic() or loadMatrixDynamic().
     * Matrix dimensions are deduced from the provided default value.
     * If the parameter with the specified name is not found on the rosparam server (e.g. because it is not specified in the launchfile or yaml config file),
     * the default value is used.
@@ -719,15 +719,15 @@ public:
     * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
     */
-  void load_param(const std::string& name, Eigen::MatrixXd& mat, const Eigen::MatrixXd& default_value)
+  void loadParam(const std::string& name, Eigen::MatrixXd& mat, const Eigen::MatrixXd& default_value)
   {
-    mat = load_param2(name, default_value);
+    mat = loadParam2(name, default_value);
   }
 
   /*!
     * \brief An overload for loading Eigen matrices.
     *
-    * For compulsory Eigen matrices, use load_matrix_static() or load_matrix_dynamic().
+    * For compulsory Eigen matrices, use loadMatrixStatic() or loadMatrixDynamic().
     * Matrix dimensions are deduced from the provided default value.
     * If the parameter with the specified name is not found on the rosparam server (e.g. because it is not specified in the launchfile or yaml config file),
     * the default value is used.
@@ -737,18 +737,18 @@ public:
     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
     * \return              The loaded parameter value.
     */
-  Eigen::MatrixXd load_param2(const std::string& name, const Eigen::MatrixXd& default_value)
+  Eigen::MatrixXd loadParam2(const std::string& name, const Eigen::MatrixXd& default_value)
   {
     int rows = default_value.rows();
     int cols = default_value.cols();
     Eigen::MatrixXd loaded;
-    load_matrix_dynamic(name, loaded, default_value, rows, cols);
+    loadMatrixDynamic(name, loaded, default_value, rows, cols);
     return loaded;
   }
   
   //}
 
-  // load_matrix_static function for loading of static Eigen::Matrices //{
+  // loadMatrixStatic function for loading of static Eigen::Matrices //{
 
   /*!
     * \brief Specialized method for loading compulsory Eigen matrix parameters.
@@ -766,9 +766,9 @@ public:
     *
     */
   template <int rows, int cols>
-  void load_matrix_static(const std::string& name, Eigen::Matrix<double, rows, cols>& mat)
+  void loadMatrixStatic(const std::string& name, Eigen::Matrix<double, rows, cols>& mat)
   {
-    mat = load_matrix_static2<rows, cols>(name);
+    mat = loadMatrixStatic2<rows, cols>(name);
   }
 
   /*!
@@ -788,9 +788,9 @@ public:
     *
     */
   template <int rows, int cols>
-  void load_matrix_static(const std::string& name, Eigen::Matrix<double, rows, cols> mat, const Eigen::Matrix<double, rows, cols>& default_value)
+  void loadMatrixStatic(const std::string& name, Eigen::Matrix<double, rows, cols> mat, const Eigen::Matrix<double, rows, cols>& default_value)
   {
-    mat = load_matrix_static2(name, default_value);
+    mat = loadMatrixStatic2(name, default_value);
   }
 
   /*!
@@ -809,9 +809,9 @@ public:
     *
     */
   template <int rows, int cols>
-  Eigen::Matrix<double, rows, cols> load_matrix_static2(const std::string& name)
+  Eigen::Matrix<double, rows, cols> loadMatrixStatic2(const std::string& name)
   {
-    return load_matrix_static_internal(name, Eigen::Matrix<double, rows, cols>(), COMPULSORY, UNIQUE);
+    return loadMatrixStatic_internal(name, Eigen::Matrix<double, rows, cols>(), COMPULSORY, UNIQUE);
   }
 
   /*!
@@ -831,13 +831,13 @@ public:
     *
     */
   template <int rows, int cols>
-  Eigen::MatrixXd load_matrix_static2(const std::string& name, const Eigen::Matrix<double, rows, cols>& default_value)
+  Eigen::MatrixXd loadMatrixStatic2(const std::string& name, const Eigen::Matrix<double, rows, cols>& default_value)
   {
-    return load_matrix_static_internal(name, default_value, OPTIONAL, UNIQUE);
+    return loadMatrixStatic_internal(name, default_value, OPTIONAL, UNIQUE);
   }
   //}
 
-  // load_matrix_static function for loading of Eigen::MatrixXd with known dimensions //{
+  // loadMatrixStatic function for loading of Eigen::MatrixXd with known dimensions //{
 
   /*!
     * \brief Specialized method for loading compulsory Eigen matrix parameters.
@@ -852,9 +852,9 @@ public:
     * \param rows  Expected number of rows of the matrix.
     * \param cols  Expected number of columns of the matrix.
     */
-  void load_matrix_static(const std::string& name, Eigen::MatrixXd& mat, int rows, int cols)
+  void loadMatrixStatic(const std::string& name, Eigen::MatrixXd& mat, int rows, int cols)
   {
-    mat = load_matrix_static2(name, rows, cols);
+    mat = loadMatrixStatic2(name, rows, cols);
   }
 
   /*!
@@ -871,9 +871,9 @@ public:
     * \param rows          Expected number of rows of the matrix.
     * \param cols          Expected number of columns of the matrix.
     */
-  void load_matrix_static(const std::string& name, Eigen::MatrixXd& mat, const Eigen::MatrixXd& default_value, int rows, int cols)
+  void loadMatrixStatic(const std::string& name, Eigen::MatrixXd& mat, const Eigen::MatrixXd& default_value, int rows, int cols)
   {
-    mat = load_matrix_static2(name, default_value, rows, cols);
+    mat = loadMatrixStatic2(name, default_value, rows, cols);
   }
 
   /*!
@@ -889,9 +889,9 @@ public:
     * \param cols  Expected number of columns of the matrix.
     * \return      The loaded parameter value.
     */
-  Eigen::MatrixXd load_matrix_static2(const std::string& name, int rows, int cols)
+  Eigen::MatrixXd loadMatrixStatic2(const std::string& name, int rows, int cols)
   {
-    return load_matrix_static_internal(name, Eigen::MatrixXd(), rows, cols, COMPULSORY, UNIQUE);
+    return loadMatrixStatic_internal(name, Eigen::MatrixXd(), rows, cols, COMPULSORY, UNIQUE);
   }
 
   /*!
@@ -908,13 +908,13 @@ public:
     * \param cols          Expected number of columns of the matrix.
     * \return              The loaded parameter value.
     */
-  Eigen::MatrixXd load_matrix_static2(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols)
+  Eigen::MatrixXd loadMatrixStatic2(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols)
   {
-    return load_matrix_static_internal(name, default_value, rows, cols, OPTIONAL, UNIQUE);
+    return loadMatrixStatic_internal(name, default_value, rows, cols, OPTIONAL, UNIQUE);
   }
   //}
 
-  // load_matrix_dynamic function for half-dynamic loading of Eigen::MatrixXd //{
+  // loadMatrixDynamic function for half-dynamic loading of Eigen::MatrixXd //{
 
   /*!
     * \brief Specialized method for loading compulsory dynamic Eigen matrix parameters.
@@ -929,9 +929,9 @@ public:
     * \param rows  Expected number of rows of the matrix (negative value indicates that the number of rows is to be deduced from the specified number of columns and the size of the loaded array).
     * \param cols  Expected number of columns of the matrix (negative value indicates that the number of columns is to be deduced from the specified number of rows and the size of the loaded array).
     */
-  void load_matrix_dynamic(const std::string& name, Eigen::MatrixXd& mat, int rows, int cols)
+  void loadMatrixDynamic(const std::string& name, Eigen::MatrixXd& mat, int rows, int cols)
   {
-    mat = load_matrix_dynamic2(name, rows, cols);
+    mat = loadMatrixDynamic2(name, rows, cols);
   }
 
   /*!
@@ -948,9 +948,9 @@ public:
     * \param rows          Expected number of rows of the matrix (negative value indicates that the number of rows is to be deduced from the specified number of columns and the size of the loaded array).
     * \param cols          Expected number of columns of the matrix (negative value indicates that the number of columns is to be deduced from the specified number of rows and the size of the loaded array).
     */
-  void load_matrix_dynamic(const std::string& name, Eigen::MatrixXd& mat, const Eigen::MatrixXd& default_value, int rows, int cols)
+  void loadMatrixDynamic(const std::string& name, Eigen::MatrixXd& mat, const Eigen::MatrixXd& default_value, int rows, int cols)
   {
-    mat = load_matrix_dynamic2(name, default_value, rows, cols);
+    mat = loadMatrixDynamic2(name, default_value, rows, cols);
   }
 
   /*!
@@ -966,9 +966,9 @@ public:
     * \param cols  Expected number of columns of the matrix (negative value indicates that the number of columns is to be deduced from the specified number of rows and the size of the loaded array).
     * \return      The loaded parameter value.
     */
-  Eigen::MatrixXd load_matrix_dynamic2(const std::string& name, int rows, int cols)
+  Eigen::MatrixXd loadMatrixDynamic2(const std::string& name, int rows, int cols)
   {
-    return load_matrix_dynamic_internal(name, Eigen::MatrixXd(), rows, cols, COMPULSORY, UNIQUE);
+    return loadMatrixDynamic_internal(name, Eigen::MatrixXd(), rows, cols, COMPULSORY, UNIQUE);
   }
 
   /*!
@@ -985,14 +985,14 @@ public:
     * \param cols          Expected number of columns of the matrix (negative value indicates that the number of columns is to be deduced from the specified number of rows and the size of the loaded array).
     * \return              The loaded parameter value.
     */
-  Eigen::MatrixXd load_matrix_dynamic2(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols)
+  Eigen::MatrixXd loadMatrixDynamic2(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols)
   {
-    return load_matrix_dynamic_internal(name, default_value, rows, cols, OPTIONAL, UNIQUE);
+    return loadMatrixDynamic_internal(name, default_value, rows, cols, OPTIONAL, UNIQUE);
   }
 
   //}
 
-  // load_matrix_array function for loading of an array of Eigen::MatrixXd with known dimensions //{
+  // loadMatrixArray function for loading of an array of Eigen::MatrixXd with known dimensions //{
   /*!
     * \brief Specialized method for loading compulsory parameters, interpreted as an array of dynamic Eigen matrices.
     *
@@ -1025,15 +1025,15 @@ public:
     * \param mat   Reference to the variable to which the parameter value will be stored (such as a class member variable).
     *
     */
-  void load_matrix_array(const std::string& name, std::vector<Eigen::MatrixXd>& mat)
+  void loadMatrixArray(const std::string& name, std::vector<Eigen::MatrixXd>& mat)
   {
-    mat = load_matrix_array2(name);
+    mat = loadMatrixArray2(name);
   }
 
   /*!
     * \brief Specialized method for loading compulsory parameters, interpreted as an array of dynamic Eigen matrices.
     *
-    * This overload of the load_matrix_array() method takes a default value for the parameter, which is used in case a \c rosparam with the specified name is not
+    * This overload of the loadMatrixArray() method takes a default value for the parameter, which is used in case a \c rosparam with the specified name is not
     * found in the \c rosparam server, instead of causing an unsuccessful load. This makes specifying the parameter value in the \c rosparam server optional.
     *
     * \param name           Name of the parameter in the rosparam server.
@@ -1041,15 +1041,15 @@ public:
     * \param default_value  The default value to be used in case the parameter is not found on the \c rosparam server.
     *
     */
-  void load_matrix_array(const std::string& name, std::vector<Eigen::MatrixXd>& mat, const std::vector<Eigen::MatrixXd>& default_value)
+  void loadMatrixArray(const std::string& name, std::vector<Eigen::MatrixXd>& mat, const std::vector<Eigen::MatrixXd>& default_value)
   {
-    mat = load_matrix_array2(name, default_value);
+    mat = loadMatrixArray2(name, default_value);
   }
 
   /*!
     * \brief Specialized method for loading compulsory parameters, interpreted as an array of dynamic Eigen matrices.
     *
-    * This method works in the same way as the load_matrix_array() method for optional parameters, except that the loaded
+    * This method works in the same way as the loadMatrixArray() method for optional parameters, except that the loaded
     * parameter is returned and not stored in the reference parameter.
     *
     * \param name           Name of the parameter in the rosparam server.
@@ -1057,24 +1057,24 @@ public:
     * \returns              The loaded parameter or the default value.
     *
     */
-  std::vector<Eigen::MatrixXd> load_matrix_array2(const std::string& name, const std::vector<Eigen::MatrixXd>& default_value)
+  std::vector<Eigen::MatrixXd> loadMatrixArray2(const std::string& name, const std::vector<Eigen::MatrixXd>& default_value)
   {
-    return load_matrix_array_internal(name, default_value, OPTIONAL, UNIQUE);
+    return loadMatrixArray_internal(name, default_value, OPTIONAL, UNIQUE);
   }
 
   /*!
     * \brief Specialized method for loading compulsory parameters, interpreted as an array of dynamic Eigen matrices.
     *
-    * This method works in the same way as the load_matrix_array() method for compulsory parameters, except that the loaded
+    * This method works in the same way as the loadMatrixArray() method for compulsory parameters, except that the loaded
     * parameter is returned and not stored in the reference parameter.
     *
     * \param name           Name of the parameter in the rosparam server.
     * \returns              The loaded parameter or a default constructed object of the respective type.
     *
     */
-  std::vector<Eigen::MatrixXd> load_matrix_array2(const std::string& name)
+  std::vector<Eigen::MatrixXd> loadMatrixArray2(const std::string& name)
   {
-    return load_matrix_array_internal(name, std::vector<Eigen::MatrixXd>(), COMPULSORY, UNIQUE);
+    return loadMatrixArray_internal(name, std::vector<Eigen::MatrixXd>(), COMPULSORY, UNIQUE);
   }
   //}
 

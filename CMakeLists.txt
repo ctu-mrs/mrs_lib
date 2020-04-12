@@ -169,7 +169,7 @@ target_link_libraries(utils_tests
   ${Eigen_LIBRARIES}
   )
 
-add_library(ParamLoader src/param_loader/ParamLoader.cpp)
+add_library(ParamLoader src/param_loader/param_loader.cpp)
 target_link_libraries(ParamLoader
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}

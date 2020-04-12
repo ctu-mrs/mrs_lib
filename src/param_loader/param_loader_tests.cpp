@@ -1,4 +1,4 @@
-#include <mrs_lib/ParamLoader.h>
+#include <mrs_lib/param_loader.h>
 
 std::vector<double> gemerate_nd_matrix(int rows, const std::vector<int>& cols)
 {
@@ -33,11 +33,11 @@ int main(int argc, char **argv)
   mrs_lib::ParamLoader pl(nh);
 
   XmlRpc::XmlRpcValue list;
-  pl.load_param("services", list, XmlRpc::XmlRpcValue());
+  pl.loadParam("services", list, XmlRpc::XmlRpcValue());
 
   ROS_INFO("[%s]: testing ParamLoader", ros::this_node::getName().c_str());
-  std::vector<Eigen::MatrixXd> loaded_nd_matrix = pl.load_matrix_array2("test_param_nd_matrix");
-  if (pl.loaded_successfully())
+  std::vector<Eigen::MatrixXd> loaded_nd_matrix = pl.loadMatrixArray2("test_param_nd_matrix");
+  if (pl.loadedSuccessfully())
   {
     ROS_INFO("[%s]: parameter loaded OK", ros::this_node::getName().c_str());
     int it = 0;
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 
   std::cout << "Loading empty matrix" << std::endl;
   nh.setParam("test_param_matrix", std::vector<double>());
-  Eigen::Matrix<double, 0, 0> mat = pl.load_matrix_static2<0, 0>("test_param_matrix");
+  Eigen::Matrix<double, 0, 0> mat = pl.loadMatrixStatic2<0, 0>("test_param_matrix");
   std::cout << "Empty matrix:" << std::endl << mat;
 
   return 0;
