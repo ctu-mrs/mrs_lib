@@ -1,3 +1,4 @@
+// clang: TomasFormat
 #ifndef MRS_LIB_POLYGON_H
 #define MRS_LIB_POLYGON_H
 
@@ -5,7 +6,7 @@
 #include <eigen3/Eigen/Eigen>
 #include <vector>
 #include <geometry_msgs/Point.h>
-#include <mrs_lib/SafetyZone/lineOperations.h>
+#include <mrs_lib/safety_zone/line_operations.h>
 
 namespace mrs_lib
 {

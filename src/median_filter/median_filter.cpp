@@ -1,6 +1,6 @@
 /* author: Daniel Hert */
 
-#include <mrs_lib/MedianFilter.h>
+#include <mrs_lib/median_filter.h>
 
 /* constructor //{ */
 
@@ -20,7 +20,7 @@ MedianFilter::MedianFilter(int buffer_size, double max_valid_value, double min_v
   this->buffer_size = buffer_size;
 
   buffer.resize(buffer_size);
-  next = 0;
+  next     = 0;
   m_median = 0;
   ROS_INFO("[MedianFilter]: initialized, buffer size: %d", buffer_size);
 }
@@ -38,7 +38,7 @@ bool MedianFilter::isValid(double input) {
   next++;
 
   if (next == buffer_size) {
-    next = 0;
+    next      = 0;
     is_filled = true;
   }
 
@@ -95,7 +95,7 @@ bool MedianFilter::isValid(double input) {
 
   {
     std::scoped_lock lock(mutex_median);
-  
+
     m_median = median;
   }
 
@@ -126,11 +126,10 @@ double MedianFilter::getMedian() {
 
   {
     std::scoped_lock lock(mutex_median);
-  
+
     median = m_median;
   }
-    return median;
+  return median;
 }
 
 //}
-

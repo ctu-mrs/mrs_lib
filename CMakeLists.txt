@@ -41,7 +41,7 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs mrs_msgs
   DEPENDS Eigen
-  LIBRARIES Lkf ConvexPolygon SafetyZone Profiler Utils ParamLoader MedianFilter Repredictor MrsLibGeometryUtils MrsLibAttitudeConverter MrsLibTransformer MrsImagePublisher
+  LIBRARIES Lkf SafetyZone Profiler Utils ParamLoader MedianFilter Repredictor MrsLibGeometryUtils MrsLibAttitudeConverter MrsLibTransformer MrsImagePublisher
   )
 
 ###########
@@ -58,23 +58,11 @@ include_directories(
   ${OpenCV_INCLUDE_DIRS}
   )
 
-add_library(Repredictor src/repredictor/Repredictor.cpp src/repredictor/MRS_odom_repredictor.cpp)
+add_library(Repredictor src/repredictor/repredictor.cpp src/repredictor/MRS_odom_repredictor.cpp)
 target_link_libraries(Repredictor
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
-
-add_library(Lkf src/lkf/lkf.cpp)
-target_link_libraries(Lkf
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  )
-
-# add_library(Ukf src/ukf/ukf.cpp)
-# target_link_libraries(Ukf
-#   ${catkin_LIBRARIES}
-#   ${Eigen_LIBRARIES}
-#   )
 
 add_executable(lkf_example src/lkf/example.cpp)
 target_link_libraries(lkf_example
@@ -82,11 +70,11 @@ target_link_libraries(lkf_example
   ${Eigen_LIBRARIES}
   )
 
-# add_executable(ukf_tests src/ukf/ukf_tests.cpp src/ukf/ukf.cpp)
-# target_link_libraries(ukf_tests
-#   ${catkin_LIBRARIES}
-#   ${Eigen_LIBRARIES}
-#   )
+add_executable(ukf_tests src/ukf/ukf_tests.cpp)
+target_link_libraries(ukf_tests
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
 
 add_executable(ukf_example src/ukf/example.cpp)
 target_link_libraries(ukf_example
@@ -100,15 +88,9 @@ target_link_libraries(nckf_tests
   ${Eigen_LIBRARIES}
   )
 
-add_library(ConvexPolygon src/convex_polygon/convex_polygon.cpp)
-target_link_libraries(ConvexPolygon
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  )
-
 add_library(SafetyZone src/safety_zone/safety_zone.cpp
   src/safety_zone/point_obstacle/point_obstacle.cpp
-  src/safety_zone/lineOperations.cpp
+  src/safety_zone/line_operations.cpp
   src/safety_zone/polygon/polygon.cpp
   )
 
@@ -205,7 +187,7 @@ target_link_libraries(rheiv_example
   ${Eigen_LIBRARIES}
   )
 
-add_library(MedianFilter src/median_filter/MedianFilter.cpp)
+add_library(MedianFilter src/median_filter/median_filter.cpp)
 target_link_libraries(MedianFilter
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}

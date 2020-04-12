@@ -1,5 +1,5 @@
-#include "mrs_lib/SafetyZone/Polygon.h"
-#include "mrs_lib/SafetyZone/lineOperations.h"
+#include <mrs_lib/safety_zone/polygon.h>
+#include <mrs_lib/safety_zone/line_operations.h>
 
 namespace mrs_lib
 {

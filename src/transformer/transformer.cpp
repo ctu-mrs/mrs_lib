@@ -1,7 +1,7 @@
 // clang: MatousFormat
 
 #include <mrs_lib/transformer.h>
-#include <mrs_lib/GpsConversions.h>
+#include <mrs_lib/gps_conversions.h>
 
 using test_t = mrs_msgs::ReferenceStamped;
 template std::optional<test_t> mrs_lib::Transformer::transform<test_t>(const mrs_lib::TransformStamped& to_frame, const test_t& what);

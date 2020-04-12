@@ -1,4 +1,4 @@
-#include <mrs_lib/Profiler.h>
+#include <mrs_lib/profiler.h>
 
 namespace mrs_lib
 {

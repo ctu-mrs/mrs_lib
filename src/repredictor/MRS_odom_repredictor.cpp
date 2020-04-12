@@ -1,16 +1,16 @@
-#include "mrs_lib/lkf.h"
+// clang: MatousFormat
+
+#include <mrs_lib/lkf.h>
 
 namespace mrs_lib
 {
   /* LKF_MRS_odom constructor //{ */
   LKF_MRS_odom::LKF_MRS_odom(const std::vector<LKF_MRS_odom::H_t>& Hs, const double p1, const double p2, const double p3, const double default_dt)
-    : p1(p1), p2(p2), p3(p3)
+      : p1(p1), p2(p2), p3(p3)
   {
     Base_class::Hs = Hs;
     const double& dt = default_dt;
-    Base_class::A << 1, dt, 0.5*dt*dt,
-                     0, 1, dt,
-                     0, 0, 0.9;
+    Base_class::A << 1, dt, 0.5 * dt * dt, 0, 1, dt, 0, 0, 0.9;
     Base_class::B << 0, 0, 0.1;
     Base_class::H = Hs.at(0);
   };
@@ -43,10 +43,10 @@ namespace mrs_lib
     double& x = ret(0);
     double& dx = ret(1);
     double& ddx = ret(2);
-    x = x + dt*dx + 0.5*dt*dt*ddx;
-    dx = dx + dt*ddx;
-    ddx = 0.9 * ddx + 0.1* u(0);
-    ddx = ddx + dt*u(0);
+    x = x + dt * dx + 0.5 * dt * dt * ddx;
+    dx = dx + dt * ddx;
+    ddx = 0.9 * ddx + 0.1 * u(0);
+    ddx = ddx + dt * u(0);
     /* ddx = ddx; */
     return ret;
   };
@@ -59,18 +59,18 @@ namespace mrs_lib
     const double &P11 = P(0, 0), &P12 = P(0, 1), &P13 = P(0, 2);
     const double &P21 = P(1, 0), &P22 = P(1, 1), &P23 = P(1, 2);
     const double &P31 = P(2, 0), &P32 = P(2, 1), &P33 = P(2, 2);
-    const double dtsqhalf = dt*dt/2.0;
-    P_ret(0, 0) = P11 + P21*dt + P31*dtsqhalf + (P12 + P22*dt + P32*dtsqhalf)*(dt) + (P13 + P23*dt + P33*dtsqhalf)*(dtsqhalf) + Q(0, 0);
-    P_ret(0, 1) = P12 + P22*dt + P32*dtsqhalf + (P13 + P23*dt + P33*dtsqhalf)*(dt) + Q(0, 1);
-    P_ret(0, 2) = P13 + P23*dt + P33*dtsqhalf + Q(0, 2);
-    P_ret(1, 0) = P21 + P31*dt + (P22 + P32*dt)*(dt) + (P23 + P33*dt)*(dtsqhalf) + Q(1, 0);
-    P_ret(1, 1) = P22 + P32*dt + (P23 + P33*dt)*(dt) + Q(1, 1);
-    P_ret(1, 2) = P23 + P33*dt + Q(1, 2);
-    P_ret(2, 0) = P31 + P32*(dt) + P33*(dtsqhalf) + Q(2, 0);
-    P_ret(2, 1) = P32 + P33*(dt) + Q(2, 1);
+    const double dtsqhalf = dt * dt / 2.0;
+    P_ret(0, 0) = P11 + P21 * dt + P31 * dtsqhalf + (P12 + P22 * dt + P32 * dtsqhalf) * (dt) + (P13 + P23 * dt + P33 * dtsqhalf) * (dtsqhalf) + Q(0, 0);
+    P_ret(0, 1) = P12 + P22 * dt + P32 * dtsqhalf + (P13 + P23 * dt + P33 * dtsqhalf) * (dt) + Q(0, 1);
+    P_ret(0, 2) = P13 + P23 * dt + P33 * dtsqhalf + Q(0, 2);
+    P_ret(1, 0) = P21 + P31 * dt + (P22 + P32 * dt) * (dt) + (P23 + P33 * dt) * (dtsqhalf) + Q(1, 0);
+    P_ret(1, 1) = P22 + P32 * dt + (P23 + P33 * dt) * (dt) + Q(1, 1);
+    P_ret(1, 2) = P23 + P33 * dt + Q(1, 2);
+    P_ret(2, 0) = P31 + P32 * (dt) + P33 * (dtsqhalf) + Q(2, 0);
+    P_ret(2, 1) = P32 + P33 * (dt) + Q(2, 1);
     P_ret(2, 2) = P33 + Q(2, 2);
     return P_ret;
   };
   //}
 
-}
+}  // namespace mrs_lib

@@ -12,7 +12,7 @@
 #include <math.h>
 #include <Eigen/Dense>
 
-#include <mrs_lib/Utils.h>
+#include <mrs_lib/utils.h>
 
 #include <iostream>
 
