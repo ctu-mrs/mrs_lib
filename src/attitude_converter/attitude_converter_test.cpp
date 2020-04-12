@@ -22,7 +22,8 @@ int main() {
 
     tf::Quaternion            tf1_quaternion  = AttitudeConverter(roll, pitch, yaw);
     tf2::Quaternion           tf2_quaternion  = AttitudeConverter(tf1_quaternion);
-    geometry_msgs::Quaternion geom_quaternion = AttitudeConverter(tf2_quaternion);
+    tf2::Matrix3x3            tf2_matrix      = AttitudeConverter(tf2_quaternion);
+    geometry_msgs::Quaternion geom_quaternion = AttitudeConverter(tf2_matrix);
     Eigen::Quaterniond        eig_quaternion  = AttitudeConverter(geom_quaternion);
     Eigen::AngleAxis<double>  eig_angle_axis  = AttitudeConverter(eig_quaternion);
     Eigen::Matrix3d           eig_matrix      = AttitudeConverter(eig_angle_axis);

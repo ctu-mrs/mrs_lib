@@ -101,6 +101,11 @@ AttitudeConverter::AttitudeConverter(const tf2::Quaternion quaternion) {
   tf2_quaternion_ = quaternion;
 }
 
+AttitudeConverter::AttitudeConverter(const tf2::Matrix3x3 matrix) {
+
+  matrix.getRotation(tf2_quaternion_);
+}
+
 //}
 
 /* operators //{ */
@@ -142,6 +147,7 @@ AttitudeConverter::operator EulerAttitude() const {
 }
 
 AttitudeConverter::operator Eigen::Matrix3d() const {
+
   Eigen::Quaterniond quaternion(tf2_quaternion_.w(), tf2_quaternion_.x(), tf2_quaternion_.y(), tf2_quaternion_.z());
 
   return quaternion.toRotationMatrix();
@@ -152,6 +158,16 @@ AttitudeConverter::operator std::tuple<double&, double&, double&>() {
   tf2::Matrix3x3(tf2_quaternion_).getRPY(roll_, pitch_, yaw_);
 
   return std::tuple<double&, double&, double&>{roll_, pitch_, yaw_};
+}
+
+AttitudeConverter::operator tf2::Matrix3x3() const {
+
+  return tf2::Matrix3x3(tf2_quaternion_);
+}
+
+AttitudeConverter::operator tf2::Transform() const {
+
+  return tf2::Transform(tf2_quaternion_);
 }
 
 //}
