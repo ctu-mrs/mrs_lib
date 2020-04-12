@@ -41,7 +41,7 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs mrs_msgs
   DEPENDS Eigen
-  LIBRARIES Lkf SafetyZone Profiler Utils ParamLoader MedianFilter Repredictor MrsLibGeometryUtils MrsLibAttitudeConverter MrsLibTransformer MrsImagePublisher
+  LIBRARIES MrsLibSafetyZone MrsLibProfiler MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibRepredictor MrsLibGeometryUtils MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibLkfLegacy
   )
 
 ###########
@@ -58,8 +58,8 @@ include_directories(
   ${OpenCV_INCLUDE_DIRS}
   )
 
-add_library(Repredictor src/repredictor/repredictor.cpp src/repredictor/MRS_odom_repredictor.cpp)
-target_link_libraries(Repredictor
+add_library(MrsLibRepredictor src/repredictor/repredictor.cpp src/repredictor/MRS_odom_repredictor.cpp)
+target_link_libraries(MrsLibRepredictor
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
@@ -88,19 +88,19 @@ target_link_libraries(nckf_tests
   ${Eigen_LIBRARIES}
   )
 
-add_library(SafetyZone src/safety_zone/safety_zone.cpp
+add_library(MrsLibSafetyZone src/safety_zone/safety_zone.cpp
   src/safety_zone/point_obstacle/point_obstacle.cpp
   src/safety_zone/line_operations.cpp
   src/safety_zone/polygon/polygon.cpp
   )
 
-target_link_libraries(SafetyZone
+target_link_libraries(MrsLibSafetyZone
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
 
-add_library(Profiler src/profiler/profiler.cpp)
-target_link_libraries(Profiler
+add_library(MrsLibProfiler src/profiler/profiler.cpp)
+target_link_libraries(MrsLibProfiler
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
@@ -118,8 +118,8 @@ target_link_libraries(MrsLibAttitudeConverter
   ${Eigen_LIBRARIES}
   )
 
-add_executable(MrsLibAttitudeConverterTest src/attitude_converter/attitude_converter_test.cpp)
-target_link_libraries(MrsLibAttitudeConverterTest
+add_executable(attitude_converter_test src/attitude_converter/attitude_converter_test.cpp)
+target_link_libraries(attitude_converter_test
   MrsLibAttitudeConverter
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
@@ -139,8 +139,8 @@ target_link_libraries(transformer_tests
   ${Eigen_LIBRARIES}
   )
 
-add_library(Utils src/utils/utils.cpp)
-target_link_libraries(Utils
+add_library(MrsLibUtils src/utils/utils.cpp)
+target_link_libraries(MrsLibUtils
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
@@ -151,8 +151,8 @@ target_link_libraries(utils_tests
   ${Eigen_LIBRARIES}
   )
 
-add_library(ParamLoader src/param_loader/param_loader.cpp)
-target_link_libraries(ParamLoader
+add_library(MrsLibParamLoader src/param_loader/param_loader.cpp)
+target_link_libraries(MrsLibParamLoader
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
@@ -187,8 +187,8 @@ target_link_libraries(rheiv_example
   ${Eigen_LIBRARIES}
   )
 
-add_library(MedianFilter src/median_filter/median_filter.cpp)
-target_link_libraries(MedianFilter
+add_library(MrsLibMedianFilter src/median_filter/median_filter.cpp)
+target_link_libraries(MrsLibMedianFilter
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
@@ -200,8 +200,8 @@ target_link_libraries(MrsLibGeometryUtils
   ${GAZEBO_INCLUDE_DIRS}
   )
 
-add_library(MrsImagePublisher src/image_publisher/image_publisher.cpp)
-target_link_libraries(MrsImagePublisher
+add_library(MrsLibImagePublisher src/image_publisher/image_publisher.cpp)
+target_link_libraries(MrsLibImagePublisher
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   ${OpenCV_LIBRARIES}
@@ -214,4 +214,10 @@ target_link_libraries(geometry_utils_tests
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   ${GAZEBO_INCLUDE_DIRS}
+  )
+
+add_library(MrsLibLkfLegacy src/lkf/lkf_legacy.cpp)
+target_link_libraries(MrsLibLkfLegacy
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
   )
