@@ -204,6 +204,13 @@ public:
    */
   AttitudeConverter(const tf2::Quaternion quaternion);
 
+  /**
+   * @brief tf2::Matrix3x3 constructor
+   *
+   * @param quaternion tf2::Matrix3x3
+   */
+  AttitudeConverter(const tf2::Matrix3x3 matrix);
+
   //}
 
   /* operators //{ */
@@ -276,6 +283,20 @@ public:
    * @return std::tuple of extrinsic RPY
    */
   operator std::tuple<double&, double&, double&>();
+
+  /**
+   * @brief typecase to tf2::Matrix3x3
+   *
+   * @return tf2::Matrix3x3 rotational matrix
+   */
+  operator tf2::Matrix3x3() const;
+
+  /**
+   * @brief typecase to tf2::Transform
+   *
+   * @return tf2::Transform
+   */
+  operator tf2::Transform() const;
 
   //}
 
