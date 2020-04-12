@@ -15,7 +15,7 @@
 #include <iostream>
 #include <boost/any.hpp>
 #include <Eigen/Dense>
-#include <mrs_lib/ParamLoader.h>
+#include <mrs_lib/param_loader.h>
 
 
 namespace mrs_lib
@@ -79,7 +79,7 @@ public:
 
   bool loaded_successfully()
   {
-    return !m_not_initialized && !m_loaded_invalid_default && m_pl.loaded_successfully();
+    return !m_not_initialized && !m_loaded_invalid_default && m_pl.loadedSuccessfully();
   }
 
 private:
@@ -122,7 +122,7 @@ private:
   {
     using param_descr_t = typename ConfigType::template ParamDescription<T>;
     boost::shared_ptr<const param_descr_t> cast_descr = boost::dynamic_pointer_cast<const param_descr_t>(descr);
-    m_pl.load_param(name, config.*(cast_descr->field));
+    m_pl.loadParam(name, config.*(cast_descr->field));
   }
   
   void load_defaults(ConfigType& new_config)
