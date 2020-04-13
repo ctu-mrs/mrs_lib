@@ -411,11 +411,12 @@ namespace mrs_lib
 
     double yaw_out = yaw;
 
-    while (yaw_out - yaw_previous > M_PI)
+    for (int i = 0; (i < 10) && (yaw_out - yaw_previous > M_PI); i++)
     {
       yaw_out -= 2 * M_PI;
     }
-    while (yaw_out - yaw_previous < -M_PI)
+
+    for (int i = 0; (i < 10) && (yaw_out - yaw_previous < -M_PI); i++)
     {
       yaw_out += 2 * M_PI;
     }
@@ -432,12 +433,12 @@ namespace mrs_lib
 
     double angle_wrapped = angle_in;
 
-    while (angle_wrapped > M_PI)
+    for (int i = 0; (i < 10) && (angle_wrapped > M_PI); i++)
     {
       angle_wrapped -= 2 * M_PI;
     }
 
-    while (angle_wrapped < -M_PI)
+    for (int i = 0; (i < 10) && (angle_wrapped < -M_PI); i++)
     {
       angle_wrapped += 2 * M_PI;
     }
