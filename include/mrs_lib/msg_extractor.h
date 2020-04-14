@@ -435,6 +435,34 @@ double getYaw(const nav_msgs::OdometryConstPtr& data) {
 
 //}
 
+/* getPose() //{ */
+
+/**
+ * @brief returns the Pose part of the nav_msgs::Odometry message
+ *
+ * @param data odometry
+ *
+ * @return pose
+ */
+geometry_msgs::Pose getPose(const nav_msgs::Odometry& data) {
+
+  return data.pose.pose;
+}
+
+/**
+ * @brief returns the Pose part of the nav_msgs::OdometryConstPtr message
+ *
+ * @param data odometry (ConstPtr)
+ *
+ * @return pose
+ */
+geometry_msgs::Pose getPose(const nav_msgs::OdometryConstPtr& data) {
+
+  return getPose(*data);
+}
+
+//}
+
 //}
 
 /* mrs_msgs::PositionCommand //{ */
