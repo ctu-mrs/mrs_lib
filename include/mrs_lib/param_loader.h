@@ -13,6 +13,7 @@
 #include <unordered_set>
 #include <iostream>
 #include <Eigen/Dense>
+#include <std_msgs/ColorRGBA.h>
 
 namespace mrs_lib
 {
@@ -699,6 +700,49 @@ public:
   {
     const double secs = loadParam2<double>(name);
     const ros::Duration ret(secs);
+    return ret;
+  }
+  
+  //}
+
+  /* loadParam specializations for std_msgs::ColorRGBA type //{ */
+
+  /*!
+    * \brief An overload for loading std_msgs::ColorRGBA.
+    *
+    * The color will be loaded as several \p double -typed variables, representing the R, G, B and A color elements.
+    *
+    * \param name          Name of the parameter in the rosparam server.
+    * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
+    * \param default_value This value will be used if the parameter name is not found in the rosparam server.
+    * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
+    */
+  bool loadParam(const std::string& name, std_msgs::ColorRGBA& out, const std_msgs::ColorRGBA& default_value = {})
+  {
+    std_msgs::ColorRGBA res;
+    bool ret = true;
+    ret = ret & loadParam(name+"/r", res.r, default_value.r);
+    ret = ret & loadParam(name+"/g", res.g, default_value.g);
+    ret = ret & loadParam(name+"/b", res.b, default_value.b);
+    ret = ret & loadParam(name+"/a", res.a, default_value.a);
+    if (ret)
+      out = res;
+    return ret;
+  }
+
+  /*!
+    * \brief An overload for loading std_msgs::ColorRGBA.
+    *
+    * The color will be loaded as several \p double -typed variables, representing the R, G, B and A color elements.
+    *
+    * \param name          Name of the parameter in the rosparam server.
+    * \param default_value This value will be used if the parameter name is not found in the rosparam server.
+    * \return              The loaded parameter value.
+    */
+  std_msgs::ColorRGBA loadParam2(const std::string& name, const std_msgs::ColorRGBA& default_value = {})
+  {
+    std_msgs::ColorRGBA ret;
+    loadParam(name, ret, default_value);
     return ret;
   }
   
