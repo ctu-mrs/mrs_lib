@@ -294,6 +294,32 @@ AttitudeConverter AttitudeConverter::setYaw(const double& new_yaw) {
   return AttitudeConverter(roll, pitch, new_yaw);
 }
 
+AttitudeConverter AttitudeConverter::setHeading(const double& heading) {
+
+  // get the Z unit vector after the original rotation
+  Eigen::Vector3d b3 = getVectorZ();
+
+  // check for singularity: z component of the thrust vector is 0
+  if (fabs(b3[2]) < 1e-3) {
+    throw SetHeadingByYawException();
+  }
+
+  // get the desired heading as a vector in 3D
+  Eigen::Vector3d h(cos(heading), sin(heading), 0);
+
+  Eigen::Vector3d b2_new = b3.cross(h);
+  b2_new.normalize();
+
+  Eigen::Vector3d b1_new = b2_new.cross(b3);
+
+  Eigen::Matrix3d new_R;
+  new_R.col(0) = b1_new;
+  new_R.col(1) = b2_new;
+  new_R.col(2) = b3;
+
+  return AttitudeConverter(new_R);
+}
+
 //}
 
 // | ------------------------ internal ------------------------ |

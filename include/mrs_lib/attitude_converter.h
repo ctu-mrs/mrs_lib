@@ -369,8 +369,32 @@ public:
 
   /* setters //{ */
 
+
+  /**
+   * @brief Updates the heading of the current orientation by changing the yaw (extrinsic).
+   *
+   * @param new heading
+   *
+   * @return the orientation
+   */
   AttitudeConverter setHeadingByYaw(const double& heading);
 
+  /**
+   * @brief Updates the heading of the current orientation by rotation around the transformed Z-axis.
+   *
+   * @param new heading
+   *
+   * @return the orientation
+   */
+  AttitudeConverter setHeading(const double& heading);
+
+  /**
+   * @brief Updates the extrinsic yaw of the current orientation.
+   *
+   * @param new yaw
+   *
+   * @return the orientation
+   */
   AttitudeConverter setYaw(const double& new_yaw);
 
   //}
