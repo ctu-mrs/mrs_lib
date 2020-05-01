@@ -247,19 +247,28 @@ double AttitudeConverter::getYawRateIntrinsic(const double& heading_rate, const 
   Eigen::Matrix3d R_d = R * W;
 
   // construct the orbital speed vector
-  double          heading        = this->getHeading();
-  Eigen::Vector3d heading_vector = Eigen::Vector3d(cos(heading), sin(heading), 0);
-  Eigen::Vector3d orbital_speed  = heading_vector.cross(Eigen::Vector3d(0, 0, heading_rate));
+  double          heading          = this->getHeading();
+  Eigen::Vector3d heading_vector   = Eigen::Vector3d(cos(heading), sin(heading), 0);
+  Eigen::Vector3d orbital_velocity = Eigen::Vector3d(0, 0, heading_rate).cross(heading_vector);
 
-  // upadte the part of R_d corresponding to the heading rate
-  R_d(0, 0) = orbital_speed(0);
-  R_d(1, 0) = orbital_speed(1);
+  R_d = Eigen::Matrix3d::Zero(3, 3);
+
+  /* // upadte the part of R_d corresponding to the heading rate */
+  R_d.col(0) = R.col(1) * R.col(1).transpose() * heading_vector;
+  R_d.col(1) = R.col(2).cross(R.col(0)) * orbital_velocity.norm();
+
+  /* // normalize R_d */
+  /* Eigen::JacobiSVD<Eigen::Matrix3d> svd(R_d, Eigen::ComputeFullU | Eigen::ComputeFullV); */
+  /* Eigen::Matrix3d                   U = svd.matrixU(); */
+  /* Eigen::Matrix3d                   V = svd.matrixV(); */
+
+  /* R_d = U * V.transpose(); */
 
   // calculate the new angular velocity tensor
   W = R.transpose() * R_d;
 
   // extract the yaw rate
-  return -W(0, 1);
+  return -W(1);
 }
 
 double AttitudeConverter::getHeadingRate(const Vector3Converter& attitude_rate) {

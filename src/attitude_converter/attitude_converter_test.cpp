@@ -163,13 +163,13 @@ int main() {
     printf("checking getHeadingRate() and getYawRateIntrinsic()\n");
 
     // initial orientation
-    Eigen::Matrix3d R = AttitudeConverter(0, 1.4, 0);
+    Eigen::Matrix3d R = AttitudeConverter(0, 1.0, 0);
 
     // attitude rate in the body frame
-    geometry_msgs::Vector3 w     = Vector3Converter(1, 1, 1);
+    geometry_msgs::Vector3 w     = Vector3Converter(0, 0, 1);
     Eigen::Vector3d        w_eig = Vector3Converter(w);
 
-    double dt  = 0.001;  // [s]
+    double dt  = 0.1;  // [s]
     int    len = 2 * M_PI / dt;
 
     double heading = AttitudeConverter(R).getHeading();
@@ -205,15 +205,17 @@ int main() {
 
       double heading_rate_error = fabs((heading_difference / dt) - heading_rate);
 
-      /* printf("heading: (%.2f->%.2f), heading rate: estimated %.2f, calcualted: %.2f, difference: %.2f\n", heading, new_heading, heading_difference / dt, */
-      /*        heading_rate, fabs((heading_difference / dt) - heading_rate)); */
+      // reconstruct a yaw rate from the heading rate
+      double yaw_rate = AttitudeConverter(R).getYawRateIntrinsic(heading_rate, Eigen::Vector3d(0, 0, 0));
+
+      printf("heading: (%.2f->%.2f), heading rate: estimated %.2f, calcualted: %.2f, difference: %.2f, yaw_rate: %.2f\n", heading, new_heading, heading_difference / dt,
+             heading_rate, fabs((heading_difference / dt) - heading_rate), yaw_rate);
 
       if (fabs(heading_rate_error) > max_heading_rate_error) {
         max_heading_rate_error = fabs(heading_rate_error);
       }
 
-      // reconstruct a yaw rate from the heading rate
-      double yaw_rate = AttitudeConverter(R).getYawRateIntrinsic(heading_rate, w);
+      printf("yaw rate: %.2f\n", yaw_rate);
 
       // compare with the original set intrinsic yaw rate
       double yaw_rate_error = fabs(yaw_rate - w.z);
