@@ -91,9 +91,15 @@ public:
 
   Vector3Converter(const Eigen::Vector3d& vector3);
 
+  Vector3Converter(const geometry_msgs::Vector3& vector3);
+
+  Vector3Converter(const double& x, const double& y, const double& z);
+
   operator tf2::Vector3() const;
 
   operator Eigen::Vector3d() const;
+
+  operator geometry_msgs::Vector3() const;
 
 private:
   tf2::Vector3 vector3_;
@@ -329,6 +335,24 @@ public:
    * @return heading
    */
   double getHeading(void);
+
+  /**
+   * @brief get heading rate base on the orientation and body-based attitude rate
+   *
+   * @param attitude_rate in the body frame
+   *
+   * @return heading rate in the world
+   */
+  double getHeadingRate(const Vector3Converter& attitude_rate);
+
+  /**
+   * @brief get the intrinsic yaw rate from a heading rate
+   *
+   * @param heading_rate
+   *
+   * @return intrinsic yaw rate
+   */
+  double getYawRateIntrinsic(const double& heading_rate, const Vector3Converter& attitude_rate);
 
   /**
    * @brief get a unit vector pointing in the X direction

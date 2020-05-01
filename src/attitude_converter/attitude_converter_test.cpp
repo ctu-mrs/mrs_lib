@@ -1,6 +1,7 @@
 // clang: TomasFormat
 
 #include <mrs_lib/attitude_converter.h>
+#include <mrs_lib/geometry_utils.h>
 
 #include <iostream>
 
@@ -152,6 +153,80 @@ int main() {
     catch (mrs_lib::AttitudeConverter::SetHeadingByYawException e) {
       printf("exception correctly caught: %s\n", e.what());
     }
+
+    printf("\n");
+  }
+
+  // | ------------------ test getHeadingRate() ----------------- |
+  {
+
+    printf("checking getHeadingRate() and getYawRateIntrinsic()\n");
+
+    // initial orientation
+    Eigen::Matrix3d R = AttitudeConverter(0, 1.4, 0);
+
+    // attitude rate in the body frame
+    geometry_msgs::Vector3 w     = Vector3Converter(1, 1, 1);
+    Eigen::Vector3d        w_eig = Vector3Converter(w);
+
+    double dt  = 0.001;  // [s]
+    int    len = 2 * M_PI / dt;
+
+    double heading = AttitudeConverter(R).getHeading();
+
+    double max_heading_rate_error = 0;
+    double max_yaw_rate_error     = 0;
+
+    for (int i = 0; i < len; i++) {
+
+      // create the angular velocity tensor
+      Eigen::Matrix3d W;
+      W << 0, -w_eig[2], w_eig[1], w_eig[2], 0, -w_eig[0], -w_eig[1], w_eig[0], 0;
+
+      // R derivative
+      Eigen::Matrix3d R_d = R * W;
+
+      // update R
+      R = R + R_d * dt;
+
+      // normalize R
+      Eigen::JacobiSVD<Eigen::Matrix3d> svd(R, Eigen::ComputeFullU | Eigen::ComputeFullV);
+      Eigen::Matrix3d                   U = svd.matrixU();
+      Eigen::Matrix3d                   V = svd.matrixV();
+
+      R = U * V.transpose();
+
+      // calculate the heading difference
+      double new_heading        = AttitudeConverter(R).getHeading();
+      double heading_difference = mrs_lib::angleBetween(new_heading, heading);
+
+      // calculate the heading rate analythically
+      double heading_rate = AttitudeConverter(R).getHeadingRate(w);
+
+      double heading_rate_error = fabs((heading_difference / dt) - heading_rate);
+
+      /* printf("heading: (%.2f->%.2f), heading rate: estimated %.2f, calcualted: %.2f, difference: %.2f\n", heading, new_heading, heading_difference / dt, */
+      /*        heading_rate, fabs((heading_difference / dt) - heading_rate)); */
+
+      if (fabs(heading_rate_error) > max_heading_rate_error) {
+        max_heading_rate_error = fabs(heading_rate_error);
+      }
+
+      // reconstruct a yaw rate from the heading rate
+      double yaw_rate = AttitudeConverter(R).getYawRateIntrinsic(heading_rate, w);
+
+      // compare with the original set intrinsic yaw rate
+      double yaw_rate_error = fabs(yaw_rate - w.z);
+
+      if (fabs(yaw_rate_error) > max_yaw_rate_error) {
+        max_yaw_rate_error = fabs(yaw_rate_error);
+      }
+
+      heading = new_heading;
+    }
+
+    printf("len: %d, max hdg rate error %.2f (%s), max yaw rate error %.2f (%s)\n", len, max_heading_rate_error, max_heading_rate_error > 0.1 ? "BAD" : "GOOD",
+           max_yaw_rate_error, max_yaw_rate_error > 0.1 ? "BAD" : "GOOD");
 
     printf("\n");
   }

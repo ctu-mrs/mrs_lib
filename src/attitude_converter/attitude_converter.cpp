@@ -34,6 +34,20 @@ Vector3Converter::Vector3Converter(const Eigen::Vector3d& vector3) {
   vector3_[2] = vector3[2];
 }
 
+Vector3Converter::Vector3Converter(const geometry_msgs::Vector3& vector3) {
+
+  vector3_[0] = vector3.x;
+  vector3_[1] = vector3.y;
+  vector3_[2] = vector3.z;
+}
+
+Vector3Converter::Vector3Converter(const double& x, const double& y, const double& z) {
+
+  vector3_[0] = x;
+  vector3_[1] = y;
+  vector3_[2] = z;
+}
+
 Vector3Converter::operator tf2::Vector3() const {
 
   return vector3_;
@@ -42,6 +56,17 @@ Vector3Converter::operator tf2::Vector3() const {
 Vector3Converter::operator Eigen::Vector3d() const {
 
   return Eigen::Vector3d(vector3_[0], vector3_[1], vector3_[2]);
+}
+
+Vector3Converter::operator geometry_msgs::Vector3() const {
+
+  geometry_msgs::Vector3 vector_3;
+
+  vector_3.x = vector3_[0];
+  vector_3.y = vector3_[1];
+  vector_3.z = vector3_[2];
+
+  return vector_3;
 }
 
 //}
@@ -206,6 +231,60 @@ double AttitudeConverter::getHeading(void) {
   }
 
   return atan2(x_new[1], x_new[0]);
+}
+
+double AttitudeConverter::getYawRateIntrinsic(const double& heading_rate, const Vector3Converter& attitude_rate) {
+
+  // prep
+  Eigen::Matrix3d R = *this;          // the given orientation
+  Eigen::Vector3d w = attitude_rate;  // the given attitude rate
+
+  // create the angular velocity tensor out of the given attitude rate
+  Eigen::Matrix3d W;
+  W << 0, -w[2], w[1], w[2], 0, -w[0], -w[1], w[0], 0;
+
+  // calculate the R derivative
+  Eigen::Matrix3d R_d = R * W;
+
+  // construct the orbital speed vector
+  double          heading        = this->getHeading();
+  Eigen::Vector3d heading_vector = Eigen::Vector3d(cos(heading), sin(heading), 0);
+  Eigen::Vector3d orbital_speed  = heading_vector.cross(Eigen::Vector3d(0, 0, heading_rate));
+
+  // upadte the part of R_d corresponding to the heading rate
+  R_d(0, 0) = orbital_speed(0);
+  R_d(1, 0) = orbital_speed(1);
+
+  // calculate the new angular velocity tensor
+  W = R.transpose() * R_d;
+
+  // extract the yaw rate
+  return -W(0, 1);
+}
+
+double AttitudeConverter::getHeadingRate(const Vector3Converter& attitude_rate) {
+
+  // prep
+  Eigen::Matrix3d R = *this;
+  Eigen::Vector3d w = attitude_rate;
+
+  // create the angular velocity tensor
+  Eigen::Matrix3d W;
+  W << 0, -w[2], w[1], w[2], 0, -w[0], -w[1], w[0], 0;
+
+  // R derivative
+  Eigen::Matrix3d R_d = R * W;
+
+  // atan2 derivative
+  double rx        = R(0, 0);  // x-component of body X
+  double ry        = R(1, 0);  // y-component of body Y
+  double atan2_d_x = -ry / (rx * rx + ry * ry);
+  double atan2_d_y = rx / (rx * rx + ry * ry);
+
+  // atan2 total differential
+  double heading_rate = atan2_d_x * R_d(0, 0) + atan2_d_y * R_d(1, 0);
+
+  return heading_rate;
 }
 
 Vector3Converter AttitudeConverter::getVectorX(void) {
