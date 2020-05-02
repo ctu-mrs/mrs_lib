@@ -206,7 +206,7 @@ int main() {
       double heading_rate_error = fabs((heading_difference / dt) - heading_rate);
 
       // reconstruct a yaw rate from the heading rate
-      double yaw_rate = AttitudeConverter(R).getYawRateIntrinsic(heading_rate, Eigen::Vector3d(0, 0, 0));
+      double yaw_rate = AttitudeConverter(R).getYawRateIntrinsic(heading_rate);
 
       printf("heading: (%.2f->%.2f), heading rate: estimated %.2f, calcualted: %.2f, difference: %.2f, yaw_rate: %.2f\n", heading, new_heading, heading_difference / dt,
              heading_rate, fabs((heading_difference / dt) - heading_rate), yaw_rate);

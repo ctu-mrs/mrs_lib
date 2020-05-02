@@ -352,7 +352,7 @@ public:
    *
    * @return intrinsic yaw rate
    */
-  double getYawRateIntrinsic(const double& heading_rate, const Vector3Converter& attitude_rate);
+  double getYawRateIntrinsic(const double& heading_rate);
 
   /**
    * @brief get a unit vector pointing in the X direction
