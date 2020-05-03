@@ -7,8 +7,6 @@
  * The default Euler angle notation is the extrinsic RPY.
  *
  * @author Tomas Baca
- * @version 1.0
- * @date 2020-03-29
  */
 
 #ifndef ATTITUDE_CONVERTER_H
@@ -85,20 +83,61 @@ private:
 
 /* class Vector3Converter //{ */
 
+/**
+ * @brief Converter of Vector3 representations. Instantiate it with any type of vector3 in constructor and convert it by assigning it to any other type of
+ * vector3 variable.
+ */
 class Vector3Converter {
 public:
+  /**
+   * @brief Constructor with tf2::Vector3
+   *
+   * @param vector3
+   */
   Vector3Converter(const tf2::Vector3& vector3) : vector3_(vector3){};
 
+  /**
+   * @brief Constructor with Eigen::Vector3
+   *
+   * @param vector3
+   */
   Vector3Converter(const Eigen::Vector3d& vector3);
 
+  /**
+   * @brief Constructor with geometry_msgs::Vector3
+   *
+   * @param vector3
+   */
   Vector3Converter(const geometry_msgs::Vector3& vector3);
 
+  /**
+   * @brief Constructor with doubles: x, y, z
+   *
+   * @param x
+   * @param y
+   * @param z
+   */
   Vector3Converter(const double& x, const double& y, const double& z);
 
+  /**
+   * @brief typecast overloaded for tf2::Vector3
+   *
+   * @return vector3
+   */
   operator tf2::Vector3() const;
 
+  /**
+   * @brief typecast overloaded for Eigen::Vector3
+   *
+   * @return vector3
+   */
   operator Eigen::Vector3d() const;
 
+  /**
+   * @brief typecast overloaded for geometry_msgs::Vector3
+   *
+   * @return vector3
+   */
   operator geometry_msgs::Vector3() const;
 
 private:
@@ -142,7 +181,6 @@ public:
   //}
 
   /* constructors //{ */
-
 
   /**
    * @brief Euler angles constructor
