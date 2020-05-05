@@ -1,4 +1,7 @@
 sudo: false
+os:
+- linux
+dist: bionic
 
 branches:
   only:
