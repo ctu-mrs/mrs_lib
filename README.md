@@ -1,5 +1,7 @@
 # mrs_lib documentation
 
+[![Build Status](https://travis-ci.com/ctu-mrs/mrs_lib.svg?branch=master)](https://travis-ci.com/ctu-mrs/mrs_lib)
+
 ## Overview
 
 This ROS package contains various useful libraries such as an implementation of the Kalman filter or the Parameter loader.
