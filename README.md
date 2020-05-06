@@ -15,5 +15,5 @@ Documentation of this package is available at https://ctu-mrs.github.io/mrs_lib.
 * [Linear Kalman filter implementation](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1LKF.html)
 * [Unscented Kalman filter implementation](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1UKF.html)
 * [Parameter loading helper](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1ParamLoader.html)
-* [Topic subscription handling helper](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1SubscribeMgr.html)
+* [Topic subscription handling helper](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1SubscribeHandler.html)
 * [Profiling tool](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1Profiler.html)
