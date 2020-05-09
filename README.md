@@ -1,21 +1,19 @@
-# mrs_lib documentation
+# MRS libraries [![Build Status](https://travis-ci.com/ctu-mrs/mrs_lib.svg?branch=master)](https://travis-ci.com/ctu-mrs/mrs_lib)
 
-[![Build Status](https://travis-ci.com/ctu-mrs/mrs_lib.svg?branch=master)](https://travis-ci.com/ctu-mrs/mrs_lib)
+![](.fig/thumbnail.jpg)
 
 ## Overview
 
-This ROS package contains various useful libraries such as an implementation of the Kalman filter or the Parameter loader.
-Documentation of this package is available at https://ctu-mrs.github.io/mrs_lib.
+This ROS package contains various useful libraries (mostly C++) for the [MRS UAV system](https://github.com/ctu-mrs/mrs_uav_system).
 
-## Quick links
+* Online documentation: [https://ctu-mrs.github.io/mrs_lib](https://ctu-mrs.github.io/mrs_lib).
 
-* Online documentation: <a href="https://ctu-mrs.github.io/mrs_lib" target="_blank">https://ctu-mrs.github.io/mrs_lib</a>
-* GitHub repository: <a href="https://github.com/ctu-mrs/mrs_lib" target="_blank">https://github.com/ctu-mrs/mrs_lib</a>
+## Notable libraries:
 
-## Documentation of useful classes
-
-* [Linear Kalman filter implementation](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1LKF.html)
-* [Unscented Kalman filter implementation](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1UKF.html)
-* [Parameter loading helper](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1ParamLoader.html)
-* [Topic subscription handling helper](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1SubscribeHandler.html)
-* [Profiling tool](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1Profiler.html)
+* **ParamLoader** - wrapper around ROS's param loading for C++ ([documentation](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1ParamLoader.html))
+* **Transformer** - wrapper around ROS's transfomation library ([documentation](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1Transformer.html))
+* **SubscribeHandler** - wrapper around ROS's subscriber ([documentation](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1SubscribeHandler.html))
+* **AttitudeConverter** - a proxy class for converting representations of 3D orientation ([documentation](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1AttitudeConverter.html))
+* **LKF** - Linear Kalman Filter ([documentation](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1LKF.html))
+* **UKF** - Unscented Kalman Filter ([documentation](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1UKF.html))
+* **Profiler** - scoped profiling routine ([documentation](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1Profiler.html))
