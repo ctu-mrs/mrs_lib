@@ -20,6 +20,17 @@ echo "running the main install.sh"
 
 gitman update
 
+# get the current commit SHA
+cd "$TRAVIS_BUILD_DIR"
+SHA=`git rev-parse HEAD`
+
+# get the current package name
+PACKAGE_NAME=${PWD##*/}
+
+# checkout the SHA
+cd "~/uav_core/ros_packages/$PACKAGE_NAME"
+git checkout "$SHA"
+
 mkdir -p ~/catkin_ws/src
 cd ~/catkin_ws/src
 ln -s ~/uav_core
