@@ -17,7 +17,6 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_geometry_msgs
   cv_bridge
   image_transport
-  dynamic_reconfigure
   )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O3 -Wall")
@@ -34,14 +33,6 @@ set(Eigen_LIBRARIES ${EIGEN3_LIBRARIES})
 
 #include OpenCV
 find_package(OpenCV REQUIRED HINTS /usr/local/lib)
-
-#########################
-## dynamic reconfigure ##
-#########################
-generate_dynamic_reconfigure_options(
-  cfg/batch_visualizer.cfg
-)
-
 ###################################
 ## catkin specific configuration ##
 ###################################
@@ -209,14 +200,6 @@ target_link_libraries(MrsLibGeometryUtils
   ${GAZEBO_INCLUDE_DIRS}
   )
 
-add_library(MrsLibBatchVisualizer src/batch_visualizer/batch_visualizer.cpp)
-target_link_libraries(MrsLibBatchVisualizer
-  MrsLibGeometryUtils
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  ${GAZEBO_INCLUDE_DIRS}
-  )
-
 add_library(MrsLibImagePublisher src/image_publisher/image_publisher.cpp)
 target_link_libraries(MrsLibImagePublisher
   ${catkin_LIBRARIES}
@@ -228,15 +211,6 @@ target_link_libraries(MrsLibImagePublisher
 add_executable(geometry_utils_tests src/geometry_utils/geometry_utils.cpp)
 target_link_libraries(geometry_utils_tests
   MrsLibGeometryUtils
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  ${GAZEBO_INCLUDE_DIRS}
-  )
-
-add_executable(batch_visualizer_demo src/batch_visualizer/batch_visualizer_demo.cpp)
-target_link_libraries(batch_visualizer_demo
-  MrsLibGeometryUtils
-  MrsLibBatchVisualizer
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   ${GAZEBO_INCLUDE_DIRS}

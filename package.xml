@@ -25,10 +25,7 @@
   <depend>cv_bridge</depend>
   <depend>opencv</depend>
   <depend>image_transport</depend>
-  <depend>dynamic_reconfigure</depend>
 
-  <exec_depend>message_runtime</exec_depend>
-  
   <export>
   </export>
 
