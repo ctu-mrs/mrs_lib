@@ -17,7 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_geometry_msgs
   cv_bridge
   image_transport
-  dynamic_reconfigure
+  # dynamic_reconfigure
   )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O3 -Wall")
@@ -38,9 +38,9 @@ find_package(OpenCV REQUIRED HINTS /usr/local/lib)
 #########################
 ## dynamic reconfigure ##
 #########################
-generate_dynamic_reconfigure_options(
-  cfg/batch_visualizer.cfg
-)
+# generate_dynamic_reconfigure_options(
+#   cfg/batch_visualizer.cfg
+# )
 
 ###################################
 ## catkin specific configuration ##
