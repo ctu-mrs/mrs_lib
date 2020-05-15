@@ -28,7 +28,7 @@ SHA=`git rev-parse HEAD`
 PACKAGE_NAME=${PWD##*/}
 
 # checkout the SHA
-cd "~/uav_core/.gitman/$PACKAGE_NAME"
+cd ~/uav_core/.gitman/$PACKAGE_NAME
 git checkout "$SHA"
 
 mkdir -p ~/catkin_ws/src
