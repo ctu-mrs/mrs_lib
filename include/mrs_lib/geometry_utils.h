@@ -2,6 +2,7 @@
 /**  \file
      \brief Defines useful geometry utilities and functions.
      \author Matouš Vrba - vrbamato@fel.cvut.cz
+     \author Petr Štibinger - stibipet@fel.cvut.cz
  */
 
 #ifndef GEOMETRY_UTILS_H
@@ -11,6 +12,7 @@
 #include <cmath>
 #include <math.h>
 #include <Eigen/Dense>
+#include <boost/optional.hpp>
 
 #include <mrs_lib/utils.h>
 
@@ -35,93 +37,595 @@ namespace mrs_lib
 
   /* class Ray //{ */
 
+  /**
+   * @brief geometric representation of a ray. Instantiate it by two input Vector3. Use static methods for from-to raycast, or a point-direction raycast.
+   */
   class Ray
   {
   public:
+    /**
+     * @brief constructor without initialization of internal variables
+     */
     Ray();
+
+    /**
+     * @brief destructor
+     */
     ~Ray();
-    Ray(Eigen::Vector3d origin, Eigen::Vector3d direction, double energy = 0.0);
 
-    double energy;
-    Eigen::Vector3d origin;
-    Eigen::Vector3d direction;
+    /**
+     * @brief default constructor
+     *
+     * @param p1 origin of the ray
+     * @param p2 endpoint of the ray
+     */
+    Ray(Eigen::Vector3d p1, Eigen::Vector3d p2);
 
-    static Ray twopointCast(Eigen::Vector3d pointFrom, Eigen::Vector3d pointTo)
-    {
-      Eigen::Vector3d origin = pointFrom;
-      Eigen::Vector3d direction = (pointTo - pointFrom);
-      /* direction.normalize(); */
-      return Ray(origin, direction);
-    }
-    static Ray directionCast(Eigen::Vector3d origin, Eigen::Vector3d direction)
-    {
-      return Ray(origin, direction);
-    }
+  private:
+    Eigen::Vector3d point1;
+    Eigen::Vector3d point2;
+
+  public:
+    /**
+     * @brief get the origin point
+     *
+     * @return ray origin point
+     */
+    const Eigen::Vector3d p1();
+    /**
+     * @brief get the end point
+     *
+     * @return ray end point
+     */
+    const Eigen::Vector3d p2();
+
+    /**
+     * @brief get the direction of ray (normalized)
+     *
+     * @return direction (normalized)
+     */
+    const Eigen::Vector3d direction();
+
+  public:
+    /**
+     * @brief static method for generating new rays by raycasting from-to
+     *
+     * @param pointFrom origin of the ray
+     * @param pointTo endpoint of the ray
+     *
+     * @return new Ray instance created by raycasting
+     */
+    static Ray twopointCast(Eigen::Vector3d pointFrom, Eigen::Vector3d pointTo);
+
+    /**
+     * @brief static method for generating new rays by raycasting origin-direction
+     *
+     * @param origin origin of the ray
+     * @param direction of the ray
+     *
+     * @return new Ray instance created by raycasting
+     */
+    static Ray directionCast(Eigen::Vector3d origin, Eigen::Vector3d direction);
   };
 
   //}
 
-  /* class Plane //{ */
-
-  class Plane
+  /* class Triangle //{ */
+  /**
+   * @brief geometric representation of a triangle. Instantiate a new triangle by providing three vertices
+   */
+  class Triangle
   {
   public:
-    Plane();
-    ~Plane();
-    Plane(Eigen::Vector3d point, Eigen::Vector3d normal);
+    /**
+     * @brief constructor for initialization with default values (points [0,0,0], [1,0,0] and [0,0,1]
+     */
+    Triangle();
 
-    Eigen::Vector3d point;
-    Eigen::Vector3d normal;
+    /**
+     * @brief destructor
+     */
+    ~Triangle();
 
-    std::optional<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-16);
+    /**
+     * @brief default constructor for creating a new triangle from given vertices
+     *
+     * @param a
+     * @param b
+     * @param c
+     */
+    Triangle(Eigen::Vector3d a, Eigen::Vector3d b, Eigen::Vector3d c);
+
+  private:
+    Eigen::Vector3d point1;
+    Eigen::Vector3d point2;
+    Eigen::Vector3d point3;
+
+  public:
+    const Eigen::Vector3d a();
+    const Eigen::Vector3d b();
+    const Eigen::Vector3d c();
+
+    /**
+     * @brief get position on the triangle center
+     *
+     * @return vector3
+     */
+    const Eigen::Vector3d center();
+
+    /**
+     * @brief get normal vector of this triangle. The vector origin is placed at triangle center, length is normalized and direction follows the right-hand rule
+     * with respect to vertex order a-b-c
+     *
+     * @return vector3
+     */
+    const Eigen::Vector3d normal();
+
+    /**
+     * @brief get a vector of all vertices
+     *
+     * @return std::vector<vector3>
+     */
+    const std::vector<Eigen::Vector3d> vertices();
+
+  public:
+    /**
+     * @brief calculate an intersection of this triangle with a given ray with given tolerance
+     *
+     * @param r ray to calculate intersection with
+     * @param epsilon calculation tolerance
+     *
+     * @return vector3 intersection if exists, boost::none if no intersection is found
+     */
+    const boost::optional<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-4);
   };
-
   //}
 
   /* class Rectangle //{ */
 
+  /**
+   * @brief geometric representation of a rectangle (can represent any quadrilateral)
+   */
   class Rectangle
   {
   public:
+    /**
+     * @brief constructor for initialization with points set to [0,0,0], [1,0,0], [1,1,0] and [0,1,0]
+     */
     Rectangle();
+
+    /**
+     * @brief destructor
+     */
     ~Rectangle();
-    Rectangle(Eigen::Vector3d A, Eigen::Vector3d B, Eigen::Vector3d C, Eigen::Vector3d D);
 
-    Eigen::Vector3d normal_vector;
+    /**
+     * @brief constructor using a std::vector of points (vector3). Provide points in a counter-clockwise order for correct behavior
+     *
+     * @param points std::vector of points in 3d
+     */
+    Rectangle(std::vector<Eigen::Vector3d> points);
 
-    Eigen::Matrix3d basis;
-    Eigen::Matrix3d projector;
+    /**
+     * @brief constructor using four points (vector3). Provide points in a counter-clockwise order for correct behavior
+     *
+     * @param a
+     * @param b
+     * @param c
+     * @param d
+     */
+    Rectangle(Eigen::Vector3d a, Eigen::Vector3d b, Eigen::Vector3d c, Eigen::Vector3d d);
 
-    Plane plane;
-    std::vector<Eigen::Vector3d> points;
+  private:
+    Eigen::Vector3d point1;
+    Eigen::Vector3d point2;
+    Eigen::Vector3d point3;
+    Eigen::Vector3d point4;
 
-    std::optional<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-16);
+  public:
+    /**
+     * @brief getter for first point
+     *
+     * @return 1st point (vector3)
+     */
+    const Eigen::Vector3d a();
+
+    /**
+     * @brief getter for the second point
+     *
+     * @return 2nd point (vector3)
+     */
+    const Eigen::Vector3d b();
+
+    /**
+     * @brief getter for the third point
+     *
+     * @return 3rd point (vector3)
+     */
+    const Eigen::Vector3d c();
+
+    /**
+     * @brief getter for the fourth point
+     *
+     * @return 4th point (vector3)
+     */
+    const Eigen::Vector3d d();
+
+    /**
+     * @brief getter for center point
+     *
+     * @return center point (vector3)
+     */
+    const Eigen::Vector3d center();
+
+    /**
+     * @brief getter for the normal vector. It originates in the center of the Rectangle, length is normalized, orientation follows the right-hand rule,
+     * assuiming the points are provided in counter-clockwise order
+     *
+     * @return normal vector3
+     */
+    const Eigen::Vector3d normal();
+
+    /**
+     * @brief getter for all the points of this rectangle provided as std::vector
+     *
+     * @return std::vector of points (vector3)
+     */
+    const std::vector<Eigen::Vector3d> vertices();
+
+    /**
+     * @brief getter for the triangles forming this rectangle
+     *
+     * @return std::vector of triangles
+     */
+    const std::vector<Triangle> triangles();
+
+    /**
+     * @brief calculate an intersection of this rectangle with a given ray with given tolerance
+     *
+     * @param r ray to calculate intersection with
+     * @param epsilon calculation tolerance
+     *
+     * @return vector3 intersection if exists, boost::none if no intersection is found
+     */
+    const boost::optional<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-4);
+
+    /**
+     * @brief check if the normal is facing a given point, i.e. if the point lies in the same half-space as the rectangle normal
+     *
+     * @param point vector3 to check against
+     *
+     * @return true if the normal is facing given point. Returns false for angle >= 90 degrees
+     */
+    bool isFacing(Eigen::Vector3d point);
   };
 
   //}
 
-  /* class Cone //{ */
-
-  class Cone
+  /* class Cuboid //{ */
+  /**
+   * @brief geometric representation of a cuboid
+   */
+  class Cuboid
   {
-
   public:
-    Cone(Eigen::Vector3d position, Eigen::Vector3d direction, double angle);
-    ~Cone();
-    Eigen::Vector3d ProjectPoint(Eigen::Vector3d point);
+    /**
+     * @brief constructor for initialization with all points set to [0,0,0]
+     */
+    Cuboid();
 
-    /* NOT FINISHED //{ */
-    std::optional<Eigen::Vector3d> ProjectPointOnPlane(Plane plane, Eigen::Vector3d point);
-    //}
+    /**
+     * @brief virtual destructor
+     */
+    ~Cuboid();
+
+    /**
+     * @brief constructor from six provided points (vector3)
+     *
+     * @param p0 vector3
+     * @param p1 vector3
+     * @param p2 vector3
+     * @param p3 vector3
+     * @param p4 vector3
+     * @param p5 vector3
+     * @param p6 vector3
+     * @param p7 vector3
+     */
+    Cuboid(Eigen::Vector3d p0, Eigen::Vector3d p1, Eigen::Vector3d p2, Eigen::Vector3d p3, Eigen::Vector3d p4, Eigen::Vector3d p5, Eigen::Vector3d p6,
+           Eigen::Vector3d p7);
+    /**
+     * @brief constructor from a std::vector of provided points
+     *
+     * @param points std::vector<vector3>
+     */
+    Cuboid(std::vector<Eigen::Vector3d> points);
+
+    /**
+     * @brief constructor from a provided center point, size and orientation
+     *
+     * @param center vector3
+     * @param size vector3
+     * @param orientation quaternion
+     */
+    Cuboid(Eigen::Vector3d center, Eigen::Vector3d size, Eigen::Quaterniond orientation);
 
   private:
-    Eigen::Vector3d position, direction;
-    double angle;
+    /**
+     * @brief side indexing
+     */
+    enum
+    {
+      BOTTOM = 0,
+      TOP = 1,
+      LEFT = 2,
+      RIGHT = 3,
+      FRONT = 4,
+      BACK = 5,
+    };
 
-    Eigen::MatrixXd cone_axis_projector;
-    Ray cone_ray;
+  private:
+    std::vector<Eigen::Vector3d> points;
+    std::vector<Eigen::Vector3d> lookupPoints(int face_idx);
+
+  public:
+    /**
+     * @brief getter for all vertices (vector3) of this cuboid
+     *
+     * @return std::vector<vector3>
+     */
+    const std::vector<Eigen::Vector3d> vertices();
+
+    /**
+     * @brief getter for the center point
+     *
+     * @return vector3
+     */
+    const Eigen::Vector3d center();
+
+    /**
+     * @brief getter for one side corresponding to a provided index
+     *
+     * @param face_idx index of the side to lookup points for
+     *
+     * @return rectangle representing the cuboid side
+     */
+    const Rectangle getRectangle(int face_idx);
+
+    /**
+     * @brief calculate the intersection between this cuboid and a provided ray within a given tolerance. Can result in 0, 1 or 2 intersection points
+     *
+     * @param r ray to check intersection with
+     * @param epsilon tolerance for the calculation
+     *
+     * @return std::vector<vector3> list of intersection points (depending on the geometry, can yield 0, 1 or 2 points)
+     */
+    const std::vector<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-4);
   };
+  //}
 
+  /* class Ellipse //{ */
+  /**
+   * @brief geometric representation of an ellipse
+   */
+  class Ellipse
+  {
+  public:
+    /**
+     * @brief constructor for initialization without setting internal variables
+     */
+    Ellipse();
+
+    /**
+     * @brief destructor
+     */
+    ~Ellipse();
+
+    /**
+     * @brief constructor using a provided center point, orientation, major semi-axis length and minor semi-axis length
+     *
+     * @param center vector3
+     * @param orientation quaternion
+     * @param a major semi-axis length
+     * @param b minor semi-axis length
+     */
+    Ellipse(Eigen::Vector3d center, Eigen::Quaterniond orientation, double a, double b);
+
+  private:
+    double major_semi;
+    double minor_semi;
+    Eigen::Vector3d center_point;
+    Eigen::Quaterniond absolute_orientation;
+
+  public:
+    /**
+     * @brief getter for major semi-axis
+     *
+     * @return length of major semi-axis
+     */
+    double a();
+
+    /**
+     * @brief getter for minor semi-axis
+     *
+     * @return length of minor semi-axis
+     */
+    double b();
+
+    /**
+     * @brief getter for the center point
+     *
+     * @return vector3
+     */
+    const Eigen::Vector3d center();
+
+    /**
+     * @brief getter for the orientation
+     *
+     * @return quaternion
+     */
+    const Eigen::Quaterniond orientation();
+  };
+  //}
+
+  /* class Cylinder //{ */
+  /**
+   * @brief geometric representation of a cylinder
+   */
+  class Cylinder
+  {
+  public:
+    /**
+     * @brief constructor without setting the internal variables
+     */
+    Cylinder();
+
+    /**
+     * @brief destructor
+     */
+    ~Cylinder();
+
+    /**
+     * @brief constructor using a given center point, radius, height and orietnation
+     *
+     * @param center geometric center in the middle of body height
+     * @param radius radius of the cap
+     * @param height distance between caps
+     * @param orientation quaternion
+     */
+    Cylinder(Eigen::Vector3d center, double radius, double height, Eigen::Quaterniond orientation);
+
+  private:
+    Eigen::Vector3d center_point;
+    double radius;
+    double height;
+    Eigen::Quaterniond absolute_orientation;
+
+  public:
+    /**
+     * @brief cap indexing
+     */
+    enum
+    {
+      BOTTOM = 0,
+      TOP = 1,
+    };
+
+  public:
+    /**
+     * @brief getter for the center point
+     *
+     * @return vector3
+     */
+    const Eigen::Vector3d center();
+
+    /**
+     * @brief getter for the orientation
+     *
+     * @return quaternion
+     */
+    const Eigen::Quaterniond orientation();
+
+    /**
+     * @brief getter for cap radius
+     *
+     * @return radius of the cap
+     */
+    double r();
+
+    /**
+     * @brief getter for the body height
+     *
+     * @return body height
+     */
+    double h();
+
+    /**
+     * @brief getter for a cap corresponding to a provided index
+     *
+     * @param index of the cap
+     *
+     * @return ellipse representing the cap
+     */
+    const Ellipse getCap(int index);
+  };
+  //}
+
+  /* class Cone //{ */
+  /**
+   * @brief geometric representaiton of a cone
+   */
+  class Cone
+  {
+  public:
+    /**
+     * @brief constructor without setting the internal variables
+     */
+    Cone();
+
+    /**
+     * @brief destructor
+     */
+    ~Cone();
+
+    /**
+     * @brief constructor from a given origin point (tip of the cone), angle, height and orientation
+     *
+     * @param origin_point tip of the cone
+     * @param angle angle between body height and side in radians
+     * @param height distance between tip and base
+     * @param orientation offset from the default orientation. Default orientation is with body height aligned with Z axis, standing on the tip
+     */
+    Cone(Eigen::Vector3d origin_point, double angle, double height, Eigen::Vector3d orientation);
+
+  private:
+    Eigen::Vector3d origin_point;
+    double angle;
+    double height;
+    Eigen::Vector3d absolute_direction;
+
+  public:
+    /**
+     * @brief getter for the tip point
+     *
+     * @return vector3
+     */
+    const Eigen::Vector3d origin();
+
+    /**
+     * @brief getter for the direction. Normalized direction from origin towards base
+     *
+     * @return vector3, normalized
+     */
+    const Eigen::Vector3d direction();
+
+    /**
+     * @brief getter for the center point. Center point lies in half of the body height
+     *
+     * @return vector3
+     */
+    const Eigen::Vector3d center();
+
+    /**
+     * @brief getter for angle between body height and body side
+     *
+     * @return angle in radians
+     */
+    double theta();
+
+    /**
+     * @brief getter for body height
+     *
+     * @return
+     */
+    double h();
+
+    /**
+     * @brief getter for the cap of the cone
+     *
+     * @return ellipse representing the cap of the cone
+     */
+    const Ellipse getCap();
+  };
   //}
 
   /* Rotation and angle related functions //{ */
@@ -231,10 +735,32 @@ namespace mrs_lib
    */
   Eigen::Matrix3d rotation_between(const vec3_t& a, const vec3_t& b, const double tolerance = 1e-9);
 
+  /**
+   * @brief computes the haversine (half of versine) for a given angle
+   *
+   * @param angle angle in radians
+   *
+   * @return
+   */
   double haversin(const double& angle);
 
-  double invHaversin(const double& angle);
+  /**
+   * @brief computes the inverse haversine angle for a given value
+   *
+   * @param value
+   *
+   * @return angle in radians
+   */
+  double invHaversin(const double& value);
 
+  /**
+   * @brief compute the angle between two vectors
+   *
+   * @param v1 vector3 at which the rotation starts
+   * @param v2 vector3 at which the rotation ends
+   *
+   * @return angle in radians
+   */
   double vectorAngle(const Eigen::Vector3d& v1, const Eigen::Vector3d& v2);
 
   double solidAngle(const double& a, const double& b, const double& c);
@@ -249,8 +775,36 @@ namespace mrs_lib
 
   double interpolateAngles(const double& a1, const double& a2, const double& coeff);
 
+  /**
+   * @brief compute the solid angle of a rectangle when viewed from a given point
+   *
+   * @param r rectangle
+   * @param center origin of the solid angle
+   *
+   * @return solid angle in steradians
+   */
   double rectSolidAngle(const Rectangle& r, const Eigen::Vector3d& center);
 
+
+  /**
+   * @brief create a quaternion from 3 provided Euler angles
+   *
+   * @param x Euler angle in radians
+   * @param y Euler angle in radians
+   * @param z Euler angle in radians
+   *
+   * @return quaternion
+   */
+  Eigen::Quaterniond quaternionFromEuler(double x, double y, double z);
+
+  /**
+   * @brief create a quaternion from Euler angles provided as a vector
+   *
+   * @param euler components of the rotation provided as vector of Euler angles
+   *
+   * @return quaternion
+   */
+  Eigen::Quaterniond quaternionFromEuler(Eigen::Vector3d euler);
   //}
 
   /* Distances, Norms and Areas //{ */
@@ -281,7 +835,26 @@ namespace mrs_lib
    */
   double dist3d(const double& ax, const double& ay, const double& az, const double& bx, const double& by, const double& bz);
 
+  /**
+   * @brief uses Heron's formula to compute area of a given triangle using side lengths
+   *
+   * @param a length of side1
+   * @param b length of side2
+   * @param c length of side3
+   *
+   * @return
+   */
   double triangleArea(const double& a, const double& b, const double& c);
+
+  /**
+   * @brief computes the area of a spherical surface section in betweeen three given points
+   *
+   * @param a vector3
+   * @param b vector3
+   * @param c vector3
+   *
+   * @return area of the spherical surface section
+   */
   double sphericalTriangleArea(const Eigen::Vector3d& a, const Eigen::Vector3d& b, const Eigen::Vector3d& c);
 
   Eigen::Vector2d rotateVector2d(const Eigen::Vector2d& vector_in, const double& angle);
