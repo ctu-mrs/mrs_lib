@@ -49,14 +49,14 @@ BatchVisualizer::BatchVisualizer(ros::NodeHandle& nh, std::string marker_topic_n
 //}
 
 /* dynamicReconfigureCallback //{ */
-/* void BatchVisualizer::dynamicReconfigureCallback(mrs_lib::batch_visualizerConfig& config, [[maybe_unused]] uint32_t level) { */
-/*   reconfigured = true; */
-/*   ROS_INFO("[%s]: Dynamic reconfigure request recieved!", ros::this_node::getName().c_str()); */
-/*   tmp_points_scale = config.points_scale; */
-/*   tmp_lines_scale  = config.lines_scale; */
-/*   ROS_INFO("[%s]: Points scale: %.3f", ros::this_node::getName().c_str(), tmp_points_scale); */
-/*   ROS_INFO("[%s]: Lines scale: %.3f", ros::this_node::getName().c_str(), tmp_lines_scale); */
-/* } */
+void BatchVisualizer::dynamicReconfigureCallback(mrs_lib::batch_visualizerConfig& config, [[maybe_unused]] uint32_t level) {
+  reconfigured = true;
+  ROS_INFO("[%s]: Dynamic reconfigure request recieved!", ros::this_node::getName().c_str());
+  tmp_points_scale = config.points_scale;
+  tmp_lines_scale  = config.lines_scale;
+  ROS_INFO("[%s]: Points scale: %.3f", ros::this_node::getName().c_str(), tmp_points_scale);
+  ROS_INFO("[%s]: Lines scale: %.3f", ros::this_node::getName().c_str(), tmp_lines_scale);
+}
 //}
 
 /* initialize //{ */
@@ -107,10 +107,10 @@ void BatchVisualizer::initialize(ros::NodeHandle& nh) {
   triangles_marker.scale.y = 1;
   triangles_marker.scale.z = 1;
 
-  /* reconfigure_server_.reset(new ReconfigureServer()); */
-  /* reconfigure_server_.reset(new ReconfigureServer(nh)); */
-  /* ReconfigureServer::CallbackType f = boost::bind(&BatchVisualizer::dynamicReconfigureCallback, this, _1, _2); */
-  /* reconfigure_server_->setCallback(f); */
+  reconfigure_server_.reset(new ReconfigureServer());
+  reconfigure_server_.reset(new ReconfigureServer(nh));
+  ReconfigureServer::CallbackType f = boost::bind(&BatchVisualizer::dynamicReconfigureCallback, this, _1, _2);
+  reconfigure_server_->setCallback(f);
 
   ROS_INFO("[%s]: Batch visualizer loaded with default values", ros::this_node::getName().c_str());
   initialized = true;

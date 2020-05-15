@@ -17,7 +17,11 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_geometry_msgs
   cv_bridge
   image_transport
-  # dynamic_reconfigure
+  dynamic_reconfigure
+  )
+
+generate_dynamic_reconfigure_options(
+  cfg/batch_visualizer.cfg
   )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O3 -Wall")
@@ -34,13 +38,6 @@ set(Eigen_LIBRARIES ${EIGEN3_LIBRARIES})
 
 #include OpenCV
 find_package(OpenCV REQUIRED HINTS /usr/local/lib)
-
-#########################
-## dynamic reconfigure ##
-#########################
-# generate_dynamic_reconfigure_options(
-#   cfg/batch_visualizer.cfg
-# )
 
 ###################################
 ## catkin specific configuration ##
@@ -65,6 +62,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${Eigen_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
+  ${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake
   )
 
 add_library(MrsLibRepredictor src/repredictor/repredictor.cpp src/repredictor/MRS_odom_repredictor.cpp)
