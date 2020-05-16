@@ -10,8 +10,8 @@
 #include <ros/ros.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <mrs_lib/geometry_utils.h>
-#include <dynamic_reconfigure/server.h>
-#include <mrs_lib/batch_visualizerConfig.h>
+/* #include <dynamic_reconfigure/server.h> */
+/* #include <mrs_lib/batch_visualizerConfig.h> */
 
 #define DEFAULT_ELLIPSE_POINTS 64
 
@@ -191,12 +191,12 @@ private:
   std::vector<Eigen::Vector3d> buildEllipse(mrs_lib::Ellipse ellispe, int num_points = DEFAULT_ELLIPSE_POINTS);
 
   // dynamic reconfigure
-  typedef mrs_lib::batch_visualizerConfig Config;
+  /* typedef mrs_lib::batch_visualizerConfig Config; */
 
-  typedef dynamic_reconfigure::Server<Config> ReconfigureServer;
-  boost::shared_ptr<ReconfigureServer>        reconfigure_server_;
+  /* typedef dynamic_reconfigure::Server<Config> ReconfigureServer; */
+  /* boost::shared_ptr<ReconfigureServer>        reconfigure_server_; */
 
-  void dynamicReconfigureCallback(Config &config, uint32_t level);
+  /* void dynamicReconfigureCallback(Config &config, uint32_t level); */
 };
 
 #endif
