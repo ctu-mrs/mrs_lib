@@ -625,6 +625,15 @@ namespace mrs_lib
      * @return ellipse representing the cap of the cone
      */
     const Ellipse getCap();
+
+    /**
+     * @brief Project a 3D point orthogonally onto the Cone surface
+     *
+     * @param point in 3D
+     *
+     * @return projected point
+     */
+    const Eigen::Vector3d projectPoint(const Eigen::Vector3d& point);
   };
   //}
 

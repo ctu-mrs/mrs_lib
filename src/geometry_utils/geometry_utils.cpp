@@ -703,6 +703,38 @@ namespace mrs_lib
     return e;
   }
 
+  const Eigen::Vector3d Cone::projectPoint(const Eigen::Vector3d& point)
+  {
+
+    Eigen::Vector3d point_vec = point - origin();
+    double point_axis_angle = acos((point_vec.dot(direction())) / (point_vec.norm() * direction().norm()));
+
+    /* Eigen::Vector3d axis_projection = this->cone_axis_projector * point_vec + origin(); */
+
+    Eigen::Vector3d axis_rot = direction().cross(point_vec);
+    axis_rot.normalize();
+
+    Eigen::AngleAxis<double> my_quat(this->angle - point_axis_angle, axis_rot);
+
+    Eigen::Vector3d point_on_cone = my_quat * point_vec + origin();
+
+    Eigen::Vector3d vec_point_on_cone = point_on_cone - origin();
+    vec_point_on_cone.normalize();
+
+    double beta = this->angle - point_axis_angle;
+
+    if (point_axis_angle < this->angle)
+    {
+      return origin() + vec_point_on_cone * cos(beta) * point_vec.norm();
+    } else if ((point_axis_angle >= this->angle) && (point_axis_angle - this->angle) <= M_PI / 2.0)
+    {  // TODO: is this condition correct?
+      return origin() + vec_point_on_cone * cos(point_axis_angle - this->angle) * point_vec.norm();
+    } else
+    {
+      return origin();
+    }
+  }
+
   //}
 
   //}
@@ -929,128 +961,6 @@ namespace mrs_lib
     return Eigen::AngleAxisd(euler.x(), Eigen::Vector3d::UnitX()) * Eigen::AngleAxisd(euler.y(), Eigen::Vector3d::UnitY())
            * Eigen::AngleAxisd(euler.z(), Eigen::Vector3d::UnitZ());
   }
-  //}
-
-  // | ------------ not finished / not used / broken ------------ |
-
-  /* UNUSED //{ */
-
-  /* /1* ConicSection constructor //{ *1/ */
-  /* ConicSection::ConicSection(const double A, const double B, const double C, const double D, const double E, const double F, const double tolerance) */
-  /* { */
-  /*   // determinant of the 2x2 submatrix (the discriminant) */
-  /*   alpha = B*B - 4*A*C; */
-
-  /*   // determinant of the 3x3 matrix */
-  /*   beta = (B*E*D - C*D*D - A*E*E - F*alpha)/4.0; */
-
-  /*   conic_type = classify_conic_section(alpha, beta, tolerance); */
-  /* } */
-  /* //} */
-
-  /* /1* classify_conic_section() method //{ *1/ */
-  /* ConicSection::conic_type_t ConicSection::classify_conic_section(const double alpha, const double beta, const double tolerance) */
-  /* { */
-  /*   conic_type_t conic_type; */
-  /*   if (abs(beta) < tolerance) */
-  /*   { */
-  /*     if (abs(alpha) < tolerance) */
-  /*       conic_type = parallel_lines; */
-  /*     else if (alpha < 0.0) */
-  /*       conic_type = point; */
-  /*     else // (alpha > 0.0) */
-  /*       conic_type = intersecting_lines; */
-  /*   } else */
-  /*   { */
-  /*     if (abs(alpha) < tolerance) */
-  /*       conic_type = parabola; */
-  /*     else if (alpha < 0.0) */
-  /*     { */
-  /*       if (abs(A-C) < tolerance && abs(B) < tolerance) */
-  /*         conic_type = circle; */
-  /*       else */
-  /*         conic_type = ellipse; */
-  /*     } */
-  /*     else // (alpha > 0.0) */
-  /*     { */
-  /*       if (abs(A+C) < tolerance) */
-  /*         conic_type = rectangular_hyperbola; */
-  /*       else */
-  /*         conic_type = hyperbola; */
-  /*     } */
-  /*   } */
-  /*   return conic_type; */
-  /* } */
-  /* //} */
-
-  // THIS IS WRONG!! It's actually pretty complicated stuff!!
-  /* double ConicSection::closest_point_on_ellipse_param(const pt2_t& to_point, const central_conic_params_t& ellipse_params) */
-  /* { */
-  /*   // transform the point to a frame where the ellipse is centered and has axes aligned with the frame axes */
-  /*   const Eigen::Rotation2Dd rot(-ellipse_params.theta); */
-  /*   const pt2_t pt_tfd = rot*(to_point - vec2_t(ellipse_params.x0, ellipse_params.y0)); */
-  /*   // calculate the `t` parameter of the ellipse, corresponding to the angle in which the point lies */
-  /*   const double t = atan2(ellipse_params.a*pt_tfd.y(), ellipse_params.b*pt_tfd.x()); */
-  /*   return t; */
-  /* } */
-
-  /* /1* calc_central_conic_params() method //{ *1/ */
-  /* ConicSection::central_conic_params_t ConicSection::calc_central_conic_params() */
-  /* { */
-  /*   assert(conic_type & basic_type_mask == ellipse || conic_type & basic_type_mask == hyperbola); */
-  /*   const double tmp1 = 2*(A*E*E + C*D*D - B*D*E + alpha*F); */
-  /*   const double tmp2 = sqrt((A - C)*(A - C) + B*B); */
-  /*   const double atmp = tmp1*((A + C) + tmp2); */
-  /*   const double btmp = tmp1*((A + C) - tmp2); */
-  /*   const double a = sqrt(abs(atmp))/alpha; */
-  /*   const double b = sqrt(abs(btmp))/alpha; */
-  /*   const double x0 = (2*C*D - B*E)/alpha; */
-  /*   const double y0 = (2*A*E - B*D)/alpha; */
-  /*   double th = atan2(C - A - tmp2, B); */
-  /*   if (A < C) */
-  /*     th += M_PI_2; */
-  /*   central_conic_params_t ret; */
-  /*   ret.a = a; */
-  /*   ret.b = b; */
-  /*   ret.x0 = x0; */
-  /*   ret.y0 = y0; */
-  /*   ret.theta = th; */
-  /*   return ret; */
-  /* } */
-  /* //} */
-
-  //}
-
-  /* NOT FINISHED //{ */
-
-  /* // TODO: probably doesn't do what it claims */
-  /* std::optional<Eigen::Vector3d> Cone::ProjectPointOnPlane(Plane plane, Eigen::Vector3d point) { */
-
-  /*   std::optional<Eigen::Vector3d> intersect = plane.intersectionRay(this->cone_ray, 1e-6); */
-
-  /*   if (!intersect) { */
-  /*     return intersect; */
-  /*   } */
-
-  /*   Eigen::Vector3d vec_to_intersect = intersect.value() - this->position; */
-  /*   vec_to_intersect.normalize(); */
-
-  /*   Eigen::Vector3d vec_to_point = intersect.value() - this->position; */
-  /*   vec_to_point.normalize(); */
-
-  /*   Eigen::Vector3d my_axis = this->direction.cross(vec_to_point); */
-  /*   my_axis.normalize(); */
-
-  /*   Eigen::AngleAxis<double> my_quat(this->angle, my_axis); */
-
-  /*   Eigen::Vector3d vec_along_cone = my_quat * vec_to_intersect; */
-  /*   Ray ray_along_cone(this->position, this->position + vec_along_cone); */
-
-  /*   std::optional<Eigen::Vector3d> intersect2 = plane.intersectionRay(ray_along_cone, 1e-6); */
-
-  /*   return intersect2; */
-  /* } */
-
   //}
 
 }  // namespace mrs_lib
