@@ -23,19 +23,28 @@ PointObstacle::PointObstacle(const Eigen::RowVector2d center, const double r, co
 
 //}
 
-/* isPointInside() //{ */
+/* isPointInside3d() //{ */
 
-bool PointObstacle::isPointInside(const double px, const double py, const double pz) {
+bool PointObstacle::isPointInside3d(const double px, const double py, const double pz) {
 
   return (pz <= height) && (pow(px - center(0), 2.0) + pow(py - center(1), 2.0)) < pow(r, 2.0);
 }
 
 //}
 
-/* doesSectionIntersect() //{ */
+/* isPointInside2d() //{ */
 
-bool PointObstacle::doesSectionIntersect(const double startX, const double startY, const double startZ, const double endX, const double endY,
-                                         const double endZ) {
+bool PointObstacle::isPointInside2d(const double px, const double py) {
+
+  return (pow(px - center(0), 2.0) + pow(py - center(1), 2.0)) < pow(r, 2.0);
+}
+
+//}
+
+/* doesSectionIntersect3d() //{ */
+
+bool PointObstacle::doesSectionIntersect3d(const double startX, const double startY, const double startZ, const double endX, const double endY,
+                                           const double endZ) {
 
   Eigen::RowVector2d start{startX, startY};
   Eigen::RowVector2d end{endX, endY};
@@ -64,6 +73,25 @@ bool PointObstacle::doesSectionIntersect(const double startX, const double start
 
     return false;
   }
+}
+
+//}
+
+/* doesSectionIntersect2d() //{ */
+
+bool PointObstacle::doesSectionIntersect2d(const double startX, const double startY, const double endX, const double endY) {
+
+  Eigen::RowVector2d start{startX, startY};
+  Eigen::RowVector2d end{endX, endY};
+
+  Eigen::RowVector2d orthogonal_vector{end(1) - start(1), start(0) - end(0)};
+
+  orthogonal_vector.normalize();
+
+  Eigen::RowVector2d circleDiagStart = center - orthogonal_vector * r;
+  Eigen::RowVector2d circleDiagEnd   = center + orthogonal_vector * r;
+
+  return sectionIntersect(start, end, circleDiagStart, circleDiagEnd).intersect;
 }
 
 //}

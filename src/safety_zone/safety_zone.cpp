@@ -78,7 +78,7 @@ bool SafetyZone::isPointValid3d(const double px, const double py, const double p
   }
 
   for (auto& elem : pointObstacles) {
-    if (elem.isPointInside(px, py, pz)) {
+    if (elem.isPointInside3d(px, py, pz)) {
       return false;
     }
   }
@@ -98,6 +98,12 @@ bool SafetyZone::isPointValid2d(const double px, const double py) {
 
   for (auto& elem : innerObstacles) {
     if (elem.isPointInside(px, py)) {
+      return false;
+    }
+  }
+
+  for (auto& elem : pointObstacles) {
+    if (elem.isPointInside2d(px, py)) {
       return false;
     }
   }
@@ -122,7 +128,7 @@ bool SafetyZone::isPathValid3d(const double p1x, const double p1y, const double 
   }
 
   for (auto& el : pointObstacles) {
-    if (el.doesSectionIntersect(p1x, p1y, p1z, p2x, p2y, p2z)) {
+    if (el.doesSectionIntersect3d(p1x, p1y, p1z, p2x, p2y, p2z)) {
       return false;
     }
   }
@@ -142,6 +148,12 @@ bool SafetyZone::isPathValid2d(const double p1x, const double p1y, const double 
 
   for (auto& el : innerObstacles) {
     if (el.doesSectionIntersect(p1x, p1y, p2x, p2y)) {
+      return false;
+    }
+  }
+
+  for (auto& el : pointObstacles) {
+    if (el.doesSectionIntersect2d(p1x, p1y, p2x, p2y)) {
       return false;
     }
   }

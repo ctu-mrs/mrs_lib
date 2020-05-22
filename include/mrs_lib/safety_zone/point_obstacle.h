@@ -11,8 +11,10 @@ namespace mrs_lib
 class PointObstacle {
 public:
   PointObstacle(const Eigen::RowVector2d center, const double r, const double height);
-  bool isPointInside(const double px, const double py, const double pz);
-  bool doesSectionIntersect(const double startX, const double startY, const double startZ, const double endX, const double endY, const double endZ);
+  bool isPointInside3d(const double px, const double py, const double pz);
+  bool isPointInside2d(const double px, const double py);
+  bool doesSectionIntersect3d(const double startX, const double startY, const double startZ, const double endX, const double endY, const double endZ);
+  bool doesSectionIntersect2d(const double startX, const double startY, const double endX, const double endY);
   void inflateSelf(double amount);
   std::vector<geometry_msgs::Point> getPointMessageVector(const double z);
 
