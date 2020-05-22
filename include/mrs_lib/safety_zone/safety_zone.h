@@ -18,8 +18,10 @@ public:
   SafetyZone(const Eigen::MatrixXd& outerBorderMatrix, const std::vector<Eigen::MatrixXd>& innerObstaclesMatrixes,
              const std::vector<Eigen::MatrixXd>& pointObstaclesMatrixes);
 
-  bool                       isPointValid(const double px, const double py, const double pz);
-  bool                       isPathValid(const double p1x, const double p1y, const double p1z, const double p2x, const double p2y, const double p2z);
+  bool                       isPointValid3d(const double px, const double py, const double pz);
+  bool                       isPointValid2d(const double px, const double py);
+  bool                       isPathValid3d(const double p1x, const double p1y, const double p1z, const double p2x, const double p2y, const double p2z);
+  bool                       isPathValid2d(const double p1x, const double p1y, const double p2x, const double p2y);
   Polygon                    getBorder();
   std::vector<Polygon>       getObstacles();
   std::vector<PointObstacle> getPointObstacles();

@@ -63,9 +63,9 @@ SafetyZone::SafetyZone(const Eigen::MatrixXd& outerBorderMatrix, const std::vect
 
 //}
 
-/* isPointValid() //{ */
+/* isPointValid3d() //{ */
 
-bool SafetyZone::isPointValid(const double px, const double py, const double pz) {
+bool SafetyZone::isPointValid3d(const double px, const double py, const double pz) {
 
   if (!outerBorder->isPointInside(px, py)) {
     return false;
@@ -88,9 +88,28 @@ bool SafetyZone::isPointValid(const double px, const double py, const double pz)
 
 //}
 
-/* isPathValid() //{ */
+/* isPointValid2d() //{ */
 
-bool SafetyZone::isPathValid(const double p1x, const double p1y, const double p1z, const double p2x, const double p2y, const double p2z) {
+bool SafetyZone::isPointValid2d(const double px, const double py) {
+
+  if (!outerBorder->isPointInside(px, py)) {
+    return false;
+  }
+
+  for (auto& elem : innerObstacles) {
+    if (elem.isPointInside(px, py)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+//}
+
+/* isPathValid3d() //{ */
+
+bool SafetyZone::isPathValid3d(const double p1x, const double p1y, const double p1z, const double p2x, const double p2y, const double p2z) {
 
   if (outerBorder->doesSectionIntersect(p1x, p1y, p2x, p2y)) {
     return false;
@@ -104,6 +123,25 @@ bool SafetyZone::isPathValid(const double p1x, const double p1y, const double p1
 
   for (auto& el : pointObstacles) {
     if (el.doesSectionIntersect(p1x, p1y, p1z, p2x, p2y, p2z)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+//}
+
+/* isPathValid2d() //{ */
+
+bool SafetyZone::isPathValid2d(const double p1x, const double p1y, const double p2x, const double p2y) {
+
+  if (outerBorder->doesSectionIntersect(p1x, p1y, p2x, p2y)) {
+    return false;
+  }
+
+  for (auto& el : innerObstacles) {
+    if (el.doesSectionIntersect(p1x, p1y, p2x, p2y)) {
       return false;
     }
   }
