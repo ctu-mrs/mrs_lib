@@ -792,7 +792,7 @@ namespace mrs_lib
    *
    * @return solid angle in steradians
    */
-  double rectSolidAngle(const Rectangle& r, const Eigen::Vector3d& center);
+  double rectSolidAngle(Rectangle r, Eigen::Vector3d center);
 
 
   /**
