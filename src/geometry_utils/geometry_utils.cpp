@@ -791,6 +791,17 @@ namespace mrs_lib
 
   //}
 
+  /* vectorAngle() //{ */
+
+  double vectorAngle(const Eigen::Vector2i& v1, const Eigen::Vector2i& v2)
+  {
+    Eigen::Vector3d v1d(v1.x(), v1.y(), 0);
+    Eigen::Vector3d v2d(v2.x(), v2.y(), 0);
+    return vectorAngle(v1d, v2d);
+  }
+
+  //}
+
   /* solidAngle() //{ */
 
   double solidAngle(const double& a, const double& b, const double& c)
@@ -808,7 +819,7 @@ namespace mrs_lib
     double bc = vectorAngle(b, c);
     double ca = vectorAngle(c, a);
 
-    if (ab < 1e-3 and bc < 1e-3 and ca < 1e-3)
+    if (ab < 1e-3 || bc < 1e-3 || ca < 1e-3)
     {
       return triangleArea(ab, bc, ca);
     }
@@ -838,6 +849,15 @@ namespace mrs_lib
 
     double t1 = sphericalTriangleArea(a, b, c);
     double t2 = sphericalTriangleArea(c, d, a);
+
+    if (t1 != t1 || t1 < 1e-11)
+    {
+      t1 = 0.0;
+    }
+    if (t2 != t2 || t2 < 1e-11)
+    {
+      t2 = 0.0;
+    }
 
     return t1 + t2;
   }

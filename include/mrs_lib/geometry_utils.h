@@ -772,6 +772,16 @@ namespace mrs_lib
    */
   double vectorAngle(const Eigen::Vector3d& v1, const Eigen::Vector3d& v2);
 
+  /**
+   * @brief overloaded version to compute the angle between two integer coordinates
+   *
+   * @param v1 vector2i at which the rotation starts
+   * @param v2 vector2i at which the rotation ends
+   *
+   * @return angle in radians
+   */
+  double vectorAngle(const Eigen::Vector2i& v1, const Eigen::Vector2i& v2);
+
   double solidAngle(const double& a, const double& b, const double& c);
 
   double unwrapAngle(const double& yaw, const double& yaw_previous);
