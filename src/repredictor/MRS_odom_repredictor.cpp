@@ -5,8 +5,7 @@
 namespace mrs_lib
 {
   /* LKF_MRS_odom constructor //{ */
-  LKF_MRS_odom::LKF_MRS_odom(const std::vector<LKF_MRS_odom::H_t>& Hs, const double p1, const double p2, const double p3, const double default_dt)
-      : p1(p1), p2(p2), p3(p3)
+  LKF_MRS_odom::LKF_MRS_odom(const std::vector<LKF_MRS_odom::H_t>& Hs, const double default_dt)
   {
     Base_class::Hs = Hs;
     const double& dt = default_dt;
