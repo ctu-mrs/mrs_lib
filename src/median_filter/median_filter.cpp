@@ -116,9 +116,18 @@ bool MedianFilter::isValid(double input) {
   }
 }
 
+//}
+
+/* isFilled() //{ */
+
 bool MedianFilter::isFilled() {
   return is_filled;
 }
+
+//}
+
+/* getMedian() //{ */
+
 
 double MedianFilter::getMedian() {
 
@@ -131,5 +140,6 @@ double MedianFilter::getMedian() {
   }
   return median;
 }
+
 
 //}
