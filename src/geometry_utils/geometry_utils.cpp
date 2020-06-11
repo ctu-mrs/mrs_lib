@@ -419,19 +419,21 @@ namespace mrs_lib
 
   Cuboid::Cuboid(Eigen::Vector3d center, Eigen::Vector3d size, Eigen::Quaterniond orientation)
   {
-    Eigen::Vector3d p0(-size.x() / 2, -size.y() / 2, -size.z() / 2);
-    Eigen::Vector3d p1(size.x() / 2, -size.y() / 2, -size.z() / 2);
-    Eigen::Vector3d p2(size.x() / 2, size.y() / 2, -size.z() / 2);
-    Eigen::Vector3d p3(-size.x() / 2, size.y() / 2, -size.z() / 2);
-    Eigen::Vector3d p4(-size.x() / 2, -size.y() / 2, size.z() / 2);
-    Eigen::Vector3d p5(size.x() / 2, -size.y() / 2, size.z() / 2);
-    Eigen::Vector3d p6(size.x() / 2, size.y() / 2, size.z() / 2);
-    Eigen::Vector3d p7(-size.x() / 2, size.y() / 2, size.z() / 2);
+    Eigen::Vector3d p0(size.x() / 2.0, -size.y() / 2.0, -size.z() / 2.0);
+    Eigen::Vector3d p1(size.x() / 2.0, size.y() / 2.0, -size.z() / 2.0);
+    Eigen::Vector3d p2(size.x() / 2.0, size.y() / 2.0, size.z() / 2.0);
+    Eigen::Vector3d p3(size.x() / 2.0, -size.y() / 2.0, size.z() / 2.0);
+
+    Eigen::Vector3d p4(-size.x() / 2.0, size.y() / 2.0, -size.z() / 2.0);
+    Eigen::Vector3d p5(-size.x() / 2.0, -size.y() / 2.0, -size.z() / 2.0);
+    Eigen::Vector3d p6(-size.x() / 2.0, -size.y() / 2.0, size.z() / 2.0);
+    Eigen::Vector3d p7(-size.x() / 2.0, size.y() / 2.0, size.z() / 2.0);
 
     p0 = center + orientation * p0;
     p1 = center + orientation * p1;
     p2 = center + orientation * p2;
     p3 = center + orientation * p3;
+
     p4 = center + orientation * p4;
     p5 = center + orientation * p5;
     p6 = center + orientation * p6;
@@ -458,39 +460,39 @@ namespace mrs_lib
     std::vector<Eigen::Vector3d> lookup;
     switch (face_idx)
     {
-      case Cuboid::BOTTOM:
+      case Cuboid::FRONT:
         lookup.push_back(points[0]);
         lookup.push_back(points[1]);
         lookup.push_back(points[2]);
         lookup.push_back(points[3]);
         break;
-      case Cuboid::TOP:
+      case Cuboid::BACK:
         lookup.push_back(points[4]);
         lookup.push_back(points[5]);
         lookup.push_back(points[6]);
         lookup.push_back(points[7]);
         break;
       case Cuboid::LEFT:
-        lookup.push_back(points[3]);
-        lookup.push_back(points[0]);
+        lookup.push_back(points[1]);
         lookup.push_back(points[4]);
         lookup.push_back(points[7]);
+        lookup.push_back(points[2]);
         break;
       case Cuboid::RIGHT:
-        lookup.push_back(points[2]);
-        lookup.push_back(points[6]);
         lookup.push_back(points[5]);
-        lookup.push_back(points[1]);
-        break;
-      case Cuboid::FRONT:
         lookup.push_back(points[0]);
-        lookup.push_back(points[1]);
+        lookup.push_back(points[3]);
+        lookup.push_back(points[6]);
+        break;
+      case Cuboid::BOTTOM:
         lookup.push_back(points[5]);
         lookup.push_back(points[4]);
+        lookup.push_back(points[1]);
+        lookup.push_back(points[0]);
         break;
-      case Cuboid::BACK:
-        lookup.push_back(points[2]);
+      case Cuboid::TOP:
         lookup.push_back(points[3]);
+        lookup.push_back(points[2]);
         lookup.push_back(points[7]);
         lookup.push_back(points[6]);
         break;
