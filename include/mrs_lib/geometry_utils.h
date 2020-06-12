@@ -355,12 +355,12 @@ namespace mrs_lib
      */
     enum
     {
-      BOTTOM = 0,
-      TOP = 1,
+      FRONT = 0,
+      BACK = 1,
       LEFT = 2,
       RIGHT = 3,
-      FRONT = 4,
-      BACK = 5,
+      BOTTOM = 4,
+      TOP = 5,
     };
 
   private:
