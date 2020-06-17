@@ -950,7 +950,7 @@ namespace mrs_lib
     Eigen::Quaterniond quat1 = Eigen::Quaterniond(Eigen::AngleAxis<double>(a1, axis));
     Eigen::Quaterniond quat2 = Eigen::Quaterniond(Eigen::AngleAxis<double>(a2, axis));
 
-    quat_t new_quat = quat1.slerp(coeff, quat2);
+    quat_t new_quat = quat2.slerp(coeff, quat1);
 
     Eigen::Vector3d vecx = new_quat * Eigen::Vector3d(1, 0, 0);
 
