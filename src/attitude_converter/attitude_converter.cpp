@@ -250,10 +250,8 @@ double AttitudeConverter::getYawRateIntrinsic(const double& heading_rate) {
   // project the body yaw orbital velocity vector base onto the heading orbital velocity vector subspace
   Eigen::Vector3d projected = P * R.col(1);
 
-  Eigen::Vector3d body_yaw_orbital_velocity = R.col(1) * (orbital_velocity[0] / projected[0]);
-
   // extract the yaw rate
-  return body_yaw_orbital_velocity.dot(R.col(1));
+  return (orbital_velocity[0] / projected[0]);
 }
 
 double AttitudeConverter::getHeadingRate(const Vector3Converter& attitude_rate) {
