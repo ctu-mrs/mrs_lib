@@ -239,8 +239,8 @@ double AttitudeConverter::getYawRateIntrinsic(const double& heading_rate) {
   Eigen::Matrix3d R = *this;
 
   // construct the heading orbital velocity vector
-  Eigen::Vector3d heading_vector        = Eigen::Vector3d(R(0, 0), R(1, 0), 0);
-  Eigen::Vector3d orbital_velocity      = Eigen::Vector3d(0, 0, heading_rate).cross(heading_vector);
+  Eigen::Vector3d heading_vector   = Eigen::Vector3d(R(0, 0), R(1, 0), 0);
+  Eigen::Vector3d orbital_velocity = Eigen::Vector3d(0, 0, heading_rate).cross(heading_vector);
 
   // projector to the heading orbital velocity vector subspace
   Eigen::Vector3d b_orb = Eigen::Vector3d(0, 0, 1).cross(heading_vector);
@@ -253,7 +253,7 @@ double AttitudeConverter::getYawRateIntrinsic(const double& heading_rate) {
   Eigen::Vector3d body_yaw_orbital_velocity = R.col(1) * (orbital_velocity[0] / projected[0]);
 
   // extract the yaw rate
-  return body_yaw_orbital_velocity.norm();
+  return body_yaw_orbital_velocity.dot(R.col(1));
 }
 
 double AttitudeConverter::getHeadingRate(const Vector3Converter& attitude_rate) {
