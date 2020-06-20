@@ -161,14 +161,14 @@ namespace mrs_lib
     //}
 
     /* state_predict() method //{ */
-    template <bool check = n_inputs>
+    template <int check = n_inputs>
     static inline typename std::enable_if<check == 0, x_t>::type state_predict(const A_t& A, const x_t& x, [[maybe_unused]] const B_t& B,
                                                                                [[maybe_unused]] const u_t& u)
     {
       return A * x;
     }
 
-    template <bool check = n_inputs>
+    template <int check = n_inputs>
     static inline typename std::enable_if<check != 0, x_t>::type state_predict(const A_t& A, const x_t& x, const B_t& B, const u_t& u)
     {
       return A * x + B * u;
