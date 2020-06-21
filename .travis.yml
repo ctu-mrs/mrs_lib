@@ -1,38 +1,28 @@
-sudo: false
-os:
-- linux
-dist: bionic
+language: generic
+
+matrix:
+  fast_finish: true
+  include:
+    - os: linux
+      dist: bionic
+      env: BADGE=bionic
+    - os: linux
+      dist: focal
+      env: BADGE=focal
+  allow_failures:
+    - env: BADGE=focal
+
 branches:
   only:
-  - master
-addons:
-  apt:
-    packages:
-    - doxygen
-    - doxygen-doc
-    - doxygen-latex
-    - doxygen-gui
-    - graphviz
+    - master
 
-jobs:
-  include:
-    - stage: build
-      before_install:
-        - ./.ci/ci_before_install.sh
-      before_script: 
-      script:
-        - ./.ci/ci_test_build.sh
-    - stage: documentation
-      script:
-        - line=$(cat CMakeLists.txt | grep "project(.*)" -o); tmp=${line:8}; proj_name=${tmp:0:${#tmp}-1};
-        - sed -i 's/\(PROJECT_NAME\s*=\s*\)\".*\"/\1\"'$proj_name'\"/g' Doxyfile Doxyfile;
-        - doxygen Doxyfile
-        - pwd
-        - ls -lah
-      deploy:
-        provider: pages
-        skip_cleanup: true
-        local_dir: doc/html
-        github_token: "$GH_REPO_TOKEN"
-        on:
-          branch: master
+compiler:
+- gcc
+
+before_install:
+- ./.ci/ci_before_install.sh
+
+before_script: 
+
+script:
+- ./.ci/ci_test_build.sh
