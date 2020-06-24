@@ -1,6 +1,7 @@
 // clang: TomasFormat
 
 #include <mrs_lib/attitude_converter.h>
+#include <mrs_lib/utils.h>
 
 using quat_t = Eigen::Quaterniond;
 
@@ -265,9 +266,9 @@ double AttitudeConverter::getYawRateIntrinsic(const double& heading_rate) {
     throw MathErrorException();
   }
 
-  double sign = orbital_velocity.dot(projected);
+  double direction = sign(orbital_velocity.dot(projected));
 
-  double output_yaw_rate = sign * (orbital_velocity_norm / projected_norm);
+  double output_yaw_rate = direction * (orbital_velocity_norm / projected_norm);
 
   if (!std::isfinite(output_yaw_rate)) {
     ROS_ERROR("[AttitudeConverter]: getYawRateIntrinsic(): NaN detected in variable \"output_yaw_rate\"!!!");
