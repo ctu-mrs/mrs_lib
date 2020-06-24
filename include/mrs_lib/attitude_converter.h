@@ -162,6 +162,14 @@ public:
     }
   };
 
+  //! is thrown when math breaks
+  struct MathErrorException : public std::exception
+  {
+    const char* what() const throw() {
+      return "AttitudeConverter: math error";
+    }
+  };
+
   //! is thrown when the Euler angle format is set wrongly
   struct EulerFormatException : public std::exception
   {

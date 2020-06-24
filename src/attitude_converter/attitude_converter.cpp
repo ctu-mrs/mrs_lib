@@ -235,6 +235,12 @@ double AttitudeConverter::getHeading(void) {
 
 double AttitudeConverter::getYawRateIntrinsic(const double& heading_rate) {
 
+  // when the heading rate is very small, it does not make sense to compute the
+  // yaw rate (the math would break), return 0
+  if (fabs(heading_rate) < 1e-3) {
+    return 0;
+  }
+
   // prep
   Eigen::Matrix3d R = *this;
 
@@ -250,8 +256,24 @@ double AttitudeConverter::getYawRateIntrinsic(const double& heading_rate) {
   // project the body yaw orbital velocity vector base onto the heading orbital velocity vector subspace
   Eigen::Vector3d projected = P * R.col(1);
 
+  double output_yaw_rate = 0;
+
+  if (fabs(projected[0]) > 1e-5) {
+    output_yaw_rate = (orbital_velocity[0] / projected[0]);
+  } else if (fabs(projected[1]) > 1e-5) {
+    output_yaw_rate = (orbital_velocity[1] / projected[1]);
+  } else {
+    ROS_ERROR("[AttitudeConverter]: getYawRateIntrinsic(): \"projected\" in denominator is almost zero!!!");
+    throw MathErrorException();
+  }
+
+  if (!std::isfinite(output_yaw_rate)) {
+    ROS_ERROR("[AttitudeConverter]: getYawRateIntrinsic(): NaN detected in variable \"output_yaw_rate\"!!!");
+    throw MathErrorException();
+  }
+
   // extract the yaw rate
-  return (orbital_velocity[0] / projected[0]);
+  return output_yaw_rate;
 }
 
 double AttitudeConverter::getHeadingRate(const Vector3Converter& attitude_rate) {
@@ -270,8 +292,16 @@ double AttitudeConverter::getHeadingRate(const Vector3Converter& attitude_rate) 
   // atan2 derivative
   double rx        = R(0, 0);  // x-component of body X
   double ry        = R(1, 0);  // y-component of body Y
-  double atan2_d_x = -ry / (rx * rx + ry * ry);
-  double atan2_d_y = rx / (rx * rx + ry * ry);
+
+  double denom = rx * rx + ry * ry;
+
+  if (fabs(denom) <= 1e-5) {
+    ROS_ERROR("[AttitudeConverter]: getHeadingRate(): denominator near zero!!!");
+    throw MathErrorException();
+  }
+
+  double atan2_d_x = -ry / denom;
+  double atan2_d_y = rx / denom;
 
   // atan2 total differential
   double heading_rate = atan2_d_x * R_d(0, 0) + atan2_d_y * R_d(1, 0);
