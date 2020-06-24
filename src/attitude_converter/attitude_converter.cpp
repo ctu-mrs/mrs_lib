@@ -256,16 +256,18 @@ double AttitudeConverter::getYawRateIntrinsic(const double& heading_rate) {
   // project the body yaw orbital velocity vector base onto the heading orbital velocity vector subspace
   Eigen::Vector3d projected = P * R.col(1);
 
-  double output_yaw_rate = 0;
 
-  if (fabs(projected[0]) > 1e-5) {
-    output_yaw_rate = (orbital_velocity[0] / projected[0]);
-  } else if (fabs(projected[1]) > 1e-5) {
-    output_yaw_rate = (orbital_velocity[1] / projected[1]);
-  } else {
-    ROS_ERROR("[AttitudeConverter]: getYawRateIntrinsic(): \"projected\" in denominator is almost zero!!!");
+  double orbital_velocity_norm = orbital_velocity.norm();
+  double projected_norm        = projected.norm();
+
+  if (fabs(projected_norm) < 1e-5) {
+    ROS_ERROR("[AttitudeConverter]: getYawRateIntrinsic(): \"projected_norm\" in denominator is almost zero!!!");
     throw MathErrorException();
   }
+
+  double sign = orbital_velocity.dot(projected);
+
+  double output_yaw_rate = sign * (orbital_velocity_norm / projected_norm);
 
   if (!std::isfinite(output_yaw_rate)) {
     ROS_ERROR("[AttitudeConverter]: getYawRateIntrinsic(): NaN detected in variable \"output_yaw_rate\"!!!");
@@ -290,8 +292,8 @@ double AttitudeConverter::getHeadingRate(const Vector3Converter& attitude_rate) 
   Eigen::Matrix3d R_d = R * W;
 
   // atan2 derivative
-  double rx        = R(0, 0);  // x-component of body X
-  double ry        = R(1, 0);  // y-component of body Y
+  double rx = R(0, 0);  // x-component of body X
+  double ry = R(1, 0);  // y-component of body Y
 
   double denom = rx * rx + ry * ry;
 
