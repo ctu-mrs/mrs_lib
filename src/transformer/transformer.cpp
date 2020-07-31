@@ -546,7 +546,6 @@ namespace mrs_lib
     if (got_uav_name_)
     {
 
-      ROS_INFO_THROTTLE(1.0, "[%s]: Transformer debug: namespace: %s", ros::this_node::getName().c_str(), in.substr(0, uav_name_.length()).c_str());
       if (in.substr(0, uav_name_.length()) != uav_name_)
       {
 
