@@ -9,6 +9,30 @@ matrix:
     - os: linux
       dist: focal
       env: BADGE=focal
+    - stage: documentation
+      os: linux
+      dist: bionic
+      addons:
+        apt:
+          packages:
+          - doxygen
+          - doxygen-doc
+          - doxygen-latex
+          - doxygen-gui
+          - graphviz
+      script:
+        - line=$(cat CMakeLists.txt | grep "project(.*)" -o); tmp=${line:8}; proj_name=${tmp:0:${#tmp}-1};
+        - sed -i 's/\(PROJECT_NAME\s*=\s*\)\".*\"/\1\"'$proj_name'\"/g' Doxyfile Doxyfile;
+        - doxygen Doxyfile
+        - pwd
+        - ls -lah
+      deploy:
+        provider: pages
+        skip_cleanup: true
+        local_dir: doc/html
+        github_token: "$GH_REPO_TOKEN"
+        on:
+          branch: master
   allow_failures:
     - env: BADGE=focal
 
