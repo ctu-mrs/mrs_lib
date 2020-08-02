@@ -543,10 +543,10 @@ namespace mrs_lib
       }
     }
 
-    if (in.substr(0, 3) != "uav")
+    if (got_uav_name_)
     {
 
-      if (got_uav_name_)
+      if (in.substr(0, uav_name_.length()) != uav_name_)
       {
 
         return uav_name_ + "/" + in;
@@ -554,9 +554,13 @@ namespace mrs_lib
       } else
       {
 
-        ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: could not deduce a namespaced frame_id '%s' (did you instance the Transformer with the uav_name argument?)",
-                          node_name_.c_str(), in.c_str());
+        return in;
       }
+    } else
+    {
+
+      ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: could not deduce a namespaced frame_id '%s' (did you instance the Transformer with the uav_name argument?)",
+                        node_name_.c_str(), in.c_str());
     }
 
     return in;
