@@ -6,6 +6,7 @@
 #include <image_transport/image_transport.h>
 #include <ros/ros.h>
 #include <mutex>
+#include <memory>
 
 namespace mrs_lib {
 
