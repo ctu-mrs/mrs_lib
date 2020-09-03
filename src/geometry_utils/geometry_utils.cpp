@@ -705,7 +705,7 @@ namespace mrs_lib
     return e;
   }
 
-  const Eigen::Vector3d Cone::projectPoint(const Eigen::Vector3d& point)
+  const std::optional<Eigen::Vector3d> Cone::projectPoint(const Eigen::Vector3d& point)
   {
 
     Eigen::Vector3d point_vec = point - origin();
@@ -733,7 +733,7 @@ namespace mrs_lib
       return origin() + vec_point_on_cone * cos(point_axis_angle - this->angle) * point_vec.norm();
     } else
     {
-      return origin();
+      return {};
     }
   }
 

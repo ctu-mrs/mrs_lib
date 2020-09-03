@@ -633,7 +633,7 @@ namespace mrs_lib
      *
      * @return projected point
      */
-    const Eigen::Vector3d projectPoint(const Eigen::Vector3d& point);
+    const std::optional<Eigen::Vector3d> projectPoint(const Eigen::Vector3d& point);
   };
   //}
 

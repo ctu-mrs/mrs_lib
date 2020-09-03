@@ -2,6 +2,8 @@
 #include <mrs_lib/batch_visualizer.h>
 #include <mrs_lib/geometry_utils.h>
 
+namespace mrs_lib
+{
 
 /* conversion utils //{ */
 geometry_msgs::Point eigenToMsg(const Eigen::Vector3d v) {
@@ -451,3 +453,5 @@ void BatchVisualizer::publish() {
   }
 }
 //}
+
+}  // namespace mrs_lib
