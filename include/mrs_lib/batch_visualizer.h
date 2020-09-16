@@ -15,6 +15,9 @@
 
 #define DEFAULT_ELLIPSE_POINTS 64
 
+namespace mrs_lib
+{
+
 /**
  * @brief library for drawing large amounts of geometric objects in RVIZ at the same time
  */
@@ -107,7 +110,8 @@ public:
    * @param filled bool to set fill. True = face visible, False = outline visible
    * @param num_points number of points to approximate the round shape
    */
-  void addEllipse(mrs_lib::Ellipse ellipse, double r = 0.0, double g = 1.0, double b = 1.0, double a = 1.0, bool filled = true, int num_points = DEFAULT_ELLIPSE_POINTS);
+  void addEllipse(mrs_lib::Ellipse ellipse, double r = 0.0, double g = 1.0, double b = 1.0, double a = 1.0, bool filled = true,
+                  int num_points = DEFAULT_ELLIPSE_POINTS);
 
   /**
    * @brief add a cylinder to the buffer
@@ -198,5 +202,7 @@ private:
 
   /* void dynamicReconfigureCallback(Config &config, uint32_t level); */
 };
+
+}  // namespace mrs_lib
 
 #endif

@@ -24,7 +24,8 @@ find_package(catkin REQUIRED COMPONENTS
 #   cfg/batch_visualizer.cfg
 # )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall")
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # please, NEVER commit those alternative flags with specific overrides of optimization
 

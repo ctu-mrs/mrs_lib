@@ -2,6 +2,8 @@
 #include <mrs_lib/batch_visualizer.h>
 #include <mrs_lib/geometry_utils.h>
 
+namespace mrs_lib
+{
 
 /* conversion utils //{ */
 geometry_msgs::Point eigenToMsg(const Eigen::Vector3d v) {
@@ -154,6 +156,7 @@ void BatchVisualizer::addTriangle(mrs_lib::Triangle tri, double r, double g, dou
     triangles_marker.colors.push_back(color);
     triangles_marker.colors.push_back(color);
     triangles_marker.colors.push_back(color);
+    triangles_marker.color = color;
 
     geometry_msgs::Point point1 = eigenToMsg(tri.a());
     geometry_msgs::Point point2 = eigenToMsg(tri.b());
@@ -451,3 +454,5 @@ void BatchVisualizer::publish() {
   }
 }
 //}
+
+}  // namespace mrs_lib
