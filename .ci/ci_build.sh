@@ -9,7 +9,7 @@ distro=`lsb_release -r | awk '{ print $2 }'`
 echo "Starting build" 
 
 cd ~/catkin_ws
-source /opt/ros/$ROS_DISTRO/setup.bash
-catkin build --limit-status-rate 0.2 --summarize
+source /opt/ros/$ROS_DISTRO/setup.bash 
+catkin build --limit-status-rate 0.2 --summarize --catkin-make-args tests
 
 echo "Ended build"
