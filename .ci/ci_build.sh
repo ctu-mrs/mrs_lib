@@ -10,6 +10,6 @@ echo "Starting build"
 
 cd ~/catkin_ws
 source /opt/ros/$ROS_DISTRO/setup.bash 
-catkin build --limit-status-rate 0.2 --summarize --catkin-make-args tests
+catkin build --limit-status-rate 0.2 --summarize
 
 echo "Ended build"
