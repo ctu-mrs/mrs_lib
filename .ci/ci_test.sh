@@ -11,11 +11,10 @@ echo "Starting test"
 cd ~/catkin_ws
 source /opt/ros/$ROS_DISTRO/setup.bash
 
+catkin build mrs_lib
 catkin build mrs_lib --catkin-make-args tests
-
-source /opt/ros/$ROS_DISTRO/setup.bash
-
-rostest mrs_lib geometry_utils_test.launch -t --results-filename=mrs_lib.test --results-base-dir=/tmp/mrs_lib
-catkin_test_results /tmp/mrs_lib
+roscd mrs_lib
+rostest mrs_lib geometry_utils_test.launch -t --results-filename=mrs_lib.test --results-base-dir=/tmp
+catkin_test_results /tmp
 
 echo "Test ended"
