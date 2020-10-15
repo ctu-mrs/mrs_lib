@@ -6,4 +6,7 @@
   <include file="$(find mrs_lib)/test/attitude_converter/attitude_converter.test">
   </include>
 
+  <include file="$(find mrs_lib)/test/utils/utils.test">
+  </include>
+
 </launch>

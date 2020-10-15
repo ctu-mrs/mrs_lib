@@ -50,7 +50,7 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs mrs_msgs
   DEPENDS Eigen
-  LIBRARIES MrsLibSafetyZone MrsLibProfiler MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibRepredictor MrsLibGeometryUtils MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibLkfLegacy
+  LIBRARIES MrsLibSafetyZone MrsLibProfiler MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibRepredictor MrsLibGeometryUtils MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher
   )
 
 ###########
@@ -148,12 +148,6 @@ target_link_libraries(MrsLibUtils
   ${Eigen_LIBRARIES}
   )
 
-add_executable(utils_tests src/utils/utils_tests.cpp src/utils/utils.cpp)
-target_link_libraries(utils_tests
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  )
-
 add_library(MrsLibParamLoader src/param_loader/param_loader.cpp)
 target_link_libraries(MrsLibParamLoader
   ${catkin_LIBRARIES}
@@ -228,12 +222,6 @@ target_link_libraries(batch_visualizer_demo
   ${GAZEBO_INCLUDE_DIRS}
   )
 
-add_library(MrsLibLkfLegacy src/lkf/lkf_legacy.cpp)
-target_link_libraries(MrsLibLkfLegacy
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  )
-
 #############
 ## Testing ##
 #############
@@ -274,6 +262,24 @@ if(CATKIN_ENABLE_TESTING)
 
   add_dependencies(
     AttitudeConverterTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+  )
+
+  add_rostest_gtest(
+    UtilsTest
+    test/utils/utils.test
+    test/utils/test.cpp
+  )
+
+  target_link_libraries(
+    UtilsTest
+    MrsLibUtils
+    ${catkin_LIBRARIES}
+  )
+
+  add_dependencies(
+    UtilsTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
   )
