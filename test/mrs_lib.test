@@ -3,4 +3,7 @@
   <include file="$(find mrs_lib)/test/geometry_utils/geometry_utils.test">
   </include>
 
+  <include file="$(find mrs_lib)/test/attitude_converter/attitude_converter.test">
+  </include>
+
 </launch>

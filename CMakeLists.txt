@@ -128,13 +128,6 @@ target_link_libraries(MrsLibAttitudeConverter
   ${Eigen_LIBRARIES}
   )
 
-add_executable(attitude_converter_test src/attitude_converter/attitude_converter_test.cpp)
-target_link_libraries(attitude_converter_test
-  MrsLibAttitudeConverter
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  )
-
 add_library(MrsLibTransformer src/transformer/transformer.cpp)
 target_link_libraries(MrsLibTransformer
   MrsLibAttitudeConverter
@@ -263,6 +256,24 @@ if(CATKIN_ENABLE_TESTING)
 
   add_dependencies(
     GeometryUtilsTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+  )
+
+  add_rostest_gtest(
+    AttitudeConverterTest
+    test/attitude_converter/attitude_converter.test
+    test/attitude_converter/test.cpp
+  )
+
+  target_link_libraries(
+    AttitudeConverterTest
+    MrsLibAttitudeConverter
+    ${catkin_LIBRARIES}
+  )
+
+  add_dependencies(
+    AttitudeConverterTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
   )
