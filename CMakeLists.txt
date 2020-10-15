@@ -74,6 +74,12 @@ target_link_libraries(MrsLibRepredictor
   ${Eigen_LIBRARIES}
   )
 
+add_executable(lkf_legacy src/lkf/lkf_legacy.cpp)
+target_link_libraries(lkf_legacy
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
 add_executable(lkf_example src/lkf/example.cpp)
 target_link_libraries(lkf_example
   ${catkin_LIBRARIES}
