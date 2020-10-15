@@ -1,13 +1,14 @@
-// clang: MatousFormat
-
-/**  \file
-     \brief Tests for the UKF implementation
-     \author Matouš Vrba - vrbamato@fel.cvut.cz
- */
-
 #include <mrs_lib/ukf.h>
 #include <mrs_lib/lkf.h>
 #include <random>
+#include <cmath>
+#include <iostream>
+
+#include <gtest/gtest.h>
+#include <log4cxx/logger.h>
+
+using namespace mrs_lib;
+using namespace std;
 
 namespace mrs_lib
 {
@@ -94,8 +95,12 @@ Eigen::Matrix<double, rows, 1> normal_randmat(const Eigen::Matrix<double, rows, 
   return cov * ret;
 }
 
-int main()
-{
+/* TEST(TESTSuite, main_test) //{ */
+
+TEST(TESTSuite, main_test) {
+
+  int result = 1;
+
   srand(std::time(0));
   const double alpha = 1e-3;
   const double kappa = 0;
@@ -167,20 +172,27 @@ int main()
       usc = ukf.predict(usc, u, Q, dt);
       std::cout << "ukf_new  predi:" << std::endl << usc.x.transpose() << std::endl;
       uscs.push_back(usc);
+
       usc = ukf.correct(usc, z, R);
       std::cout << "ukf_new  corre:" << std::endl << usc.x.transpose() << std::endl;
-      uscs.push_back(usc);
+      uscs2.push_back(usc);
     }
     catch (const std::exception& e)
     {
-      ROS_ERROR("NEW  UKF failed: %s", e.what());
+      ROS_ERROR("NEW UKF failed: %s", e.what());
+      result *= 0;
     }
   }
 
+  ROS_INFO("[%s]: loop 1 finished", ros::this_node::getName().c_str());
+
   double x_diff = 0.0;
   double P_diff = 0.0;
+
   for (int it = 0; it < n_its + 1; it++)
   {
+    ROS_INFO("[%s]: it %d", ros::this_node::getName().c_str(), it);
+
     const auto usc = uscs.at(it);
     const auto usc2 = uscs2.at(it);
     /* const auto lsc = lscs.at(it); */
@@ -190,8 +202,17 @@ int main()
     P_diff += cur_P_diff;
   }
 
-  std::cout << "x diff average: " << x_diff / (n_its + 1) << std::endl;
-  std::cout << "P diff average: " << P_diff / (n_its + 1) << std::endl;
+  /* std::cout << "x diff average: " << x_diff / (n_its + 1) << std::endl; */
+  /* std::cout << "P diff average: " << P_diff / (n_its + 1) << std::endl; */
 
-  return 0;
+  EXPECT_TRUE(result);
+}
+
+//}
+
+int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
+
+  testing::InitGoogleTest(&argc, argv);
+
+  return RUN_ALL_TESTS();
 }

@@ -1,0 +1,6 @@
+<launch>
+
+  <test pkg="mrs_lib" type="UkfTest" test-name="ukf_test" time-limit="10.0">
+  </test>
+
+</launch>

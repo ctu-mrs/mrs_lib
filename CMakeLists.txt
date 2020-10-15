@@ -80,12 +80,6 @@ target_link_libraries(lkf_example
   ${Eigen_LIBRARIES}
   )
 
-add_executable(ukf_tests src/ukf/ukf_tests.cpp)
-target_link_libraries(ukf_tests
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  )
-
 add_executable(ukf_example src/ukf/example.cpp)
 target_link_libraries(ukf_example
   ${catkin_LIBRARIES}
@@ -280,6 +274,23 @@ if(CATKIN_ENABLE_TESTING)
 
   add_dependencies(
     UtilsTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+  )
+
+  add_rostest_gtest(
+    UkfTest
+    test/ukf/ukf.test
+    test/ukf/test.cpp
+  )
+
+  target_link_libraries(
+    UkfTest
+    ${catkin_LIBRARIES}
+  )
+
+  add_dependencies(
+    UkfTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
   )

@@ -9,4 +9,7 @@
   <include file="$(find mrs_lib)/test/utils/utils.test">
   </include>
 
+  <include file="$(find mrs_lib)/test/ukf/ukf.test">
+  </include>
+
 </launch>
