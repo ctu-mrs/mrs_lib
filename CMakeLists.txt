@@ -248,8 +248,8 @@ target_link_libraries(MrsLibLkfLegacy
 
 add_rostest_gtest(
   GeometryUtilsTest
-  test/geometry_utils_test.launch
-  test/geometry_utils_test.cpp
+  test/geometry_utils/test.test
+  test/geometry_utils/test.cpp
 )
 
 target_link_libraries(
