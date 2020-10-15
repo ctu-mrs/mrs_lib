@@ -325,4 +325,21 @@ if(CATKIN_ENABLE_TESTING)
     ${catkin_EXPORTED_TARGETS}
   )
 
+  add_rostest_gtest(
+    SubscribeHandlerTest
+    test/subscribe_handler/subscribe_handler.test
+    test/subscribe_handler/test.cpp
+  )
+
+  target_link_libraries(
+    SubscribeHandlerTest
+    ${catkin_LIBRARIES}
+  )
+
+  add_dependencies(
+    SubscribeHandlerTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+  )
+
 endif()

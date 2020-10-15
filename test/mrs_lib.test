@@ -18,4 +18,7 @@
   <include file="$(find mrs_lib)/test/param_loader/param_loader.test">
   </include>
 
+  <include file="$(find mrs_lib)/test/subscribe_handler/subscribe_handler.test">
+  </include>
+
 </launch>

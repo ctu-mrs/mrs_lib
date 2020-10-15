@@ -9,7 +9,7 @@
 using namespace mrs_lib;
 using namespace std;
 
-/* TEST(TESTSuite, rotation_between_1) //{ */
+/* TEST(TESTSuite, container_to_string) //{ */
 
 TEST(TESTSuite, container_to_string) {
 
