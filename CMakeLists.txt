@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_geometry_msgs
   cv_bridge
   image_transport
+  rostest
   # dynamic_reconfigure
   )
 
@@ -226,14 +227,6 @@ target_link_libraries(MrsLibImagePublisher
   ${GAZEBO_INCLUDE_DIRS}
   )
 
-add_executable(geometry_utils_tests src/geometry_utils/geometry_utils.cpp)
-target_link_libraries(geometry_utils_tests
-  MrsLibGeometryUtils
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  ${GAZEBO_INCLUDE_DIRS}
-  )
-
 add_executable(batch_visualizer_demo src/batch_visualizer/batch_visualizer_demo.cpp)
 target_link_libraries(batch_visualizer_demo
   MrsLibGeometryUtils
@@ -248,3 +241,25 @@ target_link_libraries(MrsLibLkfLegacy
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
+
+#############
+## Testing ##
+#############
+
+add_rostest_gtest(
+  GeometryUtilsTest
+  test/geometry_utils_test.launch
+  test/geometry_utils_test.cpp
+)
+
+target_link_libraries(
+  GeometryUtilsTest
+  MrsLibGeometryUtils
+  ${catkin_LIBRARIES}
+)
+
+add_dependencies(
+  GeometryUtilsTest
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+)

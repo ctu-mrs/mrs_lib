@@ -1,5 +1,5 @@
 #!/bin/bash
-# author: Robert Penicka
+
 set -e
 
 distro=`lsb_release -r | awk '{ print $2 }'`
