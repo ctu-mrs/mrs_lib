@@ -17,7 +17,6 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_geometry_msgs
   cv_bridge
   image_transport
-  rostest
   # dynamic_reconfigure
   )
 
@@ -246,20 +245,26 @@ target_link_libraries(MrsLibLkfLegacy
 ## Testing ##
 #############
 
-add_rostest_gtest(
-  GeometryUtilsTest
-  test/geometry_utils/test.test
-  test/geometry_utils/test.cpp
-)
+if(CATKIN_ENABLE_TESTING)
 
-target_link_libraries(
-  GeometryUtilsTest
-  MrsLibGeometryUtils
-  ${catkin_LIBRARIES}
-)
+  find_package(rostest REQUIRED)
 
-add_dependencies(
-  GeometryUtilsTest
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS}
-)
+  add_rostest_gtest(
+    GeometryUtilsTest
+    test/geometry_utils/geometry_utils.test
+    test/geometry_utils/test.cpp
+  )
+
+  target_link_libraries(
+    GeometryUtilsTest
+    MrsLibGeometryUtils
+    ${catkin_LIBRARIES}
+  )
+
+  add_dependencies(
+    GeometryUtilsTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+  )
+
+endif()
