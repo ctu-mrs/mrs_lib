@@ -1,0 +1,6 @@
+<launch>
+
+  <include file="$(find mrs_lib)/test/geometry_utils/geometry_utils.test">
+  </include>
+
+</launch>
