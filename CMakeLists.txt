@@ -141,12 +141,6 @@ target_link_libraries(MrsLibParamLoader
   ${Eigen_LIBRARIES}
   )
 
-add_executable(param_loader_tests src/param_loader/param_loader_tests.cpp)
-target_link_libraries(param_loader_tests
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  )
-
 add_executable(param_loader_example src/param_loader/example.cpp)
 target_link_libraries(param_loader_example
   ${catkin_LIBRARIES}
@@ -303,6 +297,24 @@ if(CATKIN_ENABLE_TESTING)
 
   add_dependencies(
     TransformerTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+  )
+
+  add_rostest_gtest(
+    ParamLoaderTest
+    test/param_loader/param_loader.test
+    test/param_loader/test.cpp
+  )
+
+  target_link_libraries(
+    ParamLoaderTest
+    MrsLibParamLoader
+    ${catkin_LIBRARIES}
+  )
+
+  add_dependencies(
+    ParamLoaderTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
   )

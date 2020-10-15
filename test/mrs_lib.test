@@ -15,4 +15,7 @@
   <include file="$(find mrs_lib)/test/transformer/transformer.test">
   </include>
 
+  <include file="$(find mrs_lib)/test/param_loader/param_loader.test">
+  </include>
+
 </launch>

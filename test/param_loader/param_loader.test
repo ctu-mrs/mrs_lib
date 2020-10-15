@@ -1,0 +1,9 @@
+<launch>
+
+  <test pkg="mrs_lib" type="ParamLoaderTest" test-name="param_loader" time-limit="10.0">
+
+    <rosparam file="$(find mrs_lib)/test/param_loader/test.yaml" />
+
+  </test>
+
+</launch>
