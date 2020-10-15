@@ -12,4 +12,7 @@
   <include file="$(find mrs_lib)/test/ukf/ukf.test">
   </include>
 
+  <include file="$(find mrs_lib)/test/transformer/transformer.test">
+  </include>
+
 </launch>

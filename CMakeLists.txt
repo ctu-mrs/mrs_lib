@@ -129,13 +129,6 @@ target_link_libraries(MrsLibTransformer
   ${Eigen_LIBRARIES}
   )
 
-add_executable(transformer_tests src/transformer/transformer_tests.cpp)
-target_link_libraries(transformer_tests
-  MrsLibTransformer
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  )
-
 add_library(MrsLibUtils src/utils/utils.cpp)
 target_link_libraries(MrsLibUtils
   ${catkin_LIBRARIES}
@@ -291,6 +284,25 @@ if(CATKIN_ENABLE_TESTING)
 
   add_dependencies(
     UkfTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+  )
+
+  add_rostest_gtest(
+    TransformerTest
+    test/transformer/transformer.test
+    test/transformer/test.cpp
+  )
+
+  target_link_libraries(
+    TransformerTest
+    MrsLibTransformer
+    MrsLibAttitudeConverter
+    ${catkin_LIBRARIES}
+  )
+
+  add_dependencies(
+    TransformerTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
   )
