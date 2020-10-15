@@ -12,6 +12,9 @@ matrix:
     - stage: documentation
       os: linux
       dist: bionic
+      branches:
+        only:
+          - master
       addons:
         apt:
           packages:
