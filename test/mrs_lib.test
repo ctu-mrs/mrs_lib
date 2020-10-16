@@ -3,4 +3,22 @@
   <include file="$(find mrs_lib)/test/geometry_utils/geometry_utils.test">
   </include>
 
+  <include file="$(find mrs_lib)/test/attitude_converter/attitude_converter.test">
+  </include>
+
+  <include file="$(find mrs_lib)/test/utils/utils.test">
+  </include>
+
+  <include file="$(find mrs_lib)/test/ukf/ukf.test">
+  </include>
+
+  <include file="$(find mrs_lib)/test/transformer/transformer.test">
+  </include>
+
+  <include file="$(find mrs_lib)/test/param_loader/param_loader.test">
+  </include>
+
+  <include file="$(find mrs_lib)/test/subscribe_handler/subscribe_handler.test">
+  </include>
+
 </launch>
