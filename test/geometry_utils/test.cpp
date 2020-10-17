@@ -5,8 +5,59 @@
 #include <gtest/gtest.h>
 #include <log4cxx/logger.h>
 
+#include <random>
+
 using namespace mrs_lib;
 using namespace std;
+
+/* randd() //{ */
+
+double randd(double from, double to) {
+
+  double zero_to_one = double((float)rand()) / double(RAND_MAX);
+
+  return floor(to - from) * zero_to_one + from;
+}
+
+//}
+
+/* unwrapAngleTest() //{ */
+
+double unwrapAngleTest(const double& yaw, const double& yaw_previous) {
+
+  double yaw_out = yaw;
+
+  while (yaw_out - yaw_previous > M_PI) {
+    yaw_out -= 2 * M_PI;
+  }
+
+  while (yaw_out - yaw_previous < -M_PI) {
+    yaw_out += 2 * M_PI;
+  }
+
+  return yaw_out;
+}
+
+//}
+
+/* wrapAngleTest() //{ */
+
+double wrapAngleTest(const double& angle_in) {
+
+  double angle_wrapped = angle_in;
+
+  while (angle_wrapped > M_PI) {
+    angle_wrapped -= 2 * M_PI;
+  }
+
+  while (angle_wrapped < -M_PI) {
+    angle_wrapped += 2 * M_PI;
+  }
+
+  return angle_wrapped;
+}
+
+//}
 
 /* TEST(TESTSuite, rotation_between_1) //{ */
 
@@ -51,7 +102,7 @@ TEST(TESTSuite, rotation_between_2) {
 
   cout << "Should be 90 deg (angle: " << angle << "):" << std::endl << rot_90 << std::endl;
 
-  if (fabs(angle - (M_PI/2.0)) <= 1e-6 || (fabs(angle + (M_PI/2))) <= 1e-6) {
+  if (fabs(angle - (M_PI / 2.0)) <= 1e-6 || (fabs(angle + (M_PI / 2))) <= 1e-6) {
     result = 1;
   }
 
@@ -79,7 +130,7 @@ TEST(TESTSuite, rotation_between_3) {
 
   cout << "Should be 45 deg (angle: " << angle << "):" << std::endl << rot_45 << std::endl;
 
-  if (fabs(angle - (M_PI/4.0)) >= 1e-6) {
+  if (fabs(angle - (M_PI / 4.0)) >= 1e-6) {
     result = 0;
   }
 
@@ -144,7 +195,7 @@ TEST(TESTSuite, rotation_between_6) {
 
   cout << "angle from vec4 to vec6 (should be -pi/4): " << angle << std::endl;
 
-  if (fabs(angle + (M_PI/4.0)) <= 1e-6) {
+  if (fabs(angle + (M_PI / 4.0)) <= 1e-6) {
     result = 1;
   }
 
@@ -153,7 +204,60 @@ TEST(TESTSuite, rotation_between_6) {
 
 //}
 
+/* TEST(TESTSuite, unwrap_angle) //{ */
+
+TEST(TESTSuite, unwrap_angle) {
+
+  int result = 1;
+
+  for (int i = 0; i < 10000; i++) {
+
+    double previous_angle = randd(-10000, 10000);
+    double current_angle  = randd(-10000, 10000);
+
+    double output   = mrs_lib::unwrapAngle(current_angle, previous_angle);
+    double expected = unwrapAngleTest(current_angle, previous_angle);
+
+    if (fabs(output - expected) > 1e-6) {
+      printf("unwrapAngle() #%d faild, input (prev %.2f, current %.2f), output %.2f, expected %.2f\n", i, previous_angle, current_angle, output, expected);
+      result = 0;
+    }
+  }
+
+  EXPECT_TRUE(result);
+}
+
+//}
+
+/* TEST(TESTSuite, wrap_angle) //{ */
+
+TEST(TESTSuite, wrap_angle) {
+
+  int result = 1;
+
+  for (int i = 0; i < 10000; i++) {
+
+    double angle = randd(-10000, 10000);
+
+    double output   = mrs_lib::wrapAngle(angle);
+    double expected = wrapAngleTest(angle);
+
+    if (fabs(output - expected) > 1e-6) {
+      printf("wrapAngle() #%d faild, input %.2f, output %.2f, expected %.2f\n", i, angle, output, expected);
+      result = 0;
+    }
+  }
+
+  EXPECT_TRUE(result);
+}
+
+//}
+
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
+
+  // initialize the random number generator
+  /* srand(static_cast<unsigned int>(time(0))); */
+  srand(time(NULL));
 
   testing::InitGoogleTest(&argc, argv);
 

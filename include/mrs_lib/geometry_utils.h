@@ -784,11 +784,11 @@ namespace mrs_lib
 
   double solidAngle(const double& a, const double& b, const double& c);
 
-  double unwrapAngle(const double& yaw, const double& yaw_previous);
+  double unwrapAngle(const double& angle, const double& angle_previous);
 
-  double wrapAngle(const double& angle_in);
+  double wrapAngle(const double& angle);
 
-  double disambiguateAngle(const double& yaw, const double& yaw_previous);
+  double disambiguateAngle(const double& angle, const double& angle_previous);
 
   double angleBetween(const double& a, const double& b);
 

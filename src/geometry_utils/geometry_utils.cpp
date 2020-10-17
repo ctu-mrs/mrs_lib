@@ -867,62 +867,29 @@ namespace mrs_lib
 
   /* unwrapAngle() //{ */
 
-  double unwrapAngle(const double& yaw, const double& yaw_previous)
+  // makes step from previous angle smooth
+  double unwrapAngle(const double& angle, const double& angle_previous)
   {
 
-    double yaw_out = yaw;
-
-    for (int i = 0; (i < 10) && (yaw_out - yaw_previous > M_PI); i++)
-    {
-      yaw_out -= 2 * M_PI;
-    }
-
-    for (int i = 0; (i < 10) && (yaw_out - yaw_previous < -M_PI); i++)
-    {
-      yaw_out += 2 * M_PI;
-    }
-
-    return yaw_out;
+    return angle_previous + mrs_lib::angleBetween(angle, angle_previous);
   }
 
   //}
 
   /* wrapAngle() //{ */
 
-  double wrapAngle(const double& angle_in)
+  // constraints angle betwen -pi and pi
+  double wrapAngle(const double& angle)
   {
 
-    double angle_wrapped = angle_in;
+    double x = fmod(angle + M_PI, 2 * M_PI);
 
-    for (int i = 0; (i < 10) && (angle_wrapped > M_PI); i++)
+    if (x < 0)
     {
-      angle_wrapped -= 2 * M_PI;
+      x += 2 * M_PI;
     }
 
-    for (int i = 0; (i < 10) && (angle_wrapped < -M_PI); i++)
-    {
-      angle_wrapped += 2 * M_PI;
-    }
-
-    return angle_wrapped;
-  }
-
-  //}
-
-  /* disambiguateAngle() //{ */
-
-  double disambiguateAngle(const double& yaw, const double& yaw_previous)
-  {
-
-    if (yaw - yaw_previous > M_PI / 2)
-    {
-      return yaw - M_PI;
-    } else if (yaw - yaw_previous < -M_PI / 2)
-    {
-      return yaw + M_PI;
-    }
-
-    return yaw;
+    return x - M_PI;
   }
 
   //}
