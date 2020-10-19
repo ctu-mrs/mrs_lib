@@ -50,7 +50,7 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs mrs_msgs
   DEPENDS Eigen
-  LIBRARIES MrsLibSafetyZone MrsLibProfiler MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibRepredictor MrsLibGeometryUtils MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibLkfLegacy
+  LIBRARIES MrsLibSafetyZone MrsLibProfiler MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibRepredictor MrsLibGeometryUtils MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher
   )
 
 ###########
@@ -70,12 +70,6 @@ include_directories(
 
 add_library(MrsLibRepredictor src/repredictor/repredictor.cpp src/repredictor/MRS_odom_repredictor.cpp)
 target_link_libraries(MrsLibRepredictor
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  )
-
-add_library(MrsLibLkfLegacy src/lkf/lkf_legacy.cpp)
-target_link_libraries(MrsLibLkfLegacy
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
