@@ -5,6 +5,7 @@
 #include <iostream>
 #include <iomanip>
 #include <chrono>
+#include <complex>
 
 using namespace mrs_lib::geometry;
 

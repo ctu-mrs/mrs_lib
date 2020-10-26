@@ -82,6 +82,18 @@ namespace mrs_lib
           return d - range;
         return d;
       }
+
+      static flt interp_unwrapped(const flt from, const flt to, const flt coeff)
+      {
+        const flt diff = diff(to, from);
+        const flt intp = from + coeff*diff;
+        return intp;
+      }
+
+      static flt interp(const flt from, const flt to, const flt coeff)
+      {
+        return wrap(interp_unwrapped(from, to, coeff));
+      }
     };
 
     struct radians : public cyclic<double>
