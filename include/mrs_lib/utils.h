@@ -118,10 +118,10 @@ namespace mrs_lib
     bool& variable;
   };
 
-  // branchless, templated, more efficient version of sign
+  // branchless, templated, more efficient version of the signum function
   // taken from https://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
   template <typename T>
-  int sign(T val)
+  int signum(T val)
   {
     return (T(0) < val) - (val < T(0));
   }
