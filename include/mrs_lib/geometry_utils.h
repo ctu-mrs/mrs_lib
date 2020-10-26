@@ -47,30 +47,35 @@ namespace mrs_lib
       static constexpr flt range = supremum - minimum;
       static constexpr flt half_range = range/flt(2);
 
-      static_assert((supremum > minimum), "cyclic: Range not valid");   
+      static_assert((supremum > minimum), "cyclic value: Range not valid");   
 
-      static flt inRange(const flt a)
+      static flt inRange(const flt val)
       {
-        return a >= minimum && a < supremum;
+        return val >= minimum && val < supremum;
       }
 
-      static flt wrap(const flt a)
+      static flt wrap(const flt val)
       {
-        const flt rem = std::fmod(a - minimum, range);
+        const flt rem = std::fmod(val - minimum, range);
         const flt wrapped = rem + minimum + std::signbit(rem)*range;
         return wrapped;
       }
 
-      static flt dist(const flt a, const flt b)
+      static flt unwrap(const flt from, const flt to)
       {
-        const flt tmp = b - a;
+        return from + diff(to, from);
+      }
+
+      static flt dist(const flt from, const flt to)
+      {
+        const flt tmp = to - from;
         const flt dist = tmp + std::signbit(tmp)*range;
         return dist;
       }
 
-      static flt diff(const flt a, const flt b)
+      static flt diff(const flt minuend, const flt subtrahend)
       {
-        const double d = a-b;
+        const double d = minuend - subtrahend;
         if (d < -half_range)
           return d + range;
         if (d >= half_range)
