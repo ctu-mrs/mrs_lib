@@ -88,21 +88,22 @@ namespace mrs_lib
     * \brief Assignment operator.
     *
     * \param nval value to be assigned (will be wrapped).
+    * \return     reference to self.
     */
       cyclic& operator=(const flt nval) {val = wrap(nval); return *this;};
   /*!
     * \brief Assignment operator.
     *
     * \param other value to be assigned.
+    * \return      reference to self.
     */
       cyclic& operator=(const cyclic& other) {val = other.val; return *this;};
   /*!
-    * \brief Cast operator.
+    * \brief Getter for \p val.
     *
-    * \returns the current value.
+    * \return the value.
     */
-      template <typename T>
-      explicit operator T() const {return val;};
+      flt value() const {return val;};
 
       static constexpr flt minimum = spec::minimum;     /*!< \brief Minimum of the valid interval of wrapped values \f$ m \f$ */
       static constexpr flt supremum = spec::supremum;   /*!< \brief Supremum of the valid interval of wrapped values \f$ s \f$ */
