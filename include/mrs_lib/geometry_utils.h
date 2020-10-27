@@ -48,6 +48,8 @@ namespace mrs_lib
     * This class may be used as an object or its static methods may be used on regular floating-point types, avoiding any object-related overheads (see example).
     * Specializations for the most common cyclic values are provided and a new specialization may be easily created simply by inheriting from this class and specifying a different minimum and supremum values.
     *
+    * Implementation inspired by: https://www.codeproject.com/Articles/190833/Circular-Values-Math-and-Statistics-with-Cplusplus
+    *
     * \parblock
     * \note For a better intuitive understanding of the used functions, the term **walk** is sometimes used in the function explanations.
     * You can imagine walking along the circle from one angle to another (represented by the circular quantities).
@@ -61,7 +63,6 @@ namespace mrs_lib
     * \endparblock
     *
     * \tparam flt floating data type to be used by this class.
-    *
     */
     template <typename flt, class spec>
     struct cyclic
