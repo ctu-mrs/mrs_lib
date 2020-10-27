@@ -28,7 +28,7 @@ static double dist(const double a, const double b)
 int main()
 {
   std::function correct(dist);
-  std::function totest(radians::dist);
+  auto totest = std::bind<double(double, double)>(radians::dist, std::placeholders::_1, std::placeholders::_2);
 
   const std::vector<double> tst {-0.0, 0.0, 1, -1, M_PI, -M_PI, 2*M_PI, -2*M_PI};
   std::cout <<
@@ -56,7 +56,7 @@ int main()
   std::cout <<
   "└────────────┴────────────┴────────────┘" << std::endl;
 
-  constexpr int N = 1e6;
+  constexpr int N = 1e4;
   const auto start1 = std::chrono::high_resolution_clock::now();
   for (int it = 0; it < N; it++)
   {

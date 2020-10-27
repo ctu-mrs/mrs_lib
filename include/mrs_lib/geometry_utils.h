@@ -60,6 +60,21 @@ namespace mrs_lib
 
       static flt wrap(const flt val)
       {
+        // these few ifs should cover most cases, improving speed and precision
+        if (val >= minimum)
+        {
+          if (val < supremum) // value is actually in range and doesn't need to be wrapped
+            return val;
+          else if (val < supremum + range)
+            return val - range; // to avoid unnecessary costly fmod operation for this case (assumed to be significantly more common than the general case)
+        }
+        else
+        {
+          if (val >= minimum - range)
+            return val + range; // to avoid unnecessary costly fmod operation for this case (assumed to be significantly more common than the general case)
+        }
+
+        // general case
         const flt rem = std::fmod(val - minimum, range);
         const flt wrapped = rem + minimum + std::signbit(rem)*range;
         return wrapped;
@@ -90,7 +105,7 @@ namespace mrs_lib
       {
         const flt wminuend = wrap(minuend);
         const flt wsubtrahend = wrap(subtrahend);
-        const double d = wminuend - wsubtrahend;
+        const flt d = wminuend - wsubtrahend;
         if (d < -half_range)
           return d + range;
         if (d >= half_range)
@@ -100,7 +115,7 @@ namespace mrs_lib
 
       static cyclic diff(const cyclic minuend, const cyclic subtrahend)
       {
-        const double d = minuend.value - subtrahend.value;
+        const flt d = minuend.value - subtrahend.value;
         if (d < -half_range)
           return d + range;
         if (d >= half_range)
