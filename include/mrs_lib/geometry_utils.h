@@ -40,7 +40,11 @@ namespace mrs_lib
     template <typename flt>
     struct cyclic
     {
-      cyclic() = delete;
+      cyclic(const flt val) : val(wrap(val)) {};
+      cyclic& operator=(const flt nval) {val = wrap(nval);};
+      cyclic& operator=(const cyclic& other) {val = other.val;};
+
+      const flt val;
 
       static constexpr flt minimum = 0;
       static constexpr flt supremum = 2*M_PI;
@@ -66,16 +70,27 @@ namespace mrs_lib
         return from + diff(to, from);
       }
 
-      static flt dist(const flt from, const flt to)
+      static flt pdist(const flt from, const flt to)
       {
-        const flt tmp = to - from;
+        const flt wfrom = wrap(from);
+        const flt wto = wrap(to);
+        const flt tmp = wto - wfrom;
+        const flt dist = tmp + std::signbit(tmp)*range;
+        return dist;
+      }
+
+      static cyclic pdist(const cyclic from, const cyclic to)
+      {
+        const flt tmp = to.val - from.val;
         const flt dist = tmp + std::signbit(tmp)*range;
         return dist;
       }
 
       static flt diff(const flt minuend, const flt subtrahend)
       {
-        const double d = minuend - subtrahend;
+        const flt wminuend = wrap(minuend);
+        const flt wsubtrahend = wrap(subtrahend);
+        const double d = wminuend - wsubtrahend;
         if (d < -half_range)
           return d + range;
         if (d >= half_range)
@@ -83,10 +98,37 @@ namespace mrs_lib
         return d;
       }
 
+      static cyclic diff(const cyclic minuend, const cyclic subtrahend)
+      {
+        const double d = minuend.value - subtrahend.value;
+        if (d < -half_range)
+          return d + range;
+        if (d >= half_range)
+          return d - range;
+        return d;
+      }
+
+      static flt dist(const flt from, const flt to)
+      {
+        return std::abs(diff(from, to));
+      }
+
+      static cyclic dist(const cyclic from, const cyclic to)
+      {
+        return std::abs(diff(from, to));
+      }
+
       static flt interp_unwrapped(const flt from, const flt to, const flt coeff)
       {
         const flt diff = diff(to, from);
         const flt intp = from + coeff*diff;
+        return intp;
+      }
+
+      static cyclic interp_unwrapped(const cyclic from, const cyclic to, const flt coeff)
+      {
+        const cyclic diff = diff(to, from);
+        const cyclic intp = from + coeff*diff;
         return intp;
       }
 
