@@ -196,7 +196,7 @@ namespace mrs_lib
         return dist;
       }
 
-      static cyclic pdist(const cyclic from, const cyclic to)
+      static flt pdist(const spec from, const spec to)
       {
         const flt tmp = to.val - from.val;
         const flt dist = tmp + std::signbit(tmp)*range;
@@ -224,9 +224,9 @@ namespace mrs_lib
         return d;
       }
 
-      static flt diff(const cyclic minuend, const cyclic subtrahend)
+      static flt diff(const spec minuend, const spec subtrahend)
       {
-        const flt d = minuend.value - subtrahend.value;
+        const flt d = minuend.val - subtrahend.val;
         if (d < -half_range)
           return d + range;
         if (d >= half_range)
@@ -250,7 +250,7 @@ namespace mrs_lib
         return std::abs(diff(from, to));
       }
 
-      static cyclic dist(const cyclic from, const cyclic to)
+      static flt dist(const spec from, const spec to)
       {
         return std::abs(diff(from, to));
       }
@@ -269,15 +269,15 @@ namespace mrs_lib
     */
       static flt interpUnwrapped(const flt from, const flt to, const flt coeff)
       {
-        const flt diff = diff(to, from);
-        const flt intp = from + coeff*diff;
+        const flt dang = diff(to, from);
+        const flt intp = from + coeff*dang;
         return intp;
       }
 
-      static flt interpUnwrapped(const cyclic from, const cyclic to, const flt coeff)
+      static flt interpUnwrapped(const spec from, const spec to, const flt coeff)
       {
-        const flt diff = diff(to, from);
-        const flt intp = from + coeff*diff;
+        const flt dang = diff(to, from);
+        const flt intp = from.val + coeff*dang;
         return intp;
       }
 
@@ -293,12 +293,12 @@ namespace mrs_lib
     */
       static flt interp(const flt from, const flt to, const flt coeff)
       {
-        return wrap(interp_unwrapped(from, to, coeff));
+        return wrap(interpUnwrapped(from, to, coeff));
       }
 
-      static cyclic interp(const cyclic from, const cyclic to, const flt coeff)
+      static flt interp(const spec from, const spec to, const flt coeff)
       {
-        return interp_unwrapped(from, to, coeff);
+        return interpUnwrapped(from, to, coeff);
       }
 
   /*!
@@ -313,7 +313,7 @@ namespace mrs_lib
     * \warning For the purposes of this function, it is assumed that the range of one type corresponds to the whole range of the other type and zeros of both types correspond to each other (such as when converting eg. degrees to radians).
     */
       template <class other_t>
-      static other_t convert(const cyclic& what)
+      static other_t convert(const spec& what)
       {
         return other_t(what.val/range*other_t::range);
       };
