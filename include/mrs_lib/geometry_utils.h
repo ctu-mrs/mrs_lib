@@ -79,6 +79,12 @@ namespace mrs_lib
     */
       cyclic(const flt val) : val(wrap(val)) {};
   /*!
+    * \brief Copy constructor.
+    *
+    * \param val initialization value.
+    */
+      cyclic(const cyclic& other) : val(other.val) {};
+  /*!
     * \brief Assignment operator.
     *
     * \param nval value to be assigned (will be wrapped).
@@ -95,7 +101,8 @@ namespace mrs_lib
     *
     * \returns the current value.
     */
-      operator flt() const {return val;};
+      template <typename T>
+      explicit operator T() const {return val;};
 
       static constexpr flt minimum = spec::minimum;     /*!< \brief Minimum of the valid interval of wrapped values \f$ m \f$ */
       static constexpr flt supremum = spec::supremum;   /*!< \brief Supremum of the valid interval of wrapped values \f$ s \f$ */
@@ -293,7 +300,40 @@ namespace mrs_lib
         return interp_unwrapped(from, to, coeff);
       }
 
-    private:
+  /*!
+    * \brief Conversion between two different circular quantities.
+    *
+    * This function converts its parameter, interpreted as the circular quantity, represented by this class, to the \p other_t type of circular quantity.
+    *
+    * \param what       the circular quantity to be converted.
+    * \returns          the circular quantity converted to the range of \p other_t.
+    * \tparam other_t   type of the circular quantity to be converted to.
+    *
+    * \warning For the purposes of this function, it is assumed that the range of one type corresponds to the whole range of the other type and zeros of both types correspond to each other (such as when converting eg. degrees to radians).
+    */
+      template <class other_t>
+      static other_t convert(const cyclic& what)
+      {
+        return other_t(what.val/range*other_t::range);
+      };
+
+  /*!
+    * \brief Conversion between two different circular quantities.
+    *
+    * This method returns the circular quantity, represented by this object, converted to the \p other_t type of circular quantity.
+    *
+    * \returns          the circular quantity converted to the range of \p other_t.
+    * \tparam other_t   type of the circular quantity to be converted to.
+    *
+    * \warning For the purposes of this function, it is assumed that the range of one type corresponds to the whole range of the other type and zeros of both types correspond to each other (such as when converting eg. degrees to radians).
+    */
+      template <class other_t>
+      other_t convert() const
+      {
+        return other_t(val/range*other_t::range);
+      };
+
+    protected:
       flt val;
     };
 

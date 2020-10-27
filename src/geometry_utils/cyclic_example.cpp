@@ -32,13 +32,28 @@ namespace mrs_lib
   }
 }
 
-// A helpful aliase to make writing of types shorter
+// A few helpful aliases to make writing of types shorter
 using degrees = mrs_lib::geometry::degrees;
+using radians = mrs_lib::geometry::radians;
+
+template <class T>
+void printit(const T& a, const std::string& name)
+{
+  std::cout << name << ":\t" << std::left << std::showpos << std::setprecision(4)
+    << float(a) << "\tin [ " << a.minimum << ",\t" << a.supremum << "\t[" << std::endl;
+}
 
 int main()
 {
-  degrees deg(721.0f); // equal to 1 degree
-  std::cout << deg << std::endl;
+  degrees a(721.0f);  // equal to 1 degree
+  radians b(-M_PI_2); // equal to -45 degrees
+  degrees c = radians::convert<degrees>(M_PI_2);
+  degrees d = b.convert<degrees>();
+
+  printit(a, "a");
+  printit(b, "b");
+  printit(c, "c");
+  printit(d, "d");
 
   return 0;
 }
