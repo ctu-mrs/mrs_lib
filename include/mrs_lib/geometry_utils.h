@@ -63,7 +63,7 @@ namespace mrs_lib
     * \tparam flt floating data type to be used by this class.
     *
     */
-    template <typename flt>
+    template <typename flt, class spec>
     struct cyclic
     {
   /*!
@@ -95,14 +95,14 @@ namespace mrs_lib
     *
     * \returns the current value.
     */
-      operator flt() {return val;};
+      operator flt() const {return val;};
 
-      static constexpr flt minimum = 0;                 /*!< \brief Minimum of the valid interval of wrapped values \f$ m \f$ */
-      static constexpr flt supremum = 2*M_PI;           /*!< \brief Supremum of the valid interval of wrapped values \f$ s \f$ */
+      static constexpr flt minimum = spec::minimum;     /*!< \brief Minimum of the valid interval of wrapped values \f$ m \f$ */
+      static constexpr flt supremum = spec::supremum;   /*!< \brief Supremum of the valid interval of wrapped values \f$ s \f$ */
       static constexpr flt range = supremum - minimum;  /*!< \brief Range of the valid interval of wrapped values \f$ r \f$ (also the period of the cyclic quantity). */
       static constexpr flt half_range = range/flt(2);   /*!< \brief Half of the range of the valid interval of wrapped values \f$ r/2 \f$ (used for some calculations). */
 
-      static_assert((supremum > minimum), "cyclic value: Range not valid");   
+      /* static_assert((supremum > minimum), "cyclic value: Range not valid"); */   
 
   /*!
     * \brief Checks if \p val is within the valid interval of wrapped values.
@@ -297,14 +297,16 @@ namespace mrs_lib
       flt val;
     };
 
-    struct radians : public cyclic<double>
+    struct radians : public cyclic<double, radians>
     {
+      using cyclic<double, radians>::cyclic; // necessary to inherit constructors
       static constexpr double minimum = 0;
       static constexpr double supremum = 2*M_PI;
     };
 
-    struct sradians : public cyclic<double>
+    struct sradians : public cyclic<double, sradians>
     {
+      using cyclic<double, sradians>::cyclic; // necessary to inherit constructors
       static constexpr double minimum = -M_PI;
       static constexpr double supremum = M_PI;
     };

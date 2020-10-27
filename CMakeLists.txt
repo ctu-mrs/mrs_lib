@@ -75,8 +75,15 @@ target_link_libraries(MrsLibGeometryUtils
   ${GAZEBO_INCLUDE_DIRS}
   )
 
-add_executable(geometry_tests src/geometry_utils/tests.cpp)
-target_link_libraries(geometry_tests
+# add_executable(geometry_tests src/geometry_utils/tests.cpp)
+# target_link_libraries(geometry_tests
+#   MrsLibGeometryUtils
+#   ${catkin_LIBRARIES}
+#   ${Eigen_LIBRARIES}
+#   )
+
+add_executable(cyclic_example src/geometry_utils/cyclic_example.cpp)
+target_link_libraries(cyclic_example
   MrsLibGeometryUtils
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
