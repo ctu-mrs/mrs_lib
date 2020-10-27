@@ -256,7 +256,7 @@ namespace mrs_lib
       }
 
   /*!
-    * \brief Interpolation between two circular quantities without wrapping of the result.
+    * \brief Interpolation between two circular quantities.
     *
     * This function wraps the returned value so that it is in the interval of valid values.
     *
@@ -272,7 +272,55 @@ namespace mrs_lib
 
       static flt interp(const spec from, const spec to, const flt coeff)
       {
-        return interpUnwrapped(from, to, coeff);
+        return wrap(interpUnwrapped(from, to, coeff));
+      }
+
+  /*!
+    * \brief Interpolation between two circular quantities in the positive direction without wrapping of the result.
+    *
+    * Interpolates the two values in the positive direction from the first parameter to the second by the coefficient.
+    * This function doesn't wrap the returned value.
+    *
+    * \param from  the first circular quantity.
+    * \param to    the second circular quantity.
+    * \param coeff the interpolation coefficient.
+    * \returns     interpolation of the two circular quantities using the coefficient.
+    *
+    * \warning Note that the returned value may be outside the valid interval of wrapped values, specified by the \p minimum and \p supremum parameters of this class.
+    */
+      static flt pinterpUnwrapped(const flt from, const flt to, const flt coeff)
+      {
+        const flt dang = pdist(to, from);
+        const flt intp = from + coeff*dang;
+        return intp;
+      }
+
+      static flt pinterpUnwrapped(const spec from, const spec to, const flt coeff)
+      {
+        const flt dang = pdist(to, from);
+        const flt intp = from.val + coeff*dang;
+        return intp;
+      }
+
+  /*!
+    * \brief Interpolation between two circular quantities in the positive direction.
+    *
+    * Interpolates the two values in the positive direction from the first parameter to the second by the coefficient.
+    * This function wraps the returned value so that it is in the interval of valid values.
+    *
+    * \param from  the first circular quantity.
+    * \param to    the second circular quantity.
+    * \param coeff the interpolation coefficient.
+    * \returns     interpolation of the two circular quantities using the coefficient, wrapped to the interval of valid values.
+    */
+      static flt pinterp(const flt from, const flt to, const flt coeff)
+      {
+        return wrap(pinterpUnwrapped(from, to, coeff));
+      }
+
+      static flt pinterp(const spec from, const spec to, const flt coeff)
+      {
+        return wrap(pinterpUnwrapped(from, to, coeff));
       }
 
   /*!
