@@ -1,42 +1,15 @@
 // clang: MatousFormat
 /**  \file
-     \brief Defines useful geometry utilities and functions.
+     \brief Defines the cyclic class for calculations with cyclic quantities.
      \author Matouš Vrba - vrbamato@fel.cvut.cz
-     \author Petr Štibinger - stibipet@fel.cvut.cz
  */
 
-#ifndef GEOMETRY_UTILS_H
-#define GEOMETRY_UTILS_H
-
-#include <vector>
 #include <cmath>
-#include <math.h>
-#include <Eigen/Dense>
-#include <boost/optional.hpp>
-
-#include <mrs_lib/utils.h>
-
-#include <iostream>
 
 namespace mrs_lib
 {
   namespace geometry
   {
-    template <int dims>
-    using vec_t = Eigen::Matrix<double, dims, 1>;
-
-    using pt2_t = vec_t<2>;
-    using vec2_t = vec_t<2>;
-    using pt3_t = vec_t<3>;
-    using vec3_t = vec_t<3>;
-
-    template <int dims>
-    vec_t<dims + 1> to_homogenous(const vec_t<dims>& vec)
-    {
-      const Eigen::Matrix<double, dims + 1, 1> ret((Eigen::Matrix<double, dims + 1, 1>() << vec, 1).finished());
-      return ret;
-    }
-
     /**
     * \brief Implementation of the a general cyclic value (such as angles in radians/degrees etc).
     *
@@ -353,7 +326,18 @@ namespace mrs_lib
       static constexpr double supremum = M_PI;
     };
 
-  }  // namespace geometry
-}  // namespace mrs_lib
+    struct degrees : public cyclic<double, degrees>
+    {
+      using cyclic<double, degrees>::cyclic; // necessary to inherit constructors
+      static constexpr double minimum = 0;
+      static constexpr double supremum = 360;
+    };
 
-#endif
+    struct sdegrees : public cyclic<double, sdegrees>
+    {
+      using cyclic<double, sdegrees>::cyclic; // necessary to inherit constructors
+      static constexpr double minimum = -180;
+      static constexpr double supremum = 180;
+    };
+  }
+}

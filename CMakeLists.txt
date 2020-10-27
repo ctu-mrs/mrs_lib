@@ -50,7 +50,7 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs mrs_msgs
   DEPENDS Eigen
-  LIBRARIES MrsLibSafetyZone MrsLibProfiler MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibRepredictor MrsLibGeometryUtils MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher
+  LIBRARIES MrsLibSafetyZone MrsLibProfiler MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibRepredictor MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher
   )
 
 ###########
@@ -68,8 +68,8 @@ include_directories(
   # ${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake
   )
 
-add_library(MrsLibGeometryUtils src/geometry_utils/geometry_utils.cpp)
-target_link_libraries(MrsLibGeometryUtils
+add_library(MrsLibGeometry src/geometry/misc.cpp src/geometry/cyclic.cpp src/geometry/shapes.cpp)
+target_link_libraries(MrsLibGeometry
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   ${GAZEBO_INCLUDE_DIRS}
@@ -82,9 +82,9 @@ target_link_libraries(MrsLibGeometryUtils
 #   ${Eigen_LIBRARIES}
 #   )
 
-add_executable(cyclic_example src/geometry_utils/cyclic_example.cpp)
+add_executable(cyclic_example src/geometry/cyclic_example.cpp)
 target_link_libraries(cyclic_example
-  MrsLibGeometryUtils
+  MrsLibGeometry
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )

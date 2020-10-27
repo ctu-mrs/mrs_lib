@@ -14,28 +14,23 @@
  */
 
 // Include the header
-#include <mrs_lib/geometry_utils.h>
+#include <mrs_lib/geometry/cyclic.h>
 #include <random>
 #include <ros/ros.h>
 
-// Define the cyclic quantity we will be using
-namespace mrs_lib
+// Define the cyclic quantity we will be using (just a float redefinition of degrees)
+struct degrees : public mrs_lib::geometry::cyclic<float, degrees>
 {
-  namespace geometry
-  {
-    struct degrees : public cyclic<float, degrees>
-    {
-      using cyclic<float, degrees>::cyclic; // necessary to inherit constructors
-      static constexpr double minimum = -180;
-      static constexpr double supremum = 180;
-    };
-  }
-}
+  using cyclic<float, degrees>::cyclic; // necessary to inherit constructors
+  static constexpr double minimum = -180;
+  static constexpr double supremum = 180;
+};
 
 // A few helpful aliases to make writing of types shorter
-using degrees = mrs_lib::geometry::degrees;
 using radians = mrs_lib::geometry::radians;
 using sradians = mrs_lib::geometry::sradians;
+
+/* helper printing functions //{ */
 
 template <class T>
 void printit(const T& a, const std::string& name)
@@ -52,6 +47,8 @@ void printcont(const T& cont, const std::string& name)
     std::cout << el << "\t";
   std::cout << std::endl;
 }
+
+//}
 
 int main()
 {
@@ -203,6 +200,8 @@ int main()
   std::cout << "----------------------------------------------------------------" << std::endl;
   // | ----------------- Interpolation functions ---------------- |
  
+  /* interpolation //{ */
+  
   // it may happen that during your carrier as a human being, you might want to interpolate two angles
   // worry not, I've got your back!
   // this is implemented by the interp() and interpUnwrapped() functions
@@ -217,6 +216,8 @@ int main()
     << "coeff:\t" << coeff << std::endl
     << "interp(a1, a2, coeff):\t" << degrees::interp(a1, a2, coeff) << std::endl
     << "interpUnwrapped(a1, a2, coeff):\t" << degrees::interpUnwrapped(a1, a2, coeff) << std::endl;
+  
+  //}
  
   return 0;
 }
