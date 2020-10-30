@@ -50,7 +50,7 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs mrs_msgs
   DEPENDS Eigen
-  LIBRARIES MrsLibSafetyZone MrsLibProfiler MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibRepredictor MrsLibGeometryUtils MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher
+  LIBRARIES MrsLibSafetyZone MrsLibProfiler MrsLibScopeTimer MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibRepredictor MrsLibGeometryUtils MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher
   )
 
 ###########
@@ -105,6 +105,12 @@ target_link_libraries(MrsLibSafetyZone
 
 add_library(MrsLibProfiler src/profiler/profiler.cpp)
 target_link_libraries(MrsLibProfiler
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_library(MrsLibScopeTimer src/scope_timer/scope_timer.cpp)
+target_link_libraries(MrsLibScopeTimer
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
