@@ -23,12 +23,12 @@ public:
   /**
    * @brief the basic constructor with a user-defined label of the timer
    */
-  ScopeTimer(std::string label);
+  ScopeTimer(const std::string& label);
 
   /**
    * @brief checkpoint, prints the time passed until the point this function is called
    */
-  void checkpoint(std::string label);
+  void checkpoint(const std::string& label);
 
   /**
    * @brief the basic destructor

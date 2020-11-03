@@ -7,7 +7,7 @@ namespace mrs_lib
 
 /* ScopeTimer constructor //{ */
 
-ScopeTimer::ScopeTimer(std::string label) {
+ScopeTimer::ScopeTimer(const std::string& label) {
 
   time_point point;
   point.ros_time    = ros::Time::now();
@@ -24,7 +24,7 @@ ScopeTimer::ScopeTimer(std::string label) {
 
 /* checkpoint() //{ */
 
-void ScopeTimer::checkpoint(std::string label) {
+void ScopeTimer::checkpoint(const std::string& label) {
 
   time_point point;
   point.ros_time    = ros::Time::now();
