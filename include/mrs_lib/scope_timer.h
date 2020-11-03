@@ -7,23 +7,19 @@
 
 #include <ros/ros.h>
 #include <chrono>
+#include <iostream>
+#include <iomanip>
 /* #include <ctime> */
 
 namespace mrs_lib
 {
 
 /**
- * @brief simple timer which will time a duration of a scope in ros time and std::chrono time
+ * @brief simple timer which will time a duration of a scope and checkpoints inside the scope in ros time and std::chrono time
  */
 class ScopeTimer {
 
 public:
-
-  /**
-   * @brief the basic constructor
-   */
-  ScopeTimer();
-
   /**
    * @brief the basic constructor with a user-defined label of the timer
    */
@@ -32,35 +28,23 @@ public:
   /**
    * @brief checkpoint, prints the time passed until the point this function is called
    */
-  void printTime();
+  void checkpoint(std::string label);
 
-  /**
-   * @brief checkpoint, prints the time passed until the point this function is called. Inclueds a user defined label
-   */
-  void printTime(std::string label);
-
-  /**
-   * @brief checkpoint, prints the time passed since last time was printed.
-   */
-  void printTimeSinceLastCheck();
-
-  /**
-   * @brief checkpoint, prints the time passed since last time was printed.. Inclueds a user defined label
-   */
-  void printTimeSinceLastCheck(std::string label);
   /**
    * @brief the basic destructor
    */
   ~ScopeTimer();
 
 private:
+  struct time_point
+  {
+    ros::Time                                          ros_time;
+    std::chrono::time_point<std::chrono::system_clock> chrono_time;
+    std::string                                        label;
+  };
 
-  std::string                                        _timer_label_;
-  ros::Time                                          _ros_start_time_;
-  std::chrono::time_point<std::chrono::system_clock> _chrono_start_time_;
-
-  ros::Time                                          ros_last_check_time_;
-  std::chrono::time_point<std::chrono::system_clock> chrono_last_check_time_;
+  std::string             _timer_label_;
+  std::vector<time_point> checkpoints;
 };
 
 }  // namespace mrs_lib
