@@ -1,6 +1,6 @@
 /**  \file
- *   \brief A scoped function profiler which publishes ROS messages
- *   \author Tomas Baca - tomas.baca@fel.cvut.cz
+ *   \brief Simple timer which times a duration of its scope, with additional optional checkpoints.
+ *   \author Daniel Hert - hertdani@fel.cvut.cz
  */
 #ifndef SCOPE_TIMER_H
 #define SCOPE_TIMER_H
@@ -30,16 +30,37 @@ public:
   ScopeTimer(std::string label);
 
   /**
+   * @brief checkpoint, prints the time passed until the point this function is called
+   */
+  void printTime();
+
+  /**
+   * @brief checkpoint, prints the time passed until the point this function is called. Inclueds a user defined label
+   */
+  void printTime(std::string label);
+
+  /**
+   * @brief checkpoint, prints the time passed since last time was printed.
+   */
+  void printTimeSinceLastCheck();
+
+  /**
+   * @brief checkpoint, prints the time passed since last time was printed.. Inclueds a user defined label
+   */
+  void printTimeSinceLastCheck(std::string label);
+  /**
    * @brief the basic destructor
    */
   ~ScopeTimer();
 
 private:
 
-  std::string                                        _label_string_;
+  std::string                                        _timer_label_;
   ros::Time                                          _ros_start_time_;
   std::chrono::time_point<std::chrono::system_clock> _chrono_start_time_;
 
+  ros::Time                                          ros_last_check_time_;
+  std::chrono::time_point<std::chrono::system_clock> chrono_last_check_time_;
 };
 
 }  // namespace mrs_lib
