@@ -90,7 +90,7 @@ namespace mrs_lib
     /*!
      * \brief Returns the rotation between two vectors, represented as a quaternion.
      *
-     * Works the same as the angleaxis_between() function (in fact it is used in the implementation).
+     * Works the same as the angleaxisBetween() function (in fact it is used in the implementation).
      *
      * \param a vector from which the rotation starts.
      * \param b vector at which the rotation ends.
@@ -107,7 +107,7 @@ namespace mrs_lib
     /*!
      * \brief Returns the rotation between two vectors, represented as a rotation matrix.
      *
-     * Works the same as the angleaxis_between() function (in fact it is used in the implementation).
+     * Works the same as the angleaxisBetween() function (in fact it is used in the implementation).
      *
      * \param a vector from which the rotation starts.
      * \param b vector at which the rotation ends.
