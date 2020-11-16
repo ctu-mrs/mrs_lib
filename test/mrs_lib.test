@@ -1,6 +1,6 @@
 <launch>
 
-  <include file="$(find mrs_lib)/test/geometry_utils/geometry_utils.test">
+  <include file="$(find mrs_lib)/test/geometry/geometry.test">
   </include>
 
   <include file="$(find mrs_lib)/test/attitude_converter/attitude_converter.test">

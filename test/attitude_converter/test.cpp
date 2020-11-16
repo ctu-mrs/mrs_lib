@@ -1,4 +1,5 @@
 #include <mrs_lib/attitude_converter.h>
+#include <mrs_lib/geometry/cyclic.h>
 #include <cmath>
 #include <iostream>
 
@@ -259,7 +260,7 @@ TEST(TESTSuite, get_heading_rate) {
 
     // calculate the heading difference
     double new_heading        = AttitudeConverter(R).getHeading();
-    double heading_difference = mrs_lib::angleBetween(new_heading, heading);
+    double heading_difference = mrs_lib::geometry::sradians::diff(new_heading, heading);
 
     // calculate the heading rate analythically
     double heading_rate = AttitudeConverter(R).getHeadingRate(w);

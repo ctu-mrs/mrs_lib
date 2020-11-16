@@ -1,9 +1,11 @@
-#include <mrs_lib/geometry_utils.h>
+#include <mrs_lib/geometry/shapes.h>
+#include <mrs_lib/geometry/misc.h>
 #include <mrs_lib/batch_visualizer.h>
 
 #include <random>
 
 using namespace mrs_lib;
+using namespace mrs_lib::geometry;
 
 double range_min = -20;
 double range_max = 20;
@@ -196,7 +198,7 @@ int main(int argc, char** argv) {
       double             x2          = rand_dbl(generator);
       double             y2          = rand_dbl(generator);
       double             z2          = rand_dbl(generator);
-      Eigen::Quaterniond orientation = mrs_lib::quaternionFromEuler(x2, y2, z2);
+      Eigen::Quaterniond orientation = mrs_lib::geometry::quaternionFromEuler(x2, y2, z2);
 
       double r = (x1 - range_min) / (range_max - range_min);
       double g = (y1 - range_min) / (range_max - range_min);
@@ -226,7 +228,7 @@ int main(int argc, char** argv) {
       double             x2          = rand_dbl(generator);
       double             y2          = rand_dbl(generator);
       double             z2          = rand_dbl(generator);
-      Eigen::Quaterniond orientation = mrs_lib::quaternionFromEuler(x2, y2, z2);
+      Eigen::Quaterniond orientation = mrs_lib::geometry::quaternionFromEuler(x2, y2, z2);
 
       double  r = (x1 - range_min) / (range_max - range_min);
       double  g = (y1 - range_min) / (range_max - range_min);
@@ -254,7 +256,7 @@ int main(int argc, char** argv) {
       double             x2          = rand_dbl(generator);
       double             y2          = rand_dbl(generator);
       double             z2          = rand_dbl(generator);
-      Eigen::Quaterniond orientation = mrs_lib::quaternionFromEuler(x2, y2, z2);
+      Eigen::Quaterniond orientation = mrs_lib::geometry::quaternionFromEuler(x2, y2, z2);
 
       double radius = 0.3 * rand_dbl(generator);
       double height = rand_dbl(generator);

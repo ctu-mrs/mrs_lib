@@ -4,6 +4,9 @@
      \author Matouš Vrba - vrbamato@fel.cvut.cz
  */
 
+#ifndef CYCLIC_H
+#define CYCLIC_H
+
 #include <cmath>
 
 namespace mrs_lib
@@ -389,3 +392,5 @@ namespace mrs_lib
     };
   }
 }
+
+#endif // CYCLIC_H

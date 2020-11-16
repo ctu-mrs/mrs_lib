@@ -24,7 +24,7 @@
 #include <tf/transform_datatypes.h>
 #include <tf_conversions/tf_eigen.h>
 
-#include <mrs_lib/geometry_utils.h>
+#include <mrs_lib/geometry/misc.h>
 
 namespace mrs_lib
 {

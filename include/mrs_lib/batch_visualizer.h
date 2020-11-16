@@ -9,7 +9,7 @@
 #include <vector>
 #include <ros/ros.h>
 #include <visualization_msgs/MarkerArray.h>
-#include <mrs_lib/geometry_utils.h>
+#include <mrs_lib/geometry/shapes.h>
 /* #include <dynamic_reconfigure/server.h> */
 /* #include <mrs_lib/batch_visualizerConfig.h> */
 
@@ -61,7 +61,7 @@ public:
    * @param b blue color in range <0,1>
    * @param a alpha in range <0,1> (0 is fully transparent)
    */
-  void addRay(mrs_lib::Ray ray, double r = 1.0, double g = 0.0, double b = 0.0, double a = 1.0);
+  void addRay(mrs_lib::geometry::Ray ray, double r = 1.0, double g = 0.0, double b = 0.0, double a = 1.0);
 
   /**
    * @brief add a triangle to the buffer
@@ -73,7 +73,7 @@ public:
    * @param a alpha in range <0,1> (0 is fully transparent)
    * @param filled bool to set fill. True = face visible, False = outline visible
    */
-  void addTriangle(mrs_lib::Triangle tri, double r = 0.5, double g = 0.5, double b = 0.0, double a = 1.0, bool filled = true);
+  void addTriangle(mrs_lib::geometry::Triangle tri, double r = 0.5, double g = 0.5, double b = 0.0, double a = 1.0, bool filled = true);
 
   /**
    * @brief add a rectangle to the buffer
@@ -85,7 +85,7 @@ public:
    * @param a alpha in range <0,1> (0 is fully transparent)
    * @param filled bool to set fill. True = face visible, False = outline visible
    */
-  void addRectangle(mrs_lib::Rectangle rect, double r = 0.5, double g = 0.5, double b = 0.0, double a = 1.0, bool filled = true);
+  void addRectangle(mrs_lib::geometry::Rectangle rect, double r = 0.5, double g = 0.5, double b = 0.0, double a = 1.0, bool filled = true);
 
   /**
    * @brief add a cuboid to the buffer
@@ -97,7 +97,7 @@ public:
    * @param a alpha in range <0,1> (0 is fully transparent)
    * @param filled bool to set fill. True = face visible, False = outline visible
    */
-  void addCuboid(mrs_lib::Cuboid cuboid, double r = 0.5, double g = 0.5, double b = 0.0, double a = 1.0, bool filled = true);
+  void addCuboid(mrs_lib::geometry::Cuboid cuboid, double r = 0.5, double g = 0.5, double b = 0.0, double a = 1.0, bool filled = true);
 
   /**
    * @brief add an ellipse to the buffer
@@ -110,7 +110,7 @@ public:
    * @param filled bool to set fill. True = face visible, False = outline visible
    * @param num_points number of points to approximate the round shape
    */
-  void addEllipse(mrs_lib::Ellipse ellipse, double r = 0.0, double g = 1.0, double b = 1.0, double a = 1.0, bool filled = true,
+  void addEllipse(mrs_lib::geometry::Ellipse ellipse, double r = 0.0, double g = 1.0, double b = 1.0, double a = 1.0, bool filled = true,
                   int num_points = DEFAULT_ELLIPSE_POINTS);
 
   /**
@@ -125,7 +125,7 @@ public:
    * @param capped bool to set caps on/off. True = caps drawn, False = hollow cylinder
    * @param sides number of points to approximate the round shape
    */
-  void addCylinder(mrs_lib::Cylinder cylinder, double r = 0.7, double g = 0.8, double b = 0.3, double a = 1.0, bool filled = true, bool capped = true,
+  void addCylinder(mrs_lib::geometry::Cylinder cylinder, double r = 0.7, double g = 0.8, double b = 0.3, double a = 1.0, bool filled = true, bool capped = true,
                    int sides = DEFAULT_ELLIPSE_POINTS);
   /**
    * @brief add a cone to the buffer
@@ -139,7 +139,7 @@ public:
    * @param capped bool to set caps on/off. True = cap drawn, False = base cap missing
    * @param sides number of points to approximate the round shape
    */
-  void addCone(mrs_lib::Cone cone, double r = 0.7, double g = 0.8, double b = 0.3, double a = 1.0, bool filled = true, bool capped = true,
+  void addCone(mrs_lib::geometry::Cone cone, double r = 0.7, double g = 0.8, double b = 0.3, double a = 1.0, bool filled = true, bool capped = true,
                int sides = DEFAULT_ELLIPSE_POINTS);
 
   /**
@@ -192,7 +192,7 @@ private:
   void addNullLine();
   void addNullTriangle();
 
-  std::vector<Eigen::Vector3d> buildEllipse(mrs_lib::Ellipse ellispe, int num_points = DEFAULT_ELLIPSE_POINTS);
+  std::vector<Eigen::Vector3d> buildEllipse(mrs_lib::geometry::Ellipse ellispe, int num_points = DEFAULT_ELLIPSE_POINTS);
 
   // dynamic reconfigure
   /* typedef mrs_lib::batch_visualizerConfig Config; */

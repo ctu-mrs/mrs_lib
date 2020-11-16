@@ -5,10 +5,10 @@
 
      This example may be run after building *mrs_lib* by executing `rosrun mrs_lib cyclic_example`.
 
-     See \ref geometry_utils/cyclic_example.cpp.
+     See \ref geometry/cyclic_example.cpp.
  */
 
-/**  \example "geometry_utils/cyclic_example.cpp"
+/**  \example "geometry/cyclic_example.cpp"
 
      This example may be run after building *mrs_lib* by executing `rosrun mrs_lib cyclic_example`.
  */

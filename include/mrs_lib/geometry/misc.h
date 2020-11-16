@@ -5,8 +5,8 @@
      \author Petr Štibinger - stibipet@fel.cvut.cz
  */
 
-#ifndef GEOMETRY_UTILS_H
-#define GEOMETRY_UTILS_H
+#ifndef GEOMETRY_MISC_H
+#define GEOMETRY_MISC_H
 
 #include <cmath>
 #include <Eigen/Dense>
@@ -144,7 +144,31 @@ namespace mrs_lib
     double invHaversin(const double value);
     
     //}
+
+    /* quaternionFromEuler() //{ */
     
+    /**
+     * @brief create a quaternion from 3 provided Euler angles
+     *
+     * @param x Euler angle in radians
+     * @param y Euler angle in radians
+     * @param z Euler angle in radians
+     *
+     * @return quaternion
+     */
+    Eigen::Quaterniond quaternionFromEuler(double x, double y, double z);
+    
+    /**
+     * @brief create a quaternion from Euler angles provided as a vector
+     *
+     * @param euler components of the rotation provided as vector of Euler angles
+     *
+     * @return quaternion
+     */
+    Eigen::Quaterniond quaternionFromEuler(Eigen::Vector3d euler);
+    
+    //}
+
     //}
 
     // | ----------------- Miscellaneous functions ---------------- |

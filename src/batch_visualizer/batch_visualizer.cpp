@@ -1,6 +1,6 @@
 #include <string>
 #include <mrs_lib/batch_visualizer.h>
-#include <mrs_lib/geometry_utils.h>
+#include <mrs_lib/geometry/shapes.h>
 
 namespace mrs_lib
 {
@@ -130,7 +130,7 @@ void BatchVisualizer::addPoint(Eigen::Vector3d p, double r, double g, double b, 
 //}
 
 /* addRay */  //{
-void BatchVisualizer::addRay(mrs_lib::Ray ray, double r, double g, double b, double a) {
+void BatchVisualizer::addRay(mrs_lib::geometry::Ray ray, double r, double g, double b, double a) {
 
   std_msgs::ColorRGBA color = generateColor(r, g, b, a);
 
@@ -147,7 +147,7 @@ void BatchVisualizer::addRay(mrs_lib::Ray ray, double r, double g, double b, dou
 //}
 
 /* addTriangle //{ */
-void BatchVisualizer::addTriangle(mrs_lib::Triangle tri, double r, double g, double b, double a, bool filled) {
+void BatchVisualizer::addTriangle(mrs_lib::geometry::Triangle tri, double r, double g, double b, double a, bool filled) {
 
   std_msgs::ColorRGBA color = generateColor(r, g, b, a);
   if (filled) {
@@ -190,19 +190,19 @@ void BatchVisualizer::addTriangle(mrs_lib::Triangle tri, double r, double g, dou
 //}
 
 /* addRectangle //{ */
-void BatchVisualizer::addRectangle(mrs_lib::Rectangle rect, double r, double g, double b, double a, bool filled) {
-  std::vector<mrs_lib::Triangle> triangles = rect.triangles();
+void BatchVisualizer::addRectangle(mrs_lib::geometry::Rectangle rect, double r, double g, double b, double a, bool filled) {
+  std::vector<mrs_lib::geometry::Triangle> triangles = rect.triangles();
   addTriangle(triangles[0], r, g, b, a, filled);
   addTriangle(triangles[1], r, g, b, a, filled);
 }
 //}
 
 /* addCuboid //{ */
-void BatchVisualizer::addCuboid(mrs_lib::Cuboid cuboid, double r, double g, double b, double a, bool filled) {
+void BatchVisualizer::addCuboid(mrs_lib::geometry::Cuboid cuboid, double r, double g, double b, double a, bool filled) {
 
   for (int i = 0; i < 6; i++) {
-    mrs_lib::Rectangle             rect      = cuboid.getRectangle(i);
-    std::vector<mrs_lib::Triangle> triangles = rect.triangles();
+    mrs_lib::geometry::Rectangle             rect      = cuboid.getRectangle(i);
+    std::vector<mrs_lib::geometry::Triangle> triangles = rect.triangles();
     addTriangle(triangles[0], r, g, b, a, filled);
     addTriangle(triangles[1], r, g, b, a, filled);
   }
@@ -210,65 +210,65 @@ void BatchVisualizer::addCuboid(mrs_lib::Cuboid cuboid, double r, double g, doub
 //}
 
 /* addEllipse //{ */
-void BatchVisualizer::addEllipse(mrs_lib::Ellipse ellipse, double r, double g, double b, double a, bool filled, int num_points) {
+void BatchVisualizer::addEllipse(mrs_lib::geometry::Ellipse ellipse, double r, double g, double b, double a, bool filled, int num_points) {
   std::vector<Eigen::Vector3d> points = buildEllipse(ellipse, num_points);
 
   if (filled) {
     for (int i = 0; i < num_points - 1; i++) {
-      mrs_lib::Triangle tri(ellipse.center(), points[i], points[i + 1]);
+      mrs_lib::geometry::Triangle tri(ellipse.center(), points[i], points[i + 1]);
       addTriangle(tri, r, g, b, a, true);
     }
-    mrs_lib::Triangle tri(ellipse.center(), points[num_points - 1], points[0]);
+    mrs_lib::geometry::Triangle tri(ellipse.center(), points[num_points - 1], points[0]);
     addTriangle(tri, r, g, b, a, true);
 
   } else {
     for (int i = 0; i < num_points - 1; i++) {
-      mrs_lib::Ray ray = mrs_lib::Ray::twopointCast(points[i], points[i + 1]);
+      mrs_lib::geometry::Ray ray = mrs_lib::geometry::Ray::twopointCast(points[i], points[i + 1]);
       addRay(ray, r, g, b, a);
     }
-    mrs_lib::Ray ray = mrs_lib::Ray::twopointCast(points[num_points - 1], points[0]);
+    mrs_lib::geometry::Ray ray = mrs_lib::geometry::Ray::twopointCast(points[num_points - 1], points[0]);
     addRay(ray, r, g, b, a);
   }
 }
 //}
 
 /* addCylinder //{ */
-void BatchVisualizer::addCylinder(mrs_lib::Cylinder cylinder, double r, double g, double b, double a, bool filled, bool capped, int sides) {
+void BatchVisualizer::addCylinder(mrs_lib::geometry::Cylinder cylinder, double r, double g, double b, double a, bool filled, bool capped, int sides) {
   if (capped) {
-    mrs_lib::Ellipse top    = cylinder.getCap(mrs_lib::Cylinder::TOP);
-    mrs_lib::Ellipse bottom = cylinder.getCap(mrs_lib::Cylinder::BOTTOM);
+    mrs_lib::geometry::Ellipse top    = cylinder.getCap(mrs_lib::geometry::Cylinder::TOP);
+    mrs_lib::geometry::Ellipse bottom = cylinder.getCap(mrs_lib::geometry::Cylinder::BOTTOM);
     addEllipse(top, r, g, b, a, filled, sides);
     addEllipse(bottom, r, g, b, a, filled, sides);
   }
-  std::vector<Eigen::Vector3d> top_points    = buildEllipse(cylinder.getCap(mrs_lib::Cylinder::TOP), sides);
-  std::vector<Eigen::Vector3d> bottom_points = buildEllipse(cylinder.getCap(mrs_lib::Cylinder::BOTTOM), sides);
+  std::vector<Eigen::Vector3d> top_points    = buildEllipse(cylinder.getCap(mrs_lib::geometry::Cylinder::TOP), sides);
+  std::vector<Eigen::Vector3d> bottom_points = buildEllipse(cylinder.getCap(mrs_lib::geometry::Cylinder::BOTTOM), sides);
   for (unsigned int i = 0; i < top_points.size() - 1; i++) {
-    mrs_lib::Rectangle rect(bottom_points[i], bottom_points[i + 1], top_points[i + 1], top_points[i]);
+    mrs_lib::geometry::Rectangle rect(bottom_points[i], bottom_points[i + 1], top_points[i + 1], top_points[i]);
     addRectangle(rect, r, g, b, a, filled);
   }
-  mrs_lib::Rectangle rect(bottom_points[bottom_points.size() - 1], bottom_points[0], top_points[0], top_points[top_points.size() - 1]);
+  mrs_lib::geometry::Rectangle rect(bottom_points[bottom_points.size() - 1], bottom_points[0], top_points[0], top_points[top_points.size() - 1]);
   addRectangle(rect, r, g, b, a, filled);
 }
 //}
 
 /* addCone //{ */
-void BatchVisualizer::addCone(mrs_lib::Cone cone, double r, double g, double b, double a, bool filled, bool capped, int sides) {
+void BatchVisualizer::addCone(mrs_lib::geometry::Cone cone, double r, double g, double b, double a, bool filled, bool capped, int sides) {
   if (capped) {
-    mrs_lib::Ellipse cap = cone.getCap();
+    mrs_lib::geometry::Ellipse cap = cone.getCap();
     addEllipse(cap, r, g, b, a, filled, sides);
   }
   std::vector<Eigen::Vector3d> cap_points = buildEllipse(cone.getCap(), sides);
   for (unsigned int i = 0; i < cap_points.size() - 1; i++) {
-    mrs_lib::Triangle tri(cap_points[i], cap_points[i + 1], cone.origin());
+    mrs_lib::geometry::Triangle tri(cap_points[i], cap_points[i + 1], cone.origin());
     addTriangle(tri, r, g, b, a, filled);
   }
-  mrs_lib::Triangle tri(cap_points[cap_points.size() - 1], cap_points[0], cone.origin());
+  mrs_lib::geometry::Triangle tri(cap_points[cap_points.size() - 1], cap_points[0], cone.origin());
   addTriangle(tri, r, g, b, a, filled);
 }
 //}
 
 /* buildEllipse //{ */
-std::vector<Eigen::Vector3d> BatchVisualizer::buildEllipse(mrs_lib::Ellipse ellipse, int num_points) {
+std::vector<Eigen::Vector3d> BatchVisualizer::buildEllipse(mrs_lib::geometry::Ellipse ellipse, int num_points) {
   std::vector<Eigen::Vector3d> points;
   double                       theta = 0;
   for (int i = 0; i < num_points; i++) {

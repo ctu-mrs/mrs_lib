@@ -266,7 +266,7 @@ double AttitudeConverter::getYawRateIntrinsic(const double& heading_rate) {
     throw MathErrorException();
   }
 
-  double direction = sign(orbital_velocity.dot(projected));
+  double direction = mrs_lib::signum(orbital_velocity.dot(projected));
 
   double output_yaw_rate = direction * (orbital_velocity_norm / projected_norm);
 
@@ -375,7 +375,7 @@ AttitudeConverter AttitudeConverter::setHeadingByYaw(const double& heading) {
   Eigen::Vector3d heading_vec_sklop(h[0], h[1], (-b3[0] * h[0] - b3[1] * h[1]) / b3[2]);
 
   // get the relative angle between the projected heading and b1
-  double yaw_diff = mrs_lib::vectorAngle(b1, heading_vec_sklop);
+  double yaw_diff = mrs_lib::geometry::angleBetween(b1, heading_vec_sklop);
 
   // get the rotation around b3 about yaw_diff
   Eigen::Matrix3d rotator = Eigen::AngleAxisd(-yaw_diff, b3).toRotationMatrix();

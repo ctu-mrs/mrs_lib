@@ -5,6 +5,9 @@
      \author Matouš Vrba - vrbamato@fel.cvut.cz
  */
 
+#ifndef SHAPES_H
+#define SHAPES_H
+
 #include <boost/optional.hpp>
 #include <Eigen/Dense>
 
@@ -616,3 +619,5 @@ namespace mrs_lib
     //}
   }
 }
+
+#endif // SHAPES_H
