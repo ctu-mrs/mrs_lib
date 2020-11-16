@@ -68,6 +68,135 @@ include_directories(
   # ${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake
   )
 
+add_library(MrsLibRepredictor src/repredictor/repredictor.cpp src/repredictor/MRS_odom_repredictor.cpp)
+target_link_libraries(MrsLibRepredictor
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_executable(lkf_example src/lkf/example.cpp)
+target_link_libraries(lkf_example
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_executable(ukf_example src/ukf/example.cpp)
+target_link_libraries(ukf_example
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_executable(nckf_tests src/nckf/nckf_tests.cpp)
+target_link_libraries(nckf_tests
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_library(MrsLibSafetyZone src/safety_zone/safety_zone.cpp
+  src/safety_zone/point_obstacle/point_obstacle.cpp
+  src/safety_zone/line_operations.cpp
+  src/safety_zone/polygon/polygon.cpp
+  )
+
+target_link_libraries(MrsLibSafetyZone
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_library(MrsLibProfiler src/profiler/profiler.cpp)
+target_link_libraries(MrsLibProfiler
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_library(MrsLibScopeTimer src/scope_timer/scope_timer.cpp)
+target_link_libraries(MrsLibScopeTimer
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_executable(mutex_tests src/mutex/mutex_tests.cpp)
+target_link_libraries(mutex_tests
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_library(MrsLibAttitudeConverter src/attitude_converter/attitude_converter.cpp)
+target_link_libraries(MrsLibAttitudeConverter
+  MrsLibGeometry
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_library(MrsLibTransformer src/transformer/transformer.cpp)
+target_link_libraries(MrsLibTransformer
+  MrsLibAttitudeConverter
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_library(MrsLibUtils src/utils/utils.cpp)
+target_link_libraries(MrsLibUtils
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_library(MrsLibParamLoader src/param_loader/param_loader.cpp)
+target_link_libraries(MrsLibParamLoader
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_executable(param_loader_example src/param_loader/example.cpp)
+target_link_libraries(param_loader_example
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_executable(subscribe_handler_example src/subscribe_handler/example.cpp)
+target_link_libraries(subscribe_handler_example
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_executable(rheiv_example src/rheiv/example.cpp)
+target_link_libraries(rheiv_example
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_library(MrsLibMedianFilter src/median_filter/median_filter.cpp)
+target_link_libraries(MrsLibMedianFilter
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_library(MrsLibBatchVisualizer src/batch_visualizer/batch_visualizer.cpp)
+target_link_libraries(MrsLibBatchVisualizer
+  MrsLibGeometry
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  ${GAZEBO_INCLUDE_DIRS}
+  )
+
+add_library(MrsLibImagePublisher src/image_publisher/image_publisher.cpp)
+target_link_libraries(MrsLibImagePublisher
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  ${GAZEBO_INCLUDE_DIRS}
+  )
+
+add_executable(batch_visualizer_demo src/batch_visualizer/batch_visualizer_demo.cpp)
+target_link_libraries(batch_visualizer_demo
+  MrsLibGeometry
+  MrsLibBatchVisualizer
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  ${GAZEBO_INCLUDE_DIRS}
+  )
+
+
 add_library(MrsLibGeometry src/geometry/misc.cpp src/geometry/cyclic.cpp src/geometry/shapes.cpp)
 target_link_libraries(MrsLibGeometry
   ${catkin_LIBRARIES}
@@ -88,3 +217,138 @@ target_link_libraries(cyclic_example
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
+
+#############
+## Testing ##
+#############
+
+if(CATKIN_ENABLE_TESTING)
+
+  find_package(rostest REQUIRED)
+
+  add_rostest_gtest(
+    GeometryTest
+    test/geometry/geometry.test
+    test/geometry/test.cpp
+  )
+
+  target_link_libraries(
+    GeometryTest
+    MrsLibGeometry
+    ${catkin_LIBRARIES}
+  )
+
+  add_dependencies(
+    GeometryTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+  )
+
+  add_rostest_gtest(
+    AttitudeConverterTest
+    test/attitude_converter/attitude_converter.test
+    test/attitude_converter/test.cpp
+  )
+
+  target_link_libraries(
+    AttitudeConverterTest
+    MrsLibAttitudeConverter
+    ${catkin_LIBRARIES}
+  )
+
+  add_dependencies(
+    AttitudeConverterTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+  )
+
+  add_rostest_gtest(
+    UtilsTest
+    test/utils/utils.test
+    test/utils/test.cpp
+  )
+
+  target_link_libraries(
+    UtilsTest
+    MrsLibUtils
+    ${catkin_LIBRARIES}
+  )
+
+  add_dependencies(
+    UtilsTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+  )
+
+  add_rostest_gtest(
+    UkfTest
+    test/ukf/ukf.test
+    test/ukf/test.cpp
+  )
+
+  target_link_libraries(
+    UkfTest
+    ${catkin_LIBRARIES}
+  )
+
+  add_dependencies(
+    UkfTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+  )
+
+  add_rostest_gtest(
+    TransformerTest
+    test/transformer/transformer.test
+    test/transformer/test.cpp
+  )
+
+  target_link_libraries(
+    TransformerTest
+    MrsLibTransformer
+    MrsLibAttitudeConverter
+    ${catkin_LIBRARIES}
+  )
+
+  add_dependencies(
+    TransformerTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+  )
+
+  add_rostest_gtest(
+    ParamLoaderTest
+    test/param_loader/param_loader.test
+    test/param_loader/test.cpp
+  )
+
+  target_link_libraries(
+    ParamLoaderTest
+    MrsLibParamLoader
+    ${catkin_LIBRARIES}
+  )
+
+  add_dependencies(
+    ParamLoaderTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+  )
+
+  add_rostest_gtest(
+    SubscribeHandlerTest
+    test/subscribe_handler/subscribe_handler.test
+    test/subscribe_handler/test.cpp
+  )
+
+  target_link_libraries(
+    SubscribeHandlerTest
+    ${catkin_LIBRARIES}
+  )
+
+  add_dependencies(
+    SubscribeHandlerTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+  )
+
+endif()
