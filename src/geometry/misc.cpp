@@ -13,18 +13,18 @@ namespace mrs_lib
     // | ----------------- Angle-related functions ---------------- |
 
     /* angle-related functions //{ */
-    
+
     /* cross() //{ */
-  
+
     double cross(const vec2_t& vec1, const vec2_t vec2)
     {
       return vec1.x() * vec2.y() - vec1.y() * vec2.x();
     }
-  
+
     //}
-  
+
     /* angleBetween() //{ */
-  
+
     double angleBetween(const vec3_t& vec1, const vec3_t& vec2)
     {
       const double sin_12 = vec1.cross(vec2).norm();
@@ -32,7 +32,7 @@ namespace mrs_lib
       const double angle = std::atan2(sin_12, cos_12);
       return angle;
     }
-  
+
     double angleBetween(const vec2_t& vec1, const vec2_t& vec2)
     {
       const double sin_12 = cross(vec1, vec2);
@@ -40,72 +40,72 @@ namespace mrs_lib
       const double angle = std::atan2(sin_12, cos_12);
       return angle;
     }
-  
+
     //}
-  
-  /* angleaxisBetween() //{ */
-  
-  Eigen::AngleAxisd angleaxisBetween(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2, const double tolerance)
-  {
-    // Find the rotation matrix to rotate vec1 to point in the direction of vec2
-    const Eigen::Vector3d a = vec1.normalized();
-    const Eigen::Vector3d b = vec2.normalized();
-    const Eigen::Vector3d v = a.cross(b);
-    const double sin_ab = v.norm();
-    const double cos_ab = a.dot(b);
-    const double angle = std::atan2(sin_ab, cos_ab);
-    Eigen::AngleAxisd ret;
-    if (abs(angle) < tolerance)
-      ret = Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitX());
-    else if (abs(abs(angle) - M_PI) < tolerance)
-      ret = Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitX());
-    else
-      ret = Eigen::AngleAxisd(angle, v.normalized());
-    return ret;
-  }
-  
-  //}
-  
-  /* quaternionBetween() //{ */
-  
-  Eigen::Quaterniond quaternionBetween(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2, const double tolerance)
-  {
-    const auto rot = angleaxisBetween(vec1, vec2, tolerance);
-    const Eigen::Quaterniond ret(rot);
-    return ret;
-  }
-  
-  //}
-  
-  /* rotationBetween() //{ */
-  
-  Eigen::Matrix3d rotationBetween(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2, const double tolerance)
-  {
-    const auto rot = angleaxisBetween(vec1, vec2, tolerance);
-    const Eigen::Matrix3d ret(rot);
-    return ret;
-  }
-  
-  //}
-  
+
+    /* angleaxisBetween() //{ */
+
+    Eigen::AngleAxisd angleaxisBetween(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2, const double tolerance)
+    {
+      // Find the rotation matrix to rotate vec1 to point in the direction of vec2
+      const Eigen::Vector3d a = vec1.normalized();
+      const Eigen::Vector3d b = vec2.normalized();
+      const Eigen::Vector3d v = a.cross(b);
+      const double sin_ab = v.norm();
+      const double cos_ab = a.dot(b);
+      const double angle = std::atan2(sin_ab, cos_ab);
+      Eigen::AngleAxisd ret;
+      if (abs(angle) < tolerance)
+        ret = Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitX());
+      else if (abs(abs(angle) - M_PI) < tolerance)
+        ret = Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitX());
+      else
+        ret = Eigen::AngleAxisd(angle, v.normalized());
+      return ret;
+    }
+
+    //}
+
+    /* quaternionBetween() //{ */
+
+    Eigen::Quaterniond quaternionBetween(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2, const double tolerance)
+    {
+      const auto rot = angleaxisBetween(vec1, vec2, tolerance);
+      const Eigen::Quaterniond ret(rot);
+      return ret;
+    }
+
+    //}
+
+    /* rotationBetween() //{ */
+
+    Eigen::Matrix3d rotationBetween(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2, const double tolerance)
+    {
+      const auto rot = angleaxisBetween(vec1, vec2, tolerance);
+      const Eigen::Matrix3d ret(rot);
+      return ret;
+    }
+
+    //}
+
     /* haversin() //{ */
-  
+
     double haversin(const double angle)
     {
       return (1.0 - std::cos(angle)) / 2.0;
     }
-  
+
     //}
-  
+
     /* invHaversin() //{ */
-  
+
     double invHaversin(const double value)
     {
       return 2.0 * std::asin(std::sqrt(value));
     }
-  
+
     //}
-    
+
     //}
 
     /* triangleArea() //{ */
@@ -114,6 +114,22 @@ namespace mrs_lib
     {
       double s = (a + b + c) / 2.0;
       return std::sqrt(s * (s - a) * (s - b) * (s - c));
+    }
+
+    //}
+
+    /* vector distance //{ */
+
+    double dist(const vec2_t& a, const vec2_t& b)
+    {
+
+      return (a - b).norm();
+    }
+
+    double dist(const vec3_t& a, const vec3_t& b)
+    {
+
+      return (a - b).norm();
     }
 
     //}

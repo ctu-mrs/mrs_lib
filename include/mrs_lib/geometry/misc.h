@@ -33,9 +33,9 @@ namespace mrs_lib
     // | ----------------- Angle-related functions ---------------- |
 
     /* angle-related functions //{ */
-    
+
     /* angleBetween() //{ */
-    
+
     /*!
      * \brief Returns the angle between two vectors, taking orientation into account.
      *
@@ -49,7 +49,7 @@ namespace mrs_lib
      *
      */
     double angleBetween(const vec2_t& a, const vec2_t& b);
-    
+
     /*!
      * \brief Returns the angle between two vectors, taking orientation into account.
      *
@@ -63,11 +63,11 @@ namespace mrs_lib
      *
      */
     double angleBetween(const vec3_t& a, const vec3_t& b);
-    
+
     //}
-    
+
     /* angleaxisBetween() //{ */
-    
+
     /*!
      * \brief Returns the rotation between two vectors, represented as angle-axis.
      *
@@ -82,11 +82,11 @@ namespace mrs_lib
      *
      */
     Eigen::AngleAxisd angleaxisBetween(const vec3_t& a, const vec3_t& b, const double tolerance = 1e-9);
-    
+
     //}
-    
+
     /* quaternionBetween() //{ */
-    
+
     /*!
      * \brief Returns the rotation between two vectors, represented as a quaternion.
      *
@@ -99,11 +99,11 @@ namespace mrs_lib
      *
      */
     Eigen::Quaterniond quaternionBetween(const vec3_t& a, const vec3_t& b, const double tolerance = 1e-9);
-    
+
     //}
-    
+
     /* rotationBetween() //{ */
-    
+
     /*!
      * \brief Returns the rotation between two vectors, represented as a rotation matrix.
      *
@@ -116,11 +116,11 @@ namespace mrs_lib
      *
      */
     Eigen::Matrix3d rotationBetween(const vec3_t& a, const vec3_t& b, const double tolerance = 1e-9);
-    
+
     //}
-    
+
     /* haversin() //{ */
-    
+
     /**
      * @brief computes the haversine (half of versine) for a given angle
      *
@@ -129,11 +129,11 @@ namespace mrs_lib
      * @return
      */
     double haversin(const double angle);
-    
+
     //}
-    
+
     /* invHaversin() //{ */
-    
+
     /**
      * @brief computes the inverse haversine angle for a given value
      *
@@ -142,11 +142,11 @@ namespace mrs_lib
      * @return angle in radians
      */
     double invHaversin(const double value);
-    
+
     //}
 
     /* quaternionFromEuler() //{ */
-    
+
     /**
      * @brief create a quaternion from 3 provided Euler angles
      *
@@ -157,7 +157,7 @@ namespace mrs_lib
      * @return quaternion
      */
     Eigen::Quaterniond quaternionFromEuler(double x, double y, double z);
-    
+
     /**
      * @brief create a quaternion from Euler angles provided as a vector
      *
@@ -166,15 +166,15 @@ namespace mrs_lib
      * @return quaternion
      */
     Eigen::Quaterniond quaternionFromEuler(Eigen::Vector3d euler);
-    
+
     //}
 
     //}
 
     // | ----------------- Miscellaneous functions ---------------- |
-    
+
     /* 2D cross() //{ */
-    
+
     /*!
      * \brief Implementation of cross product for 2D vectors.
      *
@@ -187,11 +187,35 @@ namespace mrs_lib
      *
      */
     double cross(const vec2_t& a, const vec2_t b);
-    
+
+    //}
+
+    /* vector distance //{ */
+
+    /**
+     * @brief distnace between two 2D Eigen vectors
+     *
+     * @param a
+     * @param b
+     *
+     * @return Euclidean distance
+     */
+    double dist(const vec2_t& a, const vec2_t& b);
+
+    /**
+     * @brief distnace between two 3D Eigen vectors
+     *
+     * @param a
+     * @param b
+     *
+     * @return Euclidean distance
+     */
+    double dist(const vec3_t& a, const vec3_t& b);
+
     //}
 
     /* triangleArea() //{ */
-    
+
     /**
      * @brief uses Heron's formula to compute area of a given triangle using side lengths
      *
@@ -202,7 +226,7 @@ namespace mrs_lib
      * @return
      */
     double triangleArea(const double a, const double b, const double c);
-    
+
     //}
 
   }  // namespace geometry
