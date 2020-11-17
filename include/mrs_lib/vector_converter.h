@@ -19,6 +19,12 @@ namespace mrs_lib
     return {in.x(), in.y(), in.z()};
   }
 
+  template <>
+  std::tuple<double, double, double> convertFrom<cv::Vec3d>(const cv::Vec3d& in)
+  {
+    return {in[0], in[1], in[2]};
+  }
+
   template <typename ret_t>
   ret_t convertTo(const double x, const double y, const double z)
   {
