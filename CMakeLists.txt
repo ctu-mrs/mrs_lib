@@ -80,6 +80,12 @@ target_link_libraries(lkf_example
   ${Eigen_LIBRARIES}
   )
 
+add_executable(vector_converter src/vector_converter/vector_converter.cpp)
+target_link_libraries(vector_converter
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
 add_executable(ukf_example src/ukf/example.cpp)
 target_link_libraries(ukf_example
   ${catkin_LIBRARIES}
