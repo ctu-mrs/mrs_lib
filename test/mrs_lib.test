@@ -21,4 +21,7 @@
   <include file="$(find mrs_lib)/test/subscribe_handler/subscribe_handler.test">
   </include>
 
+  <include file="$(find mrs_lib)/test/vector_converter/vector_converter.test">
+  </include>
+
 </launch>

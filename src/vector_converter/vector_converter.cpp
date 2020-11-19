@@ -3,18 +3,12 @@
 #include <mrs_lib/vector_converter.h>
 #pragma GCC diagnostic pop
 
+#include <impl/vector_converter_types.h>
+
 // Boost preprocessor lib for cartesian product of type lists
 #include <boost/preprocessor/seq/for_each_product.hpp>
 #include <boost/preprocessor/seq/to_tuple.hpp>
 #include <boost/preprocessor/tuple/to_seq.hpp>
-
-// Include necessary files for the vector types here
-#include <Eigen/Dense>
-#include <geometry_msgs/Vector3.h>
-#include <opencv2/imgproc/imgproc.hpp>
-
-// Add the types for which you want the conversion to be instantiated to this list
-#define TYPE_LIST (Eigen::Vector3d, Eigen::Vector3f, cv::Vec3d, cv::Vec3f, geometry_msgs::Vector3)
 
 /* PREPROCESSOR BLACK MAGIC, NO TOUCHY TOUCHY! //{ */
 
@@ -30,7 +24,7 @@
      (BOOST_PP_TUPLE_TO_SEQ(TUP_B)) \
    )
 
-INITIALIZE_TEMPLATES_CARTESIAN(TYPE_LIST, TYPE_LIST)
+INITIALIZE_TEMPLATES_CARTESIAN((VC_TYPE_LIST), (VC_TYPE_LIST))
 
 //}
 
