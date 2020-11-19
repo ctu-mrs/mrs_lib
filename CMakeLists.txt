@@ -50,7 +50,7 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs mrs_msgs
   DEPENDS Eigen
-  LIBRARIES MrsLibSafetyZone MrsLibProfiler MrsLibScopeTimer MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibRepredictor MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher
+  LIBRARIES MrsLibSafetyZone MrsLibVectorConverter MrsLibProfiler MrsLibScopeTimer MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibRepredictor MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher
   )
 
 ###########
@@ -80,8 +80,8 @@ target_link_libraries(lkf_example
   ${Eigen_LIBRARIES}
   )
 
-add_executable(vector_converter src/vector_converter/vector_converter.cpp)
-target_link_libraries(vector_converter
+add_library(MrsLibVectorConverter src/vector_converter/vector_converter.cpp)
+target_link_libraries(MrsLibVectorConverter
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )

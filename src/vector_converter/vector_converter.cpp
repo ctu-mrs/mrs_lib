@@ -3,35 +3,34 @@
 #include <mrs_lib/vector_converter.h>
 #pragma GCC diagnostic pop
 
+// Boost preprocessor lib for cartesian product of type lists
+#include <boost/preprocessor/seq/for_each_product.hpp>
+#include <boost/preprocessor/seq/to_tuple.hpp>
+#include <boost/preprocessor/tuple/to_seq.hpp>
+
+// Include necessary files for the vector types here
 #include <Eigen/Dense>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <geometry_msgs/Vector3.h>
 #include <opencv2/imgproc/imgproc.hpp>
 
-// Explicit instantiation of the tepmplated functions to precompile them into mrs_lib and speed up compilation of user program.
-// Instantiating these functions should be sufficient to invoke precompilation of all templated ParamLoader functions.
+// Add the types for which you want the conversion to be instantiated to this list
+#define TYPE_LIST (Eigen::Vector3d, Eigen::Vector3f, cv::Vec3d, cv::Vec3f, geometry_msgs::Vector3)
 
-template Eigen::Vector3d mrs_lib::convert<Eigen::Vector3d>(const cv::Vec3d&);
+/* PREPROCESSOR BLACK MAGIC, NO TOUCHY TOUCHY! //{ */
 
-/* using namespace mrs_lib; */
+#define INITIALIZE_TEMPLATES(FROM_TYPE, TO_TYPE) \
+  template TO_TYPE mrs_lib::convert<TO_TYPE>(const FROM_TYPE&);
 
-/* int main() */
-/* { */
-/*   const Eigen::Vector3d vec1; */
+#define EVAL(...) __VA_ARGS__
+#define INITIALIZE_TEMPLATES_SEMI_DELIM(R,SEQ_X) EVAL(INITIALIZE_TEMPLATES BOOST_PP_SEQ_TO_TUPLE(SEQ_X));
+#define INITIALIZE_TEMPLATES_CARTESIAN(TUP_A,TUP_B) \
+   BOOST_PP_SEQ_FOR_EACH_PRODUCT \
+   ( INITIALIZE_TEMPLATES_SEMI_DELIM, \
+     (BOOST_PP_TUPLE_TO_SEQ(TUP_A)) \
+     (BOOST_PP_TUPLE_TO_SEQ(TUP_B)) \
+   )
 
-/*   const auto vec2 = convert<geometry_msgs::Vector3>(vec1); */
-/*   const auto vec3 = convert<cv::Vec3d>(vec1); */
-/*   const auto vec4 = convert<cv::Vec3f>(vec1); */
-/*   const auto vec5 = convert<Eigen::Vector3d>(vec3); */
-/*   const auto vec6 = convert<Eigen::Vector3f>(vec2); */
+INITIALIZE_TEMPLATES_CARTESIAN(TYPE_LIST, TYPE_LIST)
 
-/*   std::cout << "vec1: " << vec1 << std::endl; */
-/*   std::cout << "vec2: " << vec2 << std::endl; */
-/*   std::cout << "vec3: " << vec3 << std::endl; */
-/*   std::cout << "vec4: " << vec4 << std::endl; */
-/*   std::cout << "vec5: " << vec5 << std::endl; */
-/*   std::cout << "vec6: " << vec6 << std::endl; */
-
-/*   return 0; */
-/* }; */
+//}
 
