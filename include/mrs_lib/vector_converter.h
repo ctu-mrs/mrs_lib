@@ -26,20 +26,26 @@ template<class T> constexpr bool has_##memb##mem_v =                           \
     GENERATE_HAS_MEMBER_FUNC(x, double);
     GENERATE_HAS_MEMBER(x, double);
 
+    template<class T> using _has_sqbop_chk = decltype(std::declval<T &>()[0]);
+    template<class T> constexpr bool has_sqbop_v = std::experimental::is_detected_convertible_v<double, _has_sqbop_chk, T>;
+
+    // convertFrom specialization for Eigen types
     template <typename in_t>
     std::enable_if_t<has_xfun_v<in_t>, unw_t> convertFrom(const in_t& in)
     {
       return {in.x(), in.y(), in.z()};
     }
 
+    // convertFrom specialization for plain member types
     template <typename in_t>
     std::enable_if_t<has_xmem_v<in_t>, unw_t> convertFrom(const in_t& in)
     {
       return {in.x, in.y, in.z};
     }
 
+    // convertFrom specialization for OpenCV vectors
     template <typename in_t>
-    std::enable_if_t<!has_xfun_v<in_t> && !has_xmem_v<in_t>, unw_t> convertFrom(const in_t& in)
+    std::enable_if_t<has_sqbop_v<in_t> && !has_xfun_v<in_t>, unw_t> convertFrom(const in_t& in)
     {
       return {in[0], in[1], in[2]};
     }
