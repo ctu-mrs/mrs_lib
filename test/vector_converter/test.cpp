@@ -49,70 +49,44 @@ INSTANTIATE_TYPED_TEST_CASE_P(VectorTypesInstantiation, VectorConverterTest, Vec
 
 /* FROM-TO TYPE CONVERSION TESTS //{ */
 
-/* HELPER MACROS //{ */
-
-#define CONCATENATE_DETAIL(x, y) x##y
-#define CONCATENATE(x, y) CONCATENATE_DETAIL(x, y)
-#define MAKE_UNIQUE(x) CONCATENATE(x, __COUNTER__)
-
-//}
-
-// This macro defines a single testing function for converting from FROM_TYPE to TO_TYPE and pushes it to conv_tests
-#define DEFINE_TEST(FROM_TYPE, TO_TYPE)                             \
-conv_tests.push_back([] ()                                          \
-{                                                                   \
-  using from_t = FROM_TYPE;                                         \
-  using to_t = TO_TYPE;                                             \
-  const double xo = rand(), yo = rand(), zo = rand();               \
-  const from_t from = mrs_lib::impl::convertTo<from_t>(xo, yo, zo); \
-  const to_t to = mrs_lib::convert<to_t>(from);                     \
-  const auto [x, y, z] = mrs_lib::impl::convertFrom(to);            \
-  return                                                            \
-      (x == xo && y == yo && z == zo)                               \
-   || (x == float(xo) && y == float(yo) && z == float(zo));         \
-});
-
-/* PREPROCESSOR BLACK MAGIC, NO TOUCHY TOUCHY! //{ */
-
-// Boost preprocessor lib for cartesian product of type lists
-#include <boost/preprocessor/seq/for_each_product.hpp>
-#include <boost/preprocessor/seq/to_tuple.hpp>
-#include <boost/preprocessor/tuple/to_seq.hpp>
-
-#define EVAL(...) __VA_ARGS__
-#define DEFINE_TESTS_SEMI_DELIM(R,SEQ_X) EVAL(DEFINE_TEST BOOST_PP_SEQ_TO_TUPLE(SEQ_X));
-#define DEFINE_TESTS_CARTESIAN(TUP_A,TUP_B) \
-   BOOST_PP_SEQ_FOR_EACH_PRODUCT \
-   ( DEFINE_TESTS_SEMI_DELIM, \
-     (BOOST_PP_TUPLE_TO_SEQ(TUP_A)) \
-     (BOOST_PP_TUPLE_TO_SEQ(TUP_B)) \
-   )
-
-//}
+// This is a single testing function for converting from from_t to to_t
+template <typename from_t, typename to_t>
+bool testConv()
+{                                                                   
+  const double xo = rand(), yo = rand(), zo = rand();               
+  const from_t from = mrs_lib::impl::convertTo<from_t>(xo, yo, zo); 
+  const to_t to = mrs_lib::convert<to_t>(from);                     
+  const auto [x, y, z] = mrs_lib::impl::convertFrom(to);            
+  return                                                            
+      (x == xo && y == yo && z == zo)                               
+   || (x == float(xo) && y == float(yo) && z == float(zo));         
+};
 
 /* TMP BLACK MAGIC, ALSO NO TOUCHING! //{ */
 
-template <std::size_t I, typename tuple_t, typename F>
-void test_Ith_tuple(F fs)
+template <std::size_t I, typename tuple_t>
+void test_Ith_tuple()
 {
   using type_list = tuple_t;
   constexpr auto n_types = std::tuple_size<type_list>::value;
-  using from_t = std::tuple_element<I/n_types, type_list>;
-  using to_t = std::tuple_element<I%n_types, type_list>;
-  EXPECT_TRUE(fs.at(I)()) << "Conversion from type " << typeid(from_t).name() << " to type " << typeid(to_t).name() << " failed.";
+  using from_t = typename std::tuple_element<I/n_types, type_list>::type;
+  using to_t = typename std::tuple_element<I%n_types, type_list>::type;
+  const auto result = testConv<from_t, to_t>();
+  EXPECT_TRUE(result) << "Conversion from type " << typeid(from_t).name() << " to type " << typeid(to_t).name() << " failed.";
+  std::cerr << "Testing conversion from type " << typeid(from_t).name() << " to type " << typeid(to_t).name() << ".";
 }
 
-template <typename tuple_t, std::size_t ... Is, typename F>
-void static_for_helper(std::index_sequence<Is...>, F fs)
+template <typename tuple_t, std::size_t ... Is>
+void static_for_helper(std::index_sequence<Is...>)
 {
-  (test_Ith_tuple<Is, tuple_t>(fs),
+  (test_Ith_tuple<Is, tuple_t>(),
    ...);
 }
 
-template <std::size_t N, typename tuple_t, typename F>
-void static_for(F f)
+template <std::size_t N, typename tuple_t>
+void static_for()
 {
-  static_for_helper<tuple_t>(std::make_index_sequence<N>{}, f);
+  static_for_helper<tuple_t>(std::make_index_sequence<N>{});
 }
 
 //}
@@ -122,12 +96,12 @@ TEST(TESTSuite, ConvertsBetween)
 {
   std::vector<std::function<bool()>> conv_tests;
   // Define test functions for converting between the different types using a cartesian product of the type list with itself
-  DEFINE_TESTS_CARTESIAN((VC_TYPE_LIST), (VC_TYPE_LIST))
+  /* DEFINE_TESTS_CARTESIAN((VC_TYPE_LIST), (VC_TYPE_LIST)) */
   using type_list = std::tuple<VC_TYPE_LIST>;
   const type_list tlist_inst;
   constexpr auto n_types = std::tuple_size<type_list>::value;
   // Run all the conversion test functions, checking the return value
-  static_for<n_types, type_list>(conv_tests);
+  static_for<n_types*n_types, type_list>();
 }
 
 //}
