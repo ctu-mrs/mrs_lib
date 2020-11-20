@@ -57,9 +57,9 @@ INSTANTIATE_TYPED_TEST_CASE_P(VectorTypesInstantiation, VectorConverterTest, Vec
 
 //}
 
-// This macro defines a test for converting from FROM_TYPE to TO_TYPE
+// This macro defines a single testing function for converting from FROM_TYPE to TO_TYPE and pushes it to conv_tests
 #define DEFINE_TEST(FROM_TYPE, TO_TYPE)                             \
-TEST(VectorConverterTest, MAKE_UNIQUE(ConvertsBetween) )            \
+conv_tests.push_back([] ()                                          \
 {                                                                   \
   using from_t = FROM_TYPE;                                         \
   using to_t = TO_TYPE;                                             \
@@ -67,10 +67,10 @@ TEST(VectorConverterTest, MAKE_UNIQUE(ConvertsBetween) )            \
   const from_t from = mrs_lib::impl::convertTo<from_t>(xo, yo, zo); \
   const to_t to = mrs_lib::convert<to_t>(from);                     \
   const auto [x, y, z] = mrs_lib::impl::convertFrom(to);            \
-  EXPECT_TRUE(                                                      \
+  return                                                            \
       (x == xo && y == yo && z == zo)                               \
-   || (x == float(xo) && y == float(yo) && z == float(zo)));        \
-}
+   || (x == float(xo) && y == float(yo) && z == float(zo));         \
+});
 
 /* PREPROCESSOR BLACK MAGIC, NO TOUCHY TOUCHY! //{ */
 
@@ -90,8 +90,45 @@ TEST(VectorConverterTest, MAKE_UNIQUE(ConvertsBetween) )            \
 
 //}
 
-// Define tests for converting between the different types using a cartesian product of the type list with itself
-DEFINE_TESTS_CARTESIAN((VC_TYPE_LIST), (VC_TYPE_LIST))
+/* TMP BLACK MAGIC, ALSO NO TOUCHING! //{ */
+
+template <std::size_t I, typename tuple_t, typename F>
+void test_Ith_tuple(F fs)
+{
+  using type_list = tuple_t;
+  constexpr auto n_types = std::tuple_size<type_list>::value;
+  using from_t = std::tuple_element<I/n_types, type_list>;
+  using to_t = std::tuple_element<I%n_types, type_list>;
+  EXPECT_TRUE(fs.at(I)()) << "Conversion from type " << typeid(from_t).name() << " to type " << typeid(to_t).name() << " failed.";
+}
+
+template <typename tuple_t, std::size_t ... Is, typename F>
+void static_for_helper(std::index_sequence<Is...>, F fs)
+{
+  (test_Ith_tuple<Is, tuple_t>(fs),
+   ...);
+}
+
+template <std::size_t N, typename tuple_t, typename F>
+void static_for(F f)
+{
+  static_for_helper<tuple_t>(std::make_index_sequence<N>{}, f);
+}
+
+//}
+
+// This test tests all combinations of conversions between the various types, defined in "impl/vector_converter_types.h"
+TEST(TESTSuite, ConvertsBetween)
+{
+  std::vector<std::function<bool()>> conv_tests;
+  // Define test functions for converting between the different types using a cartesian product of the type list with itself
+  DEFINE_TESTS_CARTESIAN((VC_TYPE_LIST), (VC_TYPE_LIST))
+  using type_list = std::tuple<VC_TYPE_LIST>;
+  const type_list tlist_inst;
+  constexpr auto n_types = std::tuple_size<type_list>::value;
+  // Run all the conversion test functions, checking the return value
+  static_for<n_types, type_list>(conv_tests);
+}
 
 //}
 

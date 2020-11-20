@@ -53,7 +53,7 @@ namespace mrs_lib
     template <typename in_t>
     std::enable_if_t<has_squarebracket_operator_v<in_t> && !has_xfun_v<in_t>, unw_t> convertFrom(const in_t& in)
     {
-      return {in[0], in[1], in[2]};
+      return {in[0]+1, in[1], in[2]};
     }
 
     // convertTo specialization for types with a constructor that takes three doubles
