@@ -50,6 +50,7 @@ namespace mrs_lib
     using mat3_t = Eigen::Matrix<double, 3, 3>;
     using pt3_t = mrs_lib::geometry::vec3_t;
     using vec3_t = mrs_lib::geometry::vec3_t;
+    //}
 
   public:
   /*!
@@ -69,6 +70,39 @@ namespace mrs_lib
     */
     DKF(const A_t& A, const B_t& B) : Base_class(A, B, {}) {};
 
+    /* correctLine() method //{ */
+  /*!
+    * \brief Applies the correction (update, measurement, data) step of the Kalman filter.
+    *
+    * This method applies the linear Kalman filter correction step to the state and covariance
+    * passed in \p sc using the measurement \p z and measurement noise \p R. The parameter \p param
+    * is ignored in this implementation. The updated state and covariance after the correction step
+    * is returned.
+    *
+    * \param sc          The state and covariance to which the correction step is to be applied.
+    * \param z           The measurement vector to be used for correction.
+    * \param R           The measurement noise covariance matrix to be used for correction.
+    * \param param       Unused parameter.
+    * \return            The state and covariance after the correction update.
+    */
+    /* virtual statecov_t correctLine(const statecov_t& sc, const pt3_t& line_origin, const vec3_t& line_direction, const double line_variance) const */
+    /* { */
+    /*   assert(line_direction.norm() > 0.0); */
+    /*   const vec3_t zunit {0.0, 0.0, 1.0}; */
+    /*   // rot is a rotation matrix, transforming from F to F' */
+    /*   const mat3_t rot = mrs_lib::geometry::rotationBetween(line_direction, zunit); */
+    /*   /1* const mat3_t rotT = rot.transpose(); *1/ */
+
+    /*   const H_t Hprime = rot.block<2, 2>(0, 0); */
+
+    /*   const pt3_t oprime = rot*line_origin; */
+    /*   const z_t z = oprime.block<2, 1>(0, 0); */
+
+    /*   const R_t R = line_variance*R_t::Identity(); */
+    /*   return correction_impl(sc, z, R, Hprime); */
+    /* }; */
+    //}
+
     /* correct() method //{ */
   /*!
     * \brief Applies the correction (update, measurement, data) step of the Kalman filter.
@@ -84,23 +118,25 @@ namespace mrs_lib
     * \param param       Unused parameter.
     * \return            The state and covariance after the correction update.
     */
-    virtual statecov_t correctLine(const statecov_t& sc, const pt3_t& line_origin, const vec3_t& line_direction, const double line_variance) const
+    virtual statecov_t correct(const statecov_t& sc, const Eigen::Matrix<double, n, -1>& bases, const Eigen::Matrix<double, -1, 1>& origin) const
     {
-      assert(line_direction.norm() > 0.0);
-      const vec3_t zunit {0.0, 0.0, 1.0};
-      // rot is a rotation matrix, transforming from F to F'
-      const mat3_t rot = mrs_lib::geometry::rotationBetween(line_direction, zunit);
-      /* const mat3_t rotT = rot.transpose(); */
+      Eigen::CompleteOrthogonalDecomposition<Eigen::Matrix<double, n, -1> > cod;
+      cod.compute(bases);
+      std::cout << "rank : " << cod.rank() << "\n";
+      // Find URV^T
+      Eigen::Matrix<double, -1, n> V = cod.matrixZ().transpose();
+      Eigen::Matrix<double, -1, n> tmp = V.block(0, cod.rank(),V.rows(), V.cols() - cod.rank());
+      Eigen::Matrix<double, -1, n> P = cod.colsPermutation();
+      Eigen::MatrixXd N = P * tmp; // Unpermute the columns
 
-      const H_t Hprime = rot.block<2, 2>(0, 0);
-
-      const pt3_t oprime = rot*line_origin;
-      const z_t z = oprime.block<2, 1>(0, 0);
-
-      const R_t R = line_variance*R_t::Identity();
-      return correction_impl(sc, z, R, Hprime);
+      std::cout << "The null space: \n" << N << "\n" ;
+      // Check that it is the null-space:
+      std::cout << "bases * null space" << bases * N  << '\n';
+      /* return correction_impl(sc, z, R, Hprime); */
+      return sc;
     };
     //}
+
   };
   //}
 

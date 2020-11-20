@@ -31,7 +31,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -std=c++17 -O3 -Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++17 -O0 -g -Wall")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -std=c++17 -O3 -g -Wall")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -std=c++17 -O3 -g -Wall -DEIGEN_INITIALIZE_MATRICES_BY_NAN")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -Wall")
 # set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -g -O0 -Wall")
 
@@ -82,6 +82,12 @@ target_link_libraries(lkf_example
 
 add_executable(ukf_example src/ukf/example.cpp)
 target_link_libraries(ukf_example
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_executable(dkf_example src/dkf/dkf.cpp)
+target_link_libraries(dkf_example
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )

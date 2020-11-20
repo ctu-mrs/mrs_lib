@@ -1,0 +1,5 @@
+<launch>
+
+  <node name="mrs_lib_dbg" pkg="mrs_lib" type="dkf_example" launch-prefix="debug_roslaunch" output="screen" />
+
+</launch>
