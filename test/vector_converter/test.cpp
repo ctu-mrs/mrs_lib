@@ -47,73 +47,53 @@ INSTANTIATE_TYPED_TEST_CASE_P(VectorTypesInstantiation, VectorConverterTest, Vec
 
 //}
 
-/* template <typename T> */
-/* class VectorConverterTestCP: public ::testing::Test { }; */
-/* TYPED_TEST_CASE_P(VectorConverterTestCP); */
+/* FROM-TO TYPE CONVERSION TESTS //{ */
 
-/* TYPED_TEST_P(VectorConverterTestCP, ConvertsBetween) */
-/* { */
-/*   using from_t = typename TypeParam::from_type; */
-/*   using to_t = typename TypeParam::to_type; */
-/*   const double xo = rand(), yo = rand(), zo = rand(); */
-/*   const from_t vec = mrs_lib::impl::convertTo<from_t>(xo, yo, zo);; */
-/*   const to_t vec2 = mrs_lib::convert<to_t>(vec);; */
-/*   const auto [x, y, z] = mrs_lib::impl::convertFrom(vec2); */
-/*   EXPECT_TRUE((x == xo && y == yo && z == zo) || (x == float(xo) && y == float(yo) && z == float(zo))); */
-/* } */
+/* HELPER MACROS //{ */
 
-/* REGISTER_TYPED_TEST_CASE_P(VectorConverterTestCP, */
-/*     ConvertsBetween */
-/* ); */
+#define CONCATENATE_DETAIL(x, y) x##y
+#define CONCATENATE(x, y) CONCATENATE_DETAIL(x, y)
+#define MAKE_UNIQUE(x) CONCATENATE(x, __COUNTER__)
 
-/* /1* BLACK MAGIC, NO TOUCHY TOUCHY! //{ *1/ */
+//}
 
-/* /1* template<typename ...Ts> struct type_list {}; *1/ */
-/* template<typename ...Ts> */
-/* using type_list = ::testing::Types<Ts...>; */
-/* template<typename T1, typename T2> struct tpair */
-/* { */
-/*   using from_type = T1; */
-/*   using to_type = T2; */
-/* }; */
+// This macro defines a test for converting from FROM_TYPE to TO_TYPE
+#define DEFINE_TEST(FROM_TYPE, TO_TYPE)                             \
+TEST(VectorConverterTest, MAKE_UNIQUE(ConvertsBetween) )            \
+{                                                                   \
+  using from_t = FROM_TYPE;                                         \
+  using to_t = TO_TYPE;                                             \
+  const double xo = rand(), yo = rand(), zo = rand();               \
+  const from_t from = mrs_lib::impl::convertTo<from_t>(xo, yo, zo); \
+  const to_t to = mrs_lib::convert<to_t>(from);                     \
+  const auto [x, y, z] = mrs_lib::impl::convertFrom(to);            \
+  EXPECT_TRUE(                                                      \
+      (x == xo && y == yo && z == zo)                               \
+   || (x == float(xo) && y == float(yo) && z == float(zo)));        \
+}
 
-/* // Concatenation */
-/* template <typename ... T> struct concat; */
-/* template <typename ... Ts, typename ... Us> */
-/* struct concat<type_list<Ts...>, type_list<Us...>> */
-/* { */
-/*     typedef type_list<Ts..., Us...> type; */
-/* }; */
+/* PREPROCESSOR BLACK MAGIC, NO TOUCHY TOUCHY! //{ */
 
-/* // Cross Product */
-/* template <typename T, typename U> struct cross_product; */
+// Boost preprocessor lib for cartesian product of type lists
+#include <boost/preprocessor/seq/for_each_product.hpp>
+#include <boost/preprocessor/seq/to_tuple.hpp>
+#include <boost/preprocessor/tuple/to_seq.hpp>
 
-/* // Partially specialise the empty case for the first type_list. */
-/* template <typename ...Us> */
-/* struct cross_product<type_list<>, type_list<Us...>> { */
-/*     typedef type_list<> type; */
-/* }; */
+#define EVAL(...) __VA_ARGS__
+#define DEFINE_TESTS_SEMI_DELIM(R,SEQ_X) EVAL(DEFINE_TEST BOOST_PP_SEQ_TO_TUPLE(SEQ_X));
+#define DEFINE_TESTS_CARTESIAN(TUP_A,TUP_B) \
+   BOOST_PP_SEQ_FOR_EACH_PRODUCT \
+   ( DEFINE_TESTS_SEMI_DELIM, \
+     (BOOST_PP_TUPLE_TO_SEQ(TUP_A)) \
+     (BOOST_PP_TUPLE_TO_SEQ(TUP_B)) \
+   )
 
-/* // The general case for two type_lists. Process: */
-/* // 1. Expand out the head of the first type_list with the full second type_list. */
-/* // 2. Recurse the tail of the first type_list. */
-/* // 3. Concatenate the two type_lists. */
-/* template <typename T, typename ...Ts, typename ...Us> */
-/* struct cross_product<type_list<T, Ts...>, type_list<Us...>> { */
-/*     typedef typename concat< */
-/*         type_list<tpair<T, Us>...>, */
-/*         typename cross_product<type_list<Ts...>, type_list<Us...>>::type */
-/*     >::type type; */
-/* }; */
+//}
 
-/* //} */
+// Define tests for converting between the different types using a cartesian product of the type list with itself
+DEFINE_TESTS_CARTESIAN((VC_TYPE_LIST), (VC_TYPE_LIST))
 
-/* /1* typedef ::testing::Types< *1/ */
-/* /1* cross_product<type_list<VC_TYPE_LIST>, type_list<VC_TYPE_LIST>> *1/ */
-/* /1*   > VectorCPTypes; *1/ */
-/* using VectorCPTypes = cross_product<type_list<VC_TYPE_LIST>::type, type_list<VC_TYPE_LIST>::type>; */
-
-/* INSTANTIATE_TYPED_TEST_CASE_P(VectorTypesInstantiation2, VectorConverterTestCP, VectorCPTypes); */
+//}
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
