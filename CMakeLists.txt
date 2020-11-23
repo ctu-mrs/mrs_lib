@@ -40,8 +40,11 @@ find_package(Eigen3 REQUIRED)
 set(Eigen_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIRS})
 set(Eigen_LIBRARIES ${EIGEN3_LIBRARIES})
 
-#include OpenCV
+# include OpenCV
 find_package(OpenCV REQUIRED HINTS /usr/local/lib)
+
+# include PCL
+find_package(PCL REQUIRED)
 
 ###################################
 ## catkin specific configuration ##
@@ -85,6 +88,10 @@ add_library(MrsLibVectorConverter src/vector_converter/vector_converter.cpp)
 target_link_libraries(MrsLibVectorConverter
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
+  ${PCL_LIBRARIES}
+  )
+target_include_directories(MrsLibVectorConverter PRIVATE
+  ${PCL_INCLUDE_DIRS}
   )
 
 add_executable(vector_converter_example src/vector_converter/example.cpp)
@@ -93,6 +100,10 @@ target_link_libraries(vector_converter_example
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
+target_include_directories(vector_converter_example PRIVATE
+  ${PCL_INCLUDE_DIRS}
+  )
+
 
 add_executable(ukf_example src/ukf/example.cpp)
 target_link_libraries(ukf_example

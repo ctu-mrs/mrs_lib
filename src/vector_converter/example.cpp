@@ -22,6 +22,7 @@
 
 #include <geometry_msgs/Vector3.h>
 #include <Eigen/Dense>
+#include <pcl/point_types.h>
 
 /* Demonstration of usage for custom incompatible types. //{ */
 
@@ -63,7 +64,10 @@ int main()
   // prepare a source variable `from` with the type, which we'll want to convert
   const double xo = rand(), yo = rand(), zo = rand();
   // the mrs_lib::impl::convertTo() function is used as a shortcut for initialization of the object
-  const auto from = mrs_lib::impl::convertTo<geometry_msgs::Vector3>(xo, yo, zo);
+  // Note, then when converting to a single precision floating type,
+  // the compiler will emit a narrowing conversion waring. This can be disabled using the pragma statements
+  // around the line `#include <mrs_lib/vector_converter.h>` (see above).
+  const auto from = mrs_lib::impl::convertTo<pcl::PointXYZ>(xo, yo, zo);
 
   // This is the main functionality - one-liner for converting between two vector types.
   const auto to = mrs_lib::convert<Eigen::Vector3d>(from);
