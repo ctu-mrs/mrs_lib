@@ -14,7 +14,7 @@
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ## -*- texinfo -*- 
-## @deftypefn {} {@var{retval} =} line_meas (@var{input1}, @var{input2})
+## @deftypefn {} {@var{retval} =} kf (@var{input1}, @var{input2})
 ##
 ## @seealso{}
 ## @end deftypefn
@@ -22,11 +22,9 @@
 ## Author: matous <matous@SKUMPA-Linux>
 ## Created: 2020-11-20
 
-function [bases, origin, m] = line_meas(ground_truth)
+function [xn, Pn] = kf_predict (A, x, P, Q)
 
-  m = 2;
-  bases = rand(3, 1);
-  bases = bases/norm(bases);
-  origin = ground_truth;
+xn = A*x;
+Pn = A*P*A' + Q;
 
 endfunction

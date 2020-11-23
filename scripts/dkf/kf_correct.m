@@ -22,7 +22,7 @@
 ## Author: matous <matous@SKUMPA-Linux>
 ## Created: 2020-11-20
 
-function [xn, Pn] = kf_correct (A, H, x, P, z, R)
+function [xn, Pn] = kf_correct (H, x, P, z, R)
 
 S = H*P*H' + R;
 K = P*H'/S;

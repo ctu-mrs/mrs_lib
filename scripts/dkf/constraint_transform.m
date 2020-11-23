@@ -14,19 +14,20 @@
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ## -*- texinfo -*- 
-## @deftypefn {} {@var{retval} =} line_meas (@var{input1}, @var{input2})
+## @deftypefn {} {@var{retval} =} constraint_transform (@var{input1}, @var{input2})
 ##
 ## @seealso{}
 ## @end deftypefn
 
-## Author: matous <matous@SKUMPA-Linux>
-## Created: 2020-11-20
+## Author: matous <matous@matous-Myslplacka>
+## Created: 2020-11-23
 
-function [bases, origin, m] = line_meas(ground_truth)
+function M = constraint_transform (constrained_states)
 
-  m = 2;
-  bases = rand(3, 1);
-  bases = bases/norm(bases);
-  origin = ground_truth;
-
+  cs = constrained_states > 0;
+  n = size(cs, 1);
+  c = sum(cs);
+  M = zeros(c, n);
+  M(:, cs) = eye(c);
+  
 endfunction

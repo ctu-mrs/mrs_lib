@@ -22,11 +22,10 @@
 ## Author: matous <matous@SKUMPA-Linux>
 ## Created: 2020-11-20
 
-function [bases, origin, M] = point_meas (ground_truth, n_states)
+function [bases, origin, m] = point_meas (ground_truth)
 
-  m = size(ground_truth, 1)
-  bases = [];
+  m = 3;
+  bases = zeros(3, 1);
   origin = ground_truth;
-  M = [eye(m), zeros(n_states-m)];
 
 endfunction

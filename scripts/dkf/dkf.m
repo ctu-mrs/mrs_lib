@@ -1,7 +1,5 @@
-pkg load control
-
-gt_pos = [-3; -3; -3];
-gt_vel = [1; 1; 1];
+clear;
+close all;
 
 figure;
 hold on;
@@ -14,33 +12,46 @@ title("measurements");
 
 dt = 1;
 n = 6;
-A = [eye(3), dt*eye(3);
-     zeros(3),  eye(3)];
-x = [zeros(3, 1), eye(3, 1)];
+if n == 6
+  A = [eye(3), dt*eye(3);
+       zeros(3),  eye(3)];
+  ground_truth = [-3; -3; -3; 1; 1; 1];
+  constrained_states = [1; 1; 1; 0; 0; 0];
+else
+  A = eye(3);
+  ground_truth = [-3; -3; -3];
+  constrained_states = [1; 1; 1];
+end
+x = zeros(n, 1);
 P = 666*eye(n);
+Q = eye(n);
 
-for it = 1:5
-  [bases, origin, M] = point_meas(gt_pos, n);
-  m = size(gt_pos, 1)-size(bases, 2);
+for it = 1:20
+  ground_truth = A*ground_truth;
+  gt_pos = ground_truth(1:3);
   
-  nbases = eye(3);
-  if size(bases, 2) > 0
-    nbases = null(bases');
-  endif
+  [bases, origin, m] = plane_meas(gt_pos);
+  M = constraint_transform(constrained_states);
+  
+  nbases = null(bases');
   op = nbases'*origin;
   
   H = nbases'*M;
   z = op;
   R = eye(m);
   
-  [x, P] = kf_correct(A, H, x, P, z, R)
+  [x, P] = kf_predict(A, x, P, Q);
+  [x, P] = kf_correct(H, x, P, z, R);
   
   op3d = nbases*op;
   plot_meas(bases, origin);
   plot_meas(nbases, [0; 0; 0]);
   plot3(op3d(1), op3d(2), op3d(3), 'o');
-  ground_truth = A*[gt_pos; gt_vel];
-  gt_pos = ground_truth(1:3);
+  fprintf("it %d: %f\n", it, norm(x-ground_truth));
 endfor
+
+x
+P
+ground_truth
 
 plot3(0, 0, 0, 'x', "MarkerSize", 15);

@@ -22,8 +22,9 @@
 ## Author: matous <matous@SKUMPA-Linux>
 ## Created: 2020-11-20
 
-function [bases, origin] = plane_meas (ground_truth)
+function [bases, origin, m] = plane_meas(ground_truth)
 
+  m = 1;
   bases = rand(3, 2);
   bases(:, 1) = bases(:, 1)/norm(bases(:, 1));
   bases(:, 2) = bases(:, 2)/norm(bases(:, 2));
