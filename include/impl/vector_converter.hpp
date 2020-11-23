@@ -1,7 +1,10 @@
+/**  \file vector_converter.hpp
+     \brief Implements the convertTo() and convertFrom() functions for conversion between different vector representations (Eigen, OpenCV, tf2 etc.).
+     \author Matouš Vrba - vrbamato@fel.cvut.cz
+ */
 #ifndef VECTOR_CONVERTER_HPP
 #define VECTOR_CONVERTER_HPP
 
-#include <mrs_lib/vector_converter.h>
 #include <experimental/type_traits>
 
 namespace mrs_lib

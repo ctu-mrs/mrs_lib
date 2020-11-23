@@ -42,6 +42,7 @@ set(Eigen_LIBRARIES ${EIGEN3_LIBRARIES})
 
 #include OpenCV
 find_package(OpenCV REQUIRED HINTS /usr/local/lib)
+
 ###################################
 ## catkin specific configuration ##
 ###################################
@@ -82,6 +83,13 @@ target_link_libraries(lkf_example
 
 add_library(MrsLibVectorConverter src/vector_converter/vector_converter.cpp)
 target_link_libraries(MrsLibVectorConverter
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_executable(vector_converter_example src/vector_converter/example.cpp)
+target_link_libraries(vector_converter_example
+  MrsLibVectorConverter
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
