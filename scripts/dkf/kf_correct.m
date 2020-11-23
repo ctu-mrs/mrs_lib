@@ -24,7 +24,8 @@
 
 function [xn, Pn] = kf_correct (A, H, x, P, z, R)
 
-K = P*H'*inv(H*P*H' + R);
+S = H*P*H' + R;
+K = P*H'/S;
 
 xn = x + K*(z - H*x);
 Pn = P - K*H*P;

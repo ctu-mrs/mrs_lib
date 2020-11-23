@@ -14,7 +14,7 @@
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ## -*- texinfo -*- 
-## @deftypefn {} {@var{retval} =} line_meas (@var{input1}, @var{input2})
+## @deftypefn {} {@var{retval} =} point_meas (@var{input1}, @var{input2})
 ##
 ## @seealso{}
 ## @end deftypefn
@@ -22,11 +22,10 @@
 ## Author: matous <matous@SKUMPA-Linux>
 ## Created: 2020-11-20
 
-function [bases, origin, M] = line_meas (ground_truth, n_states)
+function [bases, origin, M] = point_meas (ground_truth, n_states)
 
   m = size(ground_truth, 1)
-  bases = rand(m, 1);
-  bases = bases/norm(bases);
+  bases = [];
   origin = ground_truth;
   M = [eye(m), zeros(n_states-m)];
 
