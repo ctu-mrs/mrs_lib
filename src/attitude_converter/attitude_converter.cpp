@@ -86,6 +86,8 @@ AttitudeConverter::AttitudeConverter(const double& roll, const double& pitch, co
       break;
     }
   }
+
+  validateOrientation();
 }
 
 AttitudeConverter::AttitudeConverter(const tf::Quaternion quaternion) {
@@ -93,6 +95,8 @@ AttitudeConverter::AttitudeConverter(const tf::Quaternion quaternion) {
   tf2_quaternion_.setY(quaternion.y());
   tf2_quaternion_.setZ(quaternion.z());
   tf2_quaternion_.setW(quaternion.w());
+
+  validateOrientation();
 }
 
 AttitudeConverter::AttitudeConverter(const geometry_msgs::Quaternion quaternion) {
@@ -100,10 +104,14 @@ AttitudeConverter::AttitudeConverter(const geometry_msgs::Quaternion quaternion)
   tf2_quaternion_.setY(quaternion.y);
   tf2_quaternion_.setZ(quaternion.z);
   tf2_quaternion_.setW(quaternion.w);
+
+  validateOrientation();
 }
 
 AttitudeConverter::AttitudeConverter(const mrs_lib::EulerAttitude& euler_attitude) {
   tf2_quaternion_.setRPY(euler_attitude.roll(), euler_attitude.pitch(), euler_attitude.yaw());
+
+  validateOrientation();
 }
 
 AttitudeConverter::AttitudeConverter(const Eigen::Quaterniond quaternion) {
@@ -111,6 +119,8 @@ AttitudeConverter::AttitudeConverter(const Eigen::Quaterniond quaternion) {
   tf2_quaternion_.setY(quaternion.y());
   tf2_quaternion_.setZ(quaternion.z());
   tf2_quaternion_.setW(quaternion.w());
+
+  validateOrientation();
 }
 
 AttitudeConverter::AttitudeConverter(const Eigen::Matrix3d matrix) {
@@ -120,16 +130,22 @@ AttitudeConverter::AttitudeConverter(const Eigen::Matrix3d matrix) {
   tf2_quaternion_.setY(quaternion.y());
   tf2_quaternion_.setZ(quaternion.z());
   tf2_quaternion_.setW(quaternion.w());
+
+  validateOrientation();
 }
 
 AttitudeConverter::AttitudeConverter(const tf2::Quaternion quaternion) {
 
   tf2_quaternion_ = quaternion;
+
+  validateOrientation();
 }
 
 AttitudeConverter::AttitudeConverter(const tf2::Matrix3x3 matrix) {
 
   matrix.getRotation(tf2_quaternion_);
+
+  validateOrientation();
 }
 
 //}
@@ -433,6 +449,14 @@ void AttitudeConverter::calculateRPY(void) {
   if (!got_rpy_) {
 
     tf2::Matrix3x3(tf2_quaternion_).getRPY(roll_, pitch_, yaw_);
+  }
+}
+
+void AttitudeConverter::validateOrientation(void) {
+
+  if (!std::isfinite(tf2_quaternion_.x()) || !std::isfinite(tf2_quaternion_.y()) || !std::isfinite(tf2_quaternion_.z()) ||
+      !std::isfinite(tf2_quaternion_.w())) {
+    throw InvalidAttitudeException();
   }
 }
 

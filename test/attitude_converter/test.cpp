@@ -303,6 +303,43 @@ TEST(TESTSuite, get_heading_rate) {
 
 //}
 
+/* TEST(TESTSuite, input_nan_checks) //{ */
+
+TEST(TESTSuite, input_nan_checks) {
+
+  int result = 1;
+
+  printf("testing NaNs on input\n");
+
+  double mynan =  std::numeric_limits<double>::quiet_NaN();
+
+  tf2::Quaternion q;
+  double heading;
+
+  try {
+    q = AttitudeConverter(mynan, 0, 0);
+    heading = AttitudeConverter(mynan, 0, 0).getHeading();
+  } catch (mrs_lib::AttitudeConverter::InvalidAttitudeException e) {
+    printf("exception caught: '%s'\n", e.what());
+  }
+
+  if (!std::isfinite(q.x()) || !std::isfinite(q.y()) || !std::isfinite(q.z()) || !std::isfinite(q.w())) {
+    printf("NaNs in the quaternion\n");
+    result = 0;
+  }
+
+  if (!std::isfinite(heading)) {
+    printf("NaNs in heading\n");
+    result = 0;
+  }
+
+  printf("\n");
+
+  EXPECT_TRUE(result);
+}
+
+//}
+
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
 
   testing::InitGoogleTest(&argc, argv);

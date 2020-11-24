@@ -170,6 +170,14 @@ public:
     }
   };
 
+  //! is thrown when the internal attitude becomes invalid
+  struct InvalidAttitudeException : public std::exception
+  {
+    const char* what() const throw() {
+      return "AttitudeConverter: invalid attitude";
+    }
+  };
+
   //! is thrown when the Euler angle format is set wrongly
   struct EulerFormatException : public std::exception
   {
@@ -482,6 +490,11 @@ private:
    * @brief convert the internal quaternion representation to internally-stored RPY
    */
   void calculateRPY(void);
+
+  /**
+   * @brief throws exception when the internal attitude is invalid
+   */
+  void validateOrientation(void);
 
   /**
    * @brief Internal representation in RPY. is used only when converting to RPY.
