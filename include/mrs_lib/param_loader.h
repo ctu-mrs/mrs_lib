@@ -617,6 +617,7 @@ public:
     const auto loaded = load<T>(name, T(), COMPULSORY, UNIQUE);
     return loaded.first;
   };
+
   /*!
     * \brief Loads a compulsory parameter from the rosparam server.
     *
@@ -661,22 +662,6 @@ public:
     * The duration will be loaded as a \p double, representing a number of seconds, and then converted to ros::Duration.
     *
     * \param name          Name of the parameter in the rosparam server.
-    * \param default_value This value will be used if the parameter name is not found in the rosparam server.
-    * \return              The loaded parameter value.
-    */
-  ros::Duration loadParam2(const std::string& name, const ros::Duration& default_value)
-  {
-    const double secs = loadParam2<double>(name, default_value.toSec());
-    const ros::Duration ret(secs);
-    return ret;
-  }
-
-  /*!
-    * \brief An overload for loading ros::Duration.
-    *
-    * The duration will be loaded as a \p double, representing a number of seconds, and then converted to ros::Duration.
-    *
-    * \param name          Name of the parameter in the rosparam server.
     * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
     * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
     */
@@ -685,21 +670,6 @@ public:
     double secs;
     const bool ret = loadParam<double>(name, secs);
     out = ros::Duration(secs);
-    return ret;
-  }
-
-  /*!
-    * \brief An overload for loading ros::Duration.
-    *
-    * The duration will be loaded as a \p double, representing a number of seconds, and then converted to ros::Duration.
-    *
-    * \param name          Name of the parameter in the rosparam server.
-    * \return              The loaded parameter value.
-    */
-  ros::Duration loadParam2(const std::string& name)
-  {
-    const double secs = loadParam2<double>(name);
-    const ros::Duration ret(secs);
     return ret;
   }
   
@@ -1126,6 +1096,39 @@ public:
 
 };
 //}
+
+  /*!
+    * \brief An overload for loading ros::Duration.
+    *
+    * The duration will be loaded as a \p double, representing a number of seconds, and then converted to ros::Duration.
+    *
+    * \param name          Name of the parameter in the rosparam server.
+    * \param default_value This value will be used if the parameter name is not found in the rosparam server.
+    * \return              The loaded parameter value.
+    */
+  template <>
+  ros::Duration ParamLoader::loadParam2<ros::Duration>(const std::string& name, const ros::Duration& default_value)
+  {
+    const double secs = loadParam2<double>(name, default_value.toSec());
+    const ros::Duration ret(secs);
+    return ret;
+  }
+
+  /*!
+    * \brief An overload for loading ros::Duration.
+    *
+    * The duration will be loaded as a \p double, representing a number of seconds, and then converted to ros::Duration.
+    *
+    * \param name          Name of the parameter in the rosparam server.
+    * \return              The loaded parameter value.
+    */
+  template <>
+  ros::Duration ParamLoader::loadParam2<ros::Duration>(const std::string& name)
+  {
+    const double secs = loadParam2<double>(name);
+    const ros::Duration ret(secs);
+    return ret;
+  }
 
 }  // namespace mrs_lib
 
