@@ -556,12 +556,13 @@ namespace mrs_lib
 
         return in;
       }
-    } else
-    {
+    } 
+    /* else */
+    /* { */
 
-      ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: could not deduce a namespaced frame_id '%s' (did you instance the Transformer with the uav_name argument?)",
-                        node_name_.c_str(), in.c_str());
-    }
+    /*   ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: could not deduce a namespaced frame_id '%s' (did you instance the Transformer with the uav_name argument?)", */
+    /*                     node_name_.c_str(), in.c_str()); */
+    /* } */
 
     return in;
   }
