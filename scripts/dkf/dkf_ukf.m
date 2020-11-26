@@ -2,6 +2,7 @@
 % (optionally a moving 3D point). Author: vrbamato@fel.cvut.cz
 
 clear;
+addpath('ukf');
 
 % Signal to noise ratio (probably not according to the definition, just a parameter)
 SNR = 100;
