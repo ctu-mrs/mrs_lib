@@ -1107,12 +1107,7 @@ public:
     * \return              The loaded parameter value.
     */
   template <>
-  ros::Duration ParamLoader::loadParam2<ros::Duration>(const std::string& name, const ros::Duration& default_value)
-  {
-    const double secs = loadParam2<double>(name, default_value.toSec());
-    const ros::Duration ret(secs);
-    return ret;
-  }
+  ros::Duration ParamLoader::loadParam2<ros::Duration>(const std::string& name, const ros::Duration& default_value);
 
   /*!
     * \brief An overload for loading ros::Duration.
@@ -1123,12 +1118,7 @@ public:
     * \return              The loaded parameter value.
     */
   template <>
-  ros::Duration ParamLoader::loadParam2<ros::Duration>(const std::string& name)
-  {
-    const double secs = loadParam2<double>(name);
-    const ros::Duration ret(secs);
-    return ret;
-  }
+  ros::Duration ParamLoader::loadParam2<ros::Duration>(const std::string& name);
 
 }  // namespace mrs_lib
 
