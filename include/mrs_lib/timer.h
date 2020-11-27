@@ -8,8 +8,6 @@
 namespace mrs_lib
 {
 
-using callback_t = std::function<void(const ros::TimerEvent&)>;
-
 // | ------------------------ ROSTimer ------------------------ |
 
 /* class ROSTimer //{ */
@@ -48,6 +46,8 @@ public:
   void start(void);
   void setPeriod(const ros::Duration& duration, const bool& reset = true);
 
+  std::mutex mutex_timer_;
+
   std::shared_ptr<ros::Timer> timer_;
 };
 
@@ -62,7 +62,6 @@ ROSTimer::~ROSTimer(void) {
 }
 
 ROSTimer::ROSTimer(const ROSTimer& other) {
-  printf("muhaha constructor\n");
   this->timer_ = other.timer_;
 }
 
@@ -111,7 +110,7 @@ ROSTimer::ROSTimer(const ros::NodeHandle& nh, const ros::Rate& rate, void (Objec
 
 //}
 
-/* ROSTimer:: operator= //{ */
+/* ROSTimer::operator= //{ */
 
 ROSTimer& ROSTimer::operator=(const ROSTimer& other) {
 
@@ -129,6 +128,9 @@ ROSTimer& ROSTimer::operator=(const ROSTimer& other) {
 /* stop() //{ */
 
 void ROSTimer::stop(void) {
+
+  std::scoped_lock lock(mutex_timer_);
+
   timer_->stop();
 }
 
@@ -137,6 +139,9 @@ void ROSTimer::stop(void) {
 /* start() //{ */
 
 void ROSTimer::start(void) {
+
+  std::scoped_lock lock(mutex_timer_);
+
   timer_->start();
 }
 
@@ -145,6 +150,8 @@ void ROSTimer::start(void) {
 /* setPeriod() //{ */
 
 void ROSTimer::setPeriod(const ros::Duration& duration, const bool& reset) {
+
+  std::scoped_lock lock(mutex_timer_);
 
   timer_->setPeriod(duration, reset);
 }
@@ -205,7 +212,7 @@ private:
     bool      oneshot_;
     ros::Rate rate_;
 
-    callback_t callback_;
+    std::function<void(const ros::TimerEvent&)> callback_;
 
   private:
     bool      running_;
@@ -337,7 +344,7 @@ ThreadTimer::ThreadTimer([[maybe_unused]] const ros::NodeHandle& nh, const ros::
 
 //}
 
-/* ThreadTimer operator= //{ */
+/* ThreadTimer::operator= //{ */
 
 ThreadTimer& ThreadTimer::operator=(const ThreadTimer& other) {
 
