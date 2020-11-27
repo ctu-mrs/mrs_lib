@@ -50,6 +50,17 @@ BatchVisualizer::BatchVisualizer(ros::NodeHandle& nh, std::string marker_topic_n
 }
 //}
 
+/* setParentFrame() //{ */
+
+void BatchVisualizer::setParentFrame(const std::string parent_frame) {
+  this->parent_frame               = parent_frame;
+  points_marker.header.frame_id    = parent_frame;
+  triangles_marker.header.frame_id = parent_frame;
+  lines_marker.header.frame_id     = parent_frame;
+}
+
+//}
+
 /* dynamicReconfigureCallback //{ */
 /* void BatchVisualizer::dynamicReconfigureCallback(mrs_lib::batch_visualizerConfig& config, [[maybe_unused]] uint32_t level) { */
 /*   reconfigured = true; */

@@ -148,6 +148,13 @@ public:
    * @param scale
    */
   void setPointsScale(double scale);
+  
+  /**
+   * @brief set the parent frame_id
+   *
+   * @param parent_frame
+   */
+  void setParentFrame(const std::string parent_frame);
 
   /**
    * @brief set the thickness of all lines
