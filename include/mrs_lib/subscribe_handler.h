@@ -8,6 +8,13 @@
 #define SUBRSCRIBE_HANDLER_H
 
 #include <ros/ros.h>
+#include <mrs_lib/timer.h>
+
+#if ROS_VERSION_MINIMUM(1, 15, 8)
+using Timer = mrs_lib::ThreadTimer;
+#else
+using Timer = mrs_lib::ROSTimer;
+#endif
 
 namespace mrs_lib
 {

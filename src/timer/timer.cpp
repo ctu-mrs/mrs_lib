@@ -14,7 +14,9 @@ ROSTimer::~ROSTimer(void) {
 }
 
 ROSTimer::ROSTimer(const ROSTimer& other) {
-  this->timer_ = other.timer_;
+  if (other.timer_) {
+    this->timer_ = other.timer_;
+  }
 }
 
 //}
@@ -27,7 +29,9 @@ ROSTimer& ROSTimer::operator=(const ROSTimer& other) {
     return *this;
   }
 
-  this->timer_ = other.timer_;
+  if (other.timer_) {
+    this->timer_ = other.timer_;
+  }
 
   return *this;
 }
@@ -40,7 +44,9 @@ void ROSTimer::stop(void) {
 
   std::scoped_lock lock(mutex_timer_);
 
-  timer_->stop();
+  if (timer_) {
+    timer_->stop();
+  }
 }
 
 //}
@@ -51,7 +57,9 @@ void ROSTimer::start(void) {
 
   std::scoped_lock lock(mutex_timer_);
 
-  timer_->start();
+  if (timer_) {
+    timer_->start();
+  }
 }
 
 //}
@@ -62,7 +70,9 @@ void ROSTimer::setPeriod(const ros::Duration& duration, const bool& reset) {
 
   std::scoped_lock lock(mutex_timer_);
 
-  timer_->setPeriod(duration, reset);
+  if (timer_) {
+    timer_->setPeriod(duration, reset);
+  }
 }
 
 //}
