@@ -147,10 +147,11 @@ void ThreadTimer::setPeriod(const ros::Duration& duration, [[maybe_unused]] cons
 ThreadTimer::Impl::~Impl() {
 }
 
-ThreadTimer::Impl::Impl() : rate_(ros::Rate(1.0)) {
+ThreadTimer::Impl::Impl() : rate_(ros::Rate(1.0)), duration_(ros::Duration(0.0)) {
 
   this->running_ = false;
   this->oneshot_ = false;
+  this->shoot_   = false;
 
   this->last_real_     = ros::Time(0);
   this->last_expected_ = ros::Time(0);
@@ -162,18 +163,28 @@ void ThreadTimer::Impl::start(void) {
   this->stop();
 
   if (!running_) {
+
     running_ = true;
-    thread_  = std::thread(&Impl::threadFcn, this);
+
+    thread_ = std::thread(&Impl::threadFcn, this);
+
+    thread_.detach();
+  }
+
+  if (oneshot_) {
+    shoot_ = true;
   }
 }
 
 void ThreadTimer::Impl::stop(void) {
 
-  running_ = false;
-
-  if (thread_.joinable()) {
-    thread_.join();
+  if (!oneshot_) {
+    running_ = false;
   }
+
+  /* if (thread_.joinable()) { */
+  /*   thread_.join(); */
+  /* } */
 }
 
 void ThreadTimer::Impl::setPeriod(const ros::Duration& duration, [[maybe_unused]] const bool& reset) {
@@ -183,8 +194,9 @@ void ThreadTimer::Impl::setPeriod(const ros::Duration& duration, [[maybe_unused]
   if (duration.toSec() > 0) {
     this->rate_ = 1.0 / duration.toSec();
   } else {
-    this->oneshot_ = true;
-    this->rate_    = ros::Rate(1.0);
+    this->oneshot_  = true;
+    this->rate_     = ros::Rate(1.0);
+    this->duration_ = duration;
   }
 
   rate_changed_ = true;
@@ -198,8 +210,19 @@ void ThreadTimer::Impl::threadFcn(void) {
 
   if (oneshot_) {
 
-    ros::TimerEvent timer_event;
-    callback_(timer_event);
+    ros::Rate temp_rate(1000);
+
+    while (ros::ok() && running_) {
+
+      if (shoot_) {
+        shoot_ = false;
+        duration_.sleep();
+        ros::TimerEvent timer_event;
+        callback_(timer_event);
+      }
+
+      temp_rate.sleep();
+    }
 
   } else {
 

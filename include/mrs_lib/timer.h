@@ -105,7 +105,9 @@ private:
     void setPeriod(const ros::Duration& duration, const bool& reset = true);
 
     bool      oneshot_;
+    bool shoot_ = false;
     ros::Rate rate_;
+    ros::Duration duration_;
 
     std::function<void(const ros::TimerEvent&)> callback_;
 
@@ -115,6 +117,7 @@ private:
     ros::Time last_expected_;
     ros::Time last_real_;
 
+    bool thread_created_ = false;
     std::thread thread_;
 
     void threadFcn(void);

@@ -90,6 +90,7 @@ ThreadTimer::ThreadTimer([[maybe_unused]] const ros::NodeHandle& nh, const ros::
   this->impl_->callback_ = std::bind(callback, obj, std::placeholders::_1);
   this->impl_->oneshot_  = oneshot;
   this->impl_->rate_     = rate;
+  this->impl_->duration_ = rate.expectedCycleTime();
 
   if (autostart) {
     this->impl_->start();
@@ -103,6 +104,7 @@ ThreadTimer::ThreadTimer([[maybe_unused]] const ros::NodeHandle& nh, const ros::
   this->impl_            = std::make_shared<Impl>();
   this->impl_->callback_ = std::bind(callback, obj, std::placeholders::_1);
   this->impl_->oneshot_  = oneshot;
+  this->impl_->duration_ = duration;
 
   if (duration.toSec() > 0) {
     this->impl_->rate_ = 1.0 / duration.toSec();
