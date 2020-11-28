@@ -13,40 +13,131 @@ namespace mrs_lib
 
 /* class ROSTimer //{ */
 
+/**
+ * @brief ros::Timer wrapper. The interface is the same as with ros::Timer, except for the initialization method.
+ */
 class ROSTimer {
 public:
   ROSTimer(void);
   ~ROSTimer(void);
+
+  /**
+   * @brief copy constructor
+   *
+   * @param other
+   */
   ROSTimer(const ROSTimer& other);
 
+  /**
+   * @brief assignment operator
+   *
+   * @param other
+   *
+   * @return
+   */
   ROSTimer& operator=(const ROSTimer& other);
 
+  /**
+   * @brief constructor, oneshot = false, autostart = true
+   *
+   * @tparam ObjectType
+   * @param nh
+   * @param rate
+   * @param ObjectType::*const callback
+   * @param obj
+   */
   template <class ObjectType>
   ROSTimer(const ros::NodeHandle& nh, const ros::Rate& rate, void (ObjectType::*const callback)(const ros::TimerEvent& event), ObjectType* const obj);
 
+  /**
+   * @brief constructor, oneshot = false, autostart = true
+   *
+   * @tparam ObjectType
+   * @param nh
+   * @param duration
+   * @param ObjectType::*const callback
+   * @param obj
+   */
   template <class ObjectType>
   ROSTimer(const ros::NodeHandle& nh, const ros::Duration& duration, void (ObjectType::*const callback)(const ros::TimerEvent& event), ObjectType* const obj);
 
+  /**
+   * @brief constructor, autostart = true
+   *
+   * @tparam ObjectType
+   * @param nh
+   * @param rate
+   * @param ObjectType::*const callback
+   * @param obj
+   * @param oneshot
+   */
   template <class ObjectType>
   ROSTimer(const ros::NodeHandle& nh, const ros::Rate& rate, void (ObjectType::*const callback)(const ros::TimerEvent& event), ObjectType* const obj,
            const bool& oneshot);
 
+  /**
+   * @brief constructor, autostart = true
+   *
+   * @tparam ObjectType
+   * @param nh
+   * @param duration
+   * @param ObjectType::*const callback
+   * @param obj
+   * @param oneshot
+   */
   template <class ObjectType>
   ROSTimer(const ros::NodeHandle& nh, const ros::Duration& duration, void (ObjectType::*const callback)(const ros::TimerEvent& event), ObjectType* const obj,
            const bool& oneshot);
 
+  /**
+   * @brief full constructor
+   *
+   * @tparam ObjectType
+   * @param nh
+   * @param rate
+   * @param ObjectType::*const callback
+   * @param obj
+   * @param oneshot
+   * @param autostart
+   */
   template <class ObjectType>
   ROSTimer(const ros::NodeHandle& nh, const ros::Rate& rate, void (ObjectType::*const callback)(const ros::TimerEvent& event), ObjectType* const obj,
            const bool& oneshot, const bool& autostart);
 
+  /**
+   * @brief full constructor
+   *
+   * @tparam ObjectType
+   * @param nh
+   * @param duration
+   * @param ObjectType::*const callback
+   * @param obj
+   * @param oneshot
+   * @param autostart
+   */
   template <class ObjectType>
   ROSTimer(const ros::NodeHandle& nh, const ros::Duration& duration, void (ObjectType::*const callback)(const ros::TimerEvent& event), ObjectType* const obj,
            const bool& oneshot, const bool& autostart);
 
+  /**
+   * @brief stop the timer
+   */
   void stop(void);
+
+  /**
+   * @brief start the timer
+   */
   void start(void);
+
+  /**
+   * @brief set the timer period/duration
+   *
+   * @param duration
+   * @param reset
+   */
   void setPeriod(const ros::Duration& duration, const bool& reset = true);
 
+private:
   std::mutex mutex_timer_;
 
   std::shared_ptr<ros::Timer> timer_;
@@ -58,40 +149,130 @@ public:
 
 /* class ThreadTimer //{ */
 
+/**
+ * @brief Custom thread-based Timers with the same interface as mrs_lib::ROSTimer.
+ */
 class ThreadTimer {
 
 public:
   ThreadTimer();
   ~ThreadTimer();
+
+  /**
+   * @brief copy constructor
+   *
+   * @param other
+   */
   ThreadTimer(const ThreadTimer& other);
 
+  /**
+   * @brief assignment operator
+   *
+   * @param other
+   *
+   * @return ThreadTimer
+   */
   ThreadTimer& operator=(const ThreadTimer& other);
 
+  /**
+   * @brief constructor, oneshot = false, autostart = true
+   *
+   * @tparam ObjectType
+   * @param nh node handle
+   * @param rate ros::Rate
+   * @param ObjectType::*const callback
+   * @param obj
+   */
   template <class ObjectType>
   ThreadTimer(const ros::NodeHandle& nh, const ros::Rate& rate, void (ObjectType::*const callback)(const ros::TimerEvent& event), ObjectType* const obj);
 
+  /**
+   * @brief constructor, oneshot = false, autostart = true
+   *
+   * @tparam ObjectType
+   * @param nh
+   * @param duration
+   * @param ObjectType::*const callback
+   * @param obj
+   */
   template <class ObjectType>
   ThreadTimer(const ros::NodeHandle& nh, const ros::Duration& duration, void (ObjectType::*const callback)(const ros::TimerEvent& event),
               ObjectType* const obj);
 
+  /**
+   * @brief constructor, autostart = false
+   *
+   * @tparam ObjectType
+   * @param nh
+   * @param rate
+   * @param ObjectType::*const callback
+   * @param obj
+   * @param oneshot
+   */
   template <class ObjectType>
   ThreadTimer(const ros::NodeHandle& nh, const ros::Rate& rate, void (ObjectType::*const callback)(const ros::TimerEvent& event), ObjectType* const obj,
               const bool& oneshot);
 
+  /**
+   * @brief constructor, autostart = false
+   *
+   * @tparam ObjectType
+   * @param nh
+   * @param duration
+   * @param ObjectType::*const callback
+   * @param obj
+   * @param oneshot
+   */
   template <class ObjectType>
   ThreadTimer(const ros::NodeHandle& nh, const ros::Duration& duration, void (ObjectType::*const callback)(const ros::TimerEvent& event), ObjectType* const obj,
               const bool& oneshot);
 
+  /**
+   * @brief full constructor
+   *
+   * @tparam ObjectType
+   * @param nh
+   * @param rate
+   * @param ObjectType::*const callback
+   * @param obj
+   * @param oneshot
+   * @param autostart
+   */
   template <class ObjectType>
   ThreadTimer(const ros::NodeHandle& nh, const ros::Rate& rate, void (ObjectType::*const callback)(const ros::TimerEvent& event), ObjectType* const obj,
               const bool& oneshot, const bool& autostart);
 
+  /**
+   * @brief full constructor
+   *
+   * @tparam ObjectType
+   * @param nh
+   * @param duration
+   * @param ObjectType::*const callback
+   * @param obj
+   * @param oneshot
+   * @param autostart
+   */
   template <class ObjectType>
   ThreadTimer(const ros::NodeHandle& nh, const ros::Duration& duration, void (ObjectType::*const callback)(const ros::TimerEvent& event), ObjectType* const obj,
               const bool& oneshot, const bool& autostart);
 
+  /**
+   * @brief stop the timer
+   */
   void stop(void);
+
+  /**
+   * @brief start the timer
+   */
   void start(void);
+
+  /**
+   * @brief set the timer period/duration
+   *
+   * @param duration
+   * @param reset
+   */
   void setPeriod(const ros::Duration& duration, const bool& reset = true);
 
 private:
@@ -137,7 +318,7 @@ private:
 
   // for oneshot
 
-  std::mutex mutex_oneshot_;
+  std::mutex              mutex_oneshot_;
   std::condition_variable oneshot_cond_;
 };
 
