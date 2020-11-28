@@ -172,7 +172,11 @@ void ThreadTimer::Impl::start(void) {
   }
 
   if (oneshot_) {
-    shoot_ = true;
+    {
+      std::lock_guard<std::mutex> lock(mutex_oneshot_);
+      shoot_ = true;
+    }
+    oneshot_cond_.notify_one();
   }
 }
 
@@ -181,15 +185,11 @@ void ThreadTimer::Impl::stop(void) {
   if (!oneshot_) {
     running_ = false;
   }
-
-  /* if (thread_.joinable()) { */
-  /*   thread_.join(); */
-  /* } */
 }
 
 void ThreadTimer::Impl::setPeriod(const ros::Duration& duration, [[maybe_unused]] const bool& reset) {
 
-  std::scoped_lock lock(mutex_rate_);
+  std::scoped_lock lock(mutex_time_);
 
   if (duration.toSec() > 0) {
     this->rate_ = 1.0 / duration.toSec();
@@ -210,18 +210,25 @@ void ThreadTimer::Impl::threadFcn(void) {
 
   if (oneshot_) {
 
-    ros::Rate temp_rate(1000);
+    ros::Duration temp_duration;
 
     while (ros::ok() && running_) {
 
-      if (shoot_) {
-        shoot_ = false;
-        duration_.sleep();
-        ros::TimerEvent timer_event;
-        callback_(timer_event);
+      std::unique_lock<std::mutex> lock(mutex_oneshot_);
+      oneshot_cond_.wait(lock);
+
+      {
+        std::scoped_lock lock(mutex_time_);
+
+        temp_duration = duration_;
       }
 
-      temp_rate.sleep();
+      temp_duration.sleep();
+
+      ros::TimerEvent timer_event;
+      callback_(timer_event);
+
+      lock.unlock();
     }
 
   } else {
@@ -246,7 +253,7 @@ void ThreadTimer::Impl::threadFcn(void) {
       temp_rate.sleep();
 
       if (rate_changed_) {
-        std::scoped_lock lock(mutex_rate_);
+        std::scoped_lock lock(mutex_time_);
         temp_rate = rate_;
       }
     }

@@ -4,6 +4,7 @@
 #include <ros/ros.h>
 #include <thread>
 #include <mutex>
+#include <condition_variable>
 
 namespace mrs_lib
 {
@@ -94,41 +95,51 @@ public:
   void setPeriod(const ros::Duration& duration, const bool& reset = true);
 
 private:
-  class Impl {
-
-  public:
-    Impl();
-    ~Impl();
-
-    void start(void);
-    void stop(void);
-    void setPeriod(const ros::Duration& duration, const bool& reset = true);
-
-    bool      oneshot_;
-    bool shoot_ = false;
-    ros::Rate rate_;
-    ros::Duration duration_;
-
-    std::function<void(const ros::TimerEvent&)> callback_;
-
-  private:
-    bool      running_;
-    ros::Time next_expected_;
-    ros::Time last_expected_;
-    ros::Time last_real_;
-
-    bool thread_created_ = false;
-    std::thread thread_;
-
-    void threadFcn(void);
-
-    bool       rate_changed_ = false;
-    std::mutex mutex_rate_;
-  };
+  class Impl;
 
   std::shared_ptr<Impl> impl_;
 
 };  // namespace mrs_lib
+
+//}
+
+/* class ThreadTimer::Impl //{ */
+
+class ThreadTimer::Impl {
+public:
+  Impl();
+  ~Impl();
+
+  void start(void);
+  void stop(void);
+  void setPeriod(const ros::Duration& duration, const bool& reset = true);
+
+  bool          oneshot_;
+  bool          shoot_ = false;
+  ros::Rate     rate_;
+  ros::Duration duration_;
+
+  std::function<void(const ros::TimerEvent&)> callback_;
+
+private:
+  bool      running_;
+  ros::Time next_expected_;
+  ros::Time last_expected_;
+  ros::Time last_real_;
+
+  bool        thread_created_ = false;
+  std::thread thread_;
+
+  void threadFcn(void);
+
+  bool       rate_changed_ = false;
+  std::mutex mutex_time_;
+
+  // for oneshot
+
+  std::mutex mutex_oneshot_;
+  std::condition_variable oneshot_cond_;
+};
 
 //}
 
