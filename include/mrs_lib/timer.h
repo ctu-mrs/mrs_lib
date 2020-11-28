@@ -320,6 +320,13 @@ private:
 
   std::mutex              mutex_oneshot_;
   std::condition_variable oneshot_cond_;
+  bool                    oneshot_stop_waiting_ = false;
+
+  bool       stop_oneshot_     = false;
+  bool       prolong_oneshot_  = false;
+  bool       oneshot_sleeping_ = false;
+  ros::Time  prolong_to_;
+  std::mutex mutex_prolong_;
 };
 
 //}

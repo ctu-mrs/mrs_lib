@@ -160,7 +160,9 @@ ThreadTimer::Impl::Impl() : rate_(ros::Rate(1.0)), duration_(ros::Duration(0.0))
 
 void ThreadTimer::Impl::start(void) {
 
-  this->stop();
+  if (!oneshot_) {
+    this->stop();
+  }
 
   if (!running_) {
 
@@ -172,11 +174,15 @@ void ThreadTimer::Impl::start(void) {
   }
 
   if (oneshot_) {
-    {
-      std::lock_guard<std::mutex> lock(mutex_oneshot_);
-      shoot_ = true;
+    stop_oneshot_ = false;
+    if (oneshot_sleeping_) {
+      std::scoped_lock lock(mutex_time_, mutex_prolong_);
+      prolong_to_      = ros::Time::now() + duration_;
+      prolong_oneshot_ = true;
+    } else {
+      oneshot_stop_waiting_ = true;
+      oneshot_cond_.notify_all();
     }
-    oneshot_cond_.notify_one();
   }
 }
 
@@ -184,6 +190,8 @@ void ThreadTimer::Impl::stop(void) {
 
   if (!oneshot_) {
     running_ = false;
+  } else {
+    stop_oneshot_ = true;
   }
 }
 
@@ -212,10 +220,11 @@ void ThreadTimer::Impl::threadFcn(void) {
 
     ros::Duration temp_duration;
 
+    std::unique_lock<std::mutex> lck(mutex_oneshot_);
+
     while (ros::ok() && running_) {
 
-      std::unique_lock<std::mutex> lock(mutex_oneshot_);
-      oneshot_cond_.wait(lock);
+      oneshot_cond_.wait(lck, [this] { return oneshot_stop_waiting_ == true; });
 
       {
         std::scoped_lock lock(mutex_time_);
@@ -223,12 +232,28 @@ void ThreadTimer::Impl::threadFcn(void) {
         temp_duration = duration_;
       }
 
-      temp_duration.sleep();
+      oneshot_sleeping_ = true;
+      while (ros::ok()) {
 
-      ros::TimerEvent timer_event;
-      callback_(timer_event);
+        temp_duration.sleep();
 
-      lock.unlock();
+        std::scoped_lock lock(mutex_prolong_);
+
+        if (prolong_oneshot_) {
+          temp_duration = prolong_to_ - ros::Time::now();
+        } else {
+          prolong_oneshot_ = false;
+          break;
+        }
+      }
+      oneshot_sleeping_ = false;
+
+      if (!stop_oneshot_) {
+        ros::TimerEvent timer_event;
+        callback_(timer_event);
+      } else {
+        stop_oneshot_ = false;
+      }
     }
 
   } else {
@@ -256,8 +281,10 @@ void ThreadTimer::Impl::threadFcn(void) {
         std::scoped_lock lock(mutex_time_);
         temp_rate = rate_;
       }
+
     }
   }
+
 }
 
 //}
