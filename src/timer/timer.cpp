@@ -275,13 +275,8 @@ void ThreadTimer::Impl::threadFcn(void) {
 
       next_expected_ = ros::Time::now() + rate_.expectedCycleTime();
 
-      temp_rate.sleep();
-
-      if (rate_changed_) {
-        std::scoped_lock lock(mutex_time_);
-        temp_rate = rate_;
-      }
-
+      std::scoped_lock lock(mutex_time_);
+      rate_.sleep();
     }
   }
 
