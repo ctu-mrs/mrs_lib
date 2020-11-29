@@ -225,6 +225,7 @@ void ThreadTimer::Impl::threadFcn(void) {
     while (ros::ok() && running_) {
 
       oneshot_cond_.wait(lck, [this] { return oneshot_stop_waiting_ == true; });
+      oneshot_stop_waiting_ = false;
 
       {
         std::scoped_lock lock(mutex_time_);
@@ -241,8 +242,8 @@ void ThreadTimer::Impl::threadFcn(void) {
 
         if (prolong_oneshot_) {
           temp_duration = prolong_to_ - ros::Time::now();
-        } else {
           prolong_oneshot_ = false;
+        } else {
           break;
         }
       }
@@ -257,8 +258,6 @@ void ThreadTimer::Impl::threadFcn(void) {
     }
 
   } else {
-
-    ros::Rate temp_rate = rate_;
 
     while (ros::ok() && running_) {
 
