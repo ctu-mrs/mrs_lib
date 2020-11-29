@@ -8,9 +8,17 @@
 #define SUBRSCRIBE_HANDLER_H
 
 #include <ros/ros.h>
+#include <mrs_lib/timer.h>
 
 namespace mrs_lib
 {
+
+#if ROS_VERSION_MINIMUM(1, 15, 8)
+  using Timer = mrs_lib::ThreadTimer;
+#else
+  using Timer = mrs_lib::ROSTimer;
+#endif
+
   static const ros::Duration no_timeout = ros::Duration(0);
 
   template <typename MessageType>
