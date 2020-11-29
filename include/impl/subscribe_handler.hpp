@@ -46,7 +46,7 @@ namespace mrs_lib
 
         if (options.no_message_timeout != mrs_lib::no_timeout)
           m_timeout_check_timer =
-              Timer(m_nh, options.no_message_timeout, &SubscribeHandler_impl<MessageType>::check_timeout, this, true /*oneshot*/, false /*autostart*/);
+              m_nh.createTimer(options.no_message_timeout, &SubscribeHandler_impl<MessageType>::check_timeout, this, true /*oneshot*/, false /*autostart*/);
 
         const std::string msg = "Subscribed to topic '" + m_topic_name + "' -> '" + resolved_topic_name() + "'";
         if (m_node_name.empty())
@@ -201,7 +201,7 @@ namespace mrs_lib
     protected:
       mutable std::mutex m_last_msg_received_mtx;
       ros::Time m_last_msg_received;
-      Timer m_timeout_check_timer;
+      ros::Timer m_timeout_check_timer;
       timeout_callback_t m_timeout_callback;
 
     private:
