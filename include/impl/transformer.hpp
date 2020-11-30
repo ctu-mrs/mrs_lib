@@ -34,6 +34,8 @@ void setHeader(pcl::PointCloud<pt_t>& cloud, const std_msgs::Header& header)
 
 //}
 
+/* copyWithHeader() helper function //{ */
+
 template <typename T>
 T copyWithHeader(const T& what, const std::string& frame_id, const ros::Time& stamp)
 {
@@ -44,6 +46,8 @@ T copyWithHeader(const T& what, const std::string& frame_id, const ros::Time& st
   setHeader(ret, new_header);
   return ret;
 }
+
+//}
 
 /* transformImpl() //{ */
 
