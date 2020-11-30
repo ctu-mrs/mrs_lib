@@ -25,8 +25,13 @@
 
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Vector3Stamped.h>
+#include <std_msgs/Header.h>
 
 #include <mrs_lib/attitude_converter.h>
+
+#include <pcl_ros/point_cloud.h>
+#include <pcl_ros/transforms.h>
+#include <pcl_conversions/pcl_conversions.h>
 
 #include <mutex>
 

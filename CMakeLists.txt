@@ -159,6 +159,9 @@ target_link_libraries(MrsLibTransformer
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
+target_include_directories(MrsLibTransformer PRIVATE
+  ${PCL_INCLUDE_DIRS}
+  )
 
 add_library(MrsLibUtils src/utils/utils.cpp)
 target_link_libraries(MrsLibUtils
