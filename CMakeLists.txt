@@ -40,8 +40,12 @@ find_package(Eigen3 REQUIRED)
 set(Eigen_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIRS})
 set(Eigen_LIBRARIES ${EIGEN3_LIBRARIES})
 
-#include OpenCV
+# include OpenCV
 find_package(OpenCV REQUIRED HINTS /usr/local/lib)
+
+# include PCL
+find_package(PCL REQUIRED)
+
 ###################################
 ## catkin specific configuration ##
 ###################################
@@ -50,7 +54,7 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs mrs_msgs
   DEPENDS Eigen
-  LIBRARIES MrsLibSafetyZone MrsLibProfiler MrsLibScopeTimer MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibRepredictor MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibTimer
+  LIBRARIES MrsLibSafetyZone MrsLibVectorConverter MrsLibProfiler MrsLibScopeTimer MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibRepredictor MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibTimer
   )
 
 ###########
@@ -79,6 +83,27 @@ target_link_libraries(lkf_example
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
+
+add_library(MrsLibVectorConverter src/vector_converter/vector_converter.cpp)
+target_link_libraries(MrsLibVectorConverter
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  ${PCL_LIBRARIES}
+  )
+target_include_directories(MrsLibVectorConverter PRIVATE
+  ${PCL_INCLUDE_DIRS}
+  )
+
+add_executable(vector_converter_example src/vector_converter/example.cpp)
+target_link_libraries(vector_converter_example
+  MrsLibVectorConverter
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+target_include_directories(vector_converter_example PRIVATE
+  ${PCL_INCLUDE_DIRS}
+  )
+
 
 add_executable(ukf_example src/ukf/example.cpp)
 target_link_libraries(ukf_example
@@ -352,6 +377,21 @@ if(CATKIN_ENABLE_TESTING)
 
   add_dependencies(
     SubscribeHandlerTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+  )
+
+  add_rostest_gtest(
+    VectorConverterTest
+    test/vector_converter/vector_converter.test
+    test/vector_converter/test.cpp
+  )
+  target_link_libraries(
+    VectorConverterTest
+    ${catkin_LIBRARIES}
+  )
+  add_dependencies(
+    VectorConverterTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
   )
