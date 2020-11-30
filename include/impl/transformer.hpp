@@ -16,12 +16,6 @@ std_msgs::Header getHeader(const pcl::PointCloud<pt_t>& cloud)
   return ret;
 }
 
-template <typename msg_t>
-std_msgs::Header getHeader(const boost::shared_ptr<msg_t>& msg)
-{
-  return getHeader(*msg);
-}
-
 //}
 
 /* setHeader() overloads for different message types (pointers, pointclouds etc) //{ */
@@ -38,12 +32,6 @@ void setHeader(pcl::PointCloud<pt_t>& cloud, const std_msgs::Header& header)
   pcl_conversions::toPCL(header, cloud.header);
 }
 
-template <typename msg_t>
-void setHeader(boost::shared_ptr<msg_t>& msg, const std_msgs::Header& header)
-{
-  setHeader(*msg, header);
-}
-
 //}
 
 template <typename T>
@@ -55,18 +43,6 @@ T copyWithHeader(const T& what, const std::string& frame_id, const ros::Time& st
   new_header.stamp = stamp;
   setHeader(ret, new_header);
   return ret;
-}
-
-template <typename T>
-boost::shared_ptr<T> copyWithHeader(const boost::shared_ptr<const T>& what, const std::string& frame_id, const ros::Time& stamp)
-{
-  return boost::make_shared<T>(std::move(copyWithHeader(*what, frame_id, stamp)));
-}
-
-template <typename T>
-boost::shared_ptr<T> copyWithHeader(const boost::shared_ptr<T>& what, const std::string& frame_id, const ros::Time& stamp)
-{
-  return copyWithHeader(boost::const_pointer_cast<const T>(what), frame_id, stamp);
 }
 
 /* transformImpl() //{ */

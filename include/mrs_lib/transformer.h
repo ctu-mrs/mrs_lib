@@ -175,6 +175,24 @@ namespace mrs_lib
     template <class T>
     [[nodiscard]] std::optional<T> transformSingle(const std::string& to_frame, const T& what);
 
+    /**
+     * @brief transform a message to new frame
+     *
+     * @param to_frame target frame name
+     * @param what the object to be transformed
+     *
+     * @return \p std::nullopt if failed, optional containing the transformed object otherwise
+     */
+    template <class T>
+    [[nodiscard]] std::optional<boost::shared_ptr<T>> transformSingle(const std::string& to_frame, const boost::shared_ptr<const T>& what)
+    {
+      auto ret = transformSingle(to_frame, *what);
+      if (ret == std::nullopt)
+        return std::nullopt;
+      else
+        return boost::make_shared<T>(std::move(ret.value()));
+    }
+
     //}
 
     /* transform() //{ */
@@ -199,6 +217,24 @@ namespace mrs_lib
      */
     template <class T>
     [[nodiscard]] std::optional<T> transform(const mrs_lib::TransformStamped& tf, const T& what);
+
+    /**
+     * @brief transform a message to new frame, given a particular tf
+     *
+     * @param tf the tf to be used
+     * @param what the object to be transformed
+     *
+     * @return \p std::nullopt if failed, optional containing the transformed object otherwise
+     */
+    template <class T>
+    [[nodiscard]] std::optional<boost::shared_ptr<T>> transform(const mrs_lib::TransformStamped& tf, const boost::shared_ptr<const T>& what)
+    {
+      auto ret = transform(tf, *what);
+      if (ret == std::nullopt)
+        return std::nullopt;
+      else
+        return boost::make_shared<T>(std::move(ret.value()));
+    }
 
     /**
      * @brief transform a message (without a header) to new frame, given a particular tf
