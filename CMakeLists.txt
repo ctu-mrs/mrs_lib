@@ -54,7 +54,7 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs mrs_msgs
   DEPENDS Eigen
-  LIBRARIES MrsLibSafetyZone MrsLibVectorConverter MrsLibProfiler MrsLibScopeTimer MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibRepredictor MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibTimer
+  LIBRARIES MrsLibSafetyZone MrsLibProfiler MrsLibScopeTimer MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibRepredictor MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibTimer
   )
 
 ###########
@@ -84,21 +84,21 @@ target_link_libraries(lkf_example
   ${Eigen_LIBRARIES}
   )
 
-add_library(MrsLibVectorConverter src/vector_converter/vector_converter.cpp)
-target_link_libraries(MrsLibVectorConverter
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  ${PCL_LIBRARIES}
-  )
-target_include_directories(MrsLibVectorConverter PRIVATE
-  ${PCL_INCLUDE_DIRS}
-  )
+# add_library(MrsLibVectorConverter src/vector_converter/vector_converter.cpp)
+# target_link_libraries(MrsLibVectorConverter
+#   ${catkin_LIBRARIES}
+#   ${Eigen_LIBRARIES}
+#   ${PCL_LIBRARIES}
+#   )
+# target_include_directories(MrsLibVectorConverter PRIVATE
+#   ${PCL_INCLUDE_DIRS}
+#   )
 
 add_executable(vector_converter_example src/vector_converter/example.cpp)
 target_link_libraries(vector_converter_example
-  MrsLibVectorConverter
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
+  ${PCL_LIBRARIES}
   )
 target_include_directories(vector_converter_example PRIVATE
   ${PCL_INCLUDE_DIRS}
@@ -389,6 +389,9 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(
     VectorConverterTest
     ${catkin_LIBRARIES}
+  )
+  target_include_directories(VectorConverterTest PRIVATE
+    ${PCL_INCLUDE_DIRS}
   )
   add_dependencies(
     VectorConverterTest
