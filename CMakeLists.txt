@@ -17,6 +17,8 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_geometry_msgs
   cv_bridge
   image_transport
+  pcl_ros
+  pcl_conversions
   # dynamic_reconfigure
   )
 
@@ -52,9 +54,9 @@ find_package(PCL REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs mrs_msgs
+  CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs pcl_ros mrs_msgs
   DEPENDS Eigen
-  LIBRARIES MrsLibSafetyZone MrsLibVectorConverter MrsLibProfiler MrsLibScopeTimer MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibRepredictor MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibTimer
+  LIBRARIES MrsLibSafetyZone MrsLibProfiler MrsLibScopeTimer MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibRepredictor MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibTimer
   )
 
 ###########
@@ -69,6 +71,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${Eigen_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
   # ${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake
   )
 
@@ -84,19 +87,19 @@ target_link_libraries(lkf_example
   ${Eigen_LIBRARIES}
   )
 
-add_library(MrsLibVectorConverter src/vector_converter/vector_converter.cpp)
-target_link_libraries(MrsLibVectorConverter
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  ${PCL_LIBRARIES}
-  )
-target_include_directories(MrsLibVectorConverter PRIVATE
-  ${PCL_INCLUDE_DIRS}
-  )
+# add_library(MrsLibVectorConverter src/vector_converter/vector_converter.cpp)
+# target_link_libraries(MrsLibVectorConverter
+#   ${catkin_LIBRARIES}
+#   ${Eigen_LIBRARIES}
+#   ${PCL_LIBRARIES}
+#   )
+# target_include_directories(MrsLibVectorConverter PRIVATE
+#   ${PCL_INCLUDE_DIRS}
+#   )
 
 add_executable(vector_converter_example src/vector_converter/example.cpp)
 target_link_libraries(vector_converter_example
-  MrsLibVectorConverter
+  # MrsLibVectorConverter
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
