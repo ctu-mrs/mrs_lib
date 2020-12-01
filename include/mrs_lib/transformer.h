@@ -37,6 +37,18 @@
 
 //}
 
+
+namespace tf2
+{
+
+  template <typename pt_t>
+  void doTransform(const pcl::PointCloud<pt_t>& cloud_in, pcl::PointCloud<pt_t>& cloud_out, const geometry_msgs::TransformStamped& transform)
+  {
+    pcl_ros::transformPointCloud(cloud_in, cloud_out, transform.transform);
+  }
+
+}
+
 namespace mrs_lib
 {
 
@@ -193,6 +205,21 @@ namespace mrs_lib
         return boost::make_shared<T>(std::move(ret.value()));
     }
 
+    /**
+     * @brief transform a message to new frame
+     *
+     * @param to_frame target frame name
+     * @param what the object to be transformed
+     *
+     * @return \p std::nullopt if failed, optional containing the transformed object otherwise
+     */
+    template <class T>
+    [[nodiscard]] std::optional<boost::shared_ptr<T>> transformSingle(const std::string& to_frame, const boost::shared_ptr<T>& what)
+    {
+      return transformSingle(to_frame, boost::shared_ptr<const T>(what));
+    }
+
+
     //}
 
     /* transform() //{ */
@@ -234,6 +261,20 @@ namespace mrs_lib
         return std::nullopt;
       else
         return boost::make_shared<T>(std::move(ret.value()));
+    }
+
+    /**
+     * @brief transform a message to new frame, given a particular tf
+     *
+     * @param tf the tf to be used
+     * @param what the object to be transformed
+     *
+     * @return \p std::nullopt if failed, optional containing the transformed object otherwise
+     */
+    template <class T>
+    [[nodiscard]] std::optional<boost::shared_ptr<T>> transform(const mrs_lib::TransformStamped& tf, const boost::shared_ptr<T>& what)
+    {
+      return transform(tf, boost::shared_ptr<const T>(what));
     }
 
     /**

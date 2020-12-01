@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   tf2
   tf2_geometry_msgs
+  tf2_sensor_msgs
   cv_bridge
   image_transport
   pcl_ros
