@@ -825,7 +825,7 @@ public:
   template <int rows, int cols>
   Eigen::Matrix<double, rows, cols> loadMatrixStatic2(const std::string& name)
   {
-    return loadMatrixStatic_internal(name, Eigen::Matrix<double, rows, cols>(), COMPULSORY, UNIQUE);
+    return loadMatrixStatic_internal<rows, cols>(name, Eigen::Matrix<double, rows, cols>::Zero(), COMPULSORY, UNIQUE);
   }
 
   /*!
@@ -847,7 +847,7 @@ public:
   template <int rows, int cols>
   Eigen::MatrixXd loadMatrixStatic2(const std::string& name, const Eigen::Matrix<double, rows, cols>& default_value)
   {
-    return loadMatrixStatic_internal(name, default_value, OPTIONAL, UNIQUE);
+    return loadMatrixStatic_internal<rows, cols>(name, default_value, OPTIONAL, UNIQUE);
   }
   //}
 

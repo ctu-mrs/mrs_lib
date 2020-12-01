@@ -102,6 +102,7 @@ target_link_libraries(vector_converter_example
   # MrsLibVectorConverter
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
+  ${PCL_LIBRARIES}
   )
 target_include_directories(vector_converter_example PRIVATE
   ${PCL_INCLUDE_DIRS}
@@ -395,6 +396,9 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(
     VectorConverterTest
     ${catkin_LIBRARIES}
+  )
+  target_include_directories(VectorConverterTest PRIVATE
+    ${PCL_INCLUDE_DIRS}
   )
   add_dependencies(
     VectorConverterTest

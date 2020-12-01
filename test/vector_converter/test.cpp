@@ -73,7 +73,7 @@ void test_Ith_tuple()
   using to_t = typename std::tuple_element<I%n_types, type_list>::type;
   const auto result = testConv<from_t, to_t>();
   EXPECT_TRUE(result) << "Conversion from type " << typeid(from_t).name() << " to type " << typeid(to_t).name() << " failed.";
-  std::cerr << "Testing conversion from type " << typeid(from_t).name() << " to type " << typeid(to_t).name() << ".";
+  std::cerr << "Testing conversion from type " << typeid(from_t).name() << " to type " << typeid(to_t).name() << "." << std::endl;
 }
 
 template <typename tuple_t, std::size_t ... Is>
