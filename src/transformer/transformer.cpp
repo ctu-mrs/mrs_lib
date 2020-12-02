@@ -4,8 +4,13 @@
 #include <mrs_lib/gps_conversions.h>
 
 using test_t = mrs_msgs::ReferenceStamped;
+/* using test_t = pcl::PointCloud<pcl::PointXYZ>; */
 template std::optional<test_t> mrs_lib::Transformer::transform<test_t>(const mrs_lib::TransformStamped& to_frame, const test_t& what);
+template std::optional<test_t::Ptr> mrs_lib::Transformer::transform<test_t>(const mrs_lib::TransformStamped& to_frame, const test_t::Ptr& what);
+template std::optional<test_t::Ptr> mrs_lib::Transformer::transform<test_t>(const mrs_lib::TransformStamped& to_frame, const test_t::ConstPtr& what);
 template std::optional<test_t> mrs_lib::Transformer::transformSingle<test_t>(const std::string& to_frame, const test_t& what);
+template std::optional<test_t::Ptr> mrs_lib::Transformer::transformSingle<test_t>(const std::string& to_frame, const test_t::Ptr& what);
+template std::optional<test_t::Ptr> mrs_lib::Transformer::transformSingle<test_t>(const std::string& to_frame, const test_t::ConstPtr& what);
 
 namespace mrs_lib
 {

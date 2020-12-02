@@ -1,5 +1,54 @@
 // clang: MatousFormat
 
+/* getHeader() overloads for different message types (pointers, pointclouds etc) //{ */
+
+template <typename msg_t>
+std_msgs::Header getHeader(const msg_t& msg)
+{
+  return msg.header;
+}
+
+template <typename pt_t>
+std_msgs::Header getHeader(const pcl::PointCloud<pt_t>& cloud)
+{
+  std_msgs::Header ret;
+  pcl_conversions::fromPCL(cloud.header, ret);
+  return ret;
+}
+
+//}
+
+/* setHeader() overloads for different message types (pointers, pointclouds etc) //{ */
+
+template <typename msg_t>
+void setHeader(msg_t& msg, const std_msgs::Header& header)
+{
+  msg.header = header;
+}
+
+template <typename pt_t>
+void setHeader(pcl::PointCloud<pt_t>& cloud, const std_msgs::Header& header)
+{
+  pcl_conversions::toPCL(header, cloud.header);
+}
+
+//}
+
+/* copyWithHeader() helper function //{ */
+
+template <typename T>
+T copyWithHeader(const T& what, const std::string& frame_id, const ros::Time& stamp)
+{
+  T ret = what;
+  std_msgs::Header new_header;
+  new_header.frame_id = frame_id;
+  new_header.stamp = stamp;
+  setHeader(ret, new_header);
+  return ret;
+}
+
+//}
+
 /* transformImpl() //{ */
 
 template <class T>
@@ -25,18 +74,15 @@ std::optional<T> Transformer::transformSingle(const std::string& to_frame, const
     return std::nullopt;
   }
 
-  std::string from_frame_resolved = resolveFrameName(what.header.frame_id);
-  std::string to_frame_resolved = resolveFrameName(to_frame);
+  const std_msgs::Header orig_header = getHeader(what);
+  const std::string from_frame_resolved = resolveFrameName(orig_header.frame_id);
+  const std::string to_frame_resolved = resolveFrameName(to_frame);
 
   if (from_frame_resolved == to_frame_resolved)
-  {
-    T ret = what;
-    ret.header.frame_id = from_frame_resolved;
-    return ret;
-  }
+    return copyWithHeader(what, from_frame_resolved, orig_header.stamp);
 
   // get the transform
-  const auto tf_opt = getTransform(from_frame_resolved, to_frame_resolved, what.header.stamp);
+  const auto tf_opt = getTransform(from_frame_resolved, to_frame_resolved, orig_header.stamp);
   if (!tf_opt.has_value())
     return std::nullopt;
   mrs_lib::TransformStamped tf = tf_opt.value();
@@ -60,12 +106,7 @@ std::optional<T> Transformer::transform(const mrs_lib::TransformStamped& tf, con
   }
 
   if (tf.from() == tf.to())
-  {
-    T ret = what;
-    ret.header.frame_id = tf.from();
-    ret.header.stamp = tf.stamp();
-    return ret;
-  }
+    return copyWithHeader(what, tf.from(), tf.stamp());
 
   const auto result_opt = transformImpl(tf, what);
   return result_opt;
