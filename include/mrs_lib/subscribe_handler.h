@@ -145,11 +145,18 @@ namespace mrs_lib
       virtual ros::Time lastMsgTime() const {assert(m_pimpl); return m_pimpl->lastMsgTime();};
 
     /*!
-      * \brief Returns the name of the topic, handled by this SubscribeHandler.
+      * \brief Returns the resolved (full) name of the topic, handled by this SubscribeHandler.
       *
       * \return name of the handled topic.
       */
       virtual std::string topicName() const {assert(m_pimpl); return m_pimpl->topicName();};
+
+    /*!
+      * \brief Returns the subscribed (unresolved) name of the topic, handled by this SubscribeHandler.
+      *
+      * \return name of the handled topic.
+      */
+      virtual std::string subscribedTopicName() const {assert(m_pimpl); return m_pimpl->subscribedTopicName();};
 
     /*!
       * \brief Enables the callbacks for the handled topic.

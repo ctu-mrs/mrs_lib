@@ -48,7 +48,7 @@ namespace mrs_lib
           m_timeout_check_timer =
               m_nh.createTimer(options.no_message_timeout, &SubscribeHandler_impl<MessageType>::check_timeout, this, true /*oneshot*/, false /*autostart*/);
 
-        const std::string msg = "Subscribed to topic '" + m_topic_name + "' -> '" + resolved_topic_name() + "'";
+        const std::string msg = "Subscribed to topic '" + m_topic_name + "' -> '" + topicName() + "'";
         if (m_node_name.empty())
           ROS_INFO_STREAM(msg);
         else
@@ -72,7 +72,7 @@ namespace mrs_lib
         assert(m_got_data);
         if (!m_got_data)
           ROS_ERROR("[%s]: No data received yet from topic '%s' (forgot to check hasMsg()?)! Returning empty message.", m_node_name.c_str(),
-                    resolved_topic_name().c_str());
+                    topicName().c_str());
         return m_latest_message;
       }
       //}
@@ -108,6 +108,16 @@ namespace mrs_lib
 
       /* topicName() method //{ */
       virtual std::string topicName() const override
+      {
+        std::string ret = m_sub.getTopic();
+        if (ret.empty())
+          ret = m_nh.resolveName(m_topic_name);
+        return ret;
+      }
+      //}
+
+      /* subscribedTopicName() method //{ */
+      virtual std::string subscribedTopicName() const override
       {
         return m_topic_name;
       };
@@ -164,7 +174,7 @@ namespace mrs_lib
           data_callback_unchecked(msg, now);
         } else
         {
-          ROS_WARN("[%s]: New message from topic '%s' is older than the latest message, skipping it.", m_node_name.c_str(), resolved_topic_name().c_str());
+          ROS_WARN("[%s]: New message from topic '%s' is older than the latest message, skipping it.", m_node_name.c_str(), topicName().c_str());
         }
       }
       //}
@@ -239,17 +249,7 @@ namespace mrs_lib
         }
         const auto n_pubs = m_sub.getNumPublishers();
         m_timeout_check_timer.start();
-        m_timeout_callback(resolved_topic_name(), last_msg, n_pubs);
-      }
-      //}
-
-      /* resolved_topic_name() method //{ */
-      std::string resolved_topic_name() const
-      {
-        std::string ret = m_sub.getTopic();
-        if (ret.empty())
-          ret = m_nh.resolveName(m_topic_name);
-        return ret;
+        m_timeout_callback(topicName(), last_msg, n_pubs);
       }
       //}
 
@@ -330,6 +330,11 @@ namespace mrs_lib
       {
         std::lock_guard<std::recursive_mutex> lck(m_mtx);
         return impl_class_t::topicName();
+      };
+      virtual std::string subscribedTopicName() const override
+      {
+        std::lock_guard<std::recursive_mutex> lck(m_mtx);
+        return impl_class_t::m_topic_name;
       };
       virtual void start() override
       {
