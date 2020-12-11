@@ -421,7 +421,7 @@ AttitudeConverter AttitudeConverter::setHeading(const double& heading) {
 
   // check for singularity: z component of the thrust vector is 0
   if (fabs(b3[2]) < 1e-3) {
-    throw SetHeadingByYawException();
+    throw SetHeadingException();
   }
 
   // get the desired heading as a vector in 3D

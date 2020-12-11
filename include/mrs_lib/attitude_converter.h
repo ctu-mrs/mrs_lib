@@ -187,6 +187,14 @@ public:
   };
 
   //! is thrown when the heading cannot be set to an existing attitude
+  struct SetHeadingException : public std::exception
+  {
+    const char* what() const throw() {
+      return "AttitudeConverter: cannot set the desired heading, the thrust vector's Z component is 0";
+    }
+  };
+
+  //! is thrown when the heading cannot be set to an existing attitude
   struct SetHeadingByYawException : public std::exception
   {
     const char* what() const throw() {
