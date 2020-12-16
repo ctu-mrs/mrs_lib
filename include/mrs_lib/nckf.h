@@ -315,7 +315,7 @@ namespace mrs_lib
 
   public:
     /* correct() method //{ */
-    virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, [[maybe_unused]] int param = 0) const override
+    virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R) const override
     {
       const auto& x = sc.x;
       const auto& P = sc.P;

@@ -69,13 +69,14 @@ namespace mrs_lib
 
         // decide whether we should predict to the next input or to the current measurement
         // (whichever is sooner according to the stamp)
-        const bool use_meas_next = next_inpt_stamp <= meas_stamp;
-        cur_stamp = use_meas_next? next_inpt_stamp : meas_stamp;
+        const bool use_meas_next = meas_stamp < next_inpt_stamp;
+        const auto to_stamp = use_meas_next ? meas_stamp : next_inpt_stamp;
 
         // do the prediction
-        cur_sc = predictFrom(cur_sc, *inpt_it, cur_stamp);
+        cur_sc = predictFrom(cur_sc, *inpt_it, cur_stamp, to_stamp);
         if (use_meas_next)
           cur_sc = correctFrom(cur_sc, *meas_it);
+        cur_stamp = to_stamp;
 
         // increment either the input or measurement iterator depending on which we used
         if (use_meas_next)
@@ -89,6 +90,7 @@ namespace mrs_lib
             inpt_it++;
         }
       }
+      cur_sc = predictFrom(cur_sc, *inpt_it, cur_stamp, stamp);
       return cur_sc;
     }
     //}
@@ -99,6 +101,11 @@ namespace mrs_lib
       const meas_t meas {z, R, stamp, model};
       const auto next_meas_it = std::lower_bound(std::begin(m_meas_hist), std::end(m_meas_hist), meas, &Repredictor<Model>::earlier<meas_t>);
       m_meas_hist.insert(next_meas_it, meas);
+
+      if (!checkMonotonicity(m_meas_hist))
+      {
+        std::cerr << "Measurement history buffer is not monotonous after modification!" << std::endl;
+      }
     }
     //}
 
@@ -117,11 +124,17 @@ namespace mrs_lib
         // get the current oldest input after the insertion of the new information
         const auto curr_oldest_inpt = m_inpt_hist.begin();
         // update m_sc
-        m_sc = predictFrom(m_sc, *orig_oldest_inpt, curr_oldest_inpt->stamp);
+        // TODO: Take into account measurements as well!
+        m_sc = predictFrom(m_sc, *orig_oldest_inpt, orig_oldest_inpt->stamp, curr_oldest_inpt->stamp);
       }
       else
       { // otherwise, just insert the new measurement
         m_inpt_hist.insert(next_inpt_it, inpt);
+      }
+
+      if (!checkMonotonicity(m_inpt_hist))
+      {
+        std::cerr << "Input history buffer is not monotonous after modification!" << std::endl;
       }
     }
     //}
@@ -145,6 +158,29 @@ namespace mrs_lib
     meas_hist_t m_meas_hist;
     // the history buffer for inputs
     inpt_hist_t m_inpt_hist;
+    template <typename T>
+    bool checkMonotonicity(const T& buf)
+    {
+      if (buf.empty())
+        return true;
+      for (auto it = std::begin(buf)+1; it != std::end(buf); it++)
+        if (earlier(*it, *(it-1)))
+          return false;
+      return true;
+    }
+
+    template <typename T>
+    void printBuffer(const T& buf)
+    {
+      if (buf.empty())
+        return;
+      const auto first_stamp = buf.front().stamp;
+      std::cerr << "first stamp: " << first_stamp << std::endl;
+      for (size_t it = 0; it < buf.size(); it++)
+      {
+        std::cerr << it << ":\t" << buf.at(it).stamp - first_stamp << std::endl;
+      }
+    }
 
   private:
     template <typename T>
@@ -153,10 +189,10 @@ namespace mrs_lib
       return ob1.stamp < ob2.stamp;
     }
 
-    statecov_t predictFrom(const statecov_t& sc, const inpt_t& inpt, const ros::Time& stamp)
+    statecov_t predictFrom(const statecov_t& sc, const inpt_t& inpt, const ros::Time& from_stamp, const ros::Time& to_stamp)
     {
       const auto model = inpt.model == nullptr ? m_default_model : inpt.model;
-      const auto dt = (stamp - inpt.stamp).toSec();
+      const auto dt = (to_stamp - from_stamp).toSec();
       return model->predict(sc, inpt.u, inpt.Q, dt);
     }
 

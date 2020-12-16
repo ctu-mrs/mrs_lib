@@ -175,7 +175,7 @@ namespace mrs_lib
   /* predict() method //{ */
 
   template <int n_states, int n_inputs, int n_measurements>
-  typename UKF<n_states, n_inputs, n_measurements>::statecov_t UKF<n_states, n_inputs, n_measurements>::predict(const statecov_t& sc, const u_t& u, const Q_t& Q, double dt, [[maybe_unused]] int param) const
+  typename UKF<n_states, n_inputs, n_measurements>::statecov_t UKF<n_states, n_inputs, n_measurements>::predict(const statecov_t& sc, const u_t& u, const Q_t& Q, double dt) const
   {
     const auto& x = sc.x;
     const auto& P = sc.P;
@@ -220,7 +220,7 @@ namespace mrs_lib
   /* correct() method //{ */
 
   template <int n_states, int n_inputs, int n_measurements>
-  typename UKF<n_states, n_inputs, n_measurements>::statecov_t UKF<n_states, n_inputs, n_measurements>::correct(const statecov_t& sc, const z_t& z, const R_t& R, [[maybe_unused]] int param) const
+  typename UKF<n_states, n_inputs, n_measurements>::statecov_t UKF<n_states, n_inputs, n_measurements>::correct(const statecov_t& sc, const z_t& z, const R_t& R) const
   {
     const auto& x = sc.x;
     const auto& P = sc.P;

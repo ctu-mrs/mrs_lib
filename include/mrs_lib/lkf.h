@@ -90,8 +90,8 @@ namespace mrs_lib
     * \brief The main constructor.
     *
     * \param A             The state transition matrix.
-    * \param B             The input to state mapping transition matrix.
-    * \param H             The state to measurement mapping transition matrix.
+    * \param B             The input to state mapping matrix.
+    * \param H             The state to measurement mapping matrix.
     */
     LKF(const A_t& A, const B_t& B, const H_t& H) : A(A), B(B), H(H){};
 
@@ -100,17 +100,15 @@ namespace mrs_lib
     * \brief Applies the correction (update, measurement, data) step of the Kalman filter.
     *
     * This method applies the linear Kalman filter correction step to the state and covariance
-    * passed in \p sc using the measurement \p z and measurement noise \p R. The parameter \p param
-    * is ignored in this implementation. The updated state and covariance after the correction step
-    * is returned.
+    * passed in \p sc using the measurement \p z and measurement noise \p R. The updated state
+    * and covariance after the correction step is returned.
     *
     * \param sc          The state and covariance to which the correction step is to be applied.
     * \param z           The measurement vector to be used for correction.
     * \param R           The measurement noise covariance matrix to be used for correction.
-    * \param param       Unused parameter.
     * \return            The state and covariance after the correction update.
     */
-    virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, [[maybe_unused]] int param = 0) const override
+    virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R) const override
     {
       /* return correct_optimized(sc, z, R, H); */
       return correction_impl(sc, z, R, H);
@@ -123,14 +121,13 @@ namespace mrs_lib
     *
     * This method applies the linear Kalman filter prediction step to the state and covariance
     * passed in \p sc using the input \p u and process noise \p Q. The process noise covariance
-    * \p Q is scaled by the \p dt parameter. The parameter \p param is ignored. The updated state
-    * and covariance after the prediction step is returned.
+    * \p Q is scaled by the \p dt parameter. The updated state and covariance after
+    * the prediction step is returned.
     *
     * \param sc          The state and covariance to which the prediction step is to be applied.
     * \param u           The input vector to be used for prediction.
     * \param Q           The process noise covariance matrix to be used for prediction.
     * \param dt          Used to scale the process noise covariance \p Q.
-    * \param param       Unused parameter.
     * \return            The state and covariance after the prediction step.
     *
     * \note Note that the \p dt parameter is only used to scale the process noise covariance \p Q it
@@ -138,7 +135,7 @@ namespace mrs_lib
     * If you have a changing time step duration and a dynamic system, you have to change the #A and #B
     * matrices manually.
     */
-    virtual statecov_t predict(const statecov_t& sc, const u_t& u, const Q_t& Q, [[maybe_unused]] double dt, [[maybe_unused]] int param = 0) const override
+    virtual statecov_t predict(const statecov_t& sc, const u_t& u, const Q_t& Q, [[maybe_unused]] double dt) const override
     {
       statecov_t ret;
       ret.x = state_predict(A, sc.x, B, u);
@@ -258,15 +255,89 @@ namespace mrs_lib
   };
   //}
 
-  /* class LKF_dt //{ */
+  /* class dtMatrixLKF //{ */
   template <int n_states, int n_inputs, int n_measurements>
-  class LKF_dt : public LKF<n_states, n_inputs, n_measurements>
+  class dtMatrixLKF : public LKF<n_states, n_inputs, n_measurements>
   {
   public:
     /* LKF definitions (typedefs, constants etc) //{ */
     static const int n = n_states;
     static const int m = n_inputs;
     static const int p = n_measurements;
+    using Base_class = LKF<n, m, p>;
+
+    using x_t = typename Base_class::x_t;
+    using u_t = typename Base_class::u_t;
+    using z_t = typename Base_class::z_t;
+    using P_t = typename Base_class::P_t;
+    using R_t = typename Base_class::R_t;
+    using statecov_t = typename Base_class::statecov_t;
+    using A_t = typename Base_class::A_t;  // measurement mapping p*n
+    using B_t = typename Base_class::B_t;  // process covariance n*n
+    using H_t = typename Base_class::H_t;  // measurement mapping p*n
+    using Q_t = typename Base_class::Q_t;  // process covariance n*n
+
+    using generateA_t = std::function<A_t(double)>;
+    using generateB_t = std::function<B_t(double)>;
+    //}
+
+  public:
+
+  /*!
+    * \brief The main constructor.
+    *
+    * \param generateA a function, which returns the state transition matrix \p A based on the time difference \p dt.
+    * \param generateB a function, which returns the input to state mapping matrix \p B based on the time difference \p dt.
+    * \param H         the state to measurement mapping matrix.
+    */
+    dtMatrixLKF(const generateA_t& generateA, const generateB_t& generateB, const H_t& H)
+      : m_generateA(generateA), m_generateB(generateB)
+    {
+      Base_class::H = H;
+    };
+
+    /* predict() method //{ */
+  /*!
+    * \brief Applies the prediction (time) step of the Kalman filter.
+    *
+    * This method applies the linear Kalman filter prediction step to the state and covariance
+    * passed in \p sc using the input \p u and process noise \p Q. The process noise covariance
+    * \p Q is scaled by the \p dt parameter. The updated state and covariance after
+    * the prediction step is returned.
+    *
+    * \param sc          The state and covariance to which the prediction step is to be applied.
+    * \param u           The input vector to be used for prediction.
+    * \param Q           The process noise covariance matrix to be used for prediction.
+    * \param dt          Used to scale the process noise covariance \p Q and to generate the state transition and input to state mapping matrices \p A and \B using the functions, passed in the object's constructor.
+    * \return            The state and covariance after the prediction step.
+    *
+    * \note Note that the \p dt parameter is used to scale the process noise covariance \p Q and to generate the system matrices #A or #B using the functions, passed in the constructor!
+    */
+    virtual statecov_t predict(const statecov_t& sc, const u_t& u, const Q_t& Q, double dt) const override
+    {
+      statecov_t ret;
+      A_t A = m_generateA(dt);
+      B_t B = m_generateB(dt);
+      ret.x = Base_class::state_predict(A, sc.x, B, u);
+      ret.P = Base_class::covariance_predict(A, sc.P, Q, dt);
+      return ret;
+    };
+    //}
+    
+  private:
+    generateA_t m_generateA;
+    generateB_t m_generateB;
+  };
+  //}
+
+  /* class LKF_MRS_odom //{ */
+  class LKF_MRS_odom : public LKF<3, 1, 1>
+  {
+  public:
+    /* LKF definitions (typedefs, constants etc) //{ */
+    static const int n = 3;
+    static const int m = 1;
+    static const int p = 1;
     using Base_class = LKF<n, m, p>;
 
     using x_t = typename Base_class::x_t;
@@ -287,162 +358,16 @@ namespace mrs_lib
     //}
 
   public:
-    LKF_dt(){};
-
-    LKF_dt(const H_t& H, const coeff_A_t& coeff_A, const dtexp_B_t& dtexp_A, const coeff_B_t& coeff_B, const dtexp_A_t& dtexp_B)
-        : coeff_A(coeff_A), dtexp_A(dtexp_A), coeff_B(coeff_B), dtexp_B(dtexp_B)
-    {
-      Base_class::H = H;
-    };
-
-    /* predict() method //{ */
-    virtual statecov_t predict(const statecov_t& sc, const u_t& u, const Q_t& Q, double dt, [[maybe_unused]] int param = 0) const override
-    {
-      statecov_t ret;
-      A_t A = get_A(coeff_A, dtexp_A, dt);
-      B_t B = get_B(coeff_B, dtexp_B, dt);
-      ret.x = Base_class::state_predict(A, sc.x, B, u);
-      ret.P = Base_class::covariance_predict(A, sc.P, Q, dt);
-      return ret;
-    };
-    //}
-
-  public:
-    coeff_A_t coeff_A;
-    dtexp_A_t dtexp_A;
-    coeff_B_t coeff_B;
-    dtexp_B_t dtexp_B;
-
-  public:
-    /* get_A() and get_B() methods //{ */
-    static A_t get_A(const coeff_A_t& coeff_A, const dtexp_A_t& dtexp_A, double dt)
-    {
-      A_t ret = A_t::Constant(dt);
-      for (int i = 0; i < n; i++)
-      {
-        for (int j = 0; j < n; j++)
-        {
-          int exp = dtexp_A(i, j);
-          for (int p = 0; p < exp; p++)
-          {
-            ret(i, j) *= ret(i, j);
-          }
-          ret(i, j) *= coeff_A(i, j);
-        }
-      }
-      return ret;
-    };
-    static B_t get_B(const coeff_B_t& coeff_B, const dtexp_B_t& dtexp_B, double dt)
-    {
-      B_t ret = B_t::Constant(dt);
-      for (int i = 0; i < n; i++)
-      {
-        for (int j = 0; j < n; j++)
-        {
-          int exp = dtexp_B(i, j);
-          for (int p = 0; p < exp; p++)
-          {
-            ret(i, j) *= ret(i, j);
-          }
-          ret(i, j) *= coeff_B(i, j);
-        }
-      }
-      return ret;
-    };
-    //}
-  };
-  //}
-
-  /* class LKF_multiH //{ */
-  template <int n_states, int n_inputs, int n_measurements>
-  class LKF_multiH : public LKF_dt<n_states, n_inputs, n_measurements>
-  {
-  public:
-    /* LKF definitions (typedefs, constants etc) //{ */
-    static const int n = n_states;
-    static const int m = n_inputs;
-    static const int p = n_measurements;
-    using Base_class = LKF_dt<n, m, p>;
-
-    using x_t = typename Base_class::x_t;
-    using u_t = typename Base_class::u_t;
-    using z_t = typename Base_class::z_t;
-    using P_t = typename Base_class::P_t;
-    using R_t = typename Base_class::R_t;
-    using statecov_t = typename Base_class::statecov_t;
-    using A_t = typename Base_class::A_t;  // measurement mapping p*n
-    using B_t = typename Base_class::B_t;  // process covariance n*n
-    using H_t = typename Base_class::H_t;  // measurement mapping p*n
-    using Q_t = typename Base_class::Q_t;  // process covariance n*n
-
-    using coeff_A_t = A_t;                            // matrix of constant coefficients in matrix A
-    typedef Eigen::Matrix<unsigned, n, n> dtexp_A_t;  // matrix of dt exponents in matrix A
-    using coeff_B_t = B_t;                            // matrix of constant coefficients in matrix B
-    typedef Eigen::Matrix<unsigned, n, m> dtexp_B_t;  // matrix of dt exponents in matrix B
-    //}
-
-  public:
-    LKF_multiH()
-    {};
-
-    LKF_multiH(const std::vector<H_t>& Hs, const coeff_A_t& coeff_A, const dtexp_B_t& dtexp_A, const coeff_B_t& coeff_B,
-                     const dtexp_A_t& dtexp_B)
-        : coeff_A(coeff_A), dtexp_A(dtexp_A), coeff_B(coeff_B), dtexp_B(dtexp_B), Hs(Hs)
-    {
-    };
-
-    /* correct() method //{ */
-    virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, int param = 0) const override
-    {
-      return Base_class::correction_impl(sc, z, R, Hs.at(param));
-    };
-    //}
-
-  public:
-    coeff_A_t coeff_A;
-    dtexp_A_t dtexp_A;
-    coeff_B_t coeff_B;
-    dtexp_B_t dtexp_B;
-    std::vector<H_t> Hs;
-  };
-  //}
-
-  /* class LKF_MRS_odom //{ */
-  class LKF_MRS_odom : public LKF_multiH<3, 1, 1>
-  {
-  public:
-    /* LKF definitions (typedefs, constants etc) //{ */
-    static const int n = 3;
-    static const int m = 1;
-    static const int p = 1;
-    using Base_class = LKF_multiH<n, m, p>;
-
-    using x_t = typename Base_class::x_t;
-    using u_t = typename Base_class::u_t;
-    using z_t = typename Base_class::z_t;
-    using P_t = typename Base_class::P_t;
-    using R_t = typename Base_class::R_t;
-    using statecov_t = typename Base_class::statecov_t;
-    using A_t = typename Base_class::A_t;  // measurement mapping p*n
-    using B_t = typename Base_class::B_t;  // process covariance n*n
-    using H_t = typename Base_class::H_t;  // measurement mapping p*n
-    using Q_t = typename Base_class::Q_t;  // process covariance n*n
-
-    using coeff_A_t = A_t;                            // matrix of constant coefficients in matrix A
-    typedef Eigen::Matrix<unsigned, n, n> dtexp_A_t;  // matrix of dt exponents in matrix A
-    using coeff_B_t = B_t;                            // matrix of constant coefficients in matrix B
-    typedef Eigen::Matrix<unsigned, n, m> dtexp_B_t;  // matrix of dt exponents in matrix B
-    //}
-
-  public:
     LKF_MRS_odom(const std::vector<H_t>& Hs, const double default_dt = 1);
-    virtual statecov_t predict(const statecov_t& sc, const u_t& u, const Q_t& Q, double dt, [[maybe_unused]] int param = 0) const override;
-    virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, int param = 0) const override;
+    virtual statecov_t predict(const statecov_t& sc, const u_t& u, const Q_t& Q, double dt) const override;
+    virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, int param) const;
 
   public:
-
     x_t state_predict_optimized(const x_t& x_prev, const u_t& u, double dt) const;
     P_t covariance_predict_optimized(const P_t& P, const Q_t& Q, double dt) const;
+
+  private:
+    std::vector<H_t> m_Hs;
   };
   //}
 
