@@ -81,9 +81,9 @@ B_t generateB([[maybe_unused]] const double dt)
   return B;
 }
 
-const Q_t Q = 1.5*Q_t::Identity();
+const Q_t Q = 2.5*Q_t::Identity();
 const H_t H( (H_t() << 1, 0).finished() );
-const R_t R_fast = 0.5*R_t::Identity();
+const R_t R_fast = 5.5*R_t::Identity();
 const R_t R_slow = 0.01*R_t::Identity();
 
 const x_t x0 = x_t::Zero();
@@ -91,11 +91,10 @@ const P_t P0 = 5.0*P_t::Identity();
 const u_t u0 = u_t::Zero();
 const ros::Time t0 = ros::Time(0);
 const std::shared_ptr<lkf_t> lkf_ptr = std::make_shared<lkf_t>(generateA, generateB, H);
-const unsigned inpt_buf_sz = 100;
-const unsigned meas_buf_sz = 30;
+const unsigned buf_sz = 100;
 
 std::mutex rep_pubs_mtx;
-rep_t rep(x0, P0, u0, Q, t0, lkf_ptr, inpt_buf_sz, meas_buf_sz);
+rep_t rep(x0, P0, u0, Q, t0, lkf_ptr, buf_sz);
 ros::Publisher pub_pos_est;
 ros::Publisher pub_vel_est;
 
@@ -167,7 +166,7 @@ void callback_meas_slow(const mrs_msgs::Float64Stamped::ConstPtr msg)
 
 // current state and its mutex
 std::mutex x_mtx;
-x_t x;
+x_t x = x_t::Random();
 
 /* publisher thread of fast, imprecise measurements //{ */
 
@@ -249,7 +248,7 @@ int main(int argc, char **argv)
   while (ros::ok())
   {
     const double dt = dur.toSec();
-    const u_t u = 2.0*u_t::Random();
+    const u_t u = 3.0*u_t::Random();
     const Q_t dtQ = dt*Q;
 
     // generate a new state

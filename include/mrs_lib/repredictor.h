@@ -58,45 +58,32 @@ namespace mrs_lib
     */
     statecov_t predictTo(const ros::Time& to_stamp)
     {
-      auto inpt_it = std::begin(m_inpt_hist);
-      auto meas_it = std::begin(m_meas_hist);
-      if (meas_it != std::end(m_meas_hist) && inpt_it->stamp > meas_it->stamp)
-        ROS_WARN_STREAM("[Repredictor]: Oldest input is newer than oldest measurement by " << (inpt_it->stamp - meas_it->stamp).toSec() << "s. This may cause imprecise estimation. Consider increasing the input history buffer size (currently: " << m_inpt_hist.size() << ").");
-
-      auto cur_stamp = inpt_it->stamp;
+      assert(!m_history.empty());
+      auto hist_it = std::begin(m_history);
+      // cur_stamp corresponds to the time point of cur_sc estimation
+      auto cur_stamp = hist_it->stamp;
+      // cur_sc is the current state and covariance estimate
       auto cur_sc = m_sc;
       do
       {
-        ros::Time next_inpt_stamp = to_stamp;
-        if ((inpt_it+1) != std::end(m_inpt_hist) && (inpt_it+1)->stamp < to_stamp)
-          next_inpt_stamp = (inpt_it+1)->stamp;
+        // do the correction if current history point is a measurement
+        if (hist_it->is_measurement)
+          cur_sc = correctFrom(cur_sc, *hist_it);
 
-        // decide whether we should predict to the next input or to the current measurement
-        // (whichever is sooner according to the stamp)
-        const bool meas_available = meas_it != std::end(m_meas_hist);
-        const bool use_meas_next = meas_available && meas_it->stamp <= next_inpt_stamp;
-        const auto next_stamp = use_meas_next ? meas_it->stamp : next_inpt_stamp;
+        // decide whether to predict to the next history point or straight to the desired stamp already
+        // (whichever comes sooner or directly to the desired stamp if no further history point is available)
+        ros::Time next_stamp = to_stamp;
+        if ((hist_it+1) != std::end(m_history) && (hist_it+1)->stamp <= to_stamp)
+          next_stamp = (hist_it+1)->stamp;
 
         // do the prediction
-        cur_sc = predictFrom(cur_sc, *inpt_it, cur_stamp, next_stamp);
+        cur_sc = predictFrom(cur_sc, *hist_it, cur_stamp, next_stamp);
         cur_stamp = next_stamp;
-        // do the correction if required
-        if (use_meas_next)
-          cur_sc = correctFrom(cur_sc, *meas_it);
 
-        // increment either the input or measurement iterator depending on which we used
-        if (use_meas_next)
-        {
-          if (meas_it != std::end(m_meas_hist))
-            meas_it++;
-        }
-        else
-        {
-          if (inpt_it+1 != std::end(m_inpt_hist))
-            inpt_it++;
-        }
+        // increment the history pointer
+        hist_it++;
       }
-      while (!(inpt_it == std::end(m_inpt_hist) && meas_it == std::end(m_meas_hist)) && cur_stamp < to_stamp);
+      while (hist_it != std::end(m_history) && hist_it->stamp <= to_stamp);
       return cur_sc;
     }
     //}
@@ -115,52 +102,15 @@ namespace mrs_lib
     */
     void addInput(const u_t& u, const Q_t& Q, const ros::Time& stamp, const ModelPtr& model = nullptr)
     {
-      const inpt_t inpt {u, Q, stamp, model};
-      const auto next_inpt_it = std::lower_bound(std::begin(m_inpt_hist), std::end(m_inpt_hist), inpt, &Repredictor<Model>::earlier<inpt_t>);
-      // check if the new input would be added before the first element of the input history buffer and ignore it if so
-      if (next_inpt_it == std::begin(m_inpt_hist) && !m_inpt_hist.empty())
-      {
-        ROS_WARN_STREAM("[Repredictor]: Added input is older than oldest by " << (next_inpt_it->stamp - inpt.stamp).toSec() << "s. Ignoring it! Consider increasing the input history buffer size (currently: " << m_inpt_hist.size() << ").");
-        return;
-      }
-
-      // check if adding a new input would throw out the oldest one
-      if (m_inpt_hist.size() == m_inpt_hist.capacity())
-      { // if so, first update m_sc
-        // figure out, what will be the oldest input in the buffer after inserting the newly received one
-        auto new_oldest_inpt = m_inpt_hist.front();
-        if (m_inpt_hist.size() == 1
-         || (m_inpt_hist.size() > 1 && stamp > m_inpt_hist.at(0).stamp && stamp < m_inpt_hist.at(1).stamp))
-        {
-          new_oldest_inpt = inpt;
-        }
-        else if (m_inpt_hist.size() > 1)
-        {
-          new_oldest_inpt = m_inpt_hist.at(1);
-        }
-        // update m_sc to the time of the new oldest input (after inserting the new input)
-        m_sc = predictTo(new_oldest_inpt.stamp);
-        // insert the new input into the history buffer, causing the original oldest input to be removed
-        m_inpt_hist.insert(next_inpt_it, inpt);
-#ifdef REPREDICTOR_DEBUG
-        if (m_inpt_hist.front() != new_oldest_inpt)
-        {
-          std::cerr << "Bad prediction of new oldest input!" << std::endl;
-        }
-#endif
-      }
-      else
-      { // otherwise, just insert the new measurement
-        m_inpt_hist.insert(next_inpt_it, inpt);
-      }
-
-#ifdef REPREDICTOR_DEBUG
-      if (!checkMonotonicity(m_inpt_hist))
-      {
-        std::cerr << "Input history buffer is not monotonous after modification!" << std::endl;
-      }
-      std::cerr << "Added input (" << m_inpt_hist.size() << " inputs, " << m_meas_hist.size() << " measurements)" << std::endl;
-#endif
+      const info_t info (stamp, u, Q, model);
+      // find the next point in the history buffer
+      const auto next_it = std::lower_bound(std::begin(m_history), std::end(m_history), info, &Repredictor<Model>::earlier);
+      // add the point to the history buffer
+      const auto added = addInfo(info, next_it);
+      // update all measurements following the newly added system input up to the next system input
+      if (added != std::end(m_history))
+        for (auto it = added+1; it != std::end(m_history) && it->is_measurement; it++)
+          it->updateUsing(info);
     }
     //}
 
@@ -178,25 +128,19 @@ namespace mrs_lib
     */
     void addMeasurement(const z_t& z, const R_t& R, const ros::Time& stamp, const ModelPtr& model = nullptr)
     {
-      const meas_t meas {z, R, stamp, model};
-      const auto next_meas_it = std::lower_bound(std::begin(m_meas_hist), std::end(m_meas_hist), meas, &Repredictor<Model>::earlier<meas_t>);
-      // check if the new measurement would be added before the first element of the measurement history buffer and ignore it if so
-      if (next_meas_it == std::begin(m_meas_hist) && !m_meas_hist.empty())
-      {
-        ROS_WARN_STREAM("[Repredictor]: Added measurement is older than oldest by " << (next_meas_it->stamp - meas.stamp).toSec() << "s. Ignoring it! Consider increasing the measurement history buffer size (currently: " << m_meas_hist.size() << ").");
-        return;
-      }
+      assert(!m_history.empty());
+      // helper variable for searching of the next point in the history buffer
+      const info_t dummy (stamp);
+      const auto next_it = std::lower_bound(std::begin(m_history), std::end(m_history), dummy, &Repredictor<Model>::earlier);
 
-      // otherwise, add it
-      m_meas_hist.insert(next_meas_it, meas);
+      // copy input information from previous history point
+      info_t prev_info = m_history.front();
+      if (next_it != std::begin(m_history))
+        prev_info = *(next_it-1);
+      const info_t info (stamp, z, R, model, prev_info);
 
-#ifdef REPREDICTOR_DEBUG
-      if (!checkMonotonicity(m_meas_hist))
-      {
-        std::cerr << "Measurement history buffer is not monotonous after modification!" << std::endl;
-      }
-      std::cerr << "Added measurement (" << m_inpt_hist.size() << " inputs, " << m_meas_hist.size() << " measurements)" << std::endl;
-#endif
+      // add the point to the history buffer
+      addInfo(info, next_it);
     }
     //}
 
@@ -216,8 +160,8 @@ namespace mrs_lib
     * \param inpt_hist_len  Length of the system input history buffer.
     * \param meas_hist_len  Length of the measurement history buffer.
     */
-    Repredictor(const x_t& x0, const P_t& P0, const u_t& u0, const Q_t& Q0, const ros::Time& t0, const ModelPtr& model, const unsigned inpt_hist_len, const unsigned meas_hist_len)
-      : m_sc{x0, P0}, m_default_model(model), m_inpt_hist(inpt_hist_t(inpt_hist_len)), m_meas_hist(meas_hist_t(meas_hist_len))
+    Repredictor(const x_t& x0, const P_t& P0, const u_t& u0, const Q_t& Q0, const ros::Time& t0, const ModelPtr& model, const unsigned hist_len)
+      : m_sc{x0, P0}, m_default_model(model), m_history(history_t(hist_len))
     {
       assert(inpt_hist_len > 0);
       assert(meas_hist_len > 0);
@@ -234,32 +178,54 @@ namespace mrs_lib
   private:
     /* helper structs and usings //{ */
     
-    struct meas_t
+    struct info_t
     {
-      z_t z;
-      R_t R;
       ros::Time stamp;
-      ModelPtr model;
-    };
-    
-    struct inpt_t
-    {
+
+      // system input-related information
       u_t u;
       Q_t Q;
-      ros::Time stamp;
-      ModelPtr model;
+      ModelPtr predict_model;
+
+      // measurement-related information (unused in case is_measurement=false)
+      z_t z;
+      R_t R;
+      ModelPtr correct_model;
+      bool is_measurement;
+
+      // constructor for a dummy info (for searching in the history)
+      info_t(const ros::Time& stamp)
+        : stamp(stamp), is_measurement(false)
+      {};
+
+      // constructor for a system input
+      info_t(const ros::Time& stamp, const u_t& u, const Q_t& Q, const ModelPtr& model)
+        : stamp(stamp), u(u), Q(Q), predict_model(model), is_measurement(false)
+      {};
+
+      // construcotr for a measurement
+      info_t(const ros::Time& stamp, const z_t& z, const R_t& R, const ModelPtr& model, const info_t& prev_info)
+        : stamp(stamp), z(z), R(R), correct_model(model), is_measurement(true)
+      {
+        updateUsing(prev_info);
+      };
+
+      // copy system input-related information from a previous info
+      void updateUsing(const info_t& info)
+      {
+        u = info.u;
+        Q = info.Q;
+        predict_model = info.predict_model;
+      };
     };
     
-    using meas_hist_t = boost::circular_buffer<meas_t>;
-    using inpt_hist_t = boost::circular_buffer<inpt_t>;
+    using history_t = boost::circular_buffer<info_t>;
     
     //}
 
   private:
-    // the history buffer for inputs
-    inpt_hist_t m_inpt_hist;
-    // the history buffer for measurements
-    meas_hist_t m_meas_hist;
+    // the history buffer
+    history_t m_history;
 
     // | ---------------- helper debugging methods ---------------- |
     /* checkMonotonicity() method //{ */
@@ -292,27 +258,74 @@ namespace mrs_lib
 
   private:
     // | -------------- helper implementation methods ------------- |
+    
+    /* addInfo() method //{ */
+    typename history_t::iterator addInfo(const info_t& info, const typename history_t::iterator& next_it)
+    {
+      // check if the new input would be added before the first element of the input history buffer and ignore it if so
+      if (next_it == std::begin(m_history) && !m_history.empty())
+      {
+        ROS_WARN_STREAM("[Repredictor]: Added history point is older than the oldest by " << (next_it->stamp - info.stamp).toSec() << "s. Ignoring it! Consider increasing the history buffer size (currently: " << m_history.size() << ")");
+        return std::end(m_history);
+      }
+
+      // check if adding a new input would throw out the oldest one
+      if (m_history.size() == m_history.capacity())
+      { // if so, first update m_sc
+        // figure out, what will be the oldest input in the buffer after inserting the newly received one
+        auto new_oldest = m_history.front();
+        if (m_history.size() == 1
+         || (m_history.size() > 1 && info.stamp > m_history.at(0).stamp && info.stamp < m_history.at(1).stamp))
+        {
+          new_oldest = info;
+        }
+        else if (m_history.size() > 1)
+        {
+          new_oldest = m_history.at(1);
+        }
+        // update m_sc to the time of the new oldest input (after inserting the new input)
+        m_sc = predictTo(new_oldest.stamp);
+        // insert the new input into the history buffer, causing the original oldest input to be removed
+      }
+
+      // add the new point finally
+      const auto ret = m_history.insert(next_it, info);
+      /* debug check //{ */
+      
+#ifdef REPREDICTOR_DEBUG
+      if (!checkMonotonicity(m_history))
+      {
+        std::cerr << "Input history buffer is not monotonous after modification!" << std::endl;
+      }
+      std::cerr << "Added info (" << m_history.size() << " total)" << std::endl;
+#endif
+      
+      //}
+      return ret;
+    }
+    //}
+
     /* earlier() method //{ */
-    template <typename T>
-    static bool earlier(const T& ob1, const T& ob2)
+    static bool earlier(const info_t& ob1, const info_t& ob2)
     {
       return ob1.stamp < ob2.stamp;
     }
     //}
 
     /* predictFrom() method //{ */
-    statecov_t predictFrom(const statecov_t& sc, const inpt_t& inpt, const ros::Time& from_stamp, const ros::Time& to_stamp)
+    statecov_t predictFrom(const statecov_t& sc, const info_t& inpt, const ros::Time& from_stamp, const ros::Time& to_stamp)
     {
-      const auto model = inpt.model == nullptr ? m_default_model : inpt.model;
+      const auto model = inpt.predict_model == nullptr ? m_default_model : inpt.predict_model;
       const auto dt = (to_stamp - from_stamp).toSec();
       return model->predict(sc, inpt.u, inpt.Q, dt);
     }
     //}
 
     /* correctFrom() method //{ */
-    statecov_t correctFrom(const statecov_t& sc, const meas_t& meas)
+    statecov_t correctFrom(const statecov_t& sc, const info_t& meas)
     {
-      const auto model = meas.model == nullptr ? m_default_model : meas.model;
+      assert(meas.is_measurement);
+      const auto model = meas.correct_model == nullptr ? m_default_model : meas.correct_model;
       return model->correct(sc, meas.z, meas.R);
     }
     //}

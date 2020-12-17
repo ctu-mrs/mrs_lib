@@ -1,5 +1,7 @@
 // clang: MatousFormat
 
+/* #define REPREDICTOR_DEBUG */
+
 // Include the Repredictor header
 #include <mrs_lib/repredictor.h>
 // As a model, we'll use a LKF variant
@@ -65,9 +67,8 @@ B_t generateB([[maybe_unused]] const double dt)
   return B;
 }
 
-#define REPREDICTOR_DEBUG
-
 TEST(TESTSuite, lkf_comparison)
+/* int main() */
 {
   // Generate initial state, input and time
   const x_t x0 = x_t::Zero();
@@ -187,7 +188,7 @@ TEST(TESTSuite, lkf_comparison)
   //}
   
   // Instantiate the Repredictor itself
-  rep_t rep(x0, P0, u0, Q, t0, lkf, n_gts, n_meass);
+  rep_t rep(x0, P0, u0, Q, t0, lkf, n_gts+n_meass);
 
   // Fill the buffer of the Repredictor
   auto meas_remaining = measurements;
@@ -222,15 +223,15 @@ TEST(TESTSuite, lkf_comparison)
     for (int it = 0; it < n_meass; it++)
     {
       const auto stamp = std::get<0>(measurements.at(it));
-      const auto x_gt = std::get<2>(measurements.at(it));
+      /* const auto x_gt = std::get<2>(measurements.at(it)); */
       rep_sc = rep.predictTo(stamp);
       const auto lkf_sc = lkf_scs.at(it);
-      const auto err = (x_gt-rep_sc.x).norm();
+      /* const auto err = (x_gt-rep_sc.x).norm(); */
       const auto diff = (lkf_sc.x-rep_sc.x).norm();
       const auto diffP = (lkf_sc.P-rep_sc.P).norm();
       EXPECT_DOUBLE_EQ(diff, 0.0);
       EXPECT_DOUBLE_EQ(diffP, 0.0);
-      std::cout << "xgt[" << it << "]: [" << x_gt.transpose() << "]^T\txes[" << it << "]: [" << rep_sc.x.transpose() << "]^T" << "\terr[" << it << "]:  " << err << std::endl;
+      /* std::cout << "xgt[" << it << "]: [" << x_gt.transpose() << "]^T\txes[" << it << "]: [" << rep_sc.x.transpose() << "]^T" << "\terr[" << it << "]:  " << err << std::endl; */
       /* ofs << stamp.toSec() << "," << x_gt.x() << "," << x_gt.y() << "," << rep_sc.x.x() << "," << rep_sc.x.y() << "," << lkf_sc.x.x() << "," << lkf_sc.x.y() << "," << err << "," << diff << "," << diffP << std::endl; */
     }
     rep_sc = rep.predictTo(tend);
@@ -251,6 +252,7 @@ TEST(TESTSuite, lkf_comparison)
   /*     ofs << std::get<0>(el).toSec() << "," << std::get<1>(el) << "," << std::get<2>(el).x() << "," << std::get<2>(el).y() << std::endl; */
   /*   } */
   /* } */
+  /* return 0; */
 }
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
