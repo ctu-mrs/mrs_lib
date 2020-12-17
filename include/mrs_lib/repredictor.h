@@ -15,9 +15,10 @@ namespace mrs_lib
   *
   * A standard state-space system model is assumed for the repredictor with system inputs and measurements,
   * generated from the system state vector. The inputs and measurements may be delayed with varying durations.
-  * To accomodate this, the Repredictor keeps a buffer of N last inputs and M last measurements (N and M are
-  * specified in the constructor). This buffer is then used to re-predict the desired state at the time,
-  * requested by the user.
+  * To accomodate this, the Repredictor keeps a buffer of N last inputs and measurements (N is specified
+  * in the constructor). This buffer is then used to re-predict the desired state at the time,
+  * requested by the user. Note that re-prediction is evaluated in a lazy manner only when the user requests,
+  * so it has to go through the whole history buffer every time.
   *
   * The Repredictor utilizes a fusion Model (specified as the template parameter), which should implement
   * the predict() and correct() methods. This Model is used for fusing the system inputs and measurements
@@ -90,14 +91,14 @@ namespace mrs_lib
 
     /* addInput() method //{ */
   /*!
-    * \brief Adds one system input to the input history buffer, removing the oldest element in the buffer if it is full.
+    * \brief Adds one system input to the history buffer, removing the oldest element in the buffer if it is full.
     *
     * \param u      The system input vector to be added.
     * \param Q      The process noise covariance matrix, corresponding to the input vector.
     * \param stamp  Time stamp of the input vector and covariance matrix.
     * \param model  Optional pointer to a specific Model to be used with this input (eg. mapping it to different states). If it equals to nullptr, the default model specified in the constructor will be used.
     *
-    * \note The system input vector will not be added if it is older than the oldest one in the history buffer.
+    * \note The system input vector will not be added if it is older than the oldest element in the history buffer.
     *
     */
     void addInput(const u_t& u, const Q_t& Q, const ros::Time& stamp, const ModelPtr& model = nullptr)
@@ -116,14 +117,14 @@ namespace mrs_lib
 
     /* addMeasurement() method //{ */
   /*!
-    * \brief Adds one measurement to the measurement history buffer, removing the oldest element in the buffer if it is full.
+    * \brief Adds one measurement to the history buffer, removing the oldest element in the buffer if it is full.
     *
     * \param z      The measurement vector to be added.
     * \param R      The measurement noise covariance matrix, corresponding to the measurement vector.
     * \param stamp  Time stamp of the measurement vector and covariance matrix.
     * \param model  Optional pointer to a specific Model to be used with this measurement (eg. mapping it from different states). If it equals to nullptr, the default model specified in the constructor will be used.
     *
-    * \note The measurement vector will not be added if it is older than the oldest one in the history buffer.
+    * \note The measurement vector will not be added if it is older than the oldest element in the history buffer.
     *
     */
     void addMeasurement(const z_t& z, const R_t& R, const ros::Time& stamp, const ModelPtr& model = nullptr)
@@ -157,20 +158,18 @@ namespace mrs_lib
     * \param Q0             Default covariance matrix of the process noise.
     * \param t0             Time stamp of the initial state.
     * \param model          Default prediction and correction model.
-    * \param inpt_hist_len  Length of the system input history buffer.
-    * \param meas_hist_len  Length of the measurement history buffer.
+    * \param hist_len       Length of the history buffer for system inputs and measurements.
     */
     Repredictor(const x_t& x0, const P_t& P0, const u_t& u0, const Q_t& Q0, const ros::Time& t0, const ModelPtr& model, const unsigned hist_len)
       : m_sc{x0, P0}, m_default_model(model), m_history(history_t(hist_len))
     {
-      assert(inpt_hist_len > 0);
-      assert(meas_hist_len > 0);
+      assert(hist_len > 0);
       addInput(u0, Q0, t0, model);
     };
     //}
 
   private:
-    // state and covariance corresponding to the oldest input in the input history buffer
+    // state and covariance corresponding to the oldest element in the history buffer
     statecov_t m_sc;
     // default model to use for updates
     ModelPtr m_default_model;
@@ -262,17 +261,17 @@ namespace mrs_lib
     /* addInfo() method //{ */
     typename history_t::iterator addInfo(const info_t& info, const typename history_t::iterator& next_it)
     {
-      // check if the new input would be added before the first element of the input history buffer and ignore it if so
+      // check if the new element would be added before the first element of the history buffer and ignore it if so
       if (next_it == std::begin(m_history) && !m_history.empty())
       {
         ROS_WARN_STREAM("[Repredictor]: Added history point is older than the oldest by " << (next_it->stamp - info.stamp).toSec() << "s. Ignoring it! Consider increasing the history buffer size (currently: " << m_history.size() << ")");
         return std::end(m_history);
       }
 
-      // check if adding a new input would throw out the oldest one
+      // check if adding a new element would throw out the oldest one
       if (m_history.size() == m_history.capacity())
       { // if so, first update m_sc
-        // figure out, what will be the oldest input in the buffer after inserting the newly received one
+        // figure out, what will be the oldest element in the buffer after inserting the newly received one
         auto new_oldest = m_history.front();
         if (m_history.size() == 1
          || (m_history.size() > 1 && info.stamp > m_history.at(0).stamp && info.stamp < m_history.at(1).stamp))
@@ -283,9 +282,9 @@ namespace mrs_lib
         {
           new_oldest = m_history.at(1);
         }
-        // update m_sc to the time of the new oldest input (after inserting the new input)
+        // update m_sc to the time of the new oldest element (after inserting the new element)
         m_sc = predictTo(new_oldest.stamp);
-        // insert the new input into the history buffer, causing the original oldest input to be removed
+        // insert the new element into the history buffer, causing the original oldest element to be removed
       }
 
       // add the new point finally
@@ -295,7 +294,7 @@ namespace mrs_lib
 #ifdef REPREDICTOR_DEBUG
       if (!checkMonotonicity(m_history))
       {
-        std::cerr << "Input history buffer is not monotonous after modification!" << std::endl;
+        std::cerr << "History buffer is not monotonous after modification!" << std::endl;
       }
       std::cerr << "Added info (" << m_history.size() << " total)" << std::endl;
 #endif
