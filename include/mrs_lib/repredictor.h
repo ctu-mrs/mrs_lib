@@ -60,6 +60,9 @@ namespace mrs_lib
     {
       auto inpt_it = std::begin(m_inpt_hist);
       auto meas_it = std::begin(m_meas_hist);
+      if (meas_it != std::end(m_meas_hist) && inpt_it->stamp > meas_it->stamp)
+        ROS_WARN_STREAM("[Repredictor]: Oldest input is newer than oldest measurement by " << (inpt_it->stamp - meas_it->stamp).toSec() << "s. This may cause imprecise estimation. Consider increasing the input history buffer size (currently: " << m_inpt_hist.size() << ").");
+
       auto cur_stamp = inpt_it->stamp;
       auto cur_sc = m_sc;
       do
@@ -117,7 +120,7 @@ namespace mrs_lib
       // check if the new input would be added before the first element of the input history buffer and ignore it if so
       if (next_inpt_it == std::begin(m_inpt_hist) && !m_inpt_hist.empty())
       {
-        ROS_WARN_STREAM("[Repredictor]: Added input is older than oldest by " << (next_inpt_it->stamp - inpt.stamp).toSec() << "s. Ignoring it! Consider increasing the input history buffer size (currently: " << m_inpt_hist.size() << ")");
+        ROS_WARN_STREAM("[Repredictor]: Added input is older than oldest by " << (next_inpt_it->stamp - inpt.stamp).toSec() << "s. Ignoring it! Consider increasing the input history buffer size (currently: " << m_inpt_hist.size() << ").");
         return;
       }
 
@@ -180,7 +183,7 @@ namespace mrs_lib
       // check if the new measurement would be added before the first element of the measurement history buffer and ignore it if so
       if (next_meas_it == std::begin(m_meas_hist) && !m_meas_hist.empty())
       {
-        ROS_WARN_STREAM("[Repredictor]: Added measurement is older than oldest by " << (next_meas_it->stamp - meas.stamp).toSec() << "s. Ignoring it! Consider increasing the measurement history buffer size (currently: " << m_meas_hist.size() << ")");
+        ROS_WARN_STREAM("[Repredictor]: Added measurement is older than oldest by " << (next_meas_it->stamp - meas.stamp).toSec() << "s. Ignoring it! Consider increasing the measurement history buffer size (currently: " << m_meas_hist.size() << ").");
         return;
       }
 
