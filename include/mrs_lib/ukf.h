@@ -124,10 +124,9 @@ namespace mrs_lib
     * \param sc     Previous estimate of the state and covariance.
     * \param z      Measurement vector.
     * \param R      Measurement covariance matrix.
-    * \param param  Unused.
     * \returns      The state and covariance after applying the correction step.
     */
-    virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, [[maybe_unused]] int param = 0) const override;
+    virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R) const override;
     //}
 
     /* predict() method //{ */
@@ -138,10 +137,9 @@ namespace mrs_lib
     * \param u      Input vector.
     * \param Q      Process noise covariance matrix.
     * \param dt     Duration since the previous estimate.
-    * \param param  Unused.
     * \returns      The state and covariance after applying the correction step.
     */
-    virtual statecov_t predict(const statecov_t& sc, const u_t& u, const Q_t& Q, double dt, [[maybe_unused]] int param = 0) const override;
+    virtual statecov_t predict(const statecov_t& sc, const u_t& u, const Q_t& Q, double dt) const override;
     //}
 
     /* setConstants() method //{ */

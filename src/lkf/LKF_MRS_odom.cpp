@@ -6,17 +6,16 @@ namespace mrs_lib
 {
   /* LKF_MRS_odom constructor //{ */
   LKF_MRS_odom::LKF_MRS_odom(const std::vector<LKF_MRS_odom::H_t>& Hs, const double default_dt)
+    : m_Hs(Hs)
   {
-    Base_class::Hs = Hs;
     const double& dt = default_dt;
     Base_class::A << 1, dt, 0.5 * dt * dt, 0, 1, dt, 0, 0, 0.9;
     Base_class::B << 0, 0, 0.1;
-    Base_class::H = Hs.at(0);
   };
   //}
 
   /* LKF_MRS_odom::predict() method //{ */
-  LKF_MRS_odom::statecov_t LKF_MRS_odom::predict(const statecov_t& sc, const u_t& u, const Q_t& Q, double dt, [[maybe_unused]] int param) const
+  LKF_MRS_odom::statecov_t LKF_MRS_odom::predict(const statecov_t& sc, const u_t& u, const Q_t& Q, double dt) const
   {
     statecov_t ret;
     ret.x = state_predict_optimized(sc.x, u, dt);
@@ -31,7 +30,7 @@ namespace mrs_lib
   LKF_MRS_odom::statecov_t LKF_MRS_odom::correct(const LKF_MRS_odom::statecov_t& sc, const LKF_MRS_odom::z_t& z, const LKF_MRS_odom::R_t& R, int param) const
   {
     /* return correction_impl(sc, z, R, Hs.at(param)); */
-    return correction_optimized(sc, z, R, Hs.at(param));
+    return correction_optimized(sc, z, R, m_Hs.at(param));
   };
   //}
 

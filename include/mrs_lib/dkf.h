@@ -81,7 +81,6 @@ namespace mrs_lib
     * \param sc          The state and covariance to which the correction step is to be applied.
     * \param z           The measurement vector to be used for correction.
     * \param R           The measurement noise covariance matrix to be used for correction.
-    * \param param       Unused parameter.
     * \return            The state and covariance after the correction update.
     */
     virtual statecov_t correctLine(const statecov_t& sc, const pt3_t& line_origin, const vec3_t& line_direction, const double line_variance) const

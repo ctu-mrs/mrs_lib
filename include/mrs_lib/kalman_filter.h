@@ -60,10 +60,9 @@ namespace mrs_lib
       * \param sc          The state and covariance to which the correction step is to be applied.
       * \param z           The measurement vector to be used for correction.
       * \param R           The measurement noise covariance matrix to be used for correction.
-      * \param param       An optional parameter which may be used by some implementations or ignored.
       * \return            The state and covariance after the correction update.
       */
-      virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, int param) const = 0;
+      virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R) const = 0;
 
     /*!
       * \brief Applies the prediction (time) step of the Kalman filter.
@@ -77,10 +76,9 @@ namespace mrs_lib
       * \param u           The input vector to be used for prediction.
       * \param Q           The process noise covariance matrix to be used for prediction.
       * \param dt          The time step for the prediction update (the state and covariance will be predicted by dt into the future).
-      * \param param       An optional parameter which may be used by some implementations or ignored.
       * \return            The state and covariance after the prediction step.
       */
-      virtual statecov_t predict(const statecov_t& sc, const u_t& u, const Q_t& Q, double dt, int param) const = 0;
+      virtual statecov_t predict(const statecov_t& sc, const u_t& u, const Q_t& Q, double dt) const = 0;
   };
   //}
 }

@@ -1,0 +1,7 @@
+<launch>
+
+  <test pkg="mrs_lib" type="RepredictorTest" test-name="repredictor_test" time-limit="10.0">
+  </test>
+
+</launch>
+
