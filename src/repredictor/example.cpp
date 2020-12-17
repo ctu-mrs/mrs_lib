@@ -28,7 +28,7 @@ namespace mrs_lib
   const int n_inputs = 1;
   const int n_measurements = 1;
 
-  using lkf_t = dtMatrixLKF<n_states, n_inputs, n_measurements>;
+  using lkf_t = varstepLKF<n_states, n_inputs, n_measurements>;
   using rep_t = Repredictor<lkf_t>;
 }
 
@@ -90,6 +90,8 @@ B_t generateB([[maybe_unused]] const double dt)
   return B;
 }
 
+#define REPREDICTOR_DEBUG
+
 int main()
 {
   // Generate initial state, input and time
@@ -142,9 +144,9 @@ int main()
   int prev_gt_it = 0;
   std::vector<std::tuple<ros::Time, z_t, x_t, u_t>> measurements(n_meass);
   std::vector<statecov_t> lkf_scs(n_meass);
-  lkf_scs.front() = {x0, P0};
-  statecov_t lkf_sc;
+  statecov_t lkf_sc = {x0, P0};
   ros::Time last_lkf_stamp = stamps.front();
+  std::cerr << "LKF:" << std::endl;
   for (int it = 0; it < n_meass; it++)
   {
     // Generate a random dt
@@ -152,12 +154,13 @@ int main()
     // Move the prev_gt_it if necessary
     while (prev_gt_it < n_gts && stamps.at(prev_gt_it) < meas_stamp)
     {
-      if (prev_gt_it > 0)
+      const auto stamp = stamps.at(prev_gt_it);
+      if (prev_gt_it > 0 && stamp > last_lkf_stamp)
       {
         const auto u = inputs.at(prev_gt_it-1);
-        const auto stamp = stamps.at(prev_gt_it);
         const double dt = (stamp-last_lkf_stamp).toSec();
         lkf_sc = lkf->predict(lkf_sc, u, Q, dt);
+        std::cerr << "predict\t" << last_lkf_stamp << "\t->\t" << stamp << std::endl;
         last_lkf_stamp = stamp;
       }
       prev_gt_it++;
@@ -177,22 +180,44 @@ int main()
     measurements.at(it) = {meas_stamp, z, x_cur, u};
 
     lkf_sc = lkf->predict(lkf_sc, u, Q, (meas_stamp-last_lkf_stamp).toSec());
+    std::cerr << "predict\t" << last_lkf_stamp << "\t->\t" << meas_stamp << std::endl;
+    last_lkf_stamp = meas_stamp;
     lkf_sc = lkf->correct(lkf_sc, z, R);
+    std::cerr << "correct\t" << meas_stamp << std::endl;
     lkf_scs.at(it) = lkf_sc;
 
     // Update the helper variable
     prev_stamp = meas_stamp;
   }
+  ros::Time tend = stamps.back() > std::get<0>(measurements.back()) ? stamps.back() : std::get<0>(measurements.back());
+  tend += ros::Duration(0.2);
+  prev_gt_it++;
+  while (prev_gt_it < (int)stamps.size())
+  {
+    const auto u = inputs.at(prev_gt_it-1);
+    const auto stamp = stamps.at(prev_gt_it);
+    const double dt = (stamp-last_lkf_stamp).toSec();
+    lkf_sc = lkf->predict(lkf_sc, u, Q, dt);
+    std::cerr << "predict\t" << last_lkf_stamp << "\t->\t" << stamp << std::endl;
+    last_lkf_stamp = stamp;
+    prev_gt_it++;
+  }
+  const auto u = inputs.at(prev_gt_it-1);
+  const auto stamp = tend;
+  const double dt = (stamp-last_lkf_stamp).toSec();
+  lkf_sc = lkf->predict(lkf_sc, u, Q, dt);
+  std::cerr << "predict\t" << last_lkf_stamp << "\t->\t" << stamp << std::endl;
+  last_lkf_stamp = tend;
 
   //}
   
   // Instantiate the Repredictor itself
-  rep_t rep(x0, P0, u0, Q, t0, lkf, n_gts+n_meass);
+  rep_t rep(x0, P0, u0, Q, t0, lkf, n_gts, n_meass);
 
   // Fill the buffer of the Repredictor
   auto meas_remaining = measurements;
   int u_it = 1; // the first input is already used for initialization, skip it
-  for (int it = 1; it < n_meass+n_inputs; it++)
+  for (int it = 1; it < n_meass+n_gts; it++)
   {
     const bool use_meas = (d(gen) > 0.0 || u_it == n_gts) && !meas_remaining.empty();
     if (use_meas)
@@ -217,15 +242,22 @@ int main()
   {
     std::ofstream ofs("inpt.csv");
     ofs << "t,xgt,dxgt,xes,dxes,xkf,dxkf,err" << std::endl;
+    auto rep_sc = rep.predictTo(t0);
+    ofs << t0.toSec() << "," << x0.x() << "," << x0.y() << "," << rep_sc.x.x() << "," << rep_sc.x.y() << "," << x0.x() << "," << x0.y() << "," << (rep_sc.x-x0).norm() << std::endl;
     for (int it = 0; it < n_meass; it++)
     {
-      const auto [stamp, z, x_gt, u] = measurements.at(it);
-      const auto [x, P] = rep.predictTo(stamp);
+      const auto stamp = std::get<0>(measurements.at(it));
+      const auto x_gt = std::get<2>(measurements.at(it));
+      rep_sc = rep.predictTo(stamp);
       const auto lkf_sc = lkf_scs.at(it);
-      const auto err = (x_gt-x).norm();
-      std::cout << "xgt[" << it << "]: [" << x_gt.transpose() << "]^T\txes[" << it << "]: [" << x.transpose() << "]^T" << "\terr[" << it << "]:  " << err << std::endl;
-      ofs << stamp.toSec() << "," << x_gt.x() << "," << x_gt.y() << "," << x.x() << "," << x.y() << "," << lkf_sc.x.x() << "," << lkf_sc.x.y() << "," << err << std::endl;
+      const auto err = (x_gt-rep_sc.x).norm();
+      std::cout << "xgt[" << it << "]: [" << x_gt.transpose() << "]^T\txes[" << it << "]: [" << rep_sc.x.transpose() << "]^T" << "\terr[" << it << "]:  " << err << std::endl;
+      ofs << stamp.toSec() << "," << x_gt.x() << "," << x_gt.y() << "," << rep_sc.x.x() << "," << rep_sc.x.y() << "," << lkf_sc.x.x() << "," << lkf_sc.x.y() << "," << err << std::endl;
     }
+    rep_sc = rep.predictTo(tend, true);
+    const x_t x_gt = generateA((tend-stamps.back()).toSec())*gts.back() + generateB((tend-stamps.back()).toSec())*inputs.back();
+    const auto err = (x_gt-rep_sc.x).norm();
+    ofs << tend.toSec() << "," << x_gt.x() << "," << x_gt.y() << "," << rep_sc.x.x() << "," << rep_sc.x.y() << "," << lkf_sc.x.x() << "," << lkf_sc.x.y() << "," << err << std::endl;
   }
 
   {

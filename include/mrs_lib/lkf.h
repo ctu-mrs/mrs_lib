@@ -257,7 +257,7 @@ namespace mrs_lib
 
   /* class dtMatrixLKF //{ */
   template <int n_states, int n_inputs, int n_measurements>
-  class dtMatrixLKF : public LKF<n_states, n_inputs, n_measurements>
+  class varstepLKF : public LKF<n_states, n_inputs, n_measurements>
   {
   public:
     /* LKF definitions (typedefs, constants etc) //{ */
@@ -290,7 +290,7 @@ namespace mrs_lib
     * \param generateB a function, which returns the input to state mapping matrix \p B based on the time difference \p dt.
     * \param H         the state to measurement mapping matrix.
     */
-    dtMatrixLKF(const generateA_t& generateA, const generateB_t& generateB, const H_t& H)
+    varstepLKF(const generateA_t& generateA, const generateB_t& generateB, const H_t& H)
       : m_generateA(generateA), m_generateB(generateB)
     {
       Base_class::H = H;
