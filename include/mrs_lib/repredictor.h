@@ -5,6 +5,7 @@
 #include <boost/circular_buffer.hpp>
 #include <std_msgs/Time.h>
 #include <functional>
+#include <ros/ros.h>
 #include <mrs_lib/utils.h>
 
 namespace mrs_lib
@@ -61,8 +62,6 @@ namespace mrs_lib
       auto meas_it = std::begin(m_meas_hist);
       auto cur_stamp = inpt_it->stamp;
       auto cur_sc = m_sc;
-      if (debug)
-        std::cerr << "Rep: (" << m_inpt_hist.size() << " inputs, " << m_meas_hist.size() << " measurements)" << std::endl;
       do
       {
         ros::Time next_inpt_stamp = to_stamp;
@@ -77,15 +76,10 @@ namespace mrs_lib
 
         // do the prediction
         cur_sc = predictFrom(cur_sc, *inpt_it, cur_stamp, next_stamp);
-        if (debug)
-          std::cerr << "predict\t" << cur_stamp << "\t->\t" << next_stamp << std::endl;
         cur_stamp = next_stamp;
+        // do the correction if required
         if (use_meas_next)
-        {
           cur_sc = correctFrom(cur_sc, *meas_it);
-          if (debug)
-            std::cerr << "correct\t" << cur_stamp << std::endl;
-        }
 
         // increment either the input or measurement iterator depending on which we used
         if (use_meas_next)
@@ -120,6 +114,13 @@ namespace mrs_lib
     {
       const inpt_t inpt {u, Q, stamp, model};
       const auto next_inpt_it = std::lower_bound(std::begin(m_inpt_hist), std::end(m_inpt_hist), inpt, &Repredictor<Model>::earlier<inpt_t>);
+      // check if the new input would be added before the first element of the input history buffer and ignore it if so
+      if (next_inpt_it == std::begin(m_inpt_hist) && !m_inpt_hist.empty())
+      {
+        ROS_WARN_STREAM("[Repredictor]: Added input is older than oldest by " << (next_inpt_it->stamp - inpt.stamp).toSec() << "s. Ignoring it! Consider increasing the input history buffer size (currently: " << m_inpt_hist.size() << ")");
+        return;
+      }
+
       // check if adding a new input would throw out the oldest one
       if (m_inpt_hist.size() == m_inpt_hist.capacity())
       { // if so, first update m_sc
@@ -176,6 +177,14 @@ namespace mrs_lib
     {
       const meas_t meas {z, R, stamp, model};
       const auto next_meas_it = std::lower_bound(std::begin(m_meas_hist), std::end(m_meas_hist), meas, &Repredictor<Model>::earlier<meas_t>);
+      // check if the new measurement would be added before the first element of the measurement history buffer and ignore it if so
+      if (next_meas_it == std::begin(m_meas_hist) && !m_meas_hist.empty())
+      {
+        ROS_WARN_STREAM("[Repredictor]: Added measurement is older than oldest by " << (next_meas_it->stamp - meas.stamp).toSec() << "s. Ignoring it! Consider increasing the measurement history buffer size (currently: " << m_meas_hist.size() << ")");
+        return;
+      }
+
+      // otherwise, add it
       m_meas_hist.insert(next_meas_it, meas);
 
 #ifdef REPREDICTOR_DEBUG

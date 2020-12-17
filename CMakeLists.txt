@@ -365,13 +365,11 @@ if(CATKIN_ENABLE_TESTING)
     test/param_loader/param_loader.test
     test/param_loader/test.cpp
   )
-
   target_link_libraries(
     ParamLoaderTest
     MrsLibParamLoader
     ${catkin_LIBRARIES}
   )
-
   add_dependencies(
     ParamLoaderTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
@@ -383,14 +381,27 @@ if(CATKIN_ENABLE_TESTING)
     test/subscribe_handler/subscribe_handler.test
     test/subscribe_handler/test.cpp
   )
-
   target_link_libraries(
     SubscribeHandlerTest
     ${catkin_LIBRARIES}
   )
-
   add_dependencies(
     SubscribeHandlerTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+  )
+
+  add_rostest_gtest(
+    RepredictorTest
+    test/repredictor/repredictor.test
+    test/repredictor/test.cpp
+  )
+  target_link_libraries(
+    RepredictorTest
+    ${catkin_LIBRARIES}
+  )
+  add_dependencies(
+    RepredictorTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
   )
