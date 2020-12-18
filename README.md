@@ -1,6 +1,9 @@
-# MRS libraries [![Build Status](https://github.com/ctu-mrs/mrs_lib/workflows/CI/badge.svg)](https://github.com/ctu-mrs/mrs_lib/actions)
+# MRS libraries
 
 ![](.fig/thumbnail.jpg)
+
+| Build status | [![Build Status](https://github.com/ctu-mrs/mrs_lib/workflows/Melodic/badge.svg)](https://github.com/ctu-mrs/mrs_lib/actions) | [![Build Status](https://github.com/ctu-mrs/mrs_lib/workflows/Noetic/badge.svg)](https://github.com/ctu-mrs/mrs_simulation/actions) | [![Build Status](https://github.com/ctu-mrs/mrs_lib/workflows/Docs/badge.svg)](https://github.com/ctu-mrs/mrs_simulation/actions) |
+|--------------|-------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
 
 ## Overview
 
