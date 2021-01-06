@@ -14,11 +14,16 @@ namespace mrs_lib
   * \brief Implementation of the Repredictor for fusing measurements with variable delays.
   *
   * A standard state-space system model is assumed for the repredictor with system inputs and measurements,
-  * generated from the system state vector. The inputs and measurements may be delayed with varying durations.
+  * generated from the system state vector. The inputs and measurements may be delayed with varying durations (an older measurement may become available after a newer one).
+  * A typical use-case scenario is when you have one "fast" but imprecise sensor and one "slow" but precise sensor
+  * and you want to use them both to get a good prediction (eg. height from the Garmin LiDAR, which comes at 100Hz,
+  * and position from a SLAM, which comes at 10Hz with a long delay). If the slow sensor is significantly
+  * slower than the fast one, fusing its measurement at the time it arrives without taking into account the sensor's delay may significantly bias your latest estimate.
+  *
   * To accomodate this, the Repredictor keeps a buffer of N last inputs and measurements (N is specified
-  * in the constructor). This buffer is then used to re-predict the desired state at the time,
-  * requested by the user. Note that re-prediction is evaluated in a lazy manner only when the user requests,
-  * so it has to go through the whole history buffer every time.
+  * in the constructor). This buffer is then used to re-predict the desired state to a specific time, as
+  * requested by the user. Note that the re-prediction is evaluated in a lazy manner only when the user requests it,
+  * so it goes through the whole history buffer every time a prediction is requested.
   *
   * The Repredictor utilizes a fusion Model (specified as the template parameter), which should implement
   * the predict() and correct() methods. This Model is used for fusing the system inputs and measurements
@@ -164,6 +169,27 @@ namespace mrs_lib
       : m_sc{x0, P0}, m_default_model(model), m_history(history_t(hist_len))
     {
       assert(hist_len > 0);
+      addInput(u0, Q0, t0, model);
+    };
+
+  /*!
+    * \brief Variation of the constructor for cases without a system input.
+    *
+    * Initializes the Repredictor with the necessary initial and default values.
+    * Assumes the system input is zero at t0.
+    *
+    * \param x0             Initial state.
+    * \param P0             Covariance matrix of the initial state uncertainty.
+    * \param Q0             Default covariance matrix of the process noise.
+    * \param t0             Time stamp of the initial state.
+    * \param model          Default prediction and correction model.
+    * \param hist_len       Length of the history buffer for system inputs and measurements.
+    */
+    Repredictor(const x_t& x0, const P_t& P0, const Q_t& Q0, const ros::Time& t0, const ModelPtr& model, const unsigned hist_len)
+      : m_sc{x0, P0}, m_default_model(model), m_history(history_t(hist_len))
+    {
+      assert(hist_len > 0);
+      const u_t u0 {0};
       addInput(u0, Q0, t0, model);
     };
     //}
