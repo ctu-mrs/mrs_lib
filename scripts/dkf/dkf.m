@@ -6,9 +6,9 @@ figure;
 hold on;
 grid on;
 axis square;
-xlim([-3, 20]);
-ylim([-3, 20]);
-zlim([-3, 20]);
+xlim([-20, 20]);
+ylim([-20, 20]);
+zlim([-20, 20]);
 title("measurements");
 
 dt = 1;
@@ -16,7 +16,7 @@ n = 6;
 if n == 6
   A = [eye(3), dt*eye(3);
        zeros(3),  eye(3)];
-  ground_truth = [-3; -3; -3; 1; 1; 1];
+  ground_truth = [13; -3; -3; -1; 1; 1];
   constrained_states = [1; 1; 1; 0; 0; 0];
 else
   A = eye(3);
@@ -25,7 +25,8 @@ else
 end
 x = zeros(n, 1);
 P = 666*eye(n);
-Q = eye(n);
+% Q = 1.0*eye(n);
+Q = 0.1*eye(n);
 
 for it = 1:20
   ground_truth = A*ground_truth;
@@ -39,26 +40,44 @@ for it = 1:20
   op = nbases'*origin;
   
   H = nbases'*M;
-  z = op;
-  R = eye(m);
+
+  % dev = tan(deg2rad(0.5))*15; % error of 1 degree at max. range of 15m
+  dev = 1.0 
+  z = op + dev*randn(m,1);
+  R = dev*eye(m);
   
   [x, P] = kf_predict(A, x, P, Q);
   [x, P] = kf_correct(H, x, P, z, R);
   
-  op3d = nbases*op;
-  plot_meas(bases, origin);
-  plot_meas(nbases, [0; 0; 0]);
-  plot3(op3d(1), op3d(2), op3d(3), 'o');
-  plot3(ground_truth(1), ground_truth(2), ground_truth(3), '*');
+  op3d = nbases*z;
 
+  if (exist('hb') ~= 0)
+    hb.delete
+  end
+  if (exist('hn') ~= 0)
+    hn.delete
+  end
+  if (exist('ho') ~= 0)
+    ho.delete
+  end
   if (exist('he') ~= 0)
     he.delete
   end
+
+
+  hb = plot_meas_z(bases, z);
+  hn = plot_meas(nbases, [0; 0; 0]);
+
+
+  ho = plot3(op3d(1), op3d(2), op3d(3), 'o');
+
+  plot3(ground_truth(1), ground_truth(2), ground_truth(3), '*');
   he = error_ellipse(P(1:3,1:3),x(1:3));
 
   fprintf("it %d: %f\n", it, norm(x-ground_truth));
   x'
   ground_truth'
+  eig(P)'
 
   pause(1)
 end

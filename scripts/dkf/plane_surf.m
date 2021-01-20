@@ -22,10 +22,10 @@
 % Author: matous <matous@SKUMPA-Linux>
 % Created: 2020-11-20
 
-function [x, y, z] = plane_surf (normal, center, size)
+function [x, y, z] = plane_surf (normal, center, sz)
   normal = normal / norm(normal);
 
-  tangents = null(normal') * size;
+  tangents = null(normal') * sz;
 
   res(1,1,:) = center + tangents * [-1;-1]; 
   res(1,2,:) = center + tangents * [-1;1]; 

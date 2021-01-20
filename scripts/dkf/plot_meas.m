@@ -22,16 +22,16 @@
 % Author: matous <matous@SKUMPA-Linux>
 % Created: 2020-11-20
 
-function plot_meas (bases, origin)
+function h=plot_meas (bases, origin)
 
   switch (size(bases, 2))
     case 1
       pts = [origin - 666*bases, origin + 666*bases];
-      plot3(pts(1, :), pts(2, :), pts(3, :));
+      h = plot3(pts(1, :), pts(2, :), pts(3, :));
     case 2
       nrm = null(bases');
-      [x, y, z] = plane_surf(nrm, origin, 6);
-      surf(x, y, z);
+      [x, y, z] = plane_surf(nrm, origin, 20);
+      h = surf(x, y, z,'FaceAlpha',0.5);
   end
 
 end
