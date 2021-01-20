@@ -31,7 +31,12 @@ function h=plot_meas (bases, origin)
     case 2
       nrm = null(bases');
       [x, y, z] = plane_surf(nrm, origin, 20);
-      h = surf(x, y, z,'FaceAlpha',0.5);
+
+      if (exist('OCTAVE_VERSION', 'builtin') == 0)
+        h = surf(x, y, z,'FaceAlpha',0.5);
+      else
+        h = surf(x, y, z);
+      end
   end
 
 end

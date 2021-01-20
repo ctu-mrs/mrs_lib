@@ -36,28 +36,38 @@ default_properties = struct(...
   'color', 'g',... % Color of the ellipse
   'edgecolor', 'none'); % Color of the ellipse
 
-if length(varargin) >= 1 & isnumeric(varargin{1})
-  default_properties.C = varargin{1};
-  varargin(1) = [];
+if length(varargin) >= 1 
+  if isnumeric(varargin{1})
+    default_properties.C = varargin{1};
+    varargin(1) = [];
+  end
 end
 
-if length(varargin) >= 1 & isnumeric(varargin{1})
-  default_properties.mu = varargin{1};
-  varargin(1) = [];
+if length(varargin) >= 1 
+  if isnumeric(varargin{1})
+    default_properties.mu = varargin{1};
+    varargin(1) = [];
+  end
 end
 
-if length(varargin) >= 1 & isnumeric(varargin{1})
-  default_properties.conf = varargin{1};
-  varargin(1) = [];
+if length(varargin) >= 1 
+  if isnumeric(varargin{1})
+    default_properties.conf = varargin{1};
+    varargin(1) = [];
+  end
 end
 
-if length(varargin) >= 1 & isnumeric(varargin{1})
-  default_properties.scale = varargin{1};
-  varargin(1) = [];
+if length(varargin) >= 1
+  if isnumeric(varargin{1})
+    default_properties.scale = varargin{1};
+    varargin(1) = [];
+  end
 end
 
-if length(varargin) >= 1 & ~ischar(varargin{1})
-  error('Invalid parameter/value pair arguments.') 
+if length(varargin) >= 1 
+  if ~ischar(varargin{1})
+    error('Invalid parameter/value pair arguments.') 
+  end
 end
 
 prop = getopt(default_properties, varargin{:});
@@ -123,7 +133,12 @@ if r==3 & c==3
   X(:) = scale*(k*XYZ(:,1)+x0);
   Y(:) = scale*(k*XYZ(:,2)+y0);
   Z(:) = scale*(k*XYZ(:,3)+z0);
-  h4=surf(X,Y,Z,'EdgeColor',edgecolor,'FaceAlpha',0.5,'FaceColor',color);
+
+  if (exist('OCTAVE_VERSION', 'builtin') == 0)
+    h4=surf(X,Y,Z,'EdgeColor',edgecolor,'FaceAlpha',0.5,'FaceColor',color);
+  else
+    h4=surf(X,Y,Z);
+  end
   % colormap gray
   % alpha(0.5)
   % camlight

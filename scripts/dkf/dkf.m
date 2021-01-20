@@ -51,17 +51,19 @@ for it = 1:20
   
   op3d = nbases*z;
 
-  if (exist('hb') ~= 0)
-    hb.delete
-  end
-  if (exist('hn') ~= 0)
-    hn.delete
-  end
-  if (exist('ho') ~= 0)
-    ho.delete
-  end
-  if (exist('he') ~= 0)
-    he.delete
+  if (exist('OCTAVE_VERSION', 'builtin') == 0)
+    if (exist('hb') ~= 0)
+      hb.delete
+    end
+    if (exist('hn') ~= 0)
+      hn.delete
+    end
+    if (exist('ho') ~= 0)
+      ho.delete
+    end
+    if (exist('he') ~= 0)
+      he.delete
+    end
   end
 
 
