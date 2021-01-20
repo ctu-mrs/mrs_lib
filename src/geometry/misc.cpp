@@ -106,6 +106,13 @@ namespace mrs_lib
 
     //}
 
+    /* solidAngle() //{ */
+    double solidAngle(double a, double b, double c)
+    {
+      return invHaversin((haversin(c) - haversin(a - b)) / (std::sin(a) * std::sin(b)));
+    }
+    //}
+
     //}
 
     /* triangleArea() //{ */
@@ -116,6 +123,26 @@ namespace mrs_lib
       return std::sqrt(s * (s - a) * (s - b) * (s - c));
     }
 
+    //}
+
+    /* sphericalTriangleArea //{ */
+    double sphericalTriangleArea(Eigen::Vector3d a, Eigen::Vector3d b, Eigen::Vector3d c)
+    {
+      double ab = angleBetween(a, b);
+      double bc = angleBetween(b, c);
+      double ca = angleBetween(c, a);
+
+      if (ab < 1e-3 and bc < 1e-3 and ca < 1e-3)
+      {
+        return triangleArea(ab, bc, ca);
+      }
+
+      double A = solidAngle(ca, ab, bc);
+      double B = solidAngle(ab, bc, ca);
+      double C = solidAngle(bc, ca, ab);
+
+      return A + B + C - M_PI;
+    }
     //}
 
     /* vector distance //{ */
