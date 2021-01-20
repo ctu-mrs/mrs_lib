@@ -42,7 +42,7 @@ for it = 1:20
   H = nbases'*M;
 
   % dev = tan(deg2rad(0.5))*15; % error of 1 degree at max. range of 15m
-  dev = 1.0 
+  dev = 1.0;
   z = op + dev*randn(m,1);
   R = dev*eye(m);
   
@@ -75,15 +75,25 @@ for it = 1:20
   he = error_ellipse(P(1:3,1:3),x(1:3));
 
   fprintf("it %d: %f\n", it, norm(x-ground_truth));
-  x'
-  ground_truth'
-  eig(P)'
+  egn = eig(P)';
+  % dt = det(P)'
+  % inside = egn(1) - norm(e)^2;
+  e = x - ground_truth;
+  e2 = e.^2;
+  e_i = P\e2;
+  n_e_i = sqrt(norm(e_i))
+  outside = n_e_i > 1;
+  if (outside)
+    e_i
+    % norm(e)^2
+    % egn(1)
+  end
 
   pause(1)
 end
 
 x
-P
+egn
 ground_truth
 
 plot3(0, 0, 0, 'x', "MarkerSize", 15);

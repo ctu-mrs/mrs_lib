@@ -1,4 +1,4 @@
-% Copyright (C) 2020 matous
+% Copyright (C) 2020 matous-viktor
 % 
 % This program is free software; you can redistribute it and/or modify it
 % under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 % @seealso{}
 % @end deftypefn
 %
-% Author: matous <matous@SKUMPA-Linux>
+% Author: matous <matous@SKUMPA-Linux> and viktor
 % Created: 2020-11-20
 
 function h=plot_meas (bases, z)
