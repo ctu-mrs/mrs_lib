@@ -1,3 +1,4 @@
+addpath('./error_ellipse')
 clear;
 close all;
 
@@ -5,9 +6,9 @@ figure;
 hold on;
 grid on;
 axis square;
-xlim([-3, 3]);
-ylim([-3, 3]);
-zlim([-3, 3]);
+xlim([-3, 20]);
+ylim([-3, 20]);
+zlim([-3, 20]);
 title("measurements");
 
 dt = 1;
@@ -30,7 +31,8 @@ for it = 1:20
   ground_truth = A*ground_truth;
   gt_pos = ground_truth(1:3);
   
-  [bases, origin, m] = plane_meas(gt_pos);
+  % [bases, origin, m] = plane_meas(gt_pos);
+  [bases, origin, m] = line_meas(gt_pos);
   M = constraint_transform(constrained_states);
   
   nbases = null(bases');
@@ -47,7 +49,18 @@ for it = 1:20
   plot_meas(bases, origin);
   plot_meas(nbases, [0; 0; 0]);
   plot3(op3d(1), op3d(2), op3d(3), 'o');
+  plot3(ground_truth(1), ground_truth(2), ground_truth(3), '*');
+
+  if (exist('he') ~= 0)
+    he.delete
+  end
+  he = error_ellipse(P(1:3,1:3),x(1:3));
+
   fprintf("it %d: %f\n", it, norm(x-ground_truth));
+  x'
+  ground_truth'
+
+  pause(1)
 end
 
 x
