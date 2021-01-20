@@ -44,7 +44,7 @@ for it = 1:Nits
   % Update the ground truth state vector
   if it ~= 1
     ground_truth = A*ground_truth + normrnd(zeros(n, 1), ones(n, 1));
-  endif
+  end
   gt_pos = ground_truth(1:3);
   origin = SNR*rand(3, 1); % origin of the measurement (offset of the line, position of the camera etc.)
   
@@ -81,7 +81,7 @@ for it = 1:Nits
   xus(:, it) = xu;
   dds(it) = det(Pd);
   dus(it) = det(Pu);
-endfor
+end
 
 % calculate the RMSE errors
 eds = sqrt(sum((xds - gts).^2));

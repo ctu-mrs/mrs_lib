@@ -48,7 +48,7 @@ for it = 1:20
   plot_meas(nbases, [0; 0; 0]);
   plot3(op3d(1), op3d(2), op3d(3), 'o');
   fprintf("it %d: %f\n", it, norm(x-ground_truth));
-endfor
+end
 
 x
 P
