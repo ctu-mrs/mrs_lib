@@ -32,8 +32,8 @@ for it = 1:20
   ground_truth = A*ground_truth;
   gt_pos = ground_truth(1:3);
   
-  % [bases, origin, m] = plane_meas(gt_pos);
-  [bases, origin, m] = line_meas(gt_pos);
+  [bases, origin, m] = plane_meas(gt_pos);
+  % [bases, origin, m] = line_meas(gt_pos);
   M = constraint_transform(constrained_states);
   
   nbases = null(bases');
