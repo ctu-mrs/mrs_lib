@@ -7,13 +7,19 @@ namespace mrs_lib
 
 /* ScopeTimer constructor //{ */
 
-ScopeTimer::ScopeTimer(const std::string& label) {
+ScopeTimer::ScopeTimer(const std::string& label)
+{
+  checkpoints.push_back(time_point("timer start"));
 
-  time_point point;
-  point.ros_time    = ros::Time::now();
-  point.chrono_time = std::chrono::system_clock::now();
-  point.label       = "(timer start)";
-  checkpoints.push_back(point);
+  _timer_label_ = label;
+
+  ROS_DEBUG("[%s]Scope timer started, label: %s", ros::this_node::getName().c_str(), label.c_str());
+}
+
+ScopeTimer::ScopeTimer(const std::string& label, const time_point& tp0)
+{
+  checkpoints.push_back(tp0);
+  checkpoints.push_back(time_point("timer start"));
 
   _timer_label_ = label;
 
@@ -24,13 +30,9 @@ ScopeTimer::ScopeTimer(const std::string& label) {
 
 /* checkpoint() //{ */
 
-void ScopeTimer::checkpoint(const std::string& label) {
-
-  time_point point;
-  point.ros_time    = ros::Time::now();
-  point.chrono_time = std::chrono::system_clock::now();
-  point.label       = "(" + label + ")";
-  checkpoints.push_back(point);
+void ScopeTimer::checkpoint(const std::string& label)
+{
+  checkpoints.push_back(time_point(label));
 }
 
 //}
@@ -42,11 +44,7 @@ ScopeTimer::~ScopeTimer() {
   auto chrono_end_time = std::chrono::system_clock::now();
   auto ros_end_time    = ros::Time::now();
 
-  time_point point;
-  point.ros_time    = ros_end_time;
-  point.chrono_time = chrono_end_time;
-  point.label       = "(scope end)";
-  checkpoints.push_back(point);
+  checkpoints.push_back(time_point("scope end"));
 
   int gap1 = 8;
   int gap2 = 8;
@@ -58,17 +56,23 @@ ScopeTimer::~ScopeTimer() {
 
   char separator = ' ';
 
-  int width_label = 10;
-
-  for (unsigned long i = 1; i < checkpoints.size(); i++) {
-    int len = (checkpoints.at(i).label + checkpoints.at(i - 1).label).length();
-    if (len > width_label) {
-      width_label = len;
-    }
+  int max_label_width = 5;
+  for (const auto& el : checkpoints)
+  {
+    const int len = el.label.length();
+    if (len > max_label_width)
+      max_label_width = len;
   }
-  width_label += 4;
 
-  ss << std::endl << std::left << std::setw(width_label) << std::setfill(separator) << " {label}";
+  int width_label_column = 10;
+  for (unsigned long i = 1; i < checkpoints.size(); i++) {
+    const int len = (checkpoints.at(i).label + checkpoints.at(i - 1).label).length();
+    if (len > width_label_column)
+      width_label_column = len;
+  }
+  width_label_column += 7;
+
+  ss << std::endl << std::left << std::setw(width_label_column) << std::setfill(separator) << " {label}";
   ss << std::left << std::setw(gap1) << std::setfill(separator) << "";
   ss << std::left << std::setw(gap2) << std::setfill(separator) << "{ROS time}";
   ss << std::left << std::setw(gap3) << std::setfill(separator) << "";
@@ -84,7 +88,9 @@ ScopeTimer::~ScopeTimer() {
     int                           chrono_secs    = int(chrono_elapsed.count());
     double                        chrono_msecs   = std::fmod(chrono_elapsed.count() * 1000, 1000);
 
-    ss << std::left << std::setw(width_label) << std::setfill(separator) << (checkpoints.at(i - 1).label + " -> " + checkpoints.at(i).label).c_str();
+    ss << std::left << std::setw(max_label_width) << std::setfill(separator) << checkpoints.at(i - 1).label;
+    ss << " -> ";
+    ss << std::left << std::setw(max_label_width) << std::setfill(separator) << checkpoints.at(i).label;
 
     ss << std::right << std::setw(gap1) << std::setfill(separator) << ros_secs << std::setw(0) << "s";
     ss << std::right << std::setw(gap2) << std::setfill(separator) << ros_msecs << std::setw(0) << "ms";
@@ -100,7 +106,7 @@ ScopeTimer::~ScopeTimer() {
   int                           chrono_secs    = int(chrono_elapsed.count());
   double                        chrono_msecs   = std::fmod(chrono_elapsed.count() * 1000, 1000);
 
-  ss << std::left << std::setw(width_label) << std::setfill(separator) << "TOTAL TIME";
+  ss << std::left << std::setw(width_label_column) << std::setfill(separator) << "TOTAL TIME";
   ss << std::right << std::setw(gap1) << std::setfill(separator) << ros_secs << std::setw(0) << "s";
   ss << std::right << std::setw(gap2) << std::setfill(separator) << ros_msecs << std::setw(0) << "ms";
   ss << std::right << std::setw(gap3) << std::setfill(separator) << chrono_secs << std::setw(0) << "s";
