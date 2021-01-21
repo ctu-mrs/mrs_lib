@@ -138,6 +138,13 @@ namespace mrs_lib
       virtual bool usedMsg() const {assert(m_pimpl); return m_pimpl->usedMsg();};
 
     /*!
+      * \brief Blocks until new data becomes available or until the timeout runs out or until a spurious wake-up.
+      *
+      * \return true if new message is available after waking up, false otherwise.
+      */
+      virtual bool waitForNew(const ros::WallDuration& timeout) const {assert(m_pimpl); return m_pimpl->waitForNew(timeout);};
+
+    /*!
       * \brief Returns time of the last received message on the topic, handled by this SubscribeHandler.
       *
       * \return time when the last message was received.

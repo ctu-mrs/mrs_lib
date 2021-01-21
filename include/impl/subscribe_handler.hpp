@@ -5,6 +5,7 @@
 
 #include <mrs_lib/subscribe_handler.h>
 #include <mutex>
+#include <condition_variable>
 
 namespace mrs_lib
 {
@@ -96,6 +97,18 @@ namespace mrs_lib
       {
         return m_used_data;
       }
+      //}
+
+      /* waitForNew() method //{ */
+      virtual bool waitForNew(const ros::WallDuration& timeout) const override
+      {
+        // convert the ros type to chrono type
+        const std::chrono::duration<float> chrono_timeout(timeout.toSec());
+        // lock the mutex guarding the m_new_data flag
+        std::unique_lock lock(m_new_data_mtx);
+        // if new data is available, return immediately, otherwise attempt to wait for new data using the respective condition variable
+        return m_new_data || (m_new_data_cv.wait_for(lock, chrono_timeout) == std::cv_status::no_timeout && m_new_data);
+      };
       //}
 
       /* lastMsgTime() method //{ */
@@ -205,7 +218,11 @@ namespace mrs_lib
 
     protected:
       bool m_got_data;   // whether any data was received
+
+      mutable std::mutex m_new_data_mtx;
+      mutable std::condition_variable m_new_data_cv;
       bool m_new_data;   // whether new data was received since last call to get_data
+
       bool m_used_data;  // whether get_data was successfully called at least once
 
     protected:
@@ -258,7 +275,11 @@ namespace mrs_lib
       {
         m_timeout_check_timer.stop();
         m_latest_message = msg;
-        m_new_data = true;
+        {
+          std::lock_guard lck(m_new_data_mtx);
+          m_new_data = true;
+        }
+        m_new_data_cv.notify_one();
         m_got_data = true;
         m_last_msg_received = time;
         m_timeout_check_timer.start();
