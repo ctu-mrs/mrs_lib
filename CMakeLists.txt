@@ -51,7 +51,7 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs pcl_ros mrs_msgs
   DEPENDS Eigen
-  LIBRARIES MrsLibSafetyZone MrsLibProfiler MrsLibScopeTimer MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibOdomLKF MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibTimer
+  LIBRARIES MrsLibSafetyZone MrsLibProfiler MrsLibScopeTimer MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibOdomLKF MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibTimer MrsLibTransformBroadcaster
   )
 
 ###########
@@ -173,6 +173,12 @@ target_link_libraries(MrsLibUtils
 
 add_library(MrsLibParamLoader src/param_loader/param_loader.cpp)
 target_link_libraries(MrsLibParamLoader
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_library(MrsLibTransformBroadcaster src/transform_broadcaster/transform_broadcaster.cpp)
+target_link_libraries(MrsLibTransformBroadcaster
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )

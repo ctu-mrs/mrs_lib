@@ -135,8 +135,8 @@ namespace mrs_lib
       const Eigen::Vector3d center();
 
       /**
-       * @brief get normal vector of this triangle. The vector origin is placed at triangle center, length is normalized and direction follows the right-hand rule
-       * with respect to vertex order a-b-c
+       * @brief get normal vector of this triangle. The vector origin is placed at triangle center, length is normalized and direction follows the right-hand
+       * rule with respect to vertex order a-b-c
        *
        * @return vector3
        */
@@ -279,6 +279,16 @@ namespace mrs_lib
        * @return true if the normal is facing given point. Returns false for angle >= 90 degrees
        */
       bool isFacing(Eigen::Vector3d point);
+
+
+      /**
+       * @brief compute the solid angle of this rectangle relative to a given sphere center
+       *
+       * @param point center of a sphere to compute the solid angle for
+       *
+       * @return solid angle in steradians
+       */
+      double solidAngleRelativeTo(Eigen::Vector3d point);
     };
 
     //}
@@ -617,7 +627,7 @@ namespace mrs_lib
       const std::optional<Eigen::Vector3d> projectPoint(const Eigen::Vector3d& point);
     };
     //}
-  }
-}
+  }  // namespace geometry
+}  // namespace mrs_lib
 
-#endif // SHAPES_H
+#endif  // SHAPES_H

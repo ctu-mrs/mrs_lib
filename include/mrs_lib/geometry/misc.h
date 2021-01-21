@@ -145,6 +145,21 @@ namespace mrs_lib
 
     //}
 
+    /* solidAngle //{ */
+
+    /**
+     * @brief computes the solid angle for a spherical surface corresponding to a 'triangle' with edge lengths a, b, c
+     *
+     * @param a
+     * @param b
+     * @param c
+     *
+     * @return solid angle in steradians
+     */
+    double solidAngle(double a, double b, double c);
+
+    //}
+
     /* quaternionFromEuler() //{ */
 
     /**
@@ -223,9 +238,24 @@ namespace mrs_lib
      * @param b length of side2
      * @param c length of side3
      *
-     * @return
+     * @return area in units squared
      */
     double triangleArea(const double a, const double b, const double c);
+
+    //}
+
+    /* sphericalTriangleArea //{ */
+
+    /**
+     * @brief compute the area of a 'triangle' drawn on a spherical surface
+     *
+     * @param a length of side1
+     * @param b length of side2
+     * @param c length of side3
+     *
+     * @return area in units squared
+     */
+    double sphericalTriangleArea(Eigen::Vector3d a, Eigen::Vector3d b, Eigen::Vector3d c);
 
     //}
 

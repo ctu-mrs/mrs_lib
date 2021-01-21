@@ -1,5 +1,6 @@
 // clang: MatousFormat
 #include <mrs_lib/geometry/shapes.h>
+#include <mrs_lib/geometry/misc.h>
 
 namespace mrs_lib
 {
@@ -264,6 +265,26 @@ namespace mrs_lib
       return dot_product > 0;
     }
 
+    //}
+
+    /* solidAngleRelativeTo //{ */
+    double Rectangle::solidAngleRelativeTo(Eigen::Vector3d point)
+    {
+      Eigen::Vector3d a = point1 - point;
+      Eigen::Vector3d b = point2 - point;
+      Eigen::Vector3d c = point3 - point;
+      Eigen::Vector3d d = point4 - point;
+
+      a.normalize();
+      b.normalize();
+      c.normalize();
+      d.normalize();
+
+      double t1 = mrs_lib::geometry::sphericalTriangleArea(a, b, c);
+      double t2 = mrs_lib::geometry::sphericalTriangleArea(c, d, a);
+
+      return t1 + t2;
+    }
     //}
 
     //}
@@ -620,6 +641,6 @@ namespace mrs_lib
     //}
 
     //}
-    
-  }
-}
+
+  }  // namespace geometry
+}  // namespace mrs_lib
