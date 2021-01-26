@@ -39,6 +39,9 @@ function h=plot_meas_z (bases, z)
       else
         h = surf(x, y, z);
       end
+    case 3
+      pts = [origin(1:3,1) - 666*bases(1:3,1), origin(1:3,1) + 666*bases(1:3,1)];
+      h = plot3(pts(1, :), pts(2, :), pts(3, :));
   end
 
 end

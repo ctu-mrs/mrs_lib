@@ -25,26 +25,36 @@ else
 end
 x = zeros(n, 1);
 P = 666*eye(n);
-% Q = 1.0*eye(n);
-Q = 0.1*eye(n);
+Q = 1.0*eye(n);
+% Q = 0.1*eye(n);
 
 for it = 1:20
   ground_truth = A*ground_truth;
   gt_pos = ground_truth(1:3);
   
-  [bases, origin, m] = plane_meas(gt_pos);
+  % [bases, origin, m] = plane_meas(gt_pos);
   % [bases, origin, m] = line_meas(gt_pos);
-  M = constraint_transform(constrained_states);
+  [bases, origin, m, R_i] = plane_velocity_meas(ground_truth);
+  if size(bases,1) == 3
+    M = constraint_transform(constrained_states);
+  else
+    M = eye(6);
+  end
   
   nbases = null(bases');
-  op = nbases'*origin;
+  % op = nbases'*origin;
   
   H = nbases'*M;
 
   % dev = tan(deg2rad(0.5))*15; % error of 1 degree at max. range of 15m
-  dev = 1.0;
-  z = op + dev*randn(m,1);
-  R = dev*eye(m);
+  dev = 0.1;
+  % z = op + dev*randn(size(op,1),1)
+  % z = nbases'*origin + dev*randn(size(size(nbases,2),1),1)
+  z = nbases'*origin;
+  R = nbases'*R_i*nbases
+  % R = dev*eye(size(z,1));
+  % R_t = bases*R*bases'
+  % R_tn = nbases'*R_t*nbases
   
   [x, P] = kf_predict(A, x, P, Q);
   [x, P] = kf_correct(H, x, P, z, R);
@@ -68,10 +78,15 @@ for it = 1:20
 
 
   hb = plot_meas_z(bases, z);
-  hn = plot_meas(nbases, [0; 0; 0]);
+  if m<3
+    hn = plot_meas(nbases, [0; 0; 0]);
+    ho = plot3(op3d(1), op3d(2), op3d(3), 'o');
+  else
+    hn = plot_meas(bases(4:6,2:3), origin(4:6,1));
+    ho = plot3(origin(1), origin(2), origin(3), 'o');
+  end
 
 
-  ho = plot3(op3d(1), op3d(2), op3d(3), 'o');
 
   plot3(ground_truth(1), ground_truth(2), ground_truth(3), '*');
   he = error_ellipse(P(1:3,1:3),x(1:3));
