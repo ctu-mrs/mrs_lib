@@ -278,6 +278,33 @@ void BatchVisualizer::addCone(mrs_lib::geometry::Cone cone, double r, double g, 
 }
 //}
 
+/* addTrajectory //{ */
+void BatchVisualizer::addTrajectory(mrs_msgs::TrajectoryReference traj, double r, double g, double b, double a, bool filled) {
+  if (traj.points.size() < 2) {
+    ROS_WARN("[%s]: Trajectory too short to visualize!", ros::this_node::getName().c_str());
+    return;
+  }
+  if (filled) {
+    for (size_t i = 0; i < traj.points.size() - 1; i++) {
+      Eigen::Vector3d p1, p2;
+      p1.x()   = traj.points[i].position.x;
+      p1.y()   = traj.points[i].position.y;
+      p1.z()   = traj.points[i].position.z;
+      p2.x()   = traj.points[i + 1].position.x;
+      p2.y()   = traj.points[i + 1].position.y;
+      p2.z()   = traj.points[i + 1].position.z;
+      auto ray = mrs_lib::geometry::Ray::twopointCast(p1, p2);
+      addRay(ray, r, g, b, a);
+    }
+  } else {
+    for (size_t i = 0; i < traj.points.size(); i++) {
+      Eigen::Vector3d p(traj.points[i].position.x, traj.points[i].position.y, traj.points[i].position.z);
+      addPoint(p);
+    }
+  }
+}
+//}
+
 /* buildEllipse //{ */
 std::vector<Eigen::Vector3d> BatchVisualizer::buildEllipse(mrs_lib::geometry::Ellipse ellipse, int num_points) {
   std::vector<Eigen::Vector3d> points;
