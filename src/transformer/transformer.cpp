@@ -297,12 +297,14 @@ namespace mrs_lib
       if (!start_to_utm_origin_tf_opt.has_value())
         return std::nullopt;
 
-      const auto pose_opt = doTransform(start_to_utm_origin_tf_opt.value(), ret);
-
-      if (!pose_opt.has_value())
-        return std::nullopt;
-
-      ret = pose_opt.value();
+      {
+        const auto pose_opt = doTransform(start_to_utm_origin_tf_opt.value(), ret);
+        
+        if (!pose_opt.has_value())
+          return std::nullopt;
+        
+        ret = std::move(pose_opt.value());
+      }
 
       // now apply the nonlinear transformation from UTM to LAT-LON
       {
@@ -315,7 +317,7 @@ namespace mrs_lib
         ret.pose.position.x = lat;
         ret.pose.position.y = lon;
 
-        return ret;
+        return {std::move(ret)};
       }
     }
     // if nothing interesting is requested, just do the plain old linear transformation
@@ -368,12 +370,14 @@ namespace mrs_lib
       if (!start_to_utm_origin_tf_opt.has_value())
         return std::nullopt;
 
-      const auto pose_opt = doTransform(start_to_utm_origin_tf_opt.value(), ret);
-
-      if (!pose_opt.has_value())
-        return std::nullopt;
-
-      ret = pose_opt.value();
+      {
+        const auto pose_opt = doTransform(start_to_utm_origin_tf_opt.value(), ret);
+        
+        if (!pose_opt.has_value())
+          return std::nullopt;
+        
+        ret = std::move(pose_opt.value());
+      }
 
       // now apply the nonlinear transformation from UTM to LAT-LON
       {
@@ -384,7 +388,7 @@ namespace mrs_lib
         ret.x = lat;
         ret.y = lon;
 
-        return ret;
+        return {std::move(ret)};
       }
     }
     // if nothing interesting is requested, just do the plain old linear transformation
