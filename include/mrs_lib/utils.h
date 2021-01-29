@@ -11,6 +11,7 @@
 #include <iterator>
 #include <vector>
 #include <sstream>
+#include <atomic>
 
 namespace mrs_lib
 {
@@ -104,6 +105,18 @@ namespace mrs_lib
   }
 
   //}
+
+  // | - scope solution for automatically setting and unsetting an atomic flag  |
+  class AtomicScopeFlag
+  {
+
+  public:
+    AtomicScopeFlag(std::atomic<bool>& in);
+    ~AtomicScopeFlag();
+
+  private:
+    std::atomic<bool>& variable;
+  };
 
   // | - context solution for automatically unsetting a variable  |
   class ScopeUnset
