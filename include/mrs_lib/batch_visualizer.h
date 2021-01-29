@@ -10,6 +10,7 @@
 #include <ros/ros.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <mrs_lib/geometry/shapes.h>
+#include <mrs_msgs/TrajectoryReference.h>
 /* #include <dynamic_reconfigure/server.h> */
 /* #include <mrs_lib/batch_visualizerConfig.h> */
 
@@ -143,12 +144,24 @@ public:
                int sides = DEFAULT_ELLIPSE_POINTS);
 
   /**
+   * @brief add a trajectory to the buffer
+   *
+   * @param traj trajectory reference to be added
+   * @param r red color in range <0,1>
+   * @param g green color in range <0,1>
+   * @param b blue color in range <0,1>
+   * @param a alpha in range <0,1> (0 is fully transparent)
+   * @param filled bool to set fill. True = continuous line, False = only visualize points
+   */
+  void addTrajectory(mrs_msgs::TrajectoryReference traj, double r = 0.3, double g = 1.0, double b = 0.3, double a = 1.0, bool filled = true);
+
+  /**
    * @brief set the scale of all points
    *
    * @param scale
    */
   void setPointsScale(double scale);
-  
+
   /**
    * @brief set the parent frame_id
    *

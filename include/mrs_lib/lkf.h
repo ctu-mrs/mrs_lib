@@ -360,7 +360,7 @@ namespace mrs_lib
   public:
     LKF_MRS_odom(const std::vector<H_t>& Hs, const double default_dt = 1);
     virtual statecov_t predict(const statecov_t& sc, const u_t& u, const Q_t& Q, double dt) const override;
-    virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, int param) const;
+    virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R, int param = 0) const;
 
   public:
     x_t state_predict_optimized(const x_t& x_prev, const u_t& u, double dt) const;
