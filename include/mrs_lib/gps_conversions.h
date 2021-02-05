@@ -174,6 +174,12 @@ namespace mrs_lib
     int    ZoneNumber;
 
     ZoneNumber = int((LongTemp + 180) / 6) + 1;
+    // range clamping to shut up some compiler warnings
+    // (the UTM Zone number should in reality be in the range <1, 60>)
+    if (ZoneNumber > 99)
+      ZoneNumber = 99;
+    if (ZoneNumber < -9)
+      ZoneNumber = -9;
 
     if (Lat >= 56.0 && Lat < 64.0 && LongTemp >= 3.0 && LongTemp < 12.0)
       ZoneNumber = 32;

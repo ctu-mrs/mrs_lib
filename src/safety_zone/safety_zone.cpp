@@ -27,13 +27,13 @@ SafetyZone::SafetyZone(const Eigen::MatrixXd& outerBorderMatrix, const std::vect
   try {
     outerBorder = new Polygon(outerBorderMatrix);
   }
-  catch (Polygon::WrongNumberOfVertices) {
+  catch (const Polygon::WrongNumberOfVertices&) {
     throw BorderError();
   }
-  catch (Polygon::WrongNumberOfColumns) {
+  catch (const Polygon::WrongNumberOfColumns&) {
     throw BorderError();
   }
-  catch (Polygon::ExtraVertices) {
+  catch (const Polygon::ExtraVertices&) {
     throw BorderError();
   }
 
@@ -41,13 +41,13 @@ SafetyZone::SafetyZone(const Eigen::MatrixXd& outerBorderMatrix, const std::vect
     try {
       innerObstacles.emplace_back(matrix);
     }
-    catch (Polygon::WrongNumberOfVertices) {
+    catch (const Polygon::WrongNumberOfVertices&) {
       throw PolygonObstacleError();
     }
-    catch (Polygon::WrongNumberOfColumns) {
+    catch (const Polygon::WrongNumberOfColumns&) {
       throw PolygonObstacleError();
     }
-    catch (Polygon::ExtraVertices) {
+    catch (const Polygon::ExtraVertices&) {
       throw PolygonObstacleError();
     }
   }

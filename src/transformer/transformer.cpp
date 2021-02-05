@@ -435,7 +435,7 @@ namespace mrs_lib
     {
       ret.reference.heading = mrs_lib::AttitudeConverter(what.pose.orientation).getHeading();
     }
-    catch (mrs_lib::AttitudeConverter::GetHeadingException e)
+    catch (const mrs_lib::AttitudeConverter::GetHeadingException& e)
     {
       ROS_ERROR_THROTTLE(1.0, "[%s]: exception caught while transforming mrs_msgs::Reference's heading: %s", node_name_.c_str(), e.what());
       throw mrs_lib::Transformer::TransformException();
