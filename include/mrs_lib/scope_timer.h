@@ -5,11 +5,12 @@
 #ifndef SCOPE_TIMER_H
 #define SCOPE_TIMER_H
 
-#include <ros/ros.h>
+#include <rclcpp/logger.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp/clock.hpp>
 #include <chrono>
 #include <iostream>
 #include <iomanip>
-/* #include <ctime> */
 
 namespace mrs_lib
 {
@@ -21,34 +22,34 @@ class ScopeTimer {
 public:
   struct time_point
   {
-    using chrono_tp = std::chrono::time_point<std::chrono::system_clock>;
-
+    private:
+      using chrono_tp = std::chrono::time_point<std::chrono::system_clock>;
+      static rclcpp::Clock checkpoint_clock;
     public:
       time_point(const std::string& label) :
-        ros_time(ros::Time::now()),
+        ros_time(checkpoint_clock.now()),
         chrono_time(std::chrono::system_clock::now()),
         label("(" + label + ")")
       {}
 
-      time_point(const std::string& label, const ros::Time& ros_time) :
+      time_point(const std::string& label, const rclcpp::Time& ros_time) :
         ros_time(ros_time),
         label("(" + label + ")")
       {
-        // helper types to make the code slightly more readable
-        using float_seconds = std::chrono::duration<float>;
+        // helper type to make the code slightly more readable
         using chrono_duration = std::chrono::system_clock::duration;
         // prepare ros and chrono current times to minimize their difference
-        const auto ros_now = ros::Time::now();
+        const auto ros_now = checkpoint_clock.now();
         const auto chrono_now = std::chrono::system_clock::now();
         // calculate how old is ros_time
         const auto ros_dt = ros_now - ros_time;
         // cast ros_dt to chrono type
-        const auto chrono_dt = std::chrono::duration_cast<chrono_duration>(float_seconds(ros_dt.toSec()));
+        const auto chrono_dt = ros_dt.to_chrono<chrono_duration>();
         // calculate ros_time in chrono time and set it to chrono_time
         chrono_time = chrono_now - chrono_dt;
       }
 
-      ros::Time ros_time;
+      rclcpp::Time ros_time;
       chrono_tp chrono_time;
       std::string label;
   };
@@ -76,8 +77,9 @@ public:
   ~ScopeTimer();
 
 private:
-  std::string             _timer_label_;
-  std::vector<time_point> checkpoints;
+  rclcpp::Logger          m_logger;
+  const std::string       m_timer_label;
+  std::vector<time_point> m_checkpoints;
 };
 
 }  // namespace mrs_lib

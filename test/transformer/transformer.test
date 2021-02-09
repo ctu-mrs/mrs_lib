@@ -1,8 +1,0 @@
-<launch>
-
-  <node pkg="tf2_ros" type="static_transform_publisher" name="tf_publisher" args="1.0 2.0 3.0 1 1.57 2 uav1/local_origin uav1/fcu" />
-
-  <test pkg="mrs_lib" type="TransformerTest" test-name="transfomer_test" time-limit="10.0">
-  </test>
-
-</launch>

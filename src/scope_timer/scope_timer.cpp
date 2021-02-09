@@ -1,29 +1,31 @@
 #include <mrs_lib/scope_timer.h>
+#include <rclcpp/logger.hpp>
 
 namespace mrs_lib
 {
+
+// instantiate the static member
+rclcpp::Clock ScopeTimer::time_point::checkpoint_clock;
 
 // | ------------------------ ScopeTimer ------------------------ |
 
 /* ScopeTimer constructor //{ */
 
-ScopeTimer::ScopeTimer(const std::string& label)
+ScopeTimer::ScopeTimer(const std::string& label) :
+  m_logger(rclcpp::get_logger(label)),
+  m_timer_label(label)
 {
-  checkpoints.push_back(time_point("timer start"));
-
-  _timer_label_ = label;
-
-  ROS_DEBUG("[%s]Scope timer started, label: %s", ros::this_node::getName().c_str(), label.c_str());
+  m_checkpoints.push_back(time_point("timer start"));
+  RCLCPP_DEBUG(m_logger, "Scope timer started, label: %s");
 }
 
-ScopeTimer::ScopeTimer(const std::string& label, const time_point& tp0)
+ScopeTimer::ScopeTimer(const std::string& label, const time_point& tp0) :
+  m_logger(rclcpp::get_logger(label)),
+  m_timer_label(label)
 {
-  checkpoints.push_back(tp0);
-  checkpoints.push_back(time_point("timer start"));
-
-  _timer_label_ = label;
-
-  ROS_DEBUG("[%s]Scope timer started, label: %s", ros::this_node::getName().c_str(), label.c_str());
+  m_checkpoints.push_back(tp0);
+  m_checkpoints.push_back(time_point("timer start"));
+  RCLCPP_DEBUG(m_logger, "Scope timer started, label: %s");
 }
 
 //}
@@ -32,19 +34,18 @@ ScopeTimer::ScopeTimer(const std::string& label, const time_point& tp0)
 
 void ScopeTimer::checkpoint(const std::string& label)
 {
-  checkpoints.push_back(time_point(label));
+  m_checkpoints.push_back(time_point(label));
 }
 
 //}
 
 /* ScopeTimer destructor //{ */
 
-ScopeTimer::~ScopeTimer() {
-
-  auto chrono_end_time = std::chrono::system_clock::now();
-  auto ros_end_time    = ros::Time::now();
-
-  checkpoints.push_back(time_point("scope end"));
+ScopeTimer::~ScopeTimer()
+{
+  m_checkpoints.push_back(time_point("scope end"));
+  const auto chrono_end_time = m_checkpoints.back().chrono_time;
+  const auto ros_end_time = m_checkpoints.back().ros_time;
 
   int gap1 = 8;
   int gap2 = 8;
@@ -57,7 +58,7 @@ ScopeTimer::~ScopeTimer() {
   char separator = ' ';
 
   int max_label_width = 5;
-  for (const auto& el : checkpoints)
+  for (const auto& el : m_checkpoints)
   {
     const int len = el.label.length();
     if (len > max_label_width)
@@ -65,8 +66,8 @@ ScopeTimer::~ScopeTimer() {
   }
 
   int width_label_column = 10;
-  for (unsigned long i = 1; i < checkpoints.size(); i++) {
-    const int len = (checkpoints.at(i).label + checkpoints.at(i - 1).label).length();
+  for (unsigned long i = 1; i < m_checkpoints.size(); i++) {
+    const int len = (m_checkpoints.at(i).label + m_checkpoints.at(i - 1).label).length();
     if (len > width_label_column)
       width_label_column = len;
   }
@@ -78,19 +79,19 @@ ScopeTimer::~ScopeTimer() {
   ss << std::left << std::setw(gap3) << std::setfill(separator) << "";
   ss << std::left << std::setw(gap2) << std::setfill(separator) << "{chrono time}" << std::endl;
 
-  for (unsigned long i = 1; i < checkpoints.size(); i++) {
+  for (unsigned long i = 1; i < m_checkpoints.size(); i++) {
 
-    double ros_elapsed = (checkpoints.at(i).ros_time - checkpoints.at(i - 1).ros_time).toSec();
+    double ros_elapsed = (m_checkpoints.at(i).ros_time - m_checkpoints.at(i - 1).ros_time).seconds();
     int    ros_secs    = int(ros_elapsed);
     double ros_msecs   = std::fmod(ros_elapsed * 1000, 1000);
 
-    std::chrono::duration<double> chrono_elapsed = (checkpoints.at(i).chrono_time - checkpoints.at(i - 1).chrono_time);
+    std::chrono::duration<double> chrono_elapsed = (m_checkpoints.at(i).chrono_time - m_checkpoints.at(i - 1).chrono_time);
     int                           chrono_secs    = int(chrono_elapsed.count());
     double                        chrono_msecs   = std::fmod(chrono_elapsed.count() * 1000, 1000);
 
-    ss << std::left << std::setw(max_label_width) << std::setfill(separator) << checkpoints.at(i - 1).label;
+    ss << std::left << std::setw(max_label_width) << std::setfill(separator) << m_checkpoints.at(i - 1).label;
     ss << " -> ";
-    ss << std::left << std::setw(max_label_width) << std::setfill(separator) << checkpoints.at(i).label;
+    ss << std::left << std::setw(max_label_width) << std::setfill(separator) << m_checkpoints.at(i).label;
 
     ss << std::right << std::setw(gap1) << std::setfill(separator) << ros_secs << std::setw(0) << "s";
     ss << std::right << std::setw(gap2) << std::setfill(separator) << ros_msecs << std::setw(0) << "ms";
@@ -98,11 +99,11 @@ ScopeTimer::~ScopeTimer() {
     ss << std::right << std::setw(gap2) << std::setfill(separator) << chrono_msecs << std::setw(0) << "ms" << std::endl;
   }
 
-  double ros_elapsed = (ros_end_time - checkpoints.at(0).ros_time).toSec();
+  double ros_elapsed = (ros_end_time - m_checkpoints.at(0).ros_time).seconds();
   int    ros_secs    = int(ros_elapsed);
   double ros_msecs   = std::fmod(ros_elapsed * 1000, 1000);
 
-  std::chrono::duration<double> chrono_elapsed = (chrono_end_time - checkpoints.at(0).chrono_time);
+  std::chrono::duration<double> chrono_elapsed = (chrono_end_time - m_checkpoints.at(0).chrono_time);
   int                           chrono_secs    = int(chrono_elapsed.count());
   double                        chrono_msecs   = std::fmod(chrono_elapsed.count() * 1000, 1000);
 
@@ -112,7 +113,7 @@ ScopeTimer::~ScopeTimer() {
   ss << std::right << std::setw(gap3) << std::setfill(separator) << chrono_secs << std::setw(0) << "s";
   ss << std::right << std::setw(gap2) << std::setfill(separator) << chrono_msecs << std::setw(0) << "ms" << std::endl;
 
-  ROS_INFO("[%s]: Scope timer [%s] finished!%s", ros::this_node::getName().c_str(), _timer_label_.c_str(), ss.str().c_str());
+  RCLCPP_INFO(m_logger, "Scope timer [%s] finished!%s", m_timer_label.c_str(), ss.str().c_str());
 }
 
 //}
