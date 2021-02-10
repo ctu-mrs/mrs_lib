@@ -55,7 +55,6 @@ private:
 
 private:
   bool m_load_successful, m_print_values;
-  std::string m_node_name;
   rclcpp::Node& m_nh;
   rclcpp::Logger m_logger;
   std::unordered_set<std::string> loaded_params;
@@ -64,17 +63,11 @@ private:
   /* printError and print_warning functions //{*/
   void print_error(const std::string str)
   {
-    if (m_node_name.empty())
-      RCLCPP_ERROR(m_logger, "%s", str.c_str());
-    else
-      RCLCPP_ERROR(m_logger, "[%s]: %s", m_node_name.c_str(), str.c_str());
+    RCLCPP_ERROR(m_logger, "%s", str.c_str());
   }
   void print_warning(const std::string str)
   {
-    if (m_node_name.empty())
-      RCLCPP_WARN(m_logger, "%s", str.c_str());
-    else
-      RCLCPP_WARN(m_logger, "[%s]: %s", m_node_name.c_str(), str.c_str());
+    RCLCPP_WARN(m_logger, "%s", str.c_str());
   }
   //}
 
@@ -83,18 +76,13 @@ private:
   template <typename T>
   void print_value(const std::string& name, const T& value)
   {
-    if (m_node_name.empty())
-      std::cout << "\t" << name << ":\t" << value << std::endl;
-    else
-      RCLCPP_INFO_STREAM(m_logger, "[" << m_node_name << "]: parameter '" << name << "':\t" << value);
+    RCLCPP_INFO_STREAM(m_logger, "parameter '" << name << "':\t" << value);
   };
 
   template <typename T>
   void print_value(const std::string& name, const std::vector<T>& value)
   {
     std::stringstream strstr;
-    if (m_node_name.empty())
-      strstr << "\t";
     strstr << name << ":\t";
     size_t it = 0;
     for (const auto& elem : value)
@@ -104,18 +92,13 @@ private:
         strstr << ", ";
       it++;
     }
-    if (m_node_name.empty())
-      std::cout << strstr.str() << std::endl;
-    else
-      RCLCPP_INFO_STREAM(m_logger, "[" << m_node_name << "]: parameter '" << strstr.str());
+    RCLCPP_INFO_STREAM(m_logger, "parameter '" << strstr.str());
   };
 
   template <typename T1, typename T2>
   void print_value(const std::string& name, const std::map<T1, T2>& value)
   {
     std::stringstream strstr;
-    if (m_node_name.empty())
-      strstr << "\t";
     strstr << name << ":" << std::endl;
     size_t it = 0;
     for (const auto& pair : value)
@@ -125,10 +108,7 @@ private:
         strstr << std::endl;
       it++;
     }
-    if (m_node_name.empty())
-      std::cout << strstr.str() << std::endl;
-    else
-      RCLCPP_INFO_STREAM(m_logger, "[" << m_node_name << "]: parameter '" << strstr.str());
+    RCLCPP_INFO_STREAM(m_logger, "parameter '" << strstr.str());
   };
 
   //}
@@ -211,39 +191,14 @@ public:
     * \brief Main constructor.
     *
     * \param nh            The parameters will be loaded from rosparam using this node handle.
-    * \param printValues  If true, the loaded values will be printed to stdout using std::cout or ROS_INFO if node_name is not empty.
-    * \param node_name     Optional node name used when printing the loaded values or loading errors.
+    * \param printValues   If true, the loaded values will be printed to stdout.
     */
-  ParamLoader(rclcpp::Node& nh, bool printValues = true, std::string node_name = std::string())
+  ParamLoader(rclcpp::Node& nh, bool printValues = true)
       : m_load_successful(true),
         m_print_values(printValues),
-        m_node_name(node_name),
         m_nh(nh),
         m_logger(m_nh.get_logger())
-        {
-            /* std::cout << "Initialized1 ParamLoader for node " << node_name << std::endl; */
-        };
-  /* Constructor overloads //{ */
-  /*!
-    * \brief Convenience overload to enable writing ParamLoader pl(nh, node_name);
-    *
-    * \param nh            The parameters will be loaded from rosparam using this node handle.
-    * \param node_name     Optional node name used when printing the loaded values or loading errors.
-    */
-  ParamLoader(rclcpp::Node& nh, std::string node_name)
-      : ParamLoader(nh, true, node_name){
-            /* std::cout << "Initialized2 ParamLoader for node " << node_name << std::endl; */
-        };
-  /*!
-    * \brief Convenience overload to enable writing ParamLoader pl(nh, "node_name");
-    *
-    * \param nh            The parameters will be loaded from rosparam using this node handle.
-    * \param node_name     Optional node name used when printing the loaded values or loading errors.
-    */
-  ParamLoader(rclcpp::Node& nh, const char* node_name)
-      : ParamLoader(nh, std::string(node_name)){
-            /* std::cout << "Initialized3 ParamLoader for node " << node_name << std::endl; */
-        };
+        {};
   //}
 
 
