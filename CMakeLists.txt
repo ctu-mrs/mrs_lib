@@ -6,10 +6,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_definitions("-Wall")
 add_definitions("-Wextra")
+add_definitions("-g")
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rclcpp_components REQUIRED)
 
 # please, NEVER commit those alternative flags with specific overrides of optimization
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3") # because normal release is just -O2
@@ -31,6 +31,22 @@ include_directories(
   include
   ${rclcpp_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
+)
+
+## --------------------------------------------------------------
+## |                       param loader                         |
+## --------------------------------------------------------------
+
+add_library(MrsLibParamLoader SHARED
+  src/param_loader/param_loader.cpp
+)
+ament_export_libraries(MrsLibParamLoader)
+
+add_executable(param_loader_example
+  src/param_loader/example.cpp
+)
+ament_target_dependencies(param_loader_example
+  rclcpp
 )
 
 ## --------------------------------------------------------------
@@ -69,11 +85,21 @@ install(
   DESTINATION include
 )
 
+install(
+  # the executables to be exported have to be listed here
+  TARGETS
+  param_loader_example
+  DESTINATION lib/${PROJECT_NAME})
+
 # so that includes are visible for whomever includes mrs_lib
 ament_export_include_directories(include)
 install(
   # the libraries to be exported for other packages have to be listed here
-  TARGETS  MrsLibScopeTimer MrsLibGeometry MrsLibUtils
+  TARGETS
+  MrsLibParamLoader
+  MrsLibScopeTimer
+  MrsLibGeometry
+  MrsLibUtils
   LIBRARY  DESTINATION lib
   ARCHIVE  DESTINATION lib
   RUNTIME  DESTINATION bin
