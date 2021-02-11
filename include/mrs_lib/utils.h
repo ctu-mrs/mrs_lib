@@ -18,7 +18,7 @@ namespace mrs_lib
   /* containerToString() function //{ */
 
   /**
-   * \brief Convenience class for converting container ranges to strings (e.g. for printing).
+   * \brief Convenience function for converting container ranges to strings (e.g. for printing).
    *
    * \param begin        first element of the container that will be converted to \p std::string.
    * \param end          one-after-the-last element of the container that will be converted to \p std::string.
@@ -42,7 +42,7 @@ namespace mrs_lib
   }
 
   /**
-   * \brief Convenience class for converting container ranges to strings (e.g. for printing).
+   * \brief Convenience function for converting container ranges to strings (e.g. for printing).
    *
    * \param begin        first element of the container that will be converted to \p std::string.
    * \param end          one-after-the-last element of the container that will be converted to \p std::string.
@@ -57,7 +57,7 @@ namespace mrs_lib
   }
 
   /**
-   * \brief Convenience class for converting containers to strings (e.g. for printing).
+   * \brief Convenience function for converting containers to strings (e.g. for printing).
    *
    * \param cont         the container that will be converted to \p std::string.
    * \param delimiter    will be used to separate the elements in the output.
@@ -71,7 +71,7 @@ namespace mrs_lib
   }
 
   /**
-   * \brief Convenience class for converting containers to strings (e.g. for printing).
+   * \brief Convenience function for converting containers to strings (e.g. for printing).
    *
    * \param cont         the container that will be converted to \p std::string.
    * \param delimiter    will be used to separate the elements in the output.
@@ -106,29 +106,30 @@ namespace mrs_lib
 
   //}
 
-  // | - scope solution for automatically setting and unsetting an atomic flag  |
+  /**
+   * \brief Convenience class for automatically setting and unsetting an atomic boolean based on the object's scope.
+   * Useful e.g. for indicating whether a thread is running or not.
+   *
+   */
   class AtomicScopeFlag
   {
 
   public:
+  /**
+   * \brief The constructor. Sets the flag \p in to \p true.
+   *
+   * \param in  The flag to be set on construction of this object and reset (set to \p false) on its destruction.
+   *
+   */
     AtomicScopeFlag(std::atomic<bool>& in);
+  /**
+   * \brief The destructor. Resets the variable given in the constructor to \p false.
+   *
+   */
     ~AtomicScopeFlag();
 
   private:
     std::atomic<bool>& variable;
-  };
-
-  // | - context solution for automatically unsetting a variable  |
-  class ScopeUnset
-  {
-
-  public:
-    ScopeUnset();
-    ScopeUnset(bool& in);
-    ~ScopeUnset();
-
-  private:
-    bool& variable;
   };
 
   // branchless, templated, more efficient version of the signum function
