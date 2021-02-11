@@ -14,14 +14,4 @@ AtomicScopeFlag::~AtomicScopeFlag()
   variable = false;
 }
 
-ScopeUnset::ScopeUnset(bool &in) : variable(in) {
-
-  variable = true;
-}
-
-ScopeUnset::~ScopeUnset() {
-
-  variable = false;
-}
-
 }  // namespace mrs_lib
