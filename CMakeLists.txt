@@ -106,5 +106,9 @@ install(
   INCLUDES DESTINATION include
 )
 
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
+)
+
 # build the package using the above settings
 ament_package()

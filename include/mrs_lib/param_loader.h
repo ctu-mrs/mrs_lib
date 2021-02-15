@@ -109,6 +109,11 @@ namespace mrs_lib
       OPTIONAL = true,
       COMPULSORY = false
     };
+    enum dynamic_t
+    {
+      DYNAMIC = true,
+      STATIC = false
+    };
     enum swap_t
     {
       SWAP = true,
@@ -117,7 +122,7 @@ namespace mrs_lib
 
   private:
     bool m_load_successful, m_print_values;
-    rclcpp::Node& m_nh;
+    std::shared_ptr<rclcpp::Node> m_nh;
     rclcpp::Logger m_logger;
     rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr m_param_callback_handle;
     std::unordered_set<std::string> m_loaded_params;
@@ -138,9 +143,12 @@ namespace mrs_lib
     /* print_param function and overloads //{ */
 
     template <typename T>
-    void print_param(const std::string& name, const T& val)
+    void print_param(const std::string& name, const T& val, const bool is_dynamic = false)
     {
-      RCLCPP_INFO_STREAM(m_logger, "parameter '" << name << "':\t" << val);
+      if (is_dynamic)
+        RCLCPP_INFO_STREAM(m_logger, "parameter '" << name << "':\t" << val << "\t\033[1;36m(dynamically reconfigurable)\033[0m");
+      else
+        RCLCPP_INFO_STREAM(m_logger, "parameter '" << name << "':\t" << val);
     };
 
     //}
@@ -175,6 +183,7 @@ namespace mrs_lib
                       + ". Expected type: " + prw.get_type_name() + ". The value attempted to be set is " + param.value_to_string() + "). Ignoring.");
           success = false;
         }
+        RCLCPP_INFO_STREAM(m_logger, "\033[1;36mparameter '" << name << "' updated to :\t" << param.value_to_string() << "\033[0m");
       }
 
       if (success)
@@ -197,15 +206,7 @@ namespace mrs_lib
     /* check_duplicit_loading checks whether the parameter was already loaded - returns true if yes //{ */
     bool check_duplicit_loading(const std::string& name)
     {
-      if (m_loaded_params.count(name))
-      {
-        print_error(std::string("Tried to load parameter ") + name + std::string(" twice"));
-        m_load_successful = false;
-        return true;
-      } else
-      {
-        return false;
-      }
+      return(m_loaded_params.count(name) > 0);
     }
     //}
 
@@ -222,19 +223,23 @@ namespace mrs_lib
     // Returns a tuple, containing either the loaded or the default value and a bool,
     // indicating if the value was loaded (true) or the default value was used (false).
     template <typename T>
-    std::tuple<T, rclcpp::ParameterType, bool> load(const std::string& name, const T& default_value, optional_t optional = OPTIONAL, unique_t unique = UNIQUE)
+    std::tuple<T, rclcpp::ParameterType, bool> load(const std::string& name, const T& default_value, optional_t is_optional = OPTIONAL, unique_t is_unique = UNIQUE, dynamic_t is_dynamic = STATIC)
     {
       const rclcpp::ParameterType type = rclcpp::ParameterValue(default_value).get_type();
-      if (unique && check_duplicit_loading(name))
+      if (is_unique && check_duplicit_loading(name))
+      {
+        print_error(std::string("Tried to load parameter ") + name + std::string(" twice"));
+        m_load_successful = false;
         return {default_value, type, false};
+      }
 
       bool default_used = false;
       bool load_successful = true;
       // declare the parameter
-      m_nh.declare_parameter(name);
+      m_nh->declare_parameter(name);
       // try to load the parameter
       rclcpp::Parameter param;
-      const bool param_exists = m_nh.get_parameter(name, param);
+      const bool param_exists = m_nh->get_parameter(name, param);
 
       T loaded_val;
       bool loaded_convertible_type = false;
@@ -253,10 +258,10 @@ namespace mrs_lib
         // if it was not loaded, set the default value
         loaded_val = default_value;
         default_used = true;
-        if (!optional)
+        if (!is_optional)
         {
           // if the parameter was compulsory, alert the user and set the flag
-          print_error(std::string("Could not load non-optional parameter ") + resolved(name));
+          print_error(std::string("Could not load non-optional parameter '") + resolved(name) + "'");
           load_successful = false;
         }
       }
@@ -265,7 +270,7 @@ namespace mrs_lib
       {
         // everything is fine and just print the name and value if required
         if (m_print_values)
-          print_param(name, loaded_val);
+          print_param(name, loaded_val, is_dynamic);
         // mark the param name as successfully loaded
         m_loaded_params.insert(name);
       } else
@@ -286,11 +291,21 @@ namespace mrs_lib
      * \param nh            The parameters will be loaded from rosparam using this node handle.
      * \param printValues   If true, the loaded values will be printed to stdout.
      */
-    ParamLoader(rclcpp::Node& nh, bool printValues = true) : m_load_successful(true), m_print_values(printValues), m_nh(nh), m_logger(m_nh.get_logger())
+    ParamLoader(std::shared_ptr<rclcpp::Node> nh, bool printValues = true) : m_load_successful(true), m_print_values(printValues), m_nh(nh), m_logger(m_nh->get_logger())
     {
-      m_param_callback_handle = nh.add_on_set_parameters_callback(std::bind(&ParamLoader::params_callback, this, std::placeholders::_1));
     };
 
+    //}
+
+    /* enable_callbacks() method //{ */
+    /*!
+     * \brief Starts the dynamic reconfigure callbacks.
+     *
+     */
+    void enable_callbacks()
+    {
+      m_param_callback_handle = m_nh->add_on_set_parameters_callback(std::bind(&ParamLoader::params_callback, this, std::placeholders::_1));
+    };
     //}
 
     /* loaded_successfully() method //{ */
@@ -316,19 +331,34 @@ namespace mrs_lib
      * \param name          Name of the parameter in the rosparam server.
      * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
      * \param default_value This value will be used if the parameter name is not found in the rosparam server.
-     * \param dynamic       Whether the variable referenced by \p out_value should be automatically modified during dynamic reconfigure callbacks.
      * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
      */
     template <typename T>
-    bool load_param(const std::string& name, T& out_value, const T& default_value, bool dynamic = false)
+    bool load_param(const std::string& name, T& out_value, const T& default_value)
+    {
+      const auto [ret_val, _, from_rosparam] = load<T>(name, default_value, OPTIONAL, UNIQUE);
+      out_value = ret_val;
+      return from_rosparam;
+    };
+    /*!
+     * \brief Loads a dynamically reconfigurable parameter from the rosparam server with a default value.
+     *
+     * If the parameter with the specified name is not found on the rosparam server (e.g. because it is not specified in the launchfile or yaml config file),
+     * the default value is used.
+     * Using this method, the parameter can only be loaded once using the same ParamLoader instance without error.
+     * When a dynamic reconfigure callback is received, value of the referenced variable will be changed.
+     *
+     * \param name          Name of the parameter in the rosparam server.
+     * \param out_value     Reference to the variable to which the parameter value will be stored and which will be modified by dynamic reconfiguration requests.
+     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
+     * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
+     */
+    template <typename T>
+    bool load_param_dynamic(const std::string& name, T& out_value, const T& default_value)
     {
       const auto [ret_val, ret_type, from_rosparam] = load<T>(name, default_value, OPTIONAL, UNIQUE);
       out_value = ret_val;
-      if (dynamic)
-      {
-        ParamRefWrapper wrp(out_value, ret_type);
-        m_dynamic_params.emplace(std::make_pair(name, std::move(wrp)));
-      }
+      m_dynamic_params.emplace(std::make_pair(name, ParamRefWrapper{out_value, ret_type}));
       return from_rosparam;
     };
     /*!
@@ -367,6 +397,79 @@ namespace mrs_lib
     };
     //}
 
+    /* load_param function for optional parameters //{ */
+    /*!
+     * \brief Loads a parameter from the rosparam server with a default value.
+     *
+     * If the parameter with the specified name is not found on the rosparam server (e.g. because it is not specified in the launchfile or yaml config file),
+     * the default value is used.
+     * Using this method, the parameter can only be loaded once using the same ParamLoader instance without error.
+     *
+     * \param name          Name of the parameter in the rosparam server.
+     * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
+     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
+     * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
+     */
+    bool load_param(const std::string& name, std::string& out_value, const char* default_value)
+    {
+      const auto [ret_val, _, from_rosparam] = load<std::string>(name, default_value, OPTIONAL, UNIQUE);
+      out_value = ret_val;
+      return from_rosparam;
+    };
+    /*!
+     * \brief Loads a dynamically reconfigurable parameter from the rosparam server with a default value.
+     *
+     * If the parameter with the specified name is not found on the rosparam server (e.g. because it is not specified in the launchfile or yaml config file),
+     * the default value is used.
+     * Using this method, the parameter can only be loaded once using the same ParamLoader instance without error.
+     * When a dynamic reconfigure callback is received, value of the referenced variable will be changed.
+     *
+     * \param name          Name of the parameter in the rosparam server.
+     * \param out_value     Reference to the variable to which the parameter value will be stored and which will be modified by dynamic reconfiguration requests.
+     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
+     * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
+     */
+    bool load_param_dynamic(const std::string& name, std::string& out_value, const char* default_value)
+    {
+      const auto [ret_val, ret_type, from_rosparam] = load<std::string>(name, default_value, OPTIONAL, UNIQUE, DYNAMIC);
+      out_value = ret_val;
+      m_dynamic_params.emplace(std::make_pair(name, ParamRefWrapper{out_value, ret_type}));
+      return from_rosparam;
+    };
+    /*!
+     * \brief Loads a parameter from the rosparam server with a default value.
+     *
+     * If the parameter with the specified name is not found on the rosparam server (e.g. because it is not specified in the launchfile or yaml config file),
+     * the default value is used.
+     * Using this method, the parameter can only be loaded once using the same ParamLoader instance without error.
+     *
+     * \param name          Name of the parameter in the rosparam server.
+     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
+     * \return              The loaded parameter value.
+     */
+    std::string load_param2(const std::string& name, const char*& default_value)
+    {
+      const auto loaded = load<std::string>(name, default_value, OPTIONAL, UNIQUE);
+      return std::get<0>(loaded);
+    };
+    /*!
+     * \brief Loads a parameter from the rosparam server with a default value.
+     *
+     * If the parameter with the specified name is not found on the rosparam server (e.g. because it is not specified in the launchfile or yaml config file),
+     * the default value is used.
+     * Using this method, the parameter can be loaded multiple times using the same ParamLoader instance without error.
+     *
+     * \param name          Name of the parameter in the rosparam server.
+     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
+     * \return              The loaded parameter value.
+     */
+    std::string load_param_reusable(const std::string& name, const char*& default_value)
+    {
+      const auto loaded = load<std::string>(name, default_value, OPTIONAL, REUSABLE);
+      return std::get<0>(loaded);
+    };
+    //}
+
     /* load_param function for compulsory parameters //{ */
     /*!
      * \brief Loads a compulsory parameter from the rosparam server.
@@ -377,19 +480,32 @@ namespace mrs_lib
      *
      * \param name          Name of the parameter in the rosparam server.
      * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
-     * \param dynamic       Whether the variable referenced by \p out_value should be automatically modified during dynamic reconfigure callbacks.
      * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
      */
     template <typename T>
-    bool load_param(const std::string& name, T& out_value, [[maybe_unused]] bool dynamic = false)
+    bool load_param(const std::string& name, T& out_value)
     {
       const auto [ret, ret_type, from_rosparam] = load<T>(name, T(), COMPULSORY, UNIQUE);
       out_value = ret;
-      /* if (dynamic) */
-      /* { */
-      /*   ParamRefWrapper wrp(out_value, ret_type); */
-      /*   m_dynamic_params.emplace(std::make_pair(name, std::move(wrp))); */
-      /* } */
+      return from_rosparam;
+    };
+    /*!
+     * \brief Loads a dynamically reconfigurable compulsory parameter from the rosparam server.
+     *
+     * If the parameter with the specified name is not found on the rosparam server (e.g. because it is not specified in the launchfile or yaml config file),
+     * the loading process is unsuccessful (loaded_successfully() will return false).
+     * Using this method, the parameter can only be loaded once using the same ParamLoader instance without error.
+     *
+     * \param name          Name of the parameter in the rosparam server.
+     * \param out_value     Reference to the variable to which the parameter value will be stored and which will be modified by dynamic reconfiguration requests.
+     * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
+     */
+    template <typename T>
+    bool load_param_dynamic(const std::string& name, T& out_value)
+    {
+      const auto [ret_val, ret_type, from_rosparam] = load<T>(name, T(), COMPULSORY, UNIQUE, DYNAMIC);
+      out_value = ret_val;
+      m_dynamic_params.emplace(std::make_pair(name, ParamRefWrapper{out_value, ret_type}));
       return from_rosparam;
     };
     /*!
