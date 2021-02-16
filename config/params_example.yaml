@@ -1,0 +1,6 @@
+param_loader_example:
+  ros__parameters:
+    example_int: 98765
+    example_float: 9.8765
+    uav_type: "example"
+    use_sim_time: false

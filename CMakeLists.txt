@@ -43,6 +43,7 @@ add_library(MrsLibParamLoader SHARED
 ament_export_libraries(MrsLibParamLoader)
 
 add_executable(param_loader_example
+  src/param_loader/param_loader.cpp
   src/param_loader/example.cpp
 )
 ament_target_dependencies(param_loader_example
@@ -107,6 +108,10 @@ install(
 )
 
 install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
+)
+
+install(DIRECTORY config
   DESTINATION share/${PROJECT_NAME}
 )
 
