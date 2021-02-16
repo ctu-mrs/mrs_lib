@@ -6,7 +6,7 @@ from launch_ros.descriptions import ComposableNode
 import os
 import sys
 
-# WTF...
+# WTF... the yaml format is different than for ComposableNode for some reason
 # https://github.com/ros2/launch_ros/issues/156
 
 def generate_launch_description():
@@ -30,8 +30,9 @@ def generate_launch_description():
         name='param_loader_example',
         parameters=[
             pkg_share_path + '/config/params_example.yaml',
-            {"uav_type": UAV_TYPE,
-             "param_namespace.floating_number": 0.9}
+            {"uav_name": UAV_NAME,
+             "uav_type": UAV_TYPE,
+             "PID.kP": 0.9}
         ],
         output='screen',
         prefix=dbg_sub,

@@ -1,6 +1,8 @@
-param_loader_example:
+# WTF... this is different than for ComposableNode for some reason
+# https://github.com/ros2/launch_ros/issues/156
+
+/uav1/param_loader_example:
   ros__parameters:
-    example_int: 98765
-    example_float: 9.8765
-    uav_type: "example"
-    use_sim_time: false
+    uav_name: "default UAV name"
+    PID:
+      kI: 5.3

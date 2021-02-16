@@ -124,22 +124,22 @@ namespace mrs_lib
   {
 
   private:
-    enum unique_t
+    enum unique_t : bool
     {
       UNIQUE = true,
       REUSABLE = false
     };
-    enum optional_t
+    enum optional_t : bool
     {
       OPTIONAL = true,
       COMPULSORY = false
     };
-    enum dynamic_t
+    enum dynamic_t : bool
     {
       DYNAMIC = true,
       STATIC = false
     };
-    enum swap_t
+    enum swap_t : bool
     {
       SWAP = true,
       NO_SWAP = false
@@ -148,8 +148,9 @@ namespace mrs_lib
 
   private:
     bool m_load_successful, m_print_values;
-    std::shared_ptr<rclcpp::Node> m_nh;
+    rclcpp::Node& m_nh;
     rclcpp::Logger m_logger;
+    std::string m_nodename;
     rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr m_param_callback_handle;
     std::unordered_set<std::string> m_loaded_params;
     std::unordered_set<std::string> m_declared_params;
@@ -182,7 +183,7 @@ namespace mrs_lib
 
     std::string resolved(const std::string& param_name)
     {
-      return param_name;
+      return m_nodename + ": " + param_name;
     }
     //}
 
@@ -243,7 +244,7 @@ namespace mrs_lib
     // Returns a tuple, containing either the loaded or the default value and a bool,
     // indicating if the value was loaded (true) or the default value was used (false).
     template <typename T>
-    std::tuple<T, rclcpp::ParameterType, bool> load(const std::string& name, const T& default_value, const ParameterDescriptor& description = ParameterDescriptor(),
+    std::tuple<T, rclcpp::ParameterType, bool> load(const std::string& name, const T& default_value, ParameterDescriptor description = ParameterDescriptor(),
                                                     optional_t is_optional = OPTIONAL, unique_t is_unique = UNIQUE, dynamic_t is_dynamic = STATIC)
     {
       const rclcpp::ParameterType type = rclcpp::ParameterValue(default_value).get_type();
@@ -254,24 +255,25 @@ namespace mrs_lib
         m_load_successful = false;
         return {default_value, type, false};
       }
-      const bool already_declared = m_nh->has_parameter(name);
+      const bool already_declared = m_nh.has_parameter(name);
 
       bool default_used = false;
       bool load_successful = true;
       // declare the parameter
       if (!already_declared)
       {
+        description.read_only = !is_dynamic;
         if (is_optional)
         {
           rclcpp::ParameterValue defval(default_value);
-          m_nh->declare_parameter(name, defval, description);
+          m_nh.declare_parameter(name, defval, description);
         }
         else
-          m_nh->declare_parameter(name, {}, description);
+          m_nh.declare_parameter(name, {}, description);
       }
       // try to load the parameter
       rclcpp::Parameter param;
-      const bool param_exists = m_nh->get_parameter(name, param);
+      const bool param_exists = m_nh.get_parameter(name, param);
 
       T loaded_val;
       bool loaded_convertible_type = false;
@@ -323,7 +325,7 @@ namespace mrs_lib
      * \param nh            The parameters will be loaded from rosparam using this node handle.
      * \param printValues   If true, the loaded values will be printed to stdout.
      */
-    ParamLoader(std::shared_ptr<rclcpp::Node> nh, bool printValues = true) : m_load_successful(true), m_print_values(printValues), m_nh(nh), m_logger(m_nh->get_logger())
+    ParamLoader(rclcpp::Node& nh, bool printValues = true) : m_load_successful(true), m_print_values(printValues), m_nh(nh), m_logger(m_nh.get_logger()), m_nodename(m_nh.get_fully_qualified_name())
     {
     };
 
@@ -336,7 +338,7 @@ namespace mrs_lib
      */
     void enable_callbacks()
     {
-      m_param_callback_handle = m_nh->add_on_set_parameters_callback(std::bind(&ParamLoader::params_callback, this, std::placeholders::_1));
+      m_param_callback_handle = m_nh.add_on_set_parameters_callback(std::bind(&ParamLoader::params_callback, this, std::placeholders::_1));
     };
     //}
 
@@ -388,7 +390,7 @@ namespace mrs_lib
     template <typename T>
     bool load_param_dynamic(const std::string& name, T& out_value, const T& default_value, const ParameterDescriptor& description = ParameterDescriptor())
     {
-      const auto [ret_val, ret_type, from_rosparam] = load<T>(name, default_value, description, OPTIONAL, UNIQUE);
+      const auto [ret_val, ret_type, from_rosparam] = load<T>(name, default_value, description, OPTIONAL, UNIQUE, DYNAMIC);
       out_value = ret_val;
       m_dynamic_params.emplace(std::make_pair(name, ParamRefWrapper{out_value, ret_type}));
       return from_rosparam;
