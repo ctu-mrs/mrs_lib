@@ -29,10 +29,10 @@ gitman update
 cd ~/uav_core/.gitman/$PACKAGE_NAME
 git checkout "$SHA"
 
-mkdir -p ~/catkin_ws/src
-cd ~/catkin_ws/src
+mkdir -p ~/mrs_workspace/src
+cd ~/mrs_workspace/src
 ln -s ~/uav_core
 source /opt/ros/$ROS_DISTRO/setup.bash
-cd ~/catkin_ws
+cd ~/mrs_workspace
 
 echo "install ended"

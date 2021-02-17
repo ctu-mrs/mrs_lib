@@ -44,3 +44,6 @@ jobs:
 
       - name: Build
         run: ./.ci/build.sh
+
+      - name: Test
+        run: ./.ci/test.sh
