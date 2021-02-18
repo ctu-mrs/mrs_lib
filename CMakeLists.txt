@@ -58,6 +58,14 @@ add_library(MrsLibScopeTimer SHARED
 )
 ament_export_libraries(MrsLibScopeTimer)
 
+add_executable(scope_timer_example
+  src/scope_timer/example.cpp
+  src/scope_timer/scope_timer.cpp
+)
+ament_target_dependencies(scope_timer_example
+  rclcpp
+)
+
 ## --------------------------------------------------------------
 ## |                         geometry                           |
 ## --------------------------------------------------------------
@@ -89,6 +97,7 @@ install(
   # the executables to be exported have to be listed here
   TARGETS
   param_loader_example
+  scope_timer_example
   DESTINATION lib/${PROJECT_NAME})
 
 # so that includes are visible for whomever includes mrs_lib

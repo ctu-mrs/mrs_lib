@@ -57,6 +57,11 @@ public:
 
 public:
   /**
+   * @brief the basic constructor with a user-defined label of the timer and a node handle (will be used to get the logger)
+   */
+  ScopeTimer(const rclcpp::Node& nh, const std::string& label);
+
+  /**
    * @brief the basic constructor with a user-defined label of the timer
    */
   ScopeTimer(const std::string& label);

@@ -11,8 +11,16 @@ rclcpp::Clock ScopeTimer::time_point::checkpoint_clock;
 
 /* ScopeTimer constructor //{ */
 
+ScopeTimer::ScopeTimer(const rclcpp::Node& nh, const std::string& label) :
+  m_logger(nh.get_logger()),
+  m_timer_label(label)
+{
+  m_checkpoints.push_back(time_point("timer start"));
+  RCLCPP_DEBUG(m_logger, "Scope timer started, label: %s");
+}
+
 ScopeTimer::ScopeTimer(const std::string& label) :
-  m_logger(rclcpp::get_logger(label)),
+  m_logger(rclcpp::get_logger(label+" timer")),
   m_timer_label(label)
 {
   m_checkpoints.push_back(time_point("timer start"));
@@ -20,7 +28,7 @@ ScopeTimer::ScopeTimer(const std::string& label) :
 }
 
 ScopeTimer::ScopeTimer(const std::string& label, const time_point& tp0) :
-  m_logger(rclcpp::get_logger(label)),
+  m_logger(rclcpp::get_logger(label+" timer")),
   m_timer_label(label)
 {
   m_checkpoints.push_back(tp0);
