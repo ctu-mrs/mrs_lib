@@ -3,6 +3,7 @@ doc
 
 # ignore temp files
 *~
+.gdb_history
 
 # ignore vim temp files
 *.swp

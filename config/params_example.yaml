@@ -1,0 +1,8 @@
+# WTF... this is different than for ComposableNode for some reason
+# https://github.com/ros2/launch_ros/issues/156
+
+/uav1/param_loader_example:
+  ros__parameters:
+    uav_name: "default UAV name"
+    PID:
+      kI: 5.3

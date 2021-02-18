@@ -79,6 +79,31 @@ namespace mrs_lib
 
   //}
 
+  /* describe_param() helper functions //{ */
+  
+  rcl_interfaces::msg::ParameterDescriptor describe_param(
+      const std::string& description,
+      const std::string& additional_constraints = ""
+      );
+  
+  rcl_interfaces::msg::ParameterDescriptor describe_param(
+      const int range_from,
+      const int range_to = std::numeric_limits<int>::max(),
+      const int range_step = 0,
+      const std::string& description = "",
+      const std::string& additional_constraints = ""
+      );
+  
+  rcl_interfaces::msg::ParameterDescriptor describe_param(
+      const double range_from,
+      const double range_to = std::numeric_limits<double>::infinity(),
+      const double range_step = 0.0,
+      const std::string& description = "",
+      const std::string& additional_constraints = ""
+      );
+  
+  //}
+
   /*** ParamLoader CLASS //{ **/
 
   /**
@@ -99,33 +124,36 @@ namespace mrs_lib
   {
 
   private:
-    enum unique_t
+    enum unique_t : bool
     {
       UNIQUE = true,
       REUSABLE = false
     };
-    enum optional_t
+    enum optional_t : bool
     {
       OPTIONAL = true,
       COMPULSORY = false
     };
-    enum dynamic_t
+    enum dynamic_t : bool
     {
       DYNAMIC = true,
       STATIC = false
     };
-    enum swap_t
+    enum swap_t : bool
     {
       SWAP = true,
       NO_SWAP = false
     };
+    using ParameterDescriptor = rcl_interfaces::msg::ParameterDescriptor;
 
   private:
     bool m_load_successful, m_print_values;
-    std::shared_ptr<rclcpp::Node> m_nh;
+    rclcpp::Node& m_nh;
     rclcpp::Logger m_logger;
+    std::string m_nodename;
     rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr m_param_callback_handle;
     std::unordered_set<std::string> m_loaded_params;
+    std::unordered_set<std::string> m_declared_params;
     std::unordered_map<std::string, ParamRefWrapper> m_dynamic_params;
 
     /* printing helper functions //{ */
@@ -155,7 +183,7 @@ namespace mrs_lib
 
     std::string resolved(const std::string& param_name)
     {
-      return param_name;
+      return m_nodename + ": " + param_name;
     }
     //}
 
@@ -203,13 +231,6 @@ namespace mrs_lib
 
     //}
 
-    /* check_duplicit_loading checks whether the parameter was already loaded - returns true if yes //{ */
-    bool check_duplicit_loading(const std::string& name)
-    {
-      return(m_loaded_params.count(name) > 0);
-    }
-    //}
-
     /* load helper function for generic types //{ */
     // This function tries to load a parameter with name 'name' and a default value.
     // You can use the flag 'optional' to not throw a ROS_ERROR when the parameter
@@ -223,23 +244,36 @@ namespace mrs_lib
     // Returns a tuple, containing either the loaded or the default value and a bool,
     // indicating if the value was loaded (true) or the default value was used (false).
     template <typename T>
-    std::tuple<T, rclcpp::ParameterType, bool> load(const std::string& name, const T& default_value, optional_t is_optional = OPTIONAL, unique_t is_unique = UNIQUE, dynamic_t is_dynamic = STATIC)
+    std::tuple<T, rclcpp::ParameterType, bool> load(const std::string& name, const T& default_value, ParameterDescriptor description = ParameterDescriptor(),
+                                                    optional_t is_optional = OPTIONAL, unique_t is_unique = UNIQUE, dynamic_t is_dynamic = STATIC)
     {
       const rclcpp::ParameterType type = rclcpp::ParameterValue(default_value).get_type();
-      if (is_unique && check_duplicit_loading(name))
+      const bool already_loaded = m_loaded_params.count(name) > 0;
+      if (is_unique && already_loaded)
       {
         print_error(std::string("Tried to load parameter ") + name + std::string(" twice"));
         m_load_successful = false;
         return {default_value, type, false};
       }
+      const bool already_declared = m_nh.has_parameter(name);
 
       bool default_used = false;
       bool load_successful = true;
       // declare the parameter
-      m_nh->declare_parameter(name);
+      if (!already_declared)
+      {
+        description.read_only = !is_dynamic;
+        if (is_optional)
+        {
+          rclcpp::ParameterValue defval(default_value);
+          m_nh.declare_parameter(name, defval, description);
+        }
+        else
+          m_nh.declare_parameter(name, {}, description);
+      }
       // try to load the parameter
       rclcpp::Parameter param;
-      const bool param_exists = m_nh->get_parameter(name, param);
+      const bool param_exists = m_nh.get_parameter(name, param);
 
       T loaded_val;
       bool loaded_convertible_type = false;
@@ -291,7 +325,7 @@ namespace mrs_lib
      * \param nh            The parameters will be loaded from rosparam using this node handle.
      * \param printValues   If true, the loaded values will be printed to stdout.
      */
-    ParamLoader(std::shared_ptr<rclcpp::Node> nh, bool printValues = true) : m_load_successful(true), m_print_values(printValues), m_nh(nh), m_logger(m_nh->get_logger())
+    ParamLoader(rclcpp::Node& nh, bool printValues = true) : m_load_successful(true), m_print_values(printValues), m_nh(nh), m_logger(m_nh.get_logger()), m_nodename(m_nh.get_fully_qualified_name())
     {
     };
 
@@ -304,7 +338,7 @@ namespace mrs_lib
      */
     void enable_callbacks()
     {
-      m_param_callback_handle = m_nh->add_on_set_parameters_callback(std::bind(&ParamLoader::params_callback, this, std::placeholders::_1));
+      m_param_callback_handle = m_nh.add_on_set_parameters_callback(std::bind(&ParamLoader::params_callback, this, std::placeholders::_1));
     };
     //}
 
@@ -334,9 +368,9 @@ namespace mrs_lib
      * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
      */
     template <typename T>
-    bool load_param(const std::string& name, T& out_value, const T& default_value)
+    bool load_param(const std::string& name, T& out_value, const T& default_value, const ParameterDescriptor& description = ParameterDescriptor())
     {
-      const auto [ret_val, _, from_rosparam] = load<T>(name, default_value, OPTIONAL, UNIQUE);
+      const auto [ret_val, _, from_rosparam] = load<T>(name, default_value, description, OPTIONAL, UNIQUE);
       out_value = ret_val;
       return from_rosparam;
     };
@@ -354,9 +388,9 @@ namespace mrs_lib
      * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
      */
     template <typename T>
-    bool load_param_dynamic(const std::string& name, T& out_value, const T& default_value)
+    bool load_param_dynamic(const std::string& name, T& out_value, const T& default_value, const ParameterDescriptor& description = ParameterDescriptor())
     {
-      const auto [ret_val, ret_type, from_rosparam] = load<T>(name, default_value, OPTIONAL, UNIQUE);
+      const auto [ret_val, ret_type, from_rosparam] = load<T>(name, default_value, description, OPTIONAL, UNIQUE, DYNAMIC);
       out_value = ret_val;
       m_dynamic_params.emplace(std::make_pair(name, ParamRefWrapper{out_value, ret_type}));
       return from_rosparam;
@@ -373,9 +407,9 @@ namespace mrs_lib
      * \return              The loaded parameter value.
      */
     template <typename T>
-    T load_param2(const std::string& name, const T& default_value)
+    T load_param2(const std::string& name, const T& default_value, const ParameterDescriptor& description = ParameterDescriptor())
     {
-      const auto loaded = load<T>(name, default_value, OPTIONAL, UNIQUE);
+      const auto loaded = load<T>(name, default_value, description, OPTIONAL, UNIQUE);
       return std::get<0>(loaded);
     };
     /*!
@@ -390,9 +424,9 @@ namespace mrs_lib
      * \return              The loaded parameter value.
      */
     template <typename T>
-    T load_param_reusable(const std::string& name, const T& default_value)
+    T load_param_reusable(const std::string& name, const T& default_value, const ParameterDescriptor& description = ParameterDescriptor())
     {
-      const auto loaded = load<T>(name, default_value, OPTIONAL, REUSABLE);
+      const auto loaded = load<T>(name, default_value, description, OPTIONAL, REUSABLE);
       return std::get<0>(loaded);
     };
     //}
@@ -410,9 +444,9 @@ namespace mrs_lib
      * \param default_value This value will be used if the parameter name is not found in the rosparam server.
      * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
      */
-    bool load_param(const std::string& name, std::string& out_value, const char* default_value)
+    bool load_param(const std::string& name, std::string& out_value, const char* default_value, const ParameterDescriptor& description = ParameterDescriptor())
     {
-      const auto [ret_val, _, from_rosparam] = load<std::string>(name, default_value, OPTIONAL, UNIQUE);
+      const auto [ret_val, _, from_rosparam] = load<std::string>(name, default_value, description, OPTIONAL, UNIQUE);
       out_value = ret_val;
       return from_rosparam;
     };
@@ -429,9 +463,9 @@ namespace mrs_lib
      * \param default_value This value will be used if the parameter name is not found in the rosparam server.
      * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
      */
-    bool load_param_dynamic(const std::string& name, std::string& out_value, const char* default_value)
+    bool load_param_dynamic(const std::string& name, std::string& out_value, const char* default_value, const ParameterDescriptor& description = ParameterDescriptor())
     {
-      const auto [ret_val, ret_type, from_rosparam] = load<std::string>(name, default_value, OPTIONAL, UNIQUE, DYNAMIC);
+      const auto [ret_val, ret_type, from_rosparam] = load<std::string>(name, default_value, description, OPTIONAL, UNIQUE, DYNAMIC);
       out_value = ret_val;
       m_dynamic_params.emplace(std::make_pair(name, ParamRefWrapper{out_value, ret_type}));
       return from_rosparam;
@@ -447,9 +481,9 @@ namespace mrs_lib
      * \param default_value This value will be used if the parameter name is not found in the rosparam server.
      * \return              The loaded parameter value.
      */
-    std::string load_param2(const std::string& name, const char*& default_value)
+    std::string load_param2(const std::string& name, const char*& default_value, const ParameterDescriptor& description = ParameterDescriptor())
     {
-      const auto loaded = load<std::string>(name, default_value, OPTIONAL, UNIQUE);
+      const auto loaded = load<std::string>(name, default_value, description, OPTIONAL, UNIQUE);
       return std::get<0>(loaded);
     };
     /*!
@@ -463,9 +497,9 @@ namespace mrs_lib
      * \param default_value This value will be used if the parameter name is not found in the rosparam server.
      * \return              The loaded parameter value.
      */
-    std::string load_param_reusable(const std::string& name, const char*& default_value)
+    std::string load_param_reusable(const std::string& name, const char*& default_value, const ParameterDescriptor& description = ParameterDescriptor())
     {
-      const auto loaded = load<std::string>(name, default_value, OPTIONAL, REUSABLE);
+      const auto loaded = load<std::string>(name, default_value, description, OPTIONAL, REUSABLE);
       return std::get<0>(loaded);
     };
     //}
@@ -483,29 +517,10 @@ namespace mrs_lib
      * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
      */
     template <typename T>
-    bool load_param(const std::string& name, T& out_value)
+    bool load_param(const std::string& name, T& out_value, const ParameterDescriptor& description = ParameterDescriptor())
     {
-      const auto [ret, ret_type, from_rosparam] = load<T>(name, T(), COMPULSORY, UNIQUE);
+      const auto [ret, ret_type, from_rosparam] = load<T>(name, T(), description, COMPULSORY, UNIQUE);
       out_value = ret;
-      return from_rosparam;
-    };
-    /*!
-     * \brief Loads a dynamically reconfigurable compulsory parameter from the rosparam server.
-     *
-     * If the parameter with the specified name is not found on the rosparam server (e.g. because it is not specified in the launchfile or yaml config file),
-     * the loading process is unsuccessful (loaded_successfully() will return false).
-     * Using this method, the parameter can only be loaded once using the same ParamLoader instance without error.
-     *
-     * \param name          Name of the parameter in the rosparam server.
-     * \param out_value     Reference to the variable to which the parameter value will be stored and which will be modified by dynamic reconfiguration requests.
-     * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
-     */
-    template <typename T>
-    bool load_param_dynamic(const std::string& name, T& out_value)
-    {
-      const auto [ret_val, ret_type, from_rosparam] = load<T>(name, T(), COMPULSORY, UNIQUE, DYNAMIC);
-      out_value = ret_val;
-      m_dynamic_params.emplace(std::make_pair(name, ParamRefWrapper{out_value, ret_type}));
       return from_rosparam;
     };
     /*!
@@ -519,9 +534,9 @@ namespace mrs_lib
      * \return              The loaded parameter value.
      */
     template <typename T>
-    T load_param2(const std::string& name)
+    T load_param2(const std::string& name, const ParameterDescriptor& description = ParameterDescriptor())
     {
-      const auto loaded = load<T>(name, T(), COMPULSORY, UNIQUE);
+      const auto loaded = load<T>(name, T(), description, COMPULSORY, UNIQUE);
       return std::get<0>(loaded);
     };
 
@@ -536,9 +551,9 @@ namespace mrs_lib
      * \return              The loaded parameter value.
      */
     template <typename T>
-    T load_param_reusable(const std::string& name)
+    T load_param_reusable(const std::string& name, const ParameterDescriptor& description = ParameterDescriptor())
     {
-      const auto loaded = load<T>(name, T(), COMPULSORY, REUSABLE);
+      const auto loaded = load<T>(name, T(), description, COMPULSORY, REUSABLE);
       return std::get<0>(loaded);
     };
     //}
