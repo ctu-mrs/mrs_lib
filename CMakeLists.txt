@@ -95,17 +95,16 @@ target_link_libraries(lkf_example
 #   ${PCL_INCLUDE_DIRS}
 #   )
 
-add_executable(vector_converter_example src/vector_converter/example.cpp)
-target_link_libraries(vector_converter_example
-  # MrsLibVectorConverter
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  ${PCL_LIBRARIES}
-  )
-target_include_directories(vector_converter_example PRIVATE
-  ${PCL_INCLUDE_DIRS}
-  )
-
+# add_executable(vector_converter_example src/vector_converter/example.cpp)
+# target_link_libraries(vector_converter_example
+#   # MrsLibVectorConverter
+#   ${catkin_LIBRARIES}
+#   ${Eigen_LIBRARIES}
+#   ${PCL_LIBRARIES}
+#   )
+# target_include_directories(vector_converter_example PRIVATE
+#   ${PCL_INCLUDE_DIRS}
+#   )
 
 add_executable(ukf_example src/ukf/example.cpp)
 target_link_libraries(ukf_example
@@ -403,22 +402,22 @@ if(CATKIN_ENABLE_TESTING)
     ${catkin_EXPORTED_TARGETS}
   )
 
-  add_rostest_gtest(
-    VectorConverterTest
-    test/vector_converter/vector_converter.test
-    test/vector_converter/test.cpp
-  )
-  target_link_libraries(
-    VectorConverterTest
-    ${catkin_LIBRARIES}
-  )
-  target_include_directories(VectorConverterTest PRIVATE
-    ${PCL_INCLUDE_DIRS}
-  )
-  add_dependencies(
-    VectorConverterTest
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS}
-  )
+  # add_rostest_gtest(
+  #   VectorConverterTest
+  #   test/vector_converter/vector_converter.test
+  #   test/vector_converter/test.cpp
+  # )
+  # target_link_libraries(
+  #   VectorConverterTest
+  #   ${catkin_LIBRARIES}
+  # )
+  # target_include_directories(VectorConverterTest PRIVATE
+  #   ${PCL_INCLUDE_DIRS}
+  # )
+  # add_dependencies(
+  #   VectorConverterTest
+  #   ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  #   ${catkin_EXPORTED_TARGETS}
+  # )
 
 endif()
