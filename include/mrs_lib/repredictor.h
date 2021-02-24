@@ -94,23 +94,79 @@ namespace mrs_lib
     }
     //}
 
-    /* addInput() method //{ */
+    /* addInputChangeWithNoise() method //{ */
   /*!
     * \brief Adds one system input to the history buffer, removing the oldest element in the buffer if it is full.
     *
     * \param u      The system input vector to be added.
-    * \param Q      The process noise covariance matrix, corresponding to the input vector.
+    * \param Q      The process noise covariance matrix.
     * \param stamp  Time stamp of the input vector and covariance matrix.
     * \param model  Optional pointer to a specific Model to be used with this input (eg. mapping it to different states). If it equals to nullptr, the default model specified in the constructor will be used.
     *
     * \note The system input vector will not be added if it is older than the oldest element in the history buffer.
     *
     */
-    void addInput(const u_t& u, const Q_t& Q, const ros::Time& stamp, const ModelPtr& model = nullptr)
+    void addInputChangeWithNoise(const u_t& u, const Q_t& Q, const ros::Time& stamp, const ModelPtr& model = nullptr)
     {
       const info_t info (stamp, u, Q, model);
       // find the next point in the history buffer
       const auto next_it = std::lower_bound(std::begin(m_history), std::end(m_history), info, &Repredictor<Model>::earlier);
+      // add the point to the history buffer
+      const auto added = addInfo(info, next_it);
+      // update all measurements following the newly added system input up to the next system input
+      if (added != std::end(m_history))
+        for (auto it = added+1; it != std::end(m_history) && it->is_measurement; it++)
+          it->updateUsing(info);
+    }
+    //}
+
+    /* addInputChange() method //{ */
+  /*!
+    * \brief Adds one system input to the history buffer, removing the oldest element in the buffer if it is full.
+    *
+    * \param u      The system input vector to be added.
+    * \param stamp  Time stamp of the input vector and covariance matrix.
+    * \param model  Optional pointer to a specific Model to be used with this input (eg. mapping it to different states). If it equals to nullptr, the default model specified in the constructor will be used.
+    *
+    * \note The system input vector will not be added if it is older than the oldest element in the history buffer.
+    *
+    */
+    void addInputChange(const u_t& u, const ros::Time& stamp, const ModelPtr& model = nullptr)
+    {
+      // find the next point in the history buffer
+      const auto next_it = std::lower_bound(std::begin(m_history), std::end(m_history), stamp, &Repredictor<Model>::earlier);
+      // get the previous history point (or the first one to avoid out of bounds)
+      const auto prev_it = next_it == std::begin(m_history) ? next_it : next_it - 1;
+      // initialize a new history info point
+      const info_t info (stamp, u, prev_it->Q, model);
+      // add the point to the history buffer
+      const auto added = addInfo(info, next_it);
+      // update all measurements following the newly added system input up to the next system input
+      if (added != std::end(m_history))
+        for (auto it = added+1; it != std::end(m_history) && it->is_measurement; it++)
+          it->updateUsing(info);
+    }
+    //}
+
+    /* addProcessNoiseChange() method //{ */
+  /*!
+    * \brief Adds one system input to the history buffer, removing the oldest element in the buffer if it is full.
+    *
+    * \param Q      The process noise covariance matrix.
+    * \param stamp  Time stamp of the input vector and covariance matrix.
+    * \param model  Optional pointer to a specific Model to be used with this covariance matrix (eg. mapping it to different states). If it equals to nullptr, the default model specified in the constructor will be used.
+    *
+    * \note The new element will not be added if it is older than the oldest element in the history buffer.
+    *
+    */
+    void addProcessNoiseChange(const Q_t& Q, const ros::Time& stamp, const ModelPtr& model = nullptr)
+    {
+      // find the next point in the history buffer
+      const auto next_it = std::lower_bound(std::begin(m_history), std::end(m_history), stamp, &Repredictor<Model>::earlier);
+      // get the previous history point (or the first one to avoid out of bounds)
+      const auto prev_it = next_it == std::begin(m_history) ? next_it : next_it - 1;
+      // initialize a new history info point
+      const info_t info (stamp, prev_it->u, Q, model);
       // add the point to the history buffer
       const auto added = addInfo(info, next_it);
       // update all measurements following the newly added system input up to the next system input
@@ -136,15 +192,11 @@ namespace mrs_lib
     {
       assert(!m_history.empty());
       // helper variable for searching of the next point in the history buffer
-      const info_t dummy (stamp);
-      const auto next_it = std::lower_bound(std::begin(m_history), std::end(m_history), dummy, &Repredictor<Model>::earlier);
-
-      // copy input information from previous history point
-      info_t prev_info = m_history.front();
-      if (next_it != std::begin(m_history))
-        prev_info = *(next_it-1);
-      const info_t info (stamp, z, R, model, prev_info);
-
+      const auto next_it = std::lower_bound(std::begin(m_history), std::end(m_history), stamp, &Repredictor<Model>::earlier);
+      // get the previous history point (or the first one to avoid out of bounds)
+      const auto prev_it = next_it == std::begin(m_history) ? next_it : next_it - 1;
+      // initialize a new history info point
+      const info_t info (stamp, z, R, model, *prev_it);
       // add the point to the history buffer
       addInfo(info, next_it);
     }
@@ -169,7 +221,7 @@ namespace mrs_lib
       : m_sc{x0, P0}, m_default_model(model), m_history(history_t(hist_len))
     {
       assert(hist_len > 0);
-      addInput(u0, Q0, t0, model);
+      addInputChangeWithNoise(u0, Q0, t0, model);
     };
 
   /*!
@@ -190,7 +242,7 @@ namespace mrs_lib
     {
       assert(hist_len > 0);
       const u_t u0 {0};
-      addInput(u0, Q0, t0, model);
+      addInputChangeWithNoise(u0, Q0, t0, model);
     };
     //}
 

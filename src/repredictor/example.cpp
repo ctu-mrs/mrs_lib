@@ -119,7 +119,7 @@ void process_msg(const mrs_msgs::Float64Stamped::ConstPtr msg, type_e type)
   switch (type)
   {
     case input: // interpret msg as system input
-      rep.addInput(u_t(msg->value), Q, msg->header.stamp);
+      rep.addInputChangeWithNoise(u_t(msg->value), Q, msg->header.stamp);
       break;
     case meas_fast: // interpret msg as fast measurement (use the corresponding R)
       rep.addMeasurement(z_t(msg->value), R_fast, msg->header.stamp);
