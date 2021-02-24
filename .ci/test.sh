@@ -11,9 +11,9 @@ distro=`lsb_release -r | awk '{ print $2 }'`
 
 echo "Starting test"
 
-cd ~/catkin_ws
+cd ~/mrs_workspace
 source /opt/ros/$ROS_DISTRO/setup.bash
-source ~/catkin_ws/devel/setup.bash
+source ~/mrs_workspace/devel/setup.bash
 
 PACKAGE="mrs_lib"
 VERBOSE=0
