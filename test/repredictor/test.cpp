@@ -210,7 +210,7 @@ TEST(TESTSuite, lkf_comparison)
     {
       const u_t u = inputs.at(u_it);
       const ros::Time stamp = stamps.at(u_it);
-      rep.addInput(u, Q, stamp);
+      rep.addInputChangeWithNoise(u, Q, stamp);
       u_it++;
     }
   }
