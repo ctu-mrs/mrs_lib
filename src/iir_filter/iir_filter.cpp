@@ -38,6 +38,7 @@ double IirFilter::iterate(const double& input) {
   for (size_t i = order_ - 1; i > 0; i--) {
     buffer_[i] = buffer_[i - 1];
   }
+
   return output;
 }
 
