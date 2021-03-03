@@ -14,7 +14,7 @@ class IirFilter {
 public:
   IirFilter(const std::vector<double>& a, const std::vector<double>& b);
 
-  double iterate(const double input);
+  double iterate(const double& input);
 
 
 private:
