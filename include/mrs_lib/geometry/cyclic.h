@@ -363,7 +363,7 @@ namespace mrs_lib
       static other_t convert(const spec& what)
       {
         return other_t(what.val / range * other_t::range);
-      };
+      }
 
       /*!
        * \brief Conversion between two different circular quantities.
@@ -380,7 +380,7 @@ namespace mrs_lib
       other_t convert() const
       {
         return other_t(val / range * other_t::range);
-      };
+      }
 
     protected:
       flt val;

@@ -12,7 +12,7 @@ static double getScale(Eigen::RowVector2d start, Eigen::RowVector2d vector, Eige
 
 namespace mrs_lib
 {
-Intersection::Intersection(bool intersect, bool parallel, Eigen::RowVector2d point) : point(std::move(point)), parallel(parallel), intersect(intersect){};
+Intersection::Intersection(bool intersect, bool parallel, Eigen::RowVector2d point) : point(std::move(point)), parallel(parallel), intersect(intersect){}
 
 /* sectionIntersect() //{ */
 

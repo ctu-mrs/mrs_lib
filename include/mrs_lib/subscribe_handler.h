@@ -209,7 +209,7 @@ namespace mrs_lib
             args...
             )
       {
-      };
+      }
 
     /*!
       * \brief Convenience constructor overload.
@@ -269,7 +269,7 @@ namespace mrs_lib
             args...
             )
       {
-      };
+      }
 
     /*!
       * \brief Convenience constructor overload.
@@ -298,7 +298,7 @@ namespace mrs_lib
             args...
             )
       {
-      };
+      }
 
     /*!
       * \brief Convenience constructor overload.
@@ -323,7 +323,7 @@ namespace mrs_lib
             args...
             )
       {
-      };
+      }
 
     /*!
       * \brief Convenience constructor overload.
@@ -357,7 +357,7 @@ namespace mrs_lib
             args...
             )
      {
-     };
+     }
 
     /*!
       * \brief Convenience constructor overload.
@@ -384,7 +384,7 @@ namespace mrs_lib
             args...
             )
       {
-      };
+      }
 
     private:
       std::unique_ptr<impl::SubscribeHandler_impl<MessageType>> m_pimpl;
@@ -413,7 +413,7 @@ namespace mrs_lib
       )
   {
     object = Class(args...);
-  };
+  }
 }
 
 #endif // SUBRSCRIBE_HANDLER_H

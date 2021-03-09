@@ -29,8 +29,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # please, NEVER commit those alternative flags with specific overrides of optimization
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3") # because normal release is just -O2
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 # please, really do not commit your temporary custom flags :-)
+
+add_definitions(-Wall)
+add_definitions(-Wextra)
+add_definitions(-Wpedantic)
 
 # include Eigen3
 find_package(Eigen3 REQUIRED)

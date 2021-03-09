@@ -174,7 +174,7 @@ namespace mrs_lib
             m_debug_nth_it(debug_nth_it),
             m_ALS_theta_set(false),
             m_last_theta_set(false)
-        {};
+        {}
 
       /*!
         * \brief A convenience constructor constructor.
@@ -238,7 +238,7 @@ namespace mrs_lib
             m_debug_nth_it(debug_nth_it),
             m_ALS_theta_set(false),
             m_last_theta_set(false)
-        {};
+        {}
       //}
 
       /* fit() method //{ */
