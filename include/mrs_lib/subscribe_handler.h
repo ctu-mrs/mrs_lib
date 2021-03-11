@@ -140,7 +140,7 @@ namespace mrs_lib
     /*!
       * \brief Blocks until new data becomes available or until the timeout runs out or until a spurious wake-up.
       *
-      * \return true if new message is available after waking up, false otherwise.
+      * \return the message if a new message is available after waking up, \p nullptr otherwise.
       */
       virtual typename MessageType::ConstPtr waitForNew(const ros::WallDuration& timeout) {assert(m_pimpl); return m_pimpl->waitForNew(timeout);};
 
