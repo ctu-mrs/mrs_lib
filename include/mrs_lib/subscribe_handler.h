@@ -142,7 +142,7 @@ namespace mrs_lib
       *
       * \return true if new message is available after waking up, false otherwise.
       */
-      virtual bool waitForNew(const ros::WallDuration& timeout) const {assert(m_pimpl); return m_pimpl->waitForNew(timeout);};
+      virtual typename MessageType::ConstPtr waitForNew(const ros::WallDuration& timeout) {assert(m_pimpl); return m_pimpl->waitForNew(timeout);};
 
     /*!
       * \brief Returns time of the last received message on the topic, handled by this SubscribeHandler.

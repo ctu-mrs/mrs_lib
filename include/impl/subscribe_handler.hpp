@@ -100,14 +100,19 @@ namespace mrs_lib
       //}
 
       /* waitForNew() method //{ */
-      virtual bool waitForNew(const ros::WallDuration& timeout) const override
+      virtual typename MessageType::ConstPtr waitForNew(const ros::WallDuration& timeout) override
       {
         // convert the ros type to chrono type
         const std::chrono::duration<float> chrono_timeout(timeout.toSec());
         // lock the mutex guarding the m_new_data flag
         std::unique_lock lock(m_new_data_mtx);
         // if new data is available, return immediately, otherwise attempt to wait for new data using the respective condition variable
-        return m_new_data || (m_new_data_cv.wait_for(lock, chrono_timeout) == std::cv_status::no_timeout && m_new_data);
+        if (m_new_data)
+          return getMsg();
+        else if (m_new_data_cv.wait_for(lock, chrono_timeout) == std::cv_status::no_timeout && m_new_data)
+          return getMsg();
+        else
+          return nullptr;
       };
       //}
 
