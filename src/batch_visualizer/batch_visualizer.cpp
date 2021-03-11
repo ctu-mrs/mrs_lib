@@ -73,7 +73,7 @@ void BatchVisualizer::setParentFrame(const std::string parent_frame) {
 //}
 
 /* initialize //{ */
-void BatchVisualizer::initialize(ros::NodeHandle& nh) {
+void BatchVisualizer::initialize([[maybe_unused]]ros::NodeHandle& nh) {
   if (initialized) {
     return;
   }
