@@ -69,6 +69,8 @@ NotchFilter::NotchFilter(const double& sample_rate, const std::vector<double>& f
   }
 
   Eigen::VectorXd h_a = (Q.transpose() * Q).inverse() * (Q.transpose()) * t_beta;
+  ROS_INFO_STREAM("left: " << Q*h_a);
+  ROS_INFO_STREAM("right: " << t_beta);
 
   Eigen::VectorXd nom(h_a.size() + 1);
   Eigen::VectorXd denom(h_a.size() + 1);
@@ -89,25 +91,25 @@ NotchFilter::NotchFilter(const double& sample_rate, const std::vector<double>& f
   std::vector<double> a_std;
   std::vector<double> b_std;
 
-  /* for (long i = 0; i < a.size(); i++) { */
-  /*   a_std.push_back(a[i]); */
-  /*   b_std.push_back(b[i]); */
-  /* } */
-  a_std.push_back(1.0);
-  a_std.push_back(-5.83234);
-  a_std.push_back(14.29652);
-  a_std.push_back(-18.85290);
-  a_std.push_back(14.10633);
-  a_std.push_back(-5.67823);
-  a_std.push_back(0.96064);
+  for (long i = 0; i < a.size(); i++) {
+    a_std.push_back(a[i]);
+    b_std.push_back(b[i]);
+  }
+  /* a_std.push_back(1.0); */
+  /* a_std.push_back(-5.83234); */
+  /* a_std.push_back(14.29652); */
+  /* a_std.push_back(-18.85290); */
+  /* a_std.push_back(14.10633); */
+  /* a_std.push_back(-5.67823); */
+  /* a_std.push_back(0.96064); */
 
-  b_std.push_back(0.98032);
-  b_std.push_back(-5.75529);
-  b_std.push_back(14.20142);
-  b_std.push_back(-18.85290);
-  b_std.push_back(14.20142);
-  b_std.push_back(-5.75529);
-  b_std.push_back(0.98032);
+  /* b_std.push_back(0.98032); */
+  /* b_std.push_back(-5.75529); */
+  /* b_std.push_back(14.20142); */
+  /* b_std.push_back(-18.85290); */
+  /* b_std.push_back(14.20142); */
+  /* b_std.push_back(-5.75529); */
+  /* b_std.push_back(0.98032); */
 
 
   filter = std::make_unique<mrs_lib::IirFilter>(a_std, b_std);

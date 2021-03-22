@@ -14,7 +14,10 @@ IirFilter::IirFilter(const std::vector<double>& a_in, const std::vector<double>&
 
   order_ = a_.size();
   buffer_.resize(order_, 0.0);
-
+  for (size_t i = 0; i < a_.size(); i++) {
+    
+  ROS_INFO_STREAM("a: " << a_[i] << " b: " << b_[i]);
+  }
   ROS_INFO("[%s]: IIR filter initialized!", ros::this_node::getName().c_str());
 }
 
