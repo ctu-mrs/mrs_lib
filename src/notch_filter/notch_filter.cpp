@@ -7,10 +7,15 @@ namespace mrs_lib
 
 /* NotchFilter constructor //{ */
 
-NotchFilter::NotchFilter(const double& sample_rate, const std::vector<double>& frequencies_in, const std::vector<double>& bandwidths_in) {
+NotchFilter::NotchFilter(const double& sample_rate, const double& f_in, const double& b_in) {
 
   double sf  = sample_rate;
   double sf2 = sf / 2;
+
+  std::vector<double> frequencies_in;
+  frequencies_in.push_back(f_in);
+  std::vector<double> bandwidths_in;
+  bandwidths_in.push_back(b_in);
 
   if (frequencies_in.size() != bandwidths_in.size() || frequencies_in.size() == 0) {
     ROS_ERROR("[%s]: Parameters frequencies and bandwidths needs to have the same non-zero length!!", ros::this_node::getName().c_str());
@@ -69,8 +74,6 @@ NotchFilter::NotchFilter(const double& sample_rate, const std::vector<double>& f
   }
 
   Eigen::VectorXd h_a = (Q.transpose() * Q).inverse() * (Q.transpose()) * t_beta;
-  ROS_INFO_STREAM("left: " << Q*h_a);
-  ROS_INFO_STREAM("right: " << t_beta);
 
   Eigen::VectorXd nom(h_a.size() + 1);
   Eigen::VectorXd denom(h_a.size() + 1);
@@ -95,37 +98,9 @@ NotchFilter::NotchFilter(const double& sample_rate, const std::vector<double>& f
     a_std.push_back(a[i]);
     b_std.push_back(b[i]);
   }
-  /* a_std.push_back(1.0); */
-  /* a_std.push_back(-5.83234); */
-  /* a_std.push_back(14.29652); */
-  /* a_std.push_back(-18.85290); */
-  /* a_std.push_back(14.10633); */
-  /* a_std.push_back(-5.67823); */
-  /* a_std.push_back(0.96064); */
-
-  /* b_std.push_back(0.98032); */
-  /* b_std.push_back(-5.75529); */
-  /* b_std.push_back(14.20142); */
-  /* b_std.push_back(-18.85290); */
-  /* b_std.push_back(14.20142); */
-  /* b_std.push_back(-5.75529); */
-  /* b_std.push_back(0.98032); */
-
 
   filter = std::make_unique<mrs_lib::IirFilter>(a_std, b_std);
   ROS_INFO("[%s]: Notch filter initialized!", ros::this_node::getName().c_str());
-}
-
-//}
-
-/* NotchFilter constructor //{ */
-
-NotchFilter::NotchFilter(const double& sample_rate, const double& frequency_in, const double& bandwidth_in) {
-  std::vector<double> f_tmp;
-  f_tmp.push_back(frequency_in);
-  std::vector<double> b_tmp;
-  b_tmp.push_back(bandwidth_in);
-  NotchFilter(sample_rate, f_tmp, b_tmp);
 }
 
 //}

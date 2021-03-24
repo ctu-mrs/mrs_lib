@@ -15,7 +15,7 @@ namespace mrs_lib
 class NotchFilter {
 
 public:
-  NotchFilter(const double& sample_rate, const std::vector<double>& frequencies_in, const std::vector<double>& bandwidths_in);
+  /* NotchFilter(const double& sample_rate, const std::vector<double>& frequencies_in, const std::vector<double>& bandwidths_in); */
   NotchFilter(const double& sample_rate, const double& frequency_in, const double& bandwidth_in);
 
   double iterate(double& sample_in);
