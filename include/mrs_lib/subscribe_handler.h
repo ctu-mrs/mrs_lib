@@ -34,6 +34,8 @@ namespace mrs_lib
   */
   struct SubscribeHandlerOptions
   {
+    SubscribeHandlerOptions(const ros::NodeHandle& nh) : nh(nh) {}
+
     ros::NodeHandle nh;  /*!< \brief The ROS NodeHandle to be used for subscription. */
 
     std::string node_name = {};  /*!< \brief Name of the ROS node, using this handle (used for messages printed to console). */
@@ -239,7 +241,6 @@ namespace mrs_lib
               message_callback
             );
         }
-        m_pimpl->template set_data_callback<false>();
         if (options.autostart)
           start();
       };

@@ -157,45 +157,45 @@ namespace mrs_lib
       }
       //}
 
-    public:
-      /* set_data_callback() method //{ */
-      template <bool time_consistent>
-      void set_data_callback()
-      {
-        m_data_callback = std::bind(&SubscribeHandler_impl<MessageType>::template data_callback_impl<time_consistent>, this, std::placeholders::_1);
-      }
-      //}
+    /* public: */
+    /*   /1* set_data_callback() method //{ *1/ */
+    /*   template <bool time_consistent> */
+    /*   void set_data_callback() */
+    /*   { */
+    /*     m_data_callback = std::bind(&SubscribeHandler_impl<MessageType>::template data_callback_impl<time_consistent>, this, std::placeholders::_1); */
+    /*   } */
+    /*   //} */
 
     protected:
-      /* data_callback() method //{ */
-      virtual void data_callback(const typename MessageType::ConstPtr& msg)
-      {
-        m_data_callback(msg);
-      }
+      /* /1* data_callback() method //{ *1/ */
+      /* virtual void data_callback(const typename MessageType::ConstPtr& msg) */
+      /* { */
+      /*   data_callback_impl(msg); */
+      /* } */
 
-      template <bool time_consistent = false>
-      typename std::enable_if<!time_consistent, void>::type data_callback_impl(const typename MessageType::ConstPtr& msg)
-      {
-        data_callback_unchecked(msg, ros::Time::now());
-      }
+    /*   template <bool time_consistent = false> */
+    /*   typename std::enable_if<!time_consistent, void>::type data_callback_impl(const typename MessageType::ConstPtr& msg) */
+    /*   { */
+    /*     data_callback_unchecked(msg, ros::Time::now()); */
+    /*   } */
 
-      template <bool time_consistent = false>
-      typename std::enable_if<time_consistent, void>::type data_callback_impl(const typename MessageType::ConstPtr& msg)
-      {
-        ros::Time now = ros::Time::now();
-        const bool time_reset = check_time_reset(now);
-        const bool message_valid = !m_got_data || check_time_consistent<time_consistent>(msg);
-        if (message_valid || time_reset)
-        {
-          if (time_reset)
-            ROS_WARN("[%s]: Detected jump back in time of %f. Resetting time consistency checks.", m_node_name.c_str(), (m_last_msg_received - now).toSec());
-          data_callback_unchecked(msg, now);
-        } else
-        {
-          ROS_WARN("[%s]: New message from topic '%s' is older than the latest message, skipping it.", m_node_name.c_str(), topicName().c_str());
-        }
-      }
-      //}
+    /*   template <bool time_consistent = false> */
+    /*   typename std::enable_if<time_consistent, void>::type data_callback_impl(const typename MessageType::ConstPtr& msg) */
+    /*   { */
+    /*     ros::Time now = ros::Time::now(); */
+    /*     const bool time_reset = check_time_reset(now); */
+    /*     const bool message_valid = !m_got_data || check_time_consistent<time_consistent>(msg); */
+    /*     if (message_valid || time_reset) */
+    /*     { */
+    /*       if (time_reset) */
+    /*         ROS_WARN("[%s]: Detected jump back in time of %f. Resetting time consistency checks.", m_node_name.c_str(), (m_last_msg_received - now).toSec()); */
+    /*       data_callback_unchecked(msg, now); */
+    /*     } else */
+    /*     { */
+    /*       ROS_WARN("[%s]: New message from topic '%s' is older than the latest message, skipping it.", m_node_name.c_str(), topicName().c_str()); */
+    /*     } */
+    /*   } */
+    /*   //} */
 
       /* check_time_reset() method //{ */
       bool check_time_reset(const ros::Time& now)
@@ -239,7 +239,6 @@ namespace mrs_lib
     private:
       typename MessageType::ConstPtr m_latest_message;
       message_callback_t m_message_callback;
-      data_callback_t m_data_callback;
 
     private:
       uint32_t m_queue_size;
@@ -276,7 +275,7 @@ namespace mrs_lib
       //}
 
       /* process_new_message() method //{ */
-      void process_new_message(const typename MessageType::ConstPtr& msg, const ros::Time& time)
+      void process_new_message(const typename MessageType::ConstPtr& msg)
       {
         m_timeout_check_timer.stop();
         m_latest_message = msg;
@@ -286,15 +285,15 @@ namespace mrs_lib
         }
         m_new_data_cv.notify_one();
         m_got_data = true;
-        m_last_msg_received = time;
+        m_last_msg_received = ros::Time::now();
         m_timeout_check_timer.start();
       }
       //}
 
-      /* data_callback_unchecked() method //{ */
-      void data_callback_unchecked(const typename MessageType::ConstPtr& msg, const ros::Time& time)
+      /* data_callback() method //{ */
+      virtual void data_callback(const typename MessageType::ConstPtr& msg)
       {
-        process_new_message(msg, time);
+        process_new_message(msg);
         if (m_message_callback)
           m_message_callback(*this);
       }
