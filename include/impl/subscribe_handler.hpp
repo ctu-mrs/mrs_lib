@@ -157,58 +157,11 @@ namespace mrs_lib
       }
       //}
 
-    /* public: */
-    /*   /1* set_data_callback() method //{ *1/ */
-    /*   template <bool time_consistent> */
-    /*   void set_data_callback() */
-    /*   { */
-    /*     m_data_callback = std::bind(&SubscribeHandler_impl<MessageType>::template data_callback_impl<time_consistent>, this, std::placeholders::_1); */
-    /*   } */
-    /*   //} */
-
     protected:
-      /* /1* data_callback() method //{ *1/ */
-      /* virtual void data_callback(const typename MessageType::ConstPtr& msg) */
-      /* { */
-      /*   data_callback_impl(msg); */
-      /* } */
-
-    /*   template <bool time_consistent = false> */
-    /*   typename std::enable_if<!time_consistent, void>::type data_callback_impl(const typename MessageType::ConstPtr& msg) */
-    /*   { */
-    /*     data_callback_unchecked(msg, ros::Time::now()); */
-    /*   } */
-
-    /*   template <bool time_consistent = false> */
-    /*   typename std::enable_if<time_consistent, void>::type data_callback_impl(const typename MessageType::ConstPtr& msg) */
-    /*   { */
-    /*     ros::Time now = ros::Time::now(); */
-    /*     const bool time_reset = check_time_reset(now); */
-    /*     const bool message_valid = !m_got_data || check_time_consistent<time_consistent>(msg); */
-    /*     if (message_valid || time_reset) */
-    /*     { */
-    /*       if (time_reset) */
-    /*         ROS_WARN("[%s]: Detected jump back in time of %f. Resetting time consistency checks.", m_node_name.c_str(), (m_last_msg_received - now).toSec()); */
-    /*       data_callback_unchecked(msg, now); */
-    /*     } else */
-    /*     { */
-    /*       ROS_WARN("[%s]: New message from topic '%s' is older than the latest message, skipping it.", m_node_name.c_str(), topicName().c_str()); */
-    /*     } */
-    /*   } */
-    /*   //} */
-
       /* check_time_reset() method //{ */
       bool check_time_reset(const ros::Time& now)
       {
         return now < m_last_msg_received;
-      }
-      //}
-
-      /* check_time_consistent() method //{ */
-      template <bool time_consistent = false>
-      typename std::enable_if<time_consistent, bool>::type check_time_consistent(const typename MessageType::ConstPtr& msg)
-      {
-        return msg->header.stamp >= m_latest_message->header.stamp;
       }
       //}
 
