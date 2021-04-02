@@ -76,6 +76,12 @@ target_link_libraries(repredictor_example
   ${Eigen_LIBRARIES}
   )
 
+add_executable(service_client_handler_example src/service_client_handler/example.cpp)
+target_link_libraries(service_client_handler_example
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
 add_library(MrsLibOdomLKF src/lkf/LKF_MRS_odom.cpp)
 target_link_libraries(MrsLibOdomLKF
   ${catkin_LIBRARIES}
