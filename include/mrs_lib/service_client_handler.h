@@ -5,62 +5,81 @@
 #include <ros/package.h>
 #include <string>
 #include <mutex>
+#include <future>
+
+#include <mrs_lib/mutex.h>
 
 #include <std_srvs/Trigger.h>
 
 namespace mrs_lib
 {
 
+/* class ServiceClientHandler_impl //{ */
+
+template <class ServiceType>
+class ServiceClientHandler_impl {
+
+public:
+  ServiceClientHandler_impl(void);
+
+  ~ServiceClientHandler_impl(void){};
+
+  ServiceClientHandler_impl(ros::NodeHandle& nh, const std::string& address);
+
+  bool call(void);
+
+  bool call(ServiceType& srv);
+
+  bool call(ServiceType& srv, const int& attempts);
+
+  std::future<ServiceType> callAsync(ServiceType& srv);
+
+  std::future<ServiceType> callAsync(ServiceType& srv, const int& attempts);
+
+private:
+  ros::ServiceClient service_client_;
+  std::mutex         mutex_service_client_;
+  std::atomic<bool>  service_initialized_;
+
+  std::string _address_;
+
+  ServiceType async_data_;
+  int         async_attempts_;
+  std::mutex  mutex_async_;
+
+  ServiceType asyncRun(void);
+};
+
+//}
+
+/* class ServiceClientHandler //{ */
+
 template <class ServiceType>
 class ServiceClientHandler {
 
 public:
-  ServiceClientHandler() : service_initialized_(false) {
-  }
+  ServiceClientHandler(){};
+  ~ServiceClientHandler(){};
 
-  ~ServiceClientHandler() {};
+  ServiceClientHandler& operator=(const ServiceClientHandler& other);
 
-  ServiceClientHandler(ros::NodeHandle& nh, const std::string& topic_name) {
+  ServiceClientHandler(const ServiceClientHandler& other);
 
-    {
-      std::scoped_lock lock(mutex_service_client_);
+  ServiceClientHandler(ros::NodeHandle& nh, const std::string& address);
 
-      service_client_ = std::make_shared<ros::ServiceClient>(nh.serviceClient<ServiceType>(topic_name));
-    }
+  bool call(ServiceType& srv);
 
-    service_initialized_ = true;
-  }
+  bool call(ServiceType& srv, const int& attempts);
 
-  bool call(ServiceType& srv) {
+  std::future<ServiceType> callAsync(ServiceType& srv);
 
-    return service_client_->call(srv);
-  }
-
-  ServiceClientHandler(const ServiceClientHandler& other) {
-
-    if (other.service_client_) {
-      this->service_client_ = other.service_client_;
-    }
-  }
-
-  ServiceClientHandler& operator=(const ServiceClientHandler& other) {
-
-    if (this == &other) {
-      return *this;
-    }
-
-    if (other.service_client_) {
-      this->service_client_ = other.service_client_;
-    }
-
-    return *this;
-  }
+  std::future<ServiceType> callAsync(ServiceType& srv, const int& attempts);
 
 private:
-  std::shared_ptr<ros::ServiceClient> service_client_;
-  std::mutex                          mutex_service_client_;
-  std::atomic<bool>                   service_initialized_;
+  std::shared_ptr<ServiceClientHandler_impl<ServiceType>> impl_;
 };
+
+//}
 
 }  // namespace mrs_lib
 

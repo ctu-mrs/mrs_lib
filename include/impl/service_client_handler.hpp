@@ -4,6 +4,236 @@
 namespace mrs_lib
 {
 
+// --------------------------------------------------------------
+// |                  ServiceClientHandler_impl                 |
+// --------------------------------------------------------------
+
+/* ServiceClientHandler_impl() //{ */
+
+template <class ServiceType>
+ServiceClientHandler_impl<ServiceType>::ServiceClientHandler_impl(void) : service_initialized_(false) {
+}
+
+//}
+
+/* ServiceClientHandler_impl(ros::NodeHandle& nh, const std::string& address //{ */
+
+template <class ServiceType>
+ServiceClientHandler_impl<ServiceType>::ServiceClientHandler_impl(ros::NodeHandle& nh, const std::string& address) {
+
+  {
+    std::scoped_lock lock(mutex_service_client_);
+
+    service_client_ = nh.serviceClient<ServiceType>(address);
+  }
+
+  _address_       = address;
+  async_attempts_ = 1;
+
+  /* thread_oneshot_ = std::make_shared<std::thread>(std::thread(&ServiceClientHandler_impl::threadOneshot, this, true, false)); */
+
+  service_initialized_ = true;
+}
+
+//}
+
+/* call() //{ */
+
+template <class ServiceType>
+bool ServiceClientHandler_impl<ServiceType>::call(void) {
+
+  if (!service_initialized_) {
+    return false;
+  }
+
+  return service_client_.call(async_data_);
+}
+
+//}
+
+/* call(ServiceType& srv) //{ */
+
+template <class ServiceType>
+bool ServiceClientHandler_impl<ServiceType>::call(ServiceType& srv) {
+
+  if (!service_initialized_) {
+    return false;
+  }
+
+  return service_client_.call(srv);
+}
+
+//}
+
+/* call(ServiceType& srv, const int& attempts) //{ */
+
+template <class ServiceType>
+bool ServiceClientHandler_impl<ServiceType>::call(ServiceType& srv, const int& attempts) {
+
+  if (!service_initialized_) {
+    return false;
+  }
+
+  std::scoped_lock lock(mutex_service_client_);
+
+  bool success = false;
+  int  counter = 0;
+
+  while (!success && ros::ok()) {
+
+    success = service_client_.call(srv);
+
+    if (!success) {
+      ROS_ERROR("[%s]: failed to call service to '%s'", ros::this_node::getName().c_str(), _address_.c_str());
+    }
+
+    if (++counter >= attempts) {
+      break;
+    }
+  }
+
+  return success;
+}
+
+//}
+
+/* callAsync(ServiceType& srv) //{ */
+
+template <class ServiceType>
+std::future<ServiceType> ServiceClientHandler_impl<ServiceType>::callAsync(ServiceType& srv) {
+
+  {
+    std::scoped_lock lock(mutex_async_);
+
+    async_data_     = srv;
+    async_attempts_ = 1;
+  }
+
+  return std::async(std::launch::async, &ServiceClientHandler_impl::asyncRun, this);
+}
+
+//}
+
+/* callAsync(ServiceType& srv, const int& attempts) //{ */
+
+template <class ServiceType>
+std::future<ServiceType> ServiceClientHandler_impl<ServiceType>::callAsync(ServiceType& srv, const int &attempts) {
+
+  {
+    std::scoped_lock lock(mutex_async_);
+
+    async_data_     = srv;
+    async_attempts_ = attempts;
+  }
+
+  return std::async(std::launch::async, &ServiceClientHandler_impl::asyncRun, this);
+}
+
+//}
+
+/* asyncRun(int i) //{ */
+
+template <class ServiceType>
+ServiceType ServiceClientHandler_impl<ServiceType>::asyncRun(void) {
+
+  auto async_data     = mrs_lib::get_mutexed(mutex_async_, async_data_);
+  auto async_attempts = mrs_lib::get_mutexed(mutex_async_, async_attempts_);
+
+  call(async_data, async_attempts);
+
+  return async_data;
+}
+
+//}
+
+// --------------------------------------------------------------
+// |                    ServiceClientHandler                    |
+// --------------------------------------------------------------
+
+/* operator= //{ */
+
+template <class ServiceType>
+ServiceClientHandler<ServiceType>& ServiceClientHandler<ServiceType>::operator=(const ServiceClientHandler<ServiceType>& other) {
+
+  if (this == &other) {
+    return *this;
+  }
+
+  if (other.impl_) {
+    this->impl_ = other.impl_;
+  }
+
+  return *this;
+}
+
+//}
+
+/* copy constructor //{ */
+
+template <class ServiceType>
+ServiceClientHandler<ServiceType>::ServiceClientHandler(const ServiceClientHandler<ServiceType>& other) {
+
+  if (other.impl_) {
+    this->impl_ = other.impl_;
+  }
+}
+
+//}
+
+/* ServiceClientHandler(ros::NodeHandle& nh, const std::string& address) //{ */
+
+template <class ServiceType>
+ServiceClientHandler<ServiceType>::ServiceClientHandler(ros::NodeHandle& nh, const std::string& address) {
+
+  impl_ = std::make_shared<ServiceClientHandler_impl<ServiceType>>(nh, address);
+}
+
+//}
+
+/* call(ServiceType& srv) //{ */
+
+template <class ServiceType>
+bool ServiceClientHandler<ServiceType>::call(ServiceType& srv) {
+
+  return impl_->call(srv);
+}
+
+//}
+
+/* call(ServiceType& srv, const int& attempts) //{ */
+
+template <class ServiceType>
+bool ServiceClientHandler<ServiceType>::call(ServiceType& srv, const int& attempts) {
+
+  return impl_->call(srv, attempts);
+}
+
+//}
+
+/* callAsync(ServiceType& srv) //{ */
+
+template <class ServiceType>
+std::future<ServiceType> ServiceClientHandler<ServiceType>::callAsync(ServiceType& srv) {
+
+  std::future<ServiceType> res = impl_->callAsync(srv);
+
+  return res;
+}
+
+//}
+
+/* callAsync(ServiceType& srv, const int& attempts) //{ */
+
+template <class ServiceType>
+std::future<ServiceType> ServiceClientHandler<ServiceType>::callAsync(ServiceType& srv, const int& attempts) {
+
+  std::future<ServiceType> res = impl_->callAsync(srv, attempts);
+
+  return res;
+}
+
+//}
+
 }  // namespace mrs_lib
 
 #endif  // SERVICE_CLIENT_HANDLER_HPP
