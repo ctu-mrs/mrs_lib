@@ -3,13 +3,11 @@
 
 #include <ros/ros.h>
 #include <ros/package.h>
+
 #include <string>
-#include <mutex>
 #include <future>
 
 #include <mrs_lib/mutex.h>
-
-#include <std_srvs/Trigger.h>
 
 namespace mrs_lib
 {
@@ -58,8 +56,8 @@ template <class ServiceType>
 class ServiceClientHandler {
 
 public:
-  ServiceClientHandler(){};
-  ~ServiceClientHandler(){};
+  ServiceClientHandler(void){};
+  ~ServiceClientHandler(void){};
 
   ServiceClientHandler& operator=(const ServiceClientHandler& other);
 

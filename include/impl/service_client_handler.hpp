@@ -8,7 +8,7 @@ namespace mrs_lib
 // |                  ServiceClientHandler_impl                 |
 // --------------------------------------------------------------
 
-/* ServiceClientHandler_impl() //{ */
+/* ServiceClientHandler_impl(void) //{ */
 
 template <class ServiceType>
 ServiceClientHandler_impl<ServiceType>::ServiceClientHandler_impl(void) : service_initialized_(false) {
@@ -16,7 +16,7 @@ ServiceClientHandler_impl<ServiceType>::ServiceClientHandler_impl(void) : servic
 
 //}
 
-/* ServiceClientHandler_impl(ros::NodeHandle& nh, const std::string& address //{ */
+/* ServiceClientHandler_impl(ros::NodeHandle& nh, const std::string& address) //{ */
 
 template <class ServiceType>
 ServiceClientHandler_impl<ServiceType>::ServiceClientHandler_impl(ros::NodeHandle& nh, const std::string& address) {
@@ -37,7 +37,7 @@ ServiceClientHandler_impl<ServiceType>::ServiceClientHandler_impl(ros::NodeHandl
 
 //}
 
-/* call() //{ */
+/* call(void) //{ */
 
 template <class ServiceType>
 bool ServiceClientHandler_impl<ServiceType>::call(void) {
@@ -117,7 +117,7 @@ std::future<ServiceType> ServiceClientHandler_impl<ServiceType>::callAsync(Servi
 /* callAsync(ServiceType& srv, const int& attempts) //{ */
 
 template <class ServiceType>
-std::future<ServiceType> ServiceClientHandler_impl<ServiceType>::callAsync(ServiceType& srv, const int &attempts) {
+std::future<ServiceType> ServiceClientHandler_impl<ServiceType>::callAsync(ServiceType& srv, const int& attempts) {
 
   {
     std::scoped_lock lock(mutex_async_);
@@ -131,7 +131,7 @@ std::future<ServiceType> ServiceClientHandler_impl<ServiceType>::callAsync(Servi
 
 //}
 
-/* asyncRun(int i) //{ */
+/* asyncRun(void) //{ */
 
 template <class ServiceType>
 ServiceType ServiceClientHandler_impl<ServiceType>::asyncRun(void) {
