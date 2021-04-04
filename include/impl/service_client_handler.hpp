@@ -122,8 +122,15 @@ std::future<ServiceType> ServiceClientHandler_impl<ServiceType>::callAsync(Servi
 template <class ServiceType>
 ServiceType ServiceClientHandler_impl<ServiceType>::asyncRun(void) {
 
-  auto async_data     = mrs_lib::get_mutexed(mutex_async_, async_data_);
-  auto async_attempts = mrs_lib::get_mutexed(mutex_async_, async_attempts_);
+  ServiceType async_data;
+  int         async_attempts;
+
+  {
+    std::scoped_lock lock(mutex_async_);
+
+    async_data     = async_data_;
+    async_attempts = async_attempts_;
+  }
 
   call(async_data, async_attempts);
 

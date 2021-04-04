@@ -10,8 +10,7 @@
 
 #include <string>
 #include <future>
-
-#include <mrs_lib/mutex.h>
+#include <mutex>
 
 namespace mrs_lib
 {
