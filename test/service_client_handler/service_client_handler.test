@@ -1,0 +1,6 @@
+<launch>
+
+  <test pkg="mrs_lib" type="ServiceClientHandlerTest" test-name="service_client_handler_test" time-limit="10.0">
+  </test>
+
+</launch>

@@ -37,20 +37,6 @@ ServiceClientHandler_impl<ServiceType>::ServiceClientHandler_impl(ros::NodeHandl
 
 //}
 
-/* call(void) //{ */
-
-template <class ServiceType>
-bool ServiceClientHandler_impl<ServiceType>::call(void) {
-
-  if (!service_initialized_) {
-    return false;
-  }
-
-  return service_client_.call(async_data_);
-}
-
-//}
-
 /* call(ServiceType& srv) //{ */
 
 template <class ServiceType>
@@ -184,6 +170,16 @@ ServiceClientHandler<ServiceType>::ServiceClientHandler(const ServiceClientHandl
 
 template <class ServiceType>
 ServiceClientHandler<ServiceType>::ServiceClientHandler(ros::NodeHandle& nh, const std::string& address) {
+
+  impl_ = std::make_shared<ServiceClientHandler_impl<ServiceType>>(nh, address);
+}
+
+//}
+
+/* initialize(ros::NodeHandle& nh, const std::string& address) //{ */
+
+template <class ServiceType>
+void ServiceClientHandler<ServiceType>::initialize(ros::NodeHandle& nh, const std::string& address) {
 
   impl_ = std::make_shared<ServiceClientHandler_impl<ServiceType>>(nh, address);
 }

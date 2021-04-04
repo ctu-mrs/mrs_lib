@@ -24,6 +24,9 @@
   <include file="$(find mrs_lib)/test/repredictor/repredictor.test">
   </include>
 
+  <include file="$(find mrs_lib)/test/service_client_handler/service_client_handler.test">
+  </include>
+
   <!--
   <include file="$(find mrs_lib)/test/vector_converter/vector_converter.test">
   </include>

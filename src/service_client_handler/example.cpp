@@ -1,10 +1,9 @@
-#include "ros/init.h"
-#include <ros/node_handle.h>
+#include <ros/ros.h>
+#include <ros/package.h>
+
 #include <mrs_lib/service_client_handler.h>
 
 #include <string>
-#include <ros/ros.h>
-
 #include <thread>
 
 #include <std_srvs/Trigger.h>
@@ -74,7 +73,7 @@ int main(int argc, char** argv) {
   // | ----------------- create a service client ---------------- |
 
   client1 = mrs_lib::ServiceClientHandler<std_srvs::Trigger>(nh, "service1");
-  client2 = mrs_lib::ServiceClientHandler<std_srvs::Trigger>(nh, "service2");
+  client2.initialize(nh, "service2");
 
   // | ------------------------- thread ------------------------- |
 
