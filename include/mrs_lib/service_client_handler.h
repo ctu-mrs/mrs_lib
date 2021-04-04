@@ -1,3 +1,7 @@
+/**  \file
+     \brief Defines ServiceClientHandler and related convenience classes for upgrading the ROS service client
+     \author Tomas Baca - tomas.baca@fel.cvut.cz
+ */
 #ifndef SERVICE_CLIENT_HANDLER_H
 #define SERVICE_CLIENT_HANDLER_H
 
