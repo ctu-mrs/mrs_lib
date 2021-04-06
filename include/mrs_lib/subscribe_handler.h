@@ -35,6 +35,7 @@ namespace mrs_lib
   struct SubscribeHandlerOptions
   {
     SubscribeHandlerOptions(const ros::NodeHandle& nh) : nh(nh) {}
+    SubscribeHandlerOptions() = default;
 
     ros::NodeHandle nh;  /*!< \brief The ROS NodeHandle to be used for subscription. */
 
