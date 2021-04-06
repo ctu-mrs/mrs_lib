@@ -57,6 +57,7 @@ private:
 private:
   bool m_load_successful, m_print_values;
   std::string m_node_name;
+  std::string m_prefix;
   const ros::NodeHandle& m_nh;
   std::unordered_set<std::string> loaded_params;
 
@@ -230,16 +231,17 @@ private:
   // loadMatrixXd helper function for loading Eigen::MatrixXd matrices //{
   Eigen::MatrixXd loadMatrixXd(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols = -1, optional_t optional = OPTIONAL, unique_t unique = UNIQUE, swap_t swap = NO_SWAP, bool printValues = true)
   {
+    const std::string name_prefixed = m_prefix + name;
     Eigen::MatrixXd loaded = default_value;
     // first, check if the user already tried to load this parameter
-    if (unique && check_duplicit_loading(name))
+    if (unique && check_duplicit_loading(name_prefixed))
       return loaded;
 
     // this function only accepts dynamic columns (you can always transpose the matrix afterward)
     if (rows < 0)
     {
       // if the parameter was compulsory, alert the user and set the flag
-      printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name));
+      printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name_prefixed));
       m_load_successful = false;
       return loaded;
     }
@@ -248,7 +250,7 @@ private:
     {
       if (cols > 0)
       {
-        printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name) + ". One dimension indicates zero matrix, but other expects non-zero.");
+        printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name_prefixed) + ". One dimension indicates zero matrix, but other expects non-zero.");
         m_load_successful = false;
         return loaded;
       }
@@ -262,7 +264,7 @@ private:
 
     std::vector<double> tmp_vec;
     // try to load the parameter
-    bool success = m_nh.getParam(name, tmp_vec);
+    bool success = m_nh.getParam(name_prefixed, tmp_vec);
     // check if the loaded vector has correct length
     bool correct_size = (int)tmp_vec.size() == rows * cols;
     if (!check_size_exact && !expect_zero_matrix)
@@ -287,7 +289,7 @@ private:
       {
         // warn the user that this parameter was not successfully loaded because of wrong vector length (might be an oversight)
         std::string warning =
-            std::string("Matrix parameter ") + name
+            std::string("Matrix parameter ") + name_prefixed
             + std::string(" could not be loaded because the vector has a wrong length " + std::to_string(tmp_vec.size()) + " instead of expected ");
         // process the message correctly based on whether the loaded matrix should be dynamic or static
         if (cols <= 0)  // for dynamic matrices
@@ -301,7 +303,7 @@ private:
       if (!optional)
       {
         // if the parameter was compulsory, alert the user and set the flag
-        printError(std::string("Could not load non-optional parameter ") + resolved(name));
+        printError(std::string("Could not load non-optional parameter ") + resolved(name_prefixed));
         cur_load_successful = false;
       }
     }
@@ -310,8 +312,8 @@ private:
     if (cur_load_successful)
     {
       if (m_print_values && printValues)
-        printValue(name, loaded);
-      loaded_params.insert(name);
+        printValue(name_prefixed, loaded);
+      loaded_params.insert(name_prefixed);
     } else
     {
       m_load_successful = false;
@@ -324,11 +326,12 @@ private:
   /* loadMatrixArray_internal helper function for loading an array of EigenXd matrices with known dimensions //{ */
   std::vector<Eigen::MatrixXd> loadMatrixArray_internal(const std::string& name, const std::vector<Eigen::MatrixXd>& default_value, optional_t optional, unique_t unique)
   {
+    const std::string name_prefixed = m_prefix + name;
     int rows;
     std::vector<int> cols;
     bool success = true;
-    success = success && m_nh.getParam(name + "/rows", rows);
-    success = success && m_nh.getParam(name + "/cols", cols);
+    success = success && m_nh.getParam(name_prefixed + "/rows", rows);
+    success = success && m_nh.getParam(name_prefixed + "/cols", cols);
 
     std::vector<Eigen::MatrixXd> loaded;
     loaded.reserve(cols.size());
@@ -338,13 +341,13 @@ private:
 
     if (!success)
     {
-      printError(std::string("Failed to load ") + resolved(name) + std::string("/rows or ") + resolved(name) + std::string("/cols"));
+      printError(std::string("Failed to load ") + resolved(name_prefixed) + std::string("/rows or ") + resolved(name_prefixed) + std::string("/cols"));
       m_load_successful = false;
       return default_value;
     }
     if (rows < 0)
     {
-      printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name) + std::string(" (rows and cols must be >= 0)"));
+      printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name_prefixed) + std::string(" (rows and cols must be >= 0)"));
       m_load_successful = false;
       return default_value;
     }
@@ -352,7 +355,7 @@ private:
     {
       if (col < 0)
       {
-        printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name) + std::string(" (rows and cols must be >= 0)"));
+        printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name_prefixed) + std::string(" (rows and cols must be >= 0)"));
         m_load_successful = false;
         return default_value;
       }
@@ -379,7 +382,7 @@ private:
       /* std::cout << "cur_mat: " << cur_mat << std::endl; */
       loaded.push_back(cur_mat);
       cols_loaded += cur_cols;
-      printValue(name + "/matrix#" + std::to_string(it), cur_mat);
+      printValue(name_prefixed + "/matrix#" + std::to_string(it), cur_mat);
     }
     return loaded;
   }
@@ -442,13 +445,14 @@ private:
   template <typename T>
   std::pair<T, bool> load(const std::string& name, const T& default_value, optional_t optional = OPTIONAL, unique_t unique = UNIQUE)
   {
+    const std::string name_prefixed = m_prefix + name;
     T loaded = default_value;
-    if (unique && check_duplicit_loading(name))
+    if (unique && check_duplicit_loading(name_prefixed))
       return {loaded, false};
 
     bool cur_load_successful = true;
     // try to load the parameter
-    const bool success = m_nh.getParam(name, loaded);
+    const bool success = m_nh.getParam(name_prefixed, loaded);
     if (!success)
     {
       // if it was not loaded, set the default value
@@ -456,18 +460,18 @@ private:
       if (!optional)
       {
         // if the parameter was compulsory, alert the user and set the flag
-        printError(std::string("Could not load non-optional parameter ") + resolved(name));
+        printError(std::string("Could not load non-optional parameter ") + resolved(name_prefixed));
         cur_load_successful = false;
       }
     }
 
     if (cur_load_successful)
     {
-      // everything is fine and just print the name and value if required
+      // everything is fine and just print the name_prefixed and value if required
       if (m_print_values)
-        printValue(name, loaded);
-      // mark the param name as successfully loaded
-      loaded_params.insert(name);
+        printValue(name_prefixed, loaded);
+      // mark the param name_prefixed as successfully loaded
+      loaded_params.insert(name_prefixed);
     } else
     {
       m_load_successful = false;
@@ -493,6 +497,7 @@ public:
   {
     /* std::cout << "Initialized1 ParamLoader for node " << node_name << std::endl; */
   }
+
   /* Constructor overloads //{ */
   /*!
     * \brief Convenience overload to enable writing ParamLoader pl(nh, node_name);
@@ -518,7 +523,35 @@ public:
   }
   //}
 
+  /* setPrefix function //{ */
+  
+  /*!
+    * \brief All loaded parameters will be prefixed with this string.
+    *
+    * \param prefix  the prefix to be applied to all loaded parameters from now on.
+    */
+  void setPrefix(const std::string& prefix)
+  {
+    m_prefix = prefix;
+  }
+  
+  //}
 
+  /* getPrefix function //{ */
+  
+  /*!
+    * \brief Returns the current parameter name prefix.
+    *
+    * \return the current prefix to be applied to the loaded parameters.
+    */
+  std::string getPrefix()
+  {
+    return m_prefix;
+  }
+  
+  //}
+
+  /* loadedSuccessfully function //{ */
   /*!
     * \brief Indicates whether all compulsory parameters were successfully loaded.
     *
@@ -528,6 +561,7 @@ public:
   {
     return m_load_successful;
   }
+  //}
 
   /* loadParam function for optional parameters //{ */
   /*!
