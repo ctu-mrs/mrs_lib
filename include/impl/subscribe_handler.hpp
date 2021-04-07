@@ -6,6 +6,7 @@
 #include <mrs_lib/subscribe_handler.h>
 #include <mutex>
 #include <condition_variable>
+#include <mrs_lib/utils.h>
 
 namespace mrs_lib
 {
@@ -246,6 +247,9 @@ namespace mrs_lib
       ros::TransportHints m_transport_hints;
 
     protected:
+      std::atomic<bool> process_new_message_running_ = false;
+
+    protected:
       /* default_timeout_callback() method //{ */
       void default_timeout_callback(const std::string& topic, const ros::Time& last_msg, const int n_pubs)
       {
@@ -271,6 +275,12 @@ namespace mrs_lib
         }
         const auto n_pubs = m_sub.getNumPublishers();
         m_timeout_check_timer.start();
+
+        if (process_new_message_running_)
+        {
+          printf("NOW IT MIGHT DEADLOCK\n");
+        }
+
         m_timeout_callback(topicName(), last_msg, n_pubs);
       }
       //}
@@ -278,6 +288,9 @@ namespace mrs_lib
       /* process_new_message() method //{ */
       void process_new_message(const typename MessageType::ConstPtr& msg, const ros::Time& time)
       {
+
+        mrs_lib::AtomicScopeFlag unset_running(process_new_message_running_);
+
         m_timeout_check_timer.stop();
         m_latest_message = msg;
         {

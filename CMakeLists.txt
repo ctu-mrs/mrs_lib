@@ -213,6 +213,7 @@ target_link_libraries(param_loader_example
 add_executable(subscribe_handler_example src/subscribe_handler/example.cpp)
 target_link_libraries(subscribe_handler_example
   MrsLibTimer
+  MrsLibUtils
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
