@@ -45,6 +45,8 @@ namespace tf2
   void doTransform(const pcl::PointCloud<pt_t>& cloud_in, pcl::PointCloud<pt_t>& cloud_out, const geometry_msgs::TransformStamped& transform)
   {
     pcl_ros::transformPointCloud(cloud_in, cloud_out, transform.transform);
+    pcl_conversions::toPCL(transform.header.stamp, cloud_out.header.stamp);
+    cloud_out.header.frame_id = transform.header.frame_id;
   }
 
 }

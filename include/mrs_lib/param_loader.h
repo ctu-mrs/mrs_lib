@@ -87,7 +87,7 @@ private:
       std::cout << "\t" << name << ":\t" << value << std::endl;
     else
       ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << name << "':\t" << value);
-  };
+  }
 
   template <typename T>
   void printValue(const std::string& name, const std::vector<T>& value)
@@ -108,7 +108,7 @@ private:
       std::cout << strstr.str() << std::endl;
     else
       ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << strstr.str());
-  };
+  }
 
   template <typename T1, typename T2>
   void printValue(const std::string& name, const std::map<T1, T2>& value)
@@ -129,7 +129,7 @@ private:
       std::cout << strstr.str() << std::endl;
     else
       ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << strstr.str());
-  };
+  }
 
   void printValue(const std::string& name, const Eigen::MatrixXd& value)
   {
@@ -142,7 +142,7 @@ private:
       std::cout << "\t" << name << ":\t" << std::endl << strstr.str() << std::endl;
     else
       ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << name << "':" << std::endl << strstr.str());
-  };
+  }
 
   std::string printValue_recursive(const std::string& name, XmlRpc::XmlRpcValue& value, unsigned depth = 0)
   {
@@ -180,7 +180,7 @@ private:
         }
     }
     return strstr.str();
-  };
+  }
 
   void printValue(const std::string& name, XmlRpc::XmlRpcValue& value)
   {
@@ -189,7 +189,7 @@ private:
       std::cout << txt << std::endl;
     else
       ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << txt);
-  };
+  }
 
   //}
   
@@ -318,7 +318,7 @@ private:
     }
     // finally, return the resulting value
     return loaded;
-  };
+  }
   //}
 
   /* loadMatrixArray_internal helper function for loading an array of EigenXd matrices with known dimensions //{ */
@@ -474,7 +474,7 @@ private:
     }
     // finally, return the resulting value
     return {loaded, success};
-  };
+  }
   //}
 
 public:
@@ -489,9 +489,10 @@ public:
       : m_load_successful(true),
         m_print_values(printValues),
         m_node_name(node_name),
-        m_nh(nh){
-            /* std::cout << "Initialized1 ParamLoader for node " << node_name << std::endl; */
-        };
+        m_nh(nh)
+  {
+    /* std::cout << "Initialized1 ParamLoader for node " << node_name << std::endl; */
+  }
   /* Constructor overloads //{ */
   /*!
     * \brief Convenience overload to enable writing ParamLoader pl(nh, node_name);
@@ -500,9 +501,10 @@ public:
     * \param node_name     Optional node name used when printing the loaded values or loading errors.
     */
   ParamLoader(const ros::NodeHandle& nh, std::string node_name)
-      : ParamLoader(nh, true, node_name){
-            /* std::cout << "Initialized2 ParamLoader for node " << node_name << std::endl; */
-        };
+      : ParamLoader(nh, true, node_name)
+  {
+    /* std::cout << "Initialized2 ParamLoader for node " << node_name << std::endl; */
+  }
   /*!
     * \brief Convenience overload to enable writing ParamLoader pl(nh, "node_name");
     *
@@ -510,9 +512,10 @@ public:
     * \param node_name     Optional node name used when printing the loaded values or loading errors.
     */
   ParamLoader(const ros::NodeHandle& nh, const char* node_name)
-      : ParamLoader(nh, std::string(node_name)){
-            /* std::cout << "Initialized3 ParamLoader for node " << node_name << std::endl; */
-        };
+      : ParamLoader(nh, std::string(node_name))
+  {
+    /* std::cout << "Initialized3 ParamLoader for node " << node_name << std::endl; */
+  }
   //}
 
 
@@ -524,7 +527,7 @@ public:
   bool loadedSuccessfully()
   {
     return m_load_successful;
-  };
+  }
 
   /* loadParam function for optional parameters //{ */
   /*!
@@ -545,7 +548,7 @@ public:
     const auto [ret, success] = load<T>(name, default_value, OPTIONAL, UNIQUE);
     out_value = ret;
     return success;
-  };
+  }
   /*!
     * \brief Loads a parameter from the rosparam server with a default value.
     *
@@ -562,7 +565,7 @@ public:
   {
     const auto loaded = load<T>(name, default_value, OPTIONAL, UNIQUE);
     return loaded.first;
-  };
+  }
   /*!
     * \brief Loads a parameter from the rosparam server with a default value.
     *
@@ -579,7 +582,7 @@ public:
   {
     const auto loaded = load<T>(name, default_value, OPTIONAL, REUSABLE);
     return loaded.first;
-  };
+  }
   //}
 
   /* loadParam function for compulsory parameters //{ */
@@ -600,7 +603,7 @@ public:
     const auto [ret, success] = load<T>(name, T(), COMPULSORY, UNIQUE);
     out_value = ret;
     return success;
-  };
+  }
   /*!
     * \brief Loads a compulsory parameter from the rosparam server.
     *
@@ -616,7 +619,7 @@ public:
   {
     const auto loaded = load<T>(name, T(), COMPULSORY, UNIQUE);
     return loaded.first;
-  };
+  }
 
   /*!
     * \brief Loads a compulsory parameter from the rosparam server.
@@ -633,7 +636,7 @@ public:
   {
     const auto loaded = load<T>(name, T(), COMPULSORY, REUSABLE);
     return loaded.first;
-  };
+  }
   //}
 
   /* loadParam specializations for ros::Duration type //{ */

@@ -34,6 +34,9 @@ namespace mrs_lib
   */
   struct SubscribeHandlerOptions
   {
+    SubscribeHandlerOptions(const ros::NodeHandle& nh) : nh(nh) {}
+    SubscribeHandlerOptions() = default;
+
     ros::NodeHandle nh;  /*!< \brief The ROS NodeHandle to be used for subscription. */
 
     std::string node_name = {};  /*!< \brief Name of the ROS node, using this handle (used for messages printed to console). */
@@ -140,9 +143,9 @@ namespace mrs_lib
     /*!
       * \brief Blocks until new data becomes available or until the timeout runs out or until a spurious wake-up.
       *
-      * \return true if new message is available after waking up, false otherwise.
+      * \return the message if a new message is available after waking up, \p nullptr otherwise.
       */
-      virtual bool waitForNew(const ros::WallDuration& timeout) const {assert(m_pimpl); return m_pimpl->waitForNew(timeout);};
+      virtual typename MessageType::ConstPtr waitForNew(const ros::WallDuration& timeout) {assert(m_pimpl); return m_pimpl->waitForNew(timeout);};
 
     /*!
       * \brief Returns time of the last received message on the topic, handled by this SubscribeHandler.
@@ -209,7 +212,7 @@ namespace mrs_lib
             args...
             )
       {
-      };
+      }
 
     /*!
       * \brief Convenience constructor overload.
@@ -239,7 +242,6 @@ namespace mrs_lib
               message_callback
             );
         }
-        m_pimpl->template set_data_callback<false>();
         if (options.autostart)
           start();
       };
@@ -269,7 +271,7 @@ namespace mrs_lib
             args...
             )
       {
-      };
+      }
 
     /*!
       * \brief Convenience constructor overload.
@@ -298,7 +300,7 @@ namespace mrs_lib
             args...
             )
       {
-      };
+      }
 
     /*!
       * \brief Convenience constructor overload.
@@ -323,7 +325,7 @@ namespace mrs_lib
             args...
             )
       {
-      };
+      }
 
     /*!
       * \brief Convenience constructor overload.
@@ -357,7 +359,7 @@ namespace mrs_lib
             args...
             )
      {
-     };
+     }
 
     /*!
       * \brief Convenience constructor overload.
@@ -384,7 +386,7 @@ namespace mrs_lib
             args...
             )
       {
-      };
+      }
 
     private:
       std::unique_ptr<impl::SubscribeHandler_impl<MessageType>> m_pimpl;
@@ -413,7 +415,7 @@ namespace mrs_lib
       )
   {
     object = Class(args...);
-  };
+  }
 }
 
 #endif // SUBRSCRIBE_HANDLER_H

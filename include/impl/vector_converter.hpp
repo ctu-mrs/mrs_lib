@@ -27,8 +27,8 @@ namespace mrs_lib
     template<class T> constexpr bool has_##memb##mem_v =                           \
           std::experimental::is_detected_convertible_v<type, _has_##memb##mem_chk, T>;
     
-    GENERATE_HAS_MEMBER_FUNC(x, double);
-    GENERATE_HAS_MEMBER(x, double);
+    GENERATE_HAS_MEMBER_FUNC(x, double)
+    GENERATE_HAS_MEMBER(x, double)
 
     template<class T> using _has_squarebracket_operator_chk = decltype(std::declval<T &>()[0]);
     template<class T> constexpr bool has_squarebracket_operator_v = std::experimental::is_detected_convertible_v<double, _has_squarebracket_operator_chk, T>;

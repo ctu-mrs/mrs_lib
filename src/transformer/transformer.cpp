@@ -44,7 +44,7 @@ namespace mrs_lib
     this->is_initialized_ = true;
   }
 
-  Transformer::Transformer(const std::string& node_name) : Transformer(node_name, ""){};
+  Transformer::Transformer(const std::string& node_name) : Transformer(node_name, ""){}
 
   Transformer::Transformer(const Transformer& other)
   {

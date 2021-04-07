@@ -10,7 +10,7 @@ namespace mrs_lib
 
 /* class EulerAttitude //{ */
 
-EulerAttitude::EulerAttitude(const double& roll, const double& pitch, const double& yaw) : roll_(roll), pitch_(pitch), yaw_(yaw){};
+EulerAttitude::EulerAttitude(const double& roll, const double& pitch, const double& yaw) : roll_(roll), pitch_(pitch), yaw_(yaw){}
 
 double EulerAttitude::roll(void) const {
   return roll_;

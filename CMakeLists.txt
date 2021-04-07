@@ -29,8 +29,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # please, NEVER commit those alternative flags with specific overrides of optimization
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3") # because normal release is just -O2
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 # please, really do not commit your temporary custom flags :-)
+
+add_definitions(-Wall)
+add_definitions(-Wextra)
+add_definitions(-Wpedantic)
 
 # include Eigen3
 find_package(Eigen3 REQUIRED)
@@ -51,7 +54,7 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs pcl_ros mrs_msgs
   DEPENDS Eigen
-  LIBRARIES MrsLibSafetyZone MrsLibProfiler MrsLibScopeTimer MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibOdomLKF MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibTimer MrsLibTransformBroadcaster
+  LIBRARIES MrsLibSafetyZone MrsLibProfiler MrsLibScopeTimer MrsLibIirFilter MrsLibNotchFilter MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibOdomLKF MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibTimer MrsLibTransformBroadcaster
   )
 
 ###########
@@ -73,6 +76,12 @@ target_link_libraries(repredictor_example
   ${Eigen_LIBRARIES}
   )
 
+add_executable(service_client_handler_example src/service_client_handler/example.cpp)
+target_link_libraries(service_client_handler_example
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
 add_library(MrsLibOdomLKF src/lkf/LKF_MRS_odom.cpp)
 target_link_libraries(MrsLibOdomLKF
   ${catkin_LIBRARIES}
@@ -85,6 +94,8 @@ target_link_libraries(lkf_example
   ${Eigen_LIBRARIES}
   )
 
+# # Slows the compilation of the library waaaay too much - just generate the conversions on-demand
+# # instead of pre-generating all combinations.
 # add_library(MrsLibVectorConverter src/vector_converter/vector_converter.cpp)
 # target_link_libraries(MrsLibVectorConverter
 #   ${catkin_LIBRARIES}
@@ -137,6 +148,19 @@ target_link_libraries(MrsLibProfiler
 
 add_library(MrsLibScopeTimer src/scope_timer/scope_timer.cpp)
 target_link_libraries(MrsLibScopeTimer
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_library(MrsLibIirFilter src/iir_filter/iir_filter.cpp)
+target_link_libraries(MrsLibIirFilter
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_library(MrsLibNotchFilter src/notch_filter/notch_filter.cpp)
+target_link_libraries(MrsLibNotchFilter
+  MrsLibIirFilter
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
@@ -398,6 +422,21 @@ if(CATKIN_ENABLE_TESTING)
   )
   add_dependencies(
     RepredictorTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+  )
+
+  add_rostest_gtest(
+    ServiceClientHandlerTest
+    test/service_client_handler/service_client_handler.test
+    test/service_client_handler/test.cpp
+  )
+  target_link_libraries(
+    ServiceClientHandlerTest
+    ${catkin_LIBRARIES}
+  )
+  add_dependencies(
+    ServiceClientHandlerTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
   )

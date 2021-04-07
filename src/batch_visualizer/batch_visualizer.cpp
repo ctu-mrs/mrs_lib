@@ -46,7 +46,6 @@ BatchVisualizer::BatchVisualizer(ros::NodeHandle& nh, std::string marker_topic_n
 
   this->visual_pub = nh.advertise<visualization_msgs::MarkerArray>(marker_topic_name.c_str(), 1);
   publish();
-  ros::spinOnce();
 }
 //}
 
@@ -73,7 +72,7 @@ void BatchVisualizer::setParentFrame(const std::string parent_frame) {
 //}
 
 /* initialize //{ */
-void BatchVisualizer::initialize(ros::NodeHandle& nh) {
+void BatchVisualizer::initialize([[maybe_unused]]ros::NodeHandle& nh) {
   if (initialized) {
     return;
   }
@@ -433,7 +432,6 @@ void BatchVisualizer::clearVisuals() {
   addNullTriangle();
 
   publish();
-  ros::spinOnce();
 
   points_marker    = points_tmp;
   lines_marker     = lines_tmp;

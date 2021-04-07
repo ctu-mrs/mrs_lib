@@ -2,7 +2,7 @@
 <package format="2">
 
   <name>mrs_lib</name>
-  <version>0.0.5</version>
+  <version>1.0.0</version>
   <description>The MRS library</description>
 
   <author email="matous.vrba@fel.cvut.cz">Matous Vrba</author>

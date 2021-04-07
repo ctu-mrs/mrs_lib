@@ -2,6 +2,20 @@
 Changelog for package mrs_lib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.0 (2021-03-18)
+------------------
+* Major release
+
+0.0.6 (2021-03-16)
+------------------
+* Noetic-compatible
+* + Repredictor
+* + Custom Timer library
+* + Vector converter
+* + Attitude converter
+* + Subscribe handler
+* ... and athor 250 commits with major improvements ;-)
+
 0.0.5 (2020-02-26)
 ------------------
 * fixed lkf for building without optimalization (static const to static constexpr)

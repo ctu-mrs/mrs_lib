@@ -57,8 +57,7 @@ int main(int argc, char **argv)
 
   ROS_INFO("[%s]: Creating SubscribeHandlers.", node_name.c_str());
 
-  mrs_lib::SubscribeHandlerOptions shopts;
-  shopts.nh = nh;
+  mrs_lib::SubscribeHandlerOptions shopts(nh);
   shopts.node_name = node_name;
   shopts.threadsafe = threadsafe;
 

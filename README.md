@@ -19,4 +19,5 @@ This ROS package contains various useful libraries (mostly C++) for the [MRS UAV
 * **AttitudeConverter** - a proxy class for converting representations of 3D orientation ([documentation](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1AttitudeConverter.html))
 * **LKF** - Linear Kalman Filter ([documentation](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1LKF.html))
 * **UKF** - Unscented Kalman Filter ([documentation](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1UKF.html))
+* **Repredictor** - algorithm for fusing variably time-delayed measurements ([documentation](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1Repredictor.html))
 * **Profiler** - scoped profiling routine ([documentation](https://ctu-mrs.github.io/mrs_lib/classmrs__lib_1_1Profiler.html))

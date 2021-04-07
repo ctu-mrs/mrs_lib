@@ -11,7 +11,7 @@ namespace mrs_lib
     const double& dt = default_dt;
     Base_class::A << 1, dt, 0.5 * dt * dt, 0, 1, dt, 0, 0, 0.9;
     Base_class::B << 0, 0, 0.1;
-  };
+  }
   //}
 
   /* LKF_MRS_odom::predict() method //{ */
@@ -23,7 +23,7 @@ namespace mrs_lib
     /* ret.x = Base_class::state_predict(A, sc.x, B, u); */
     /* ret.P = Base_class::covariance_predict(Base_class::A, sc.P, Base_class::Q); */
     return ret;
-  };
+  }
   //}
 
   /* LKF_MRS_odom::correct() method //{ */
@@ -31,7 +31,7 @@ namespace mrs_lib
   {
     /* return correction_impl(sc, z, R, Hs.at(param)); */
     return correction_optimized(sc, z, R, m_Hs.at(param));
-  };
+  }
   //}
 
   /* LKF_MRS_odom::state_predict_optimized() method //{ */
@@ -47,7 +47,7 @@ namespace mrs_lib
     ddx = ddx + dt * u(0);
     /* ddx = ddx; */
     return ret;
-  };
+  }
   //}
 
   /* LKF_MRS_odom::covariance_predict_optimized() method //{ */
@@ -68,7 +68,7 @@ namespace mrs_lib
     P_ret(2, 1) = P32 + P33 * (dt) + Q(2, 1);
     P_ret(2, 2) = P33 + Q(2, 2);
     return P_ret;
-  };
+  }
   //}
 
 }  // namespace mrs_lib
