@@ -15,7 +15,7 @@ namespace mrs_lib
     /* SubscribeHandler_impl class //{ */
     // implements the constructor, getMsg() method and data_callback method (non-thread-safe)
     template <typename MessageType>
-    class SubscribeHandler_impl : SubscribeHandler<MessageType>
+    class SubscribeHandler_impl : public SubscribeHandler<MessageType>
     {
     public:
       using timeout_callback_t = typename SubscribeHandler<MessageType>::timeout_callback_t;
@@ -134,13 +134,6 @@ namespace mrs_lib
       }
       //}
 
-      /* subscribedTopicName() method //{ */
-      virtual std::string subscribedTopicName() const override
-      {
-        return m_topic_name;
-      };
-      //}
-
       /* start() method //{ */
       virtual void start() override
       {
@@ -157,58 +150,11 @@ namespace mrs_lib
       }
       //}
 
-    public:
-      /* set_data_callback() method //{ */
-      template <bool time_consistent>
-      void set_data_callback()
-      {
-        m_data_callback = std::bind(&SubscribeHandler_impl<MessageType>::template data_callback_impl<time_consistent>, this, std::placeholders::_1);
-      }
-      //}
-
     protected:
-      /* data_callback() method //{ */
-      virtual void data_callback(const typename MessageType::ConstPtr& msg)
-      {
-        m_data_callback(msg);
-      }
-
-      template <bool time_consistent = false>
-      typename std::enable_if<!time_consistent, void>::type data_callback_impl(const typename MessageType::ConstPtr& msg)
-      {
-        data_callback_unchecked(msg, ros::Time::now());
-      }
-
-      template <bool time_consistent = false>
-      typename std::enable_if<time_consistent, void>::type data_callback_impl(const typename MessageType::ConstPtr& msg)
-      {
-        ros::Time now = ros::Time::now();
-        const bool time_reset = check_time_reset(now);
-        const bool message_valid = !m_got_data || check_time_consistent<time_consistent>(msg);
-        if (message_valid || time_reset)
-        {
-          if (time_reset)
-            ROS_WARN("[%s]: Detected jump back in time of %f. Resetting time consistency checks.", m_node_name.c_str(), (m_last_msg_received - now).toSec());
-          data_callback_unchecked(msg, now);
-        } else
-        {
-          ROS_WARN("[%s]: New message from topic '%s' is older than the latest message, skipping it.", m_node_name.c_str(), topicName().c_str());
-        }
-      }
-      //}
-
       /* check_time_reset() method //{ */
       bool check_time_reset(const ros::Time& now)
       {
         return now < m_last_msg_received;
-      }
-      //}
-
-      /* check_time_consistent() method //{ */
-      template <bool time_consistent = false>
-      typename std::enable_if<time_consistent, bool>::type check_time_consistent(const typename MessageType::ConstPtr& msg)
-      {
-        return msg->header.stamp >= m_latest_message->header.stamp;
       }
       //}
 
@@ -236,10 +182,9 @@ namespace mrs_lib
       ros::Timer m_timeout_check_timer;
       timeout_callback_t m_timeout_callback;
 
-    private:
+    protected:
       typename MessageType::ConstPtr m_latest_message;
       message_callback_t m_message_callback;
-      data_callback_t m_data_callback;
 
     private:
       uint32_t m_queue_size;
@@ -276,9 +221,8 @@ namespace mrs_lib
       //}
 
       /* process_new_message() method //{ */
-      void process_new_message(const typename MessageType::ConstPtr& msg, const ros::Time& time)
+      void process_new_message(const typename MessageType::ConstPtr& msg)
       {
-        m_timeout_check_timer.stop();
         m_latest_message = msg;
         {
           std::lock_guard lck(m_new_data_mtx);
@@ -286,17 +230,18 @@ namespace mrs_lib
         }
         m_new_data_cv.notify_one();
         m_got_data = true;
-        m_last_msg_received = time;
-        m_timeout_check_timer.start();
+        m_last_msg_received = ros::Time::now();
       }
       //}
 
-      /* data_callback_unchecked() method //{ */
-      void data_callback_unchecked(const typename MessageType::ConstPtr& msg, const ros::Time& time)
+      /* data_callback() method //{ */
+      virtual void data_callback(const typename MessageType::ConstPtr& msg)
       {
-        process_new_message(msg, time);
+        m_timeout_check_timer.stop();
+        process_new_message(msg);
         if (m_message_callback)
           m_message_callback(*this);
+        m_timeout_check_timer.start();
       }
       //}
     };
@@ -357,11 +302,6 @@ namespace mrs_lib
         std::lock_guard<std::recursive_mutex> lck(m_mtx);
         return impl_class_t::topicName();
       };
-      virtual std::string subscribedTopicName() const override
-      {
-        std::lock_guard<std::recursive_mutex> lck(m_mtx);
-        return impl_class_t::m_topic_name;
-      };
       virtual void start() override
       {
         std::lock_guard<std::recursive_mutex> lck(m_mtx);
@@ -376,8 +316,15 @@ namespace mrs_lib
     protected:
       virtual void data_callback(const typename MessageType::ConstPtr& msg) override
       {
+        // the stop has to come before the mutex lock to enable the timer callbacks currently
+        // in the queue to execute and prevent deadlock (.stop() waits for all currently
+        // queued callbacks to finish before returning...)
+        this->m_timeout_check_timer.stop();
         std::lock_guard<std::recursive_mutex> lck(m_mtx);
-        impl_class_t::data_callback(msg);
+        this->process_new_message(msg);
+        if (this->m_message_callback)
+          this->m_message_callback(*this);
+        this->m_timeout_check_timer.start();
       }
 
     private:
