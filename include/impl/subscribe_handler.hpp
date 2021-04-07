@@ -15,7 +15,7 @@ namespace mrs_lib
     /* SubscribeHandler_impl class //{ */
     // implements the constructor, getMsg() method and data_callback method (non-thread-safe)
     template <typename MessageType>
-    class SubscribeHandler_impl : SubscribeHandler<MessageType>
+    class SubscribeHandler_impl : public SubscribeHandler<MessageType>
     {
     public:
       using timeout_callback_t = typename SubscribeHandler<MessageType>::timeout_callback_t;
@@ -182,7 +182,7 @@ namespace mrs_lib
       ros::Timer m_timeout_check_timer;
       timeout_callback_t m_timeout_callback;
 
-    private:
+    protected:
       typename MessageType::ConstPtr m_latest_message;
       message_callback_t m_message_callback;
 
@@ -319,12 +319,12 @@ namespace mrs_lib
         // the stop has to come before the mutex lock to enable the timer callbacks currently
         // in the queue to execute and prevent deadlock (.stop() waits for all currently
         // queued callbacks to finish before returning...)
-        m_timeout_check_timer.stop();
+        this->m_timeout_check_timer.stop();
         std::lock_guard<std::recursive_mutex> lck(m_mtx);
-        process_new_message(msg);
-        if (m_message_callback)
-          m_message_callback(*this);
-        m_timeout_check_timer.start();
+        this->process_new_message(msg);
+        if (this->m_message_callback)
+          this->m_message_callback(*this);
+        this->m_timeout_check_timer.start();
       }
 
     private:
