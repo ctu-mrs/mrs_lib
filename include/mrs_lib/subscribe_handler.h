@@ -166,7 +166,7 @@ namespace mrs_lib
       *
       * \return name of the handled topic.
       */
-      virtual std::string subscribedTopicName() const {assert(m_pimpl); return m_pimpl->subscribedTopicName();};
+      virtual std::string subscribedTopicName() const {assert(m_pimpl); return m_pimpl->m_topic_name;};
 
     /*!
       * \brief Enables the callbacks for the handled topic.
