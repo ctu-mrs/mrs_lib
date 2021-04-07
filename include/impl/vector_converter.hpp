@@ -33,8 +33,7 @@ namespace mrs_lib
     template<class T> using _has_squarebracket_operator_chk = decltype(std::declval<T &>()[0]);
     template<class T> constexpr bool has_squarebracket_operator_v = std::experimental::is_detected_convertible_v<double, _has_squarebracket_operator_chk, T>;
 
-    template<class T> using _has_xyz_constructor_chk = decltype(T{std::declval<double>(), std::declval<double>(), std::declval<double>()});
-    template<class T> constexpr bool has_xyz_constructor_v = std::experimental::is_detected_v<_has_xyz_constructor_chk, T>;
+    template<class T> constexpr bool has_xyz_constructor_v = std::experimental::is_constructible_v<T, double, double, double>;
     
     //}
 
@@ -61,19 +60,25 @@ namespace mrs_lib
 
     // convertTo specialization for types with a constructor that takes three doubles
     template <typename ret_t>
-    std::enable_if_t<has_xyz_constructor_v<ret_t>, ret_t> convertTo(const double x, const double y, const double z)
+    std::enable_if_t<has_xyz_constructor_v<ret_t>, void> convertTo(ret_t& out, const double x, const double y, const double z)
     {
-      return ret_t {x, y, z};
+      out = {x, y, z};
     }
 
     // convertTo specialization for other types
     template <typename ret_t>
-    std::enable_if_t<!has_xyz_constructor_v<ret_t>, ret_t> convertTo(const double x, const double y, const double z)
+    std::enable_if_t<!has_xyz_constructor_v<ret_t> && has_xmem_v<ret_t>, void> convertTo(ret_t& out, const double x, const double y, const double z)
+    {
+      out.x = x;
+      out.y = y;
+      out.z = z;
+    }
+
+    template <typename ret_t>
+    ret_t convertTo(const double x, const double y, const double z)
     {
       ret_t ret;
-      ret.x = x;
-      ret.y = y;
-      ret.z = z;
+      convertTo(ret, x, y, z);
       return ret;
     }
 
