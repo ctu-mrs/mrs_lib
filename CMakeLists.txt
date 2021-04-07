@@ -76,6 +76,12 @@ target_link_libraries(repredictor_example
   ${Eigen_LIBRARIES}
   )
 
+add_executable(service_client_handler_example src/service_client_handler/example.cpp)
+target_link_libraries(service_client_handler_example
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
 add_library(MrsLibOdomLKF src/lkf/LKF_MRS_odom.cpp)
 target_link_libraries(MrsLibOdomLKF
   ${catkin_LIBRARIES}
@@ -414,6 +420,21 @@ if(CATKIN_ENABLE_TESTING)
   )
   add_dependencies(
     RepredictorTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+  )
+
+  add_rostest_gtest(
+    ServiceClientHandlerTest
+    test/service_client_handler/service_client_handler.test
+    test/service_client_handler/test.cpp
+  )
+  target_link_libraries(
+    ServiceClientHandlerTest
+    ${catkin_LIBRARIES}
+  )
+  add_dependencies(
+    ServiceClientHandlerTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
   )
