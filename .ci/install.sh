@@ -5,6 +5,9 @@ distro=`lsb_release -r | awk '{ print $2 }'`
 [ "$distro" = "18.04" ] && ROS_DISTRO="melodic"
 [ "$distro" = "20.04" ] && ROS_DISTRO="noetic"
 
+# get the path to this script
+MY_PATH=`pwd`
+
 echo "Starting install"
 
 # get the current commit SHA
@@ -25,9 +28,8 @@ echo "running the main install.sh"
 
 gitman update
 
-# checkout the SHA
-cd ~/uav_core/.gitman/$PACKAGE_NAME
-git checkout "$SHA"
+# copy the up-to-date version of this package
+ln -sf "$MY_PATH" ~/uav_core/.gitman/$PACKAGE_NAME
 
 mkdir -p ~/mrs_workspace/src
 cd ~/mrs_workspace/src
