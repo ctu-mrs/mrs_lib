@@ -28,8 +28,9 @@ echo "running the main install.sh"
 
 gitman update
 
-# copy the up-to-date version of this package
-ln -sf "$MY_PATH" ~/uav_core/.gitman/$PACKAGE_NAME
+# link the up-to-date version of this package
+rm -rf ~/uav_core/.gitman/$PACKAGE_NAME
+ln -s "$MY_PATH" ~/uav_core/.gitman/$PACKAGE_NAME
 
 mkdir -p ~/mrs_workspace/src
 cd ~/mrs_workspace/src
