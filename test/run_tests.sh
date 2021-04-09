@@ -19,6 +19,8 @@ catkin build $PACKAGE --catkin-make-args tests
 TEST_RESULT_PATH=$(realpath /tmp/$RANDOM)
 mkdir -p $TEST_RESULT_PATH
 
+export ROS_MASTER_URI=http://localhost:11311
+
 # run the test
 rostest $PACKAGE mrs_lib.test $TEXT_OUTPUT --results-filename=$PACKAGE.test --results-base-dir="$TEST_RESULT_PATH"
 
