@@ -60,7 +60,7 @@ bool testConv()
   return                                                            
       (x == xo && y == yo && z == zo)                               
    || (x == float(xo) && y == float(yo) && z == float(zo));         
-};
+}
 
 /* TMP BLACK MAGIC, ALSO NO TOUCHING! //{ */
 

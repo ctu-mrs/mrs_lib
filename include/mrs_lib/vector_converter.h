@@ -9,6 +9,7 @@
 #include <tuple>
 
 #include <impl/vector_converter.hpp>
+
 namespace mrs_lib
 {
 
@@ -33,7 +34,9 @@ namespace mrs_lib
   ret_t convert(const in_t& in)
   {
     const auto [x, y, z] = impl::convertFrom(in);
-    return impl::convertTo<ret_t>(x, y, z);
+    ret_t ret;
+    impl::convertTo(ret, x, y, z);
+    return ret;
   }
 
 }

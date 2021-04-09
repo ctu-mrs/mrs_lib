@@ -12,7 +12,7 @@ VERBOSE=1
 [ "$VERBOSE" = "1" ] && TEXT_OUTPUT="-t"
 
 # build the package
-catkin build $PACKAGE # it has to be fully build normally before building with --catkin-make-args tests
+catkin build $PACKAGE # it has to be fully built normally before building with --catkin-make-args tests
 catkin build $PACKAGE --catkin-make-args tests
 
 # folder for test results

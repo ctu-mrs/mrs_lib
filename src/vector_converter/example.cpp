@@ -14,12 +14,6 @@
      It may be run after building *mrs_lib* by executing `rosrun mrs_lib vector_converter_example`.
  */
 
-// Include the vector_converter.h header
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wnarrowing"
-#include <mrs_lib/vector_converter.h>
-#pragma GCC diagnostic pop
-
 #include <geometry_msgs/Vector3.h>
 #include <Eigen/Dense>
 #include <pcl/point_types.h>
@@ -38,26 +32,30 @@ namespace mrs_lib
   namespace impl
   {
 
-    // convertFrom specialization for OpenCV vectors (mrs_lib::impl::unw_t is just a shorthand for std::tuple<double, double, double>)
-    unw_t convertFrom(const MyPoint& in)
+    // convertFrom specialization for MyPoint (mrs_lib::impl::unw_t is just a shorthand for std::tuple<double, double, double>)
+    std::tuple<double, double, double> convertFrom(const MyPoint& in)
     {
       return {in.e1, in.e2, in.e3};
     }
 
-    // convertTo specialization for types with a constructor that takes three doubles
-    MyPoint convertTo(const double x, const double y, const double z)
+    // convertTo specialization for MyPoint
+    void convertTo(MyPoint& ret, const double x, const double y, const double z)
     {
-      MyPoint ret;
       ret.e1 = x;
       ret.e2 = y;
       ret.e3 = z;
-      return ret;
     }
 
   }
 }
 
 //}
+
+// Include the vector_converter.h header (this has to be included *after* defining functions for your custom types)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnarrowing"
+#include <mrs_lib/vector_converter.h>
+#pragma GCC diagnostic pop
 
 int main()
 {

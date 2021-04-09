@@ -1,3 +1,4 @@
+#include <limits>
 #include <mrs_lib/attitude_converter.h>
 #include <mrs_lib/geometry/cyclic.h>
 #include <cmath>
@@ -115,7 +116,7 @@ TEST(TESTSuite, get_heading_exception) {
   try {
     [[maybe_unused]] double errored_heading = AttitudeConverter(0, M_PI_2, 0).getHeading();
   }
-  catch (mrs_lib::AttitudeConverter::GetHeadingException e) {
+  catch (const mrs_lib::AttitudeConverter::GetHeadingException& e) {
     result = 1;
     printf("exception correctly caught: %s\n", e.what());
   }
@@ -204,7 +205,7 @@ TEST(TESTSuite, get_heading_by_yaw_exception) {
   try {
     [[maybe_unused]] tf2::Quaternion attitude = AttitudeConverter(0, M_PI_2, 0).setHeadingByYaw(1.0);
   }
-  catch (mrs_lib::AttitudeConverter::SetHeadingByYawException e) {
+  catch (const mrs_lib::AttitudeConverter::SetHeadingByYawException& e) {
     printf("exception correctly caught: %s\n", e.what());
     result = 1;
   }
@@ -311,26 +312,39 @@ TEST(TESTSuite, input_nan_checks) {
 
   printf("testing NaNs on input\n");
 
-  double mynan =  std::numeric_limits<double>::quiet_NaN();
+  double mynan = std::numeric_limits<double>::quiet_NaN();
 
-  tf2::Quaternion q;
-  double heading;
+  tf2::Quaternion q(0, 0, 0, 1);
+
+  // ok by default
+  double heading = 0;
 
   try {
+    // this should cause an exception, therefore, q should be ok after this
     q = AttitudeConverter(mynan, 0, 0);
-    heading = AttitudeConverter(mynan, 0, 0).getHeading();
-  } catch (mrs_lib::AttitudeConverter::InvalidAttitudeException e) {
+  }
+  catch (const mrs_lib::AttitudeConverter::InvalidAttitudeException& e) {
     printf("exception caught: '%s'\n", e.what());
   }
 
+  // this should not be triggered
   if (!std::isfinite(q.x()) || !std::isfinite(q.y()) || !std::isfinite(q.z()) || !std::isfinite(q.w())) {
     printf("NaNs in the quaternion\n");
-    result = 0;
+    result = 0;  // make the test fail
   }
 
+  try {
+    // this should cause an exception, therefore, heading should be ok after this
+    heading = AttitudeConverter(mynan, 0, 0).getHeading();
+  }
+  catch (const mrs_lib::AttitudeConverter::InvalidAttitudeException& e) {
+    printf("exception caught: '%s'\n", e.what());
+  }
+
+  // this should not pass
   if (!std::isfinite(heading)) {
     printf("NaNs in heading\n");
-    result = 0;
+    result = 0;  // make the test fail
   }
 
   printf("\n");
