@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
 
   std::thread thread_main = std::thread(threadMain);
 
-  ROS_INFO("[%s]: initialized", ros::this_node::getName().c_str())
+  ROS_INFO("[%s]: initialized", ros::this_node::getName().c_str());
 
   ros::MultiThreadedSpinner spinner(4);
   spinner.spin();
