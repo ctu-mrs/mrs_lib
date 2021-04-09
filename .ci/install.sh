@@ -10,9 +10,6 @@ MY_PATH=`pwd`
 
 echo "Starting install"
 
-# get the current commit SHA
-SHA=`git rev-parse HEAD`
-
 # get the current package name
 PACKAGE_NAME=${PWD##*/}
 
