@@ -17,6 +17,10 @@ source ~/mrs_workspace/devel/setup.bash
 
 export ROS_MASTER_URI=http://localhost:11311
 
+roscore &
+
+sleep 2
+
 PACKAGE="mrs_lib"
 VERBOSE=0
 
