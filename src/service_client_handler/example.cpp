@@ -51,8 +51,8 @@ void threadMain(void) {
 
     std_srvs::Trigger srv;
 
-    std::future<std_srvs::Trigger> res = client1.callAsync(srv, 3);
-    client2.call(srv);
+    std::future<std_srvs::Trigger> res = client1.callAsync(srv, 10);
+    client2.call(srv, 10, 0.1);
   }
 }
 

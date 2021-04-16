@@ -62,6 +62,17 @@ public:
   bool call(ServiceType& srv, const int& attempts);
 
   /**
+   * @brief "classic" synchronous service call with repeats after an error
+   *
+   * @param srv data
+   * @param attempts how many attempts for the call
+   * @param repeat_delay how long to wait before repeating the call
+   *
+   * @return  true when success
+   */
+  bool call(ServiceType& srv, const int& attempts, const double& repeat_delay);
+
+  /**
    * @brief asynchronous service call
    *
    * @param srv data
@@ -80,6 +91,17 @@ public:
    */
   std::future<ServiceType> callAsync(ServiceType& srv, const int& attempts);
 
+  /**
+   * @brief asynchronous service call with repeates after an error
+   *
+   * @param srv data
+   * @param attempts how many attempts for the call
+   * @param repeat_delay how long to wait before repeating the call
+   *
+   * @return future result
+   */
+  std::future<ServiceType> callAsync(ServiceType& srv, const int& attempts, const double& repeat_delay);
+
 private:
   ros::ServiceClient service_client_;
   std::mutex         mutex_service_client_;
@@ -89,6 +111,7 @@ private:
 
   ServiceType async_data_;
   int         async_attempts_;
+  double      async_repeat_delay_;
   std::mutex  mutex_async_;
 
   ServiceType asyncRun(void);
@@ -167,6 +190,17 @@ public:
   bool call(ServiceType& srv, const int& attempts);
 
   /**
+   * @brief "standard" synchronous call with repeats after failure
+   *
+   * @param srv data
+   * @param attempts how many attempts for the call
+   * @param repeat_delay how long to wait before repeating the call
+   *
+   * @return true when success
+   */
+  bool call(ServiceType& srv, const int& attempts, const double& repeat_delay);
+
+  /**
    * @brief asynchronous call
    *
    * @param srv data
@@ -184,6 +218,17 @@ public:
    * @return future result
    */
   std::future<ServiceType> callAsync(ServiceType& srv, const int& attempts);
+
+  /**
+   * @brief asynchronous call with repeats after failure
+   *
+   * @param srv data
+   * @param attempts how many attemps for the call
+   * @param repeat_delay how long to wait before repeating the call
+   *
+   * @return future result
+   */
+  std::future<ServiceType> callAsync(ServiceType& srv, const int& attempts, const double& repeat_delay);
 
 private:
   std::shared_ptr<ServiceClientHandler_impl<ServiceType>> impl_;

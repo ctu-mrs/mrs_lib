@@ -83,6 +83,40 @@ bool ServiceClientHandler_impl<ServiceType>::call(ServiceType& srv, const int& a
 
 //}
 
+/* call(ServiceType& srv, const int& attempts, const double& repeat_delay) //{ */
+
+template <class ServiceType>
+bool ServiceClientHandler_impl<ServiceType>::call(ServiceType& srv, const int& attempts, const double& repeat_delay) {
+
+  if (!service_initialized_) {
+    return false;
+  }
+
+  std::scoped_lock lock(mutex_service_client_);
+
+  bool success = false;
+  int  counter = 0;
+
+  while (!success && ros::ok()) {
+
+    success = service_client_.call(srv);
+
+    if (!success) {
+      ROS_ERROR("[%s]: failed to call service to '%s'", ros::this_node::getName().c_str(), _address_.c_str());
+    }
+
+    if (++counter >= attempts) {
+      break;
+    }
+
+    ros::Duration(repeat_delay).sleep();
+  }
+
+  return success;
+}
+
+//}
+
 /* callAsync(ServiceType& srv) //{ */
 
 template <class ServiceType>
@@ -91,8 +125,9 @@ std::future<ServiceType> ServiceClientHandler_impl<ServiceType>::callAsync(Servi
   {
     std::scoped_lock lock(mutex_async_);
 
-    async_data_     = srv;
-    async_attempts_ = 1;
+    async_data_         = srv;
+    async_attempts_     = 1;
+    async_repeat_delay_ = 0;
   }
 
   return std::async(std::launch::async, &ServiceClientHandler_impl::asyncRun, this);
@@ -108,8 +143,27 @@ std::future<ServiceType> ServiceClientHandler_impl<ServiceType>::callAsync(Servi
   {
     std::scoped_lock lock(mutex_async_);
 
-    async_data_     = srv;
-    async_attempts_ = attempts;
+    async_data_         = srv;
+    async_attempts_     = attempts;
+    async_repeat_delay_ = 0;
+  }
+
+  return std::async(std::launch::async, &ServiceClientHandler_impl::asyncRun, this);
+}
+
+//}
+
+/* callAsync(ServiceType& srv, const int& attempts, const double &repeat_delay) //{ */
+
+template <class ServiceType>
+std::future<ServiceType> ServiceClientHandler_impl<ServiceType>::callAsync(ServiceType& srv, const int& attempts, const double& repeat_delay) {
+
+  {
+    std::scoped_lock lock(mutex_async_);
+
+    async_data_         = srv;
+    async_attempts_     = attempts;
+    async_repeat_delay_ = repeat_delay;
   }
 
   return std::async(std::launch::async, &ServiceClientHandler_impl::asyncRun, this);
@@ -128,11 +182,12 @@ ServiceType ServiceClientHandler_impl<ServiceType>::asyncRun(void) {
   {
     std::scoped_lock lock(mutex_async_);
 
-    async_data     = async_data_;
-    async_attempts = async_attempts_;
+    async_data          = async_data_;
+    async_attempts      = async_attempts_;
+    async_repeat_delay_ = async_repeat_delay_;
   }
 
-  call(async_data, async_attempts);
+  call(async_data, async_attempts, async_repeat_delay_);
 
   return async_data;
 }
@@ -213,6 +268,16 @@ bool ServiceClientHandler<ServiceType>::call(ServiceType& srv, const int& attemp
 
 //}
 
+/* call(ServiceType& srv, const int& attempts, const double& repeat_delay) //{ */
+
+template <class ServiceType>
+bool ServiceClientHandler<ServiceType>::call(ServiceType& srv, const int& attempts, const double& repeat_delay) {
+
+  return impl_->call(srv, attempts, repeat_delay);
+}
+
+//}
+
 /* callAsync(ServiceType& srv) //{ */
 
 template <class ServiceType>
@@ -231,6 +296,18 @@ template <class ServiceType>
 std::future<ServiceType> ServiceClientHandler<ServiceType>::callAsync(ServiceType& srv, const int& attempts) {
 
   std::future<ServiceType> res = impl_->callAsync(srv, attempts);
+
+  return res;
+}
+
+//}
+
+/* callAsync(ServiceType& srv, const int& attempts, const double& repeat_delay) //{ */
+
+template <class ServiceType>
+std::future<ServiceType> ServiceClientHandler<ServiceType>::callAsync(ServiceType& srv, const int& attempts, const double& repeat_delay) {
+
+  std::future<ServiceType> res = impl_->callAsync(srv, attempts, repeat_delay);
 
   return res;
 }
