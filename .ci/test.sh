@@ -36,7 +36,7 @@ TEST_RESULT_PATH=$(realpath /tmp/$RANDOM)
 mkdir -p $TEST_RESULT_PATH
 
 # run the test
-rostest $PACKAGE mrs_lib.test $TEXT_OUTPUT --results-filename=$PACKAGE.test --results-base-dir="$TEST_RESULT_PATH"
+rostest --reuse-master $PACKAGE mrs_lib.test $TEXT_OUTPUT --results-filename=$PACKAGE.test --results-base-dir="$TEST_RESULT_PATH"
 
 # evaluate the test results
 catkin_test_results "$TEST_RESULT_PATH"
