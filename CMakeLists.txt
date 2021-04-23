@@ -34,6 +34,11 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3") # because normal r
 add_definitions(-Wall)
 add_definitions(-Wextra)
 add_definitions(-Wpedantic)
+add_definitions(-fno-omit-frame-pointer)
+add_definitions(-fsanitize=address,undefined)
+add_link_options(-fsanitize=address,undefined)
+set(-O0)
+set(-g)
 
 # include Eigen3
 find_package(Eigen3 REQUIRED)
