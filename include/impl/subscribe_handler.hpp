@@ -226,13 +226,10 @@ namespace mrs_lib
       void process_new_message(const typename MessageType::ConstPtr& msg)
       {
         m_latest_message = msg;
-        {
-          std::lock_guard lck(m_new_data_mtx);
-          m_new_data = true;
-        }
-        m_new_data_cv.notify_one();
+        m_new_data = true;
         m_got_data = true;
         m_last_msg_received = ros::Time::now();
+        m_new_data_cv.notify_one();
       }
       //}
 
@@ -240,6 +237,7 @@ namespace mrs_lib
       virtual void data_callback(const typename MessageType::ConstPtr& msg)
       {
         m_timeout_check_timer.stop();
+        std::lock_guard lck(m_new_data_mtx);
         process_new_message(msg);
         if (m_message_callback)
           m_message_callback(*this);
@@ -322,7 +320,7 @@ namespace mrs_lib
         // in the queue to execute and prevent deadlock (.stop() waits for all currently
         // queued callbacks to finish before returning...)
         this->m_timeout_check_timer.stop();
-        std::lock_guard<std::recursive_mutex> lck(m_mtx);
+        std::scoped_lock lck(m_mtx, this->m_new_data_mtx);
         this->process_new_message(msg);
         if (this->m_message_callback)
           this->m_message_callback(*this);
