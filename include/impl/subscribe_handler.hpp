@@ -57,6 +57,8 @@ namespace mrs_lib
       }
       //}
 
+      virtual ~SubscribeHandler_impl() override = default;
+
     public:
       /* getMsg() method //{ */
       virtual typename MessageType::ConstPtr getMsg() override
@@ -249,7 +251,7 @@ namespace mrs_lib
 
     /* SubscribeHandler_threadsafe class //{ */
     template <typename MessageType>
-    class SubscribeHandler_threadsafe : public SubscribeHandler_impl<MessageType>
+    class SubscribeHandler_threadsafe final : public SubscribeHandler_impl<MessageType>
     {
     private:
       using impl_class_t = impl::SubscribeHandler_impl<MessageType>;
