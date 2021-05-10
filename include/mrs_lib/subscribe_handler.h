@@ -388,6 +388,12 @@ namespace mrs_lib
       {
       }
 
+      virtual ~SubscribeHandler() = default;
+      SubscribeHandler(const SubscribeHandler&) = default;
+      SubscribeHandler(SubscribeHandler&&) = default;
+      SubscribeHandler& operator=(const SubscribeHandler&) = default;
+      SubscribeHandler& operator=(SubscribeHandler&&) = default;
+
     private:
       std::unique_ptr<impl::SubscribeHandler_impl<MessageType>> m_pimpl;
   };

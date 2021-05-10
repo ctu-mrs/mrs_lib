@@ -5,23 +5,23 @@ namespace mrs_lib
 
 // | ------------------------ ScopeTimer ------------------------ |
 
+std::unordered_map<std::string, ros::Time> ScopeTimer::last_print_times;
+
 /* ScopeTimer constructor //{ */
 
-ScopeTimer::ScopeTimer(const std::string& label)
+ScopeTimer::ScopeTimer(const std::string& label, const ros::Duration& throttle_period)
+  : _timer_label_(label), _throttle_period_(throttle_period)
 {
   checkpoints.push_back(time_point("timer start"));
-
-  _timer_label_ = label;
 
   ROS_DEBUG("[%s]Scope timer started, label: %s", ros::this_node::getName().c_str(), label.c_str());
 }
 
-ScopeTimer::ScopeTimer(const std::string& label, const time_point& tp0)
+ScopeTimer::ScopeTimer(const std::string& label, const time_point& tp0, const ros::Duration& throttle_period)
+  : _timer_label_(label), _throttle_period_(throttle_period)
 {
   checkpoints.push_back(tp0);
   checkpoints.push_back(time_point("timer start"));
-
-  _timer_label_ = label;
 
   ROS_DEBUG("[%s]Scope timer started, label: %s", ros::this_node::getName().c_str(), label.c_str());
 }
@@ -41,8 +41,35 @@ void ScopeTimer::checkpoint(const std::string& label)
 
 ScopeTimer::~ScopeTimer() {
 
-  auto chrono_end_time = std::chrono::system_clock::now();
-  auto ros_end_time    = ros::Time::now();
+  const auto chrono_end_time = std::chrono::system_clock::now();
+  const auto ros_end_time    = ros::Time::now();
+
+  // if throttling is enabled, check time of last print and only print if applicable
+  if (!_throttle_period_.isZero())
+  {
+    bool do_print = false;
+    const auto last_it = last_print_times.find(_timer_label_);
+    // if this is the first print of this ScopeTimer
+    if (last_it == last_print_times.end())
+    {
+      do_print = true;
+      last_print_times.emplace(_timer_label_, ros_end_time);
+    }
+    else
+    {
+      // if this ScopeTimer was already printed, check how long ago
+      ros::Time& last_print_time = last_it->second;
+      if (ros_end_time - last_print_time > _throttle_period_)
+      {
+        // if it was long ago enough, print again and update the last print time
+        do_print = true;
+        last_print_time = ros_end_time;
+      }
+    }
+
+    if (!do_print)
+      return;
+  }
 
   checkpoints.push_back(time_point("scope end"));
 

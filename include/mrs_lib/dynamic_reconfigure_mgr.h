@@ -186,19 +186,19 @@ private:
 
       if (try_cast(val, intval))
       {
-        if (!try_compare(old_val, intval) || m_not_initialized)
+        if (m_not_initialized || !try_compare(old_val, intval))
           print_value(name, *intval);
       } else if (try_cast(val, doubleval))
       {
-        if (!try_compare(old_val, doubleval) || m_not_initialized)
+        if (m_not_initialized || !try_compare(old_val, doubleval))
           print_value(name, *doubleval);
       } else if (try_cast(val, boolval))
       {
-        if (!try_compare(old_val, boolval) || m_not_initialized)
+        if (m_not_initialized || !try_compare(old_val, boolval))
           print_value(name, *boolval);
       } else if (try_cast(val, stringval))
       {
-        if (!try_compare(old_val, stringval) || m_not_initialized)
+        if (m_not_initialized || !try_compare(old_val, stringval))
           print_value(name, *stringval);
       } else
       {
