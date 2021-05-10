@@ -11,8 +11,8 @@
 ros::ServiceServer server1;
 ros::ServiceServer server2;
 
-mrs_lib::ServiceClientHandler<std_srvs::Trigger> client1;
-mrs_lib::ServiceClientHandler<std_srvs::Trigger> client2;
+mrs_lib::ServiceClientHandler client1;
+/* mrs_lib::ServiceClientHandler<std_srvs::Trigger> client2; */
 
 int counter_1 = 0;
 int counter_2 = 0;
@@ -51,8 +51,9 @@ void threadMain(void) {
 
     std_srvs::Trigger srv;
 
-    std::future<std_srvs::Trigger> res = client1.callAsync(srv, 10);
-    client2.call(srv, 10, 0.1);
+    client1.call(srv);
+    /* std::future<std_srvs::Trigger> res = client1.callAsync(srv, 10); */
+    /* client2.call(srv, 10, 0.1); */
   }
 }
 
@@ -72,8 +73,8 @@ int main(int argc, char** argv) {
 
   // | ----------------- create a service client ---------------- |
 
-  client1 = mrs_lib::ServiceClientHandler<std_srvs::Trigger>(nh, "service1");
-  client2.initialize(nh, "service2");
+  client1.initialize<std_srvs::Trigger>(nh, "service1");
+  /* client2.initialize(nh, "service2"); */
 
   // | ------------------------- thread ------------------------- |
 
