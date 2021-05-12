@@ -82,8 +82,8 @@ TEST(TESTSuite, lkf_comparison)
   // measurement noise is just identity
   const R_t R = 0.1*R_t::Identity();
   
-  const int n_gts = 5e2;
-  const int n_meass = 3e2;
+  const int n_gts = 2e2;
+  const int n_meass = 1e2;
 
   // Instantiate the LKF model
   auto lkf = std::make_shared<lkf_t>(generateA, generateB, H);
