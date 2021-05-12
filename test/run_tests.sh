@@ -27,7 +27,13 @@ roscore &
 rostest --reuse-master $PACKAGE mrs_lib.test $TEXT_OUTPUT --results-filename=$PACKAGE.test --results-base-dir="$TEST_RESULT_PATH"
 
 # evaluate the test results
+echo test result path is $TEST_RESULT_PATH
 catkin_test_results "$TEST_RESULT_PATH"
+success=$?
 
 echo ""
-echo "Success? $?"
+if [ $success = "0" ]; then
+  echo -e "\033[0;32mSuccess! \033[1;"
+else
+  echo -e "\033[0;31mFailed some tests! \033[1;"
+fi

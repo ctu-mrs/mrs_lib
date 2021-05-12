@@ -1,19 +1,6 @@
 cmake_minimum_required(VERSION 3.1.2)
 project(mrs_lib)
 
-# Override CXX flags inherited from workspace, if precompiled PCL binaries from debian repos are used
-if (DEFINED ENV{PCL_CROSS_COMPILATION})
-  set(PCL_CROSS_COMPILATION $ENV{PCL_CROSS_COMPILATION})
-else()
-  set(PCL_CROSS_COMPILATION "false")
-endif()
-if(${PCL_CROSS_COMPILATION} STREQUAL "false")
-  message("Using precompiled PCL binaries from debian repos. Overriding catkin workspace CMAKE_CXX_FLAGS.")
-  set(CMAKE_CXX_FLAGS "-std=c++17")
-else()
-  message("Using custom-built PCL binaries. Inheriting all CMAKE_CXX_FLAGS from catkin workspace.")
-endif()
-
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   cmake_modules
@@ -41,6 +28,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # please, NEVER commit those alternative flags with specific overrides of optimization
+#  add the address sanitizer compiler flags to debug build type
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address,undefined -fno-omit-frame-pointer") # because normal release is just -O2
+#  add the address sanitizer linker flags to debug build type
+set(CMAKE_LD_FLAGS_DEBUG  "${CMAKE_LD_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address,undefined") # because normal release is just -O2
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3") # because normal release is just -O2
 # please, really do not commit your temporary custom flags :-)
 
