@@ -28,19 +28,12 @@ void message_callback(mrs_lib::SubscribeHandler<geometry_msgs::PointStamped>& sh
   got_messages_ = true;
 }
 
-mrs_lib::SubscribeHandler<geometry_msgs::PointStamped> sh;
-
-void thread_fcn([[maybe_unused]] const ros::TimerEvent& evt) {
-  if (sh.hasMsg()) {
-    ROS_INFO_STREAM_THROTTLE(1.0, "time of last message: " << sh.lastMsgTime());
-  }
-}
-
 /* TEST(TESTSuite, main_test) //{ */
 
 TEST(TESTSuite, main_test) {
 
   ros::NodeHandle nh("~");
+  mrs_lib::SubscribeHandler<geometry_msgs::PointStamped> sh;
 
   int result = 0;
 
@@ -63,7 +56,14 @@ TEST(TESTSuite, main_test) {
 
   std::vector<ros::Timer> timers;
   for (int it = 0; it < 200; it++) {
-    timers.push_back(nh.createTimer(ros::Duration(1e-3), thread_fcn));
+    timers.push_back(nh.createTimer(ros::Duration(1e-3), 
+    [&sh] ([[maybe_unused]] const ros::TimerEvent& evt)
+    {
+      if (sh.hasMsg()) {
+        ROS_INFO_STREAM_THROTTLE(1.0, "time of last message: " << sh.lastMsgTime());
+      }
+    }
+    ));
   }
 
   /* Type of the message may be accessed by C++11 decltype in case of need */
