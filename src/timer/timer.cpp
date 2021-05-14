@@ -44,6 +44,20 @@ void ROSTimer::setPeriod(const ros::Duration& duration, const bool reset) {
 
 //}
 
+/* running() //{ */
+
+bool ROSTimer::running()
+{
+  std::scoped_lock lock(mutex_timer_);
+
+  if (timer_)
+    return timer_->hasStarted();
+  else
+    return false;
+}
+
+//}
+
 // | ----------------------- ThreadTimer ---------------------- |
 
 /* TheadTimer::start() //{ */
@@ -75,6 +89,18 @@ void ThreadTimer::setPeriod(const ros::Duration& duration, [[maybe_unused]] cons
   if (impl_) {
     impl_->setPeriod(duration, reset);
   }
+}
+
+//}
+
+/* ThreadTimer::running() //{ */
+
+bool ThreadTimer::running()
+{
+  if (impl_)
+    return impl_->running_;
+  else
+    return false;
 }
 
 //}
@@ -121,6 +147,7 @@ void ThreadTimer::Impl::stop()
 {
   std::scoped_lock lck(mutex_state_);
   running_ = false;
+  start_cond_.notify_all();
 }
 
 void ThreadTimer::Impl::setPeriod(const ros::Duration& duration, [[maybe_unused]] const bool reset)
@@ -132,6 +159,23 @@ void ThreadTimer::Impl::setPeriod(const ros::Duration& duration, [[maybe_unused]
     this->oneshot_  = true;
 }
 
+//}
+
+/* ThreadTimer::breakableSleep() method //{ */
+void ThreadTimer::Impl::breakableSleep(const ros::Time& until)
+{
+  while (ros::ok() && ros::Time::now() < until)
+  {
+    const std::chrono::nanoseconds dur {(until - ros::Time::now()).toNSec()};
+    const std::chrono::time_point<std::chrono::steady_clock> until_stl = std::chrono::steady_clock::now() + dur;
+    std::unique_lock lck(mutex_state_);
+    if (!ending_)
+      start_cond_.wait_until(lck, until_stl);
+    // check the flags while mutex_state_ is locked
+    if (ending_ || !running_)
+      break;
+  }
+}
 //}
 
 /* ThreadTimer::Impl::threadFcn() //{ */
@@ -156,12 +200,12 @@ void ThreadTimer::Impl::threadFcn()
 
     // If the flow got here, the thread should attempt to wait for the specified duration.
     // first, copy the delay we should wait for in a thread-safe manner
-    ros::Duration delay;
+    ros::Time next_expected;
     {
       std::scoped_lock lck(mutex_state_);
-      delay = next_expected_ - ros::Time::now();
+      next_expected = next_expected_;
     }
-    delay.sleep();
+    breakableSleep(next_expected);
 
     // prepare the timer event (outside the locked scope so that it is usable by the callback without holding the mutex)
     ros::TimerEvent timer_event;

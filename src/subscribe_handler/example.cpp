@@ -73,7 +73,7 @@ int main(int argc, char **argv)
   // * when it's true:
   //   Our custom timer implementation will be used. The timeout callbacks will now be called every second without messages
   //   irregardles of the spinOnce call. This is the prefferred behavior in many cases.
-  shopts.use_thread_timer = false;
+  shopts.use_thread_timer = true;
 
   /* This is how a new SubscribeHandler object is initialized. */ 
   mrs_lib::SubscribeHandler<std_msgs::String> handler(

@@ -24,6 +24,7 @@ find_package(catkin REQUIRED COMPONENTS
 #   cfg/batch_visualizer.cfg
 # )
 
+set(CMAKE_BUILD_TYPE debug)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -427,6 +428,22 @@ if(CATKIN_ENABLE_TESTING)
   )
   add_dependencies(
     RepredictorTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+  )
+
+  add_rostest_gtest(
+    TimerTest
+    test/timer/timer.test
+    test/timer/test.cpp
+  )
+  target_link_libraries(
+    TimerTest
+    MrsLibTimer 
+    ${catkin_LIBRARIES}
+  )
+  add_dependencies(
+    TimerTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
   )

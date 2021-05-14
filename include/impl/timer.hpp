@@ -6,6 +6,7 @@
 /* ROSTimer constructors //{ */
 
 // duration + oneshot + autostart
+#include <chrono>
 template <class ObjectType>
 ROSTimer::ROSTimer(const ros::NodeHandle& nh, const ros::Duration& duration, void (ObjectType::*const callback)(const ros::TimerEvent&),
                    ObjectType* const obj, const bool oneshot, const bool autostart) {
@@ -50,6 +51,7 @@ private:
 
   bool oneshot_;
 
+  void breakableSleep(const ros::Time& until);
   void threadFcn();
 
   std::mutex mutex_state_;
@@ -70,7 +72,7 @@ private:
 template <class ObjectType>
 ThreadTimer::ThreadTimer([[maybe_unused]] const ros::NodeHandle& nh, const ros::Rate& rate, void (ObjectType::*const callback)(const ros::TimerEvent&),
                          ObjectType* const obj, const bool oneshot, const bool autostart)
-  : ThreadTimer(nh, ros::Duration(rate), callback, obj, ros::Duration(rate), oneshot, autostart)
+  : ThreadTimer(nh, rate.expectedCycleTime(), callback, obj, oneshot, autostart)
 {
 }
 

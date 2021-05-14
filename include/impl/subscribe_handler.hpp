@@ -40,7 +40,6 @@ namespace mrs_lib
           m_queue_size(options.queue_size),
           m_transport_hints(options.transport_hints)
     {
-      std::cout << "impl constructor address: " << owner << "\n";
       if (!m_timeout_callback)
         m_timeout_callback = std::bind(&Impl::default_timeout_callback, this, std::placeholders::_1, std::placeholders::_2,
                                        std::placeholders::_3);
@@ -275,7 +274,6 @@ namespace mrs_lib
     ImplThreadsafe(SubscribeHandler* owner, const SubscribeHandlerOptions& options, const message_callback_t& message_callback = message_callback_t())
         : impl_class_t::Impl(owner, options, message_callback)
     {
-      std::cout << "implThreadsafe constructor address: " << owner << "\n";
     }
 
   public:

@@ -218,7 +218,6 @@ namespace mrs_lib
             const message_callback_t& message_callback = {}
           )
       {
-        std::cout << "shandler constructor address: " << this << "\n";
         if (options.threadsafe)
         {
           m_pimpl = std::make_unique<ImplThreadsafe>
