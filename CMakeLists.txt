@@ -24,7 +24,6 @@ find_package(catkin REQUIRED COMPONENTS
 #   cfg/batch_visualizer.cfg
 # )
 
-set(CMAKE_BUILD_TYPE debug)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
