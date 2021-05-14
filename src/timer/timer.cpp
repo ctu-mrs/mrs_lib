@@ -5,42 +5,9 @@ namespace mrs_lib
 
 // | ------------------------ ROSTimer ------------------------ |
 
-/* ROSTimer constructors //{ */
-
-ROSTimer::ROSTimer(void) {
-}
-
-ROSTimer::~ROSTimer(void) {
-}
-
-ROSTimer::ROSTimer(const ROSTimer& other) {
-  if (other.timer_) {
-    this->timer_ = other.timer_;
-  }
-}
-
-//}
-
-/* ROSTimer::operator= //{ */
-
-ROSTimer& ROSTimer::operator=(const ROSTimer& other) {
-
-  if (this == &other) {
-    return *this;
-  }
-
-  if (other.timer_) {
-    this->timer_ = other.timer_;
-  }
-
-  return *this;
-}
-
-/* //} */
-
 /* stop() //{ */
 
-void ROSTimer::stop(void) {
+void ROSTimer::stop() {
 
   std::scoped_lock lock(mutex_timer_);
 
@@ -53,7 +20,7 @@ void ROSTimer::stop(void) {
 
 /* start() //{ */
 
-void ROSTimer::start(void) {
+void ROSTimer::start() {
 
   std::scoped_lock lock(mutex_timer_);
 
@@ -66,7 +33,7 @@ void ROSTimer::start(void) {
 
 /* setPeriod() //{ */
 
-void ROSTimer::setPeriod(const ros::Duration& duration, const bool& reset) {
+void ROSTimer::setPeriod(const ros::Duration& duration, const bool reset) {
 
   std::scoped_lock lock(mutex_timer_);
 
@@ -79,39 +46,9 @@ void ROSTimer::setPeriod(const ros::Duration& duration, const bool& reset) {
 
 // | ----------------------- ThreadTimer ---------------------- |
 
-/* ThreadTimer constructors and destructors//{ */
-
-ThreadTimer::ThreadTimer() {
-}
-
-ThreadTimer::~ThreadTimer() {
-}
-
-ThreadTimer::ThreadTimer(const ThreadTimer& other) {
-
-  impl_ = other.impl_;
-}
-
-//}
-
-/* ThreadTimer::operator= //{ */
-
-ThreadTimer& ThreadTimer::operator=(const ThreadTimer& other) {
-
-  if (this == &other) {
-    return *this;
-  }
-
-  this->impl_ = other.impl_;
-
-  return *this;
-}
-
-//}
-
 /* TheadTimer::start() //{ */
 
-void ThreadTimer::start(void) {
+void ThreadTimer::start() {
 
   if (impl_) {
     impl_->start();
@@ -122,7 +59,7 @@ void ThreadTimer::start(void) {
 
 /* ThreadTimer::stop() //{ */
 
-void ThreadTimer::stop(void) {
+void ThreadTimer::stop() {
 
   if (impl_) {
     impl_->stop();
@@ -133,7 +70,7 @@ void ThreadTimer::stop(void) {
 
 /* ThreadTimer::setPeriod() //{ */
 
-void ThreadTimer::setPeriod(const ros::Duration& duration, [[maybe_unused]] const bool& reset) {
+void ThreadTimer::setPeriod(const ros::Duration& duration, [[maybe_unused]] const bool reset) {
 
   if (impl_) {
     impl_->setPeriod(duration, reset);
@@ -144,141 +81,125 @@ void ThreadTimer::setPeriod(const ros::Duration& duration, [[maybe_unused]] cons
 
 /* ThreadTimer::Impl //{ */
 
-ThreadTimer::Impl::~Impl() {
+ThreadTimer::Impl::Impl(const std::function<void(const ros::TimerEvent&)>& callback, const ros::Duration& delay_dur, const bool oneshot)
+  : callback_(callback), oneshot_(oneshot), delay_dur_(delay_dur)
+{
+  ending_  = false;
+  running_ = false;
+
+  last_real_     = ros::Time(0);
+  last_expected_ = ros::Time(0);
+  next_expected_ = ros::Time(0);
+
+  thread_ = std::thread(&ThreadTimer::Impl::threadFcn, this);
 }
 
-ThreadTimer::Impl::Impl() : rate_(ros::Rate(1.0)), duration_(ros::Duration(0.0)) {
-
-  this->running_ = false;
-  this->oneshot_ = false;
-  this->shoot_   = false;
-
-  this->last_real_     = ros::Time(0);
-  this->last_expected_ = ros::Time(0);
-  this->next_expected_ = ros::Time(0);
-}
-
-void ThreadTimer::Impl::start(void) {
-
-  if (!oneshot_) {
-    this->stop();
+ThreadTimer::Impl::~Impl()
+{
+  {
+    // signal the thread to end
+    std::scoped_lock lck(mutex_state_);
+    ending_ = true;
+    start_cond_.notify_all();
   }
+  // wait for it to die
+  thread_.join();
+}
 
-  if (!running_) {
-
+void ThreadTimer::Impl::start()
+{
+  std::scoped_lock lck(mutex_state_);
+  if (!running_)
+  {
+    next_expected_ = ros::Time::now() + delay_dur_;
     running_ = true;
-
-    thread_ = std::thread(&Impl::threadFcn, this);
-
-    thread_.detach();
-  }
-
-  if (oneshot_) {
-    stop_oneshot_ = false;
-    if (oneshot_sleeping_) {
-      std::scoped_lock lock(mutex_time_, mutex_prolong_);
-      prolong_to_      = ros::Time::now() + duration_;
-      prolong_oneshot_ = true;
-    } else {
-      oneshot_stop_waiting_ = true;
-      oneshot_cond_.notify_all();
-    }
+    start_cond_.notify_all();
   }
 }
 
-void ThreadTimer::Impl::stop(void) {
-
-  if (!oneshot_) {
-    running_ = false;
-  } else {
-    stop_oneshot_ = true;
-  }
+void ThreadTimer::Impl::stop()
+{
+  std::scoped_lock lck(mutex_state_);
+  running_ = false;
 }
 
-void ThreadTimer::Impl::setPeriod(const ros::Duration& duration, [[maybe_unused]] const bool& reset) {
-
-  std::scoped_lock lock(mutex_time_);
-
-  if (duration.toSec() > 0) {
-    this->rate_ = 1.0 / duration.toSec();
-  } else {
+void ThreadTimer::Impl::setPeriod(const ros::Duration& duration, [[maybe_unused]] const bool reset)
+{
+  std::scoped_lock lock(mutex_state_);
+  delay_dur_ = duration;
+  // gracefully handle the special case
+  if (duration == ros::Duration(0))
     this->oneshot_  = true;
-    this->rate_     = ros::Rate(1.0);
-    this->duration_ = duration;
-  }
-
-  rate_changed_ = true;
 }
 
 //}
 
 /* ThreadTimer::Impl::threadFcn() //{ */
 
-void ThreadTimer::Impl::threadFcn(void) {
+void ThreadTimer::Impl::threadFcn()
+{
+  while (ros::ok() && !ending_)
+  {
+    {
+      std::unique_lock lck(mutex_state_);
+      // if the timer is not yet started, wait for condition variable notification
+      if (!running_)
+        start_cond_.wait(lck);
+      // The thread either got cv-notified, or running_ was already true, or it got woken up for some other reason.
+      // Check if the reason is that we should end (and end if it is).
+      if (ending_)
+        break;
+      // Check if the timer is still paused - probably was a spurious wake up (and restart the wait if it is).
+      if (!running_)
+        continue;
+    }
 
-  if (oneshot_) {
+    // If the flow got here, the thread should attempt to wait for the specified duration.
+    // first, copy the delay we should wait for in a thread-safe manner
+    ros::Duration delay;
+    {
+      std::scoped_lock lck(mutex_state_);
+      delay = next_expected_ - ros::Time::now();
+    }
+    delay.sleep();
 
-    ros::Duration temp_duration;
+    // prepare the timer event (outside the locked scope so that it is usable by the callback without holding the mutex)
+    ros::TimerEvent timer_event;
+    {
+      // make sure the state doesn't change here
+      std::scoped_lock lck(mutex_state_);
+      // Again, check if everything is OK (the state may have changed while the thread was a sleeping beauty).
+      // Check if we should end (and end if it is so).
+      if (ending_)
+        break;
+      // Check if the timer is paused (and skip if it is so).
+      if (!running_)
+        continue;
 
-    std::unique_lock<std::mutex> lck(mutex_oneshot_);
-
-    while (ros::ok() && running_) {
-
-      oneshot_cond_.wait(lck, [this] { return oneshot_stop_waiting_ == true; });
-      oneshot_stop_waiting_ = false;
-
+      // If all is fine and dandy, actually run the callback function!
+      // if the timer is a oneshot-type, automatically pause it
+      // and do not fill out the expected fields in timer_event (we had no expectations...)
+      const ros::Time now = ros::Time::now();
+      if (oneshot_)
       {
-        std::scoped_lock lock(mutex_time_);
-
-        temp_duration = duration_;
+        running_ = false;
+        timer_event.last_real        = last_real_;
+        timer_event.current_real     = now;
       }
+      else
+      {
+        timer_event.last_expected    = last_expected_;
+        timer_event.last_real        = last_real_;
+        timer_event.current_expected = next_expected_;
+        timer_event.current_real     = now;
 
-      oneshot_sleeping_ = true;
-      while (ros::ok()) {
-
-        temp_duration.sleep();
-
-        std::scoped_lock lock(mutex_prolong_);
-
-        if (prolong_oneshot_) {
-          temp_duration = prolong_to_ - ros::Time::now();
-          prolong_oneshot_ = false;
-        } else {
-          break;
-        }
+        last_expected_ = next_expected_;
+        next_expected_ = now + delay_dur_;
       }
-      oneshot_sleeping_ = false;
-
-      if (!stop_oneshot_) {
-        ros::TimerEvent timer_event;
-        callback_(timer_event);
-      } else {
-        stop_oneshot_ = false;
-      }
+      last_real_ = now;
     }
-
-  } else {
-
-    while (ros::ok() && running_) {
-
-      ros::TimerEvent timer_event;
-      timer_event.last_expected    = last_expected_;
-      timer_event.last_real        = last_real_;
-      timer_event.current_expected = next_expected_;
-      timer_event.current_real     = ros::Time::now();
-
-      callback_(timer_event);
-
-      last_expected_ = next_expected_;
-      last_real_     = ros::Time::now();
-
-      next_expected_ = ros::Time::now() + rate_.expectedCycleTime();
-
-      std::scoped_lock lock(mutex_time_);
-      rate_.sleep();
-    }
+    callback_(timer_event);
   }
-
 }
 
 //}

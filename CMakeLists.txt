@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.1.2)
 project(mrs_lib)
+set(CMAKE_BUILD_TYPE Debug)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp

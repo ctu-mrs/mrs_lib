@@ -14,15 +14,8 @@ namespace mrs_lib
 
   static const ros::Duration no_timeout = ros::Duration(0);
 
-  template <typename MessageType>
-  class SubscribeHandler;
-
-/*!
-  * \brief Helper typedef for a more convenient usage of the shared_ptrs for the SubscribeHandler.
-  */
-  template <typename MessageType>
-  using SubscribeHandlerPtr = std::shared_ptr<SubscribeHandler<MessageType>>;
-
+  /* struct SubscribeHandlerOptions //{ */
+  
   /**
   * \brief A helper class to simplify setup of SubscribeHandler construction.
   * This class is passed to the SubscribeHandler constructor and specifies its common options.
@@ -36,31 +29,30 @@ namespace mrs_lib
   {
     SubscribeHandlerOptions(const ros::NodeHandle& nh) : nh(nh) {}
     SubscribeHandlerOptions() = default;
-
+  
     ros::NodeHandle nh;  /*!< \brief The ROS NodeHandle to be used for subscription. */
-
+  
     std::string node_name = {};  /*!< \brief Name of the ROS node, using this handle (used for messages printed to console). */
-
+  
     std::string topic_name = {};  /*!< \brief Name of the ROS topic to be handled. */
-
+  
     ros::Duration no_message_timeout = mrs_lib::no_timeout;  /*!< \brief If no new message is received for this duration, the \p timeout_callback function will be called. If \p timeout_callback is empty, an error message will be printed to the console. */
-
+  
+    bool use_thread_timer = false;  /*!< \brief Selects whether to use an STL thread-based timer implementation instead of ROS' own. */
+  
     std::function<void(const std::string&, const ros::Time&, const int)> timeout_callback = {};  /*!< \brief This function will be called if no new message is received for the \p no_message_timeout duration. If this variable is empty, an error message will be printed to the console. */
-
+  
     bool threadsafe = true;  /*!< \brief If true, all methods of the SubscribeHandler will be mutexed (using a recursive mutex) to avoid data races. */
-
+  
     bool autostart = true;  /*!< \brief If true, the SubscribeHandler will be started after construction. Otherwise it has to be started using the start() method */
-
+  
     uint32_t queue_size = 3;  /*!< \brief This parameter is passed to the NodeHandle when subscribing to the topic */
-
+  
     ros::TransportHints transport_hints = ros::TransportHints();  /*!< \brief This parameter is passed to the NodeHandle when subscribing to the topic */
   };
-}
+  
+  //}
 
-#include <impl/subscribe_handler.hpp>
-
-namespace mrs_lib
-{
   /* SubscribeHandler class //{ */
   /**
   * \brief The main class for ROS topic subscription, message timeout handling etc.
@@ -226,18 +218,21 @@ namespace mrs_lib
             const message_callback_t& message_callback = {}
           )
       {
+        std::cout << "shandler constructor address: " << this << "\n";
         if (options.threadsafe)
         {
-          m_pimpl = std::make_unique<impl::SubscribeHandler_threadsafe<MessageType>>
+          m_pimpl = std::make_unique<ImplThreadsafe>
             (
+              this,
               options,
               message_callback
             );
         }
         else
         {
-          m_pimpl = std::make_unique<impl::SubscribeHandler_impl<MessageType>>
+          m_pimpl = std::make_unique<Impl>
             (
+              this,
               options,
               message_callback
             );
@@ -388,14 +383,29 @@ namespace mrs_lib
       {
       }
 
-      virtual ~SubscribeHandler() = default;
-      SubscribeHandler(const SubscribeHandler&) = default;
-      SubscribeHandler(SubscribeHandler&&) = default;
-      SubscribeHandler& operator=(const SubscribeHandler&) = default;
-      SubscribeHandler& operator=(SubscribeHandler&&) = default;
+      ~SubscribeHandler() = default;
+      // delete copy constructor and assignment operator (forbid copying shandlers)
+      SubscribeHandler(const SubscribeHandler&) = delete;
+      SubscribeHandler& operator=(const SubscribeHandler&) = delete;
+      // define only move constructor and assignemnt operator
+      SubscribeHandler(SubscribeHandler&& other)
+      {
+        this->m_pimpl = std::move(other.m_pimpl);
+        other.m_pimpl = nullptr;
+        this->m_pimpl->m_owner = this;
+      }
+      SubscribeHandler& operator=(SubscribeHandler&& other)
+      {
+        this->m_pimpl = std::move(other.m_pimpl);
+        other.m_pimpl = nullptr;
+        this->m_pimpl->m_owner = this;
+        return *this;
+      }
 
     private:
-      std::unique_ptr<impl::SubscribeHandler_impl<MessageType>> m_pimpl;
+      class Impl;
+      class ImplThreadsafe;
+      std::unique_ptr<Impl> m_pimpl;
   };
   //}
 
@@ -423,5 +433,7 @@ namespace mrs_lib
     object = Class(args...);
   }
 }
+
+#include <impl/subscribe_handler.hpp>
 
 #endif // SUBRSCRIBE_HANDLER_H
