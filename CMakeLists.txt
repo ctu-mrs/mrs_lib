@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.1.2)
 project(mrs_lib)
-set(CMAKE_BUILD_TYPE Debug)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -408,6 +407,7 @@ if(CATKIN_ENABLE_TESTING)
   )
   target_link_libraries(
     SubscribeHandlerTest
+    MrsLibTimer 
     ${catkin_LIBRARIES}
   )
   add_dependencies(
