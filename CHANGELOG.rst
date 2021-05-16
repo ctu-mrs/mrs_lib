@@ -2,8 +2,8 @@
 Changelog for package mrs_lib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.1 (2021-05-16)
+------------------
   Updating CI - added sanitizers to debug build type, removed PCL-dependent flags (`-march=native` etc)
 * [ScopeTimer]: added possibility to throttle output
 * fixed important bug in shandler
