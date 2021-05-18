@@ -7,6 +7,7 @@
 
 // duration + oneshot + autostart
 #include <chrono>
+#include <mutex>
 template <class ObjectType>
 ROSTimer::ROSTimer(const ros::NodeHandle& nh, const ros::Duration& duration, void (ObjectType::*const callback)(const ros::TimerEvent&),
                    ObjectType* const obj, const bool oneshot, const bool autostart) {
@@ -54,8 +55,9 @@ private:
   void breakableSleep(const ros::Time& until);
   void threadFcn();
 
-  std::mutex mutex_state_;
-  std::condition_variable start_cond_;
+  std::mutex mutex_wakeup_;
+  std::condition_variable wakeup_cond_;
+  std::recursive_mutex mutex_state_;
   bool running_;
   ros::Duration delay_dur_;
   bool ending_;

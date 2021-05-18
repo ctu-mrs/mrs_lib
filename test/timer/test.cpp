@@ -10,7 +10,7 @@ using namespace mrs_lib;
 using namespace std;
 
 std::unique_ptr<mrs_lib::MRSTimer> timer = nullptr;
-std::atomic<bool> test_stop_from_cbk = false;
+std::atomic<bool> test_stop_from_cbk;
 
 struct obj_t
 {
@@ -39,14 +39,18 @@ void do_test(const bool use_threadtimer)
 {
   ros::NodeHandle nh("~");
 
+  test_stop_from_cbk = false;
   obj_t cbk_obj;
+  cout << "\tConstructing timer\n";
   if (use_threadtimer)
-    timer = std::make_unique<mrs_lib::ThreadTimer>(nh, cbk_obj.r, &obj_t::callback, &cbk_obj, false, true);
+    timer = std::make_unique<mrs_lib::ThreadTimer>(nh, cbk_obj.r, &obj_t::callback, &cbk_obj, false, false);
   else
-    timer = std::make_unique<mrs_lib::ROSTimer>(nh, cbk_obj.r, &obj_t::callback, &cbk_obj, false, true);
+    timer = std::make_unique<mrs_lib::ROSTimer>(nh, cbk_obj.r, &obj_t::callback, &cbk_obj, false, false);
 
+  cout << "\tTesting callback period\n";
+  timer->start();
   const ros::Time start = ros::Time::now();
-  const ros::Duration test_dur(1.0);
+  const ros::Duration test_dur(0.5);
   while (ros::Time::now() - start < test_dur)
   {
     ros::Rate(1000.0).sleep();
@@ -62,11 +66,12 @@ void do_test(const bool use_threadtimer)
   EXPECT_FALSE(callback_while_not_running);
   EXPECT_LE(std::abs(cbk_obj.n_cbks - expected_cbks), 2);
 
+  cout << "\tTesting stop from callback\n";
   test_stop_from_cbk = true;
   timer->start();
 
   {
-    // test correct destruction
+    cout << "\tTesting destructor\n";
     cbk_obj.cbks_ok = true;
     const ros::Time start = ros::Time::now();
     timer->setPeriod(ros::Duration(50.0));
@@ -79,24 +84,24 @@ void do_test(const bool use_threadtimer)
   }
 }
 
-/* TEST(TESTSuite, thread_timer_test) //{ */
-
-TEST(TESTSuite, thread_timer_test)
-{
-  cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
-  for (int it = 0; it < 20; it++)
-    do_test(true);
-}
-
-//}
-
 /* TEST(TESTSuite, ros_timer_test) //{ */
 
 TEST(TESTSuite, ros_timer_test)
 {
-  cout << "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB\n";
-  for (int it = 0; it < 20; it++)
+  cout << "Testing ROSTimer\n";
+  for (int it = 0; it < 8; it++)
     do_test(false);
+}
+
+//}
+
+/* TEST(TESTSuite, thread_timer_test) //{ */
+
+TEST(TESTSuite, thread_timer_test)
+{
+  cout << "Testing ThreadTimer\n";
+  for (int it = 0; it < 8; it++)
+    do_test(true);
 }
 
 //}

@@ -124,9 +124,9 @@ ThreadTimer::Impl::~Impl()
 {
   {
     // signal the thread to end
-    std::scoped_lock lck(mutex_state_);
+    std::scoped_lock lck(mutex_wakeup_, mutex_state_);
     ending_ = true;
-    start_cond_.notify_all();
+    wakeup_cond_.notify_all();
   }
   // wait for it to die
   thread_.join();
@@ -134,25 +134,25 @@ ThreadTimer::Impl::~Impl()
 
 void ThreadTimer::Impl::start()
 {
-  std::scoped_lock lck(mutex_state_);
+  std::scoped_lock lck(mutex_wakeup_, mutex_state_);
   if (!running_)
   {
     next_expected_ = ros::Time::now() + delay_dur_;
     running_ = true;
-    start_cond_.notify_all();
+    wakeup_cond_.notify_all();
   }
 }
 
 void ThreadTimer::Impl::stop()
 {
-  std::scoped_lock lck(mutex_state_);
+  std::scoped_lock lck(mutex_wakeup_, mutex_state_);
   running_ = false;
-  start_cond_.notify_all();
+  wakeup_cond_.notify_all();
 }
 
 void ThreadTimer::Impl::setPeriod(const ros::Duration& duration, [[maybe_unused]] const bool reset)
 {
-  std::scoped_lock lock(mutex_state_);
+  std::scoped_lock lock(mutex_wakeup_, mutex_state_);
   delay_dur_ = duration;
   // gracefully handle the special case
   if (duration == ros::Duration(0))
@@ -168,9 +168,9 @@ void ThreadTimer::Impl::breakableSleep(const ros::Time& until)
   {
     const std::chrono::nanoseconds dur {(until - ros::Time::now()).toNSec()};
     const std::chrono::time_point<std::chrono::steady_clock> until_stl = std::chrono::steady_clock::now() + dur;
-    std::unique_lock lck(mutex_state_);
-    if (!ending_)
-      start_cond_.wait_until(lck, until_stl);
+    std::unique_lock lck(mutex_wakeup_);
+    if (!ending_ && running_)
+      wakeup_cond_.wait_until(lck, until_stl);
     // check the flags while mutex_state_ is locked
     if (ending_ || !running_)
       break;
@@ -185,10 +185,10 @@ void ThreadTimer::Impl::threadFcn()
   while (ros::ok() && !ending_)
   {
     {
-      std::unique_lock lck(mutex_state_);
+      std::unique_lock lck(mutex_wakeup_);
       // if the timer is not yet started, wait for condition variable notification
-      if (!running_)
-        start_cond_.wait(lck);
+      if (!running_ && !ending_)
+        wakeup_cond_.wait(lck);
       // The thread either got cv-notified, or running_ was already true, or it got woken up for some other reason.
       // Check if the reason is that we should end (and end if it is).
       if (ending_)
@@ -241,6 +241,7 @@ void ThreadTimer::Impl::threadFcn()
         next_expected_ = now + delay_dur_;
       }
       last_real_ = now;
+      // call the callback
       callback_(timer_event);
     }
   }
