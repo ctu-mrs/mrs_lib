@@ -9,7 +9,8 @@
 using namespace mrs_lib;
 using namespace std;
 
-std::unique_ptr<mrs_lib::MRSTimer> timer;
+std::unique_ptr<mrs_lib::MRSTimer> timer = nullptr;
+std::atomic<bool> test_stop_from_cbk = false;
 
 struct obj_t
 {
@@ -28,17 +29,21 @@ struct obj_t
 
     if (!timer->running())
       cbks_ok = false;
+
+    if (test_stop_from_cbk)
+      timer->stop();
   }
 };
 
-/* TEST(TESTSuite, thread_timer_test) //{ */
-
-TEST(TESTSuite, thread_timer_test) {
-
+void do_test(const bool use_threadtimer)
+{
   ros::NodeHandle nh("~");
 
   obj_t cbk_obj;
-  timer = std::make_unique<mrs_lib::ThreadTimer>(nh, cbk_obj.r, &obj_t::callback, &cbk_obj, false, true);
+  if (use_threadtimer)
+    timer = std::make_unique<mrs_lib::ThreadTimer>(nh, cbk_obj.r, &obj_t::callback, &cbk_obj, false, true);
+  else
+    timer = std::make_unique<mrs_lib::ROSTimer>(nh, cbk_obj.r, &obj_t::callback, &cbk_obj, false, true);
 
   const ros::Time start = ros::Time::now();
   const ros::Duration test_dur(1.0);
@@ -56,6 +61,9 @@ TEST(TESTSuite, thread_timer_test) {
   EXPECT_TRUE(callbacks_in_time);
   EXPECT_FALSE(callback_while_not_running);
   EXPECT_LE(std::abs(cbk_obj.n_cbks - expected_cbks), 2);
+
+  test_stop_from_cbk = true;
+  timer->start();
 
   {
     // test correct destruction
@@ -71,46 +79,24 @@ TEST(TESTSuite, thread_timer_test) {
   }
 }
 
+/* TEST(TESTSuite, thread_timer_test) //{ */
+
+TEST(TESTSuite, thread_timer_test)
+{
+  cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
+  for (int it = 0; it < 20; it++)
+    do_test(true);
+}
+
 //}
 
 /* TEST(TESTSuite, ros_timer_test) //{ */
 
-TEST(TESTSuite, ros_timer_test) {
-
-  ros::NodeHandle nh("~");
-
-  obj_t cbk_obj;
-  timer = std::make_unique<mrs_lib::ROSTimer>(nh, cbk_obj.r, &obj_t::callback, &cbk_obj, false, true);
-
-  const ros::Time start = ros::Time::now();
-  const ros::Duration test_dur(1.0);
-  while (ros::Time::now() - start < test_dur)
-  {
-    ros::Rate(1000.0).sleep();
-    ros::spinOnce();
-  }
-  timer->stop();
-
-  const double expected_cbks = test_dur.toSec() / cbk_obj.r.expectedCycleTime().toSec();
-  const bool callbacks_in_time = cbk_obj.cbks_in_time;
-  const bool callback_while_not_running = !cbk_obj.cbks_ok;
-
-  EXPECT_TRUE(callbacks_in_time);
-  EXPECT_FALSE(callback_while_not_running);
-  EXPECT_LE(std::abs(cbk_obj.n_cbks - expected_cbks), 2);
-
-  {
-    // test correct destruction
-    cbk_obj.cbks_ok = true;
-    const ros::Time start = ros::Time::now();
-    timer->setPeriod(ros::Duration(50.0));
-    timer->start();
-    timer = nullptr;
-    const ros::Time destroy = ros::Time::now();
-    const bool callback_while_destroyed = !cbk_obj.cbks_ok;
-    EXPECT_FALSE(callback_while_destroyed);
-    EXPECT_LE((destroy - start).toSec(), 1.0);
-  }
+TEST(TESTSuite, ros_timer_test)
+{
+  cout << "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB\n";
+  for (int it = 0; it < 20; it++)
+    do_test(false);
 }
 
 //}

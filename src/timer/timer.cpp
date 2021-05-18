@@ -207,8 +207,6 @@ void ThreadTimer::Impl::threadFcn()
     }
     breakableSleep(next_expected);
 
-    // prepare the timer event (outside the locked scope so that it is usable by the callback without holding the mutex)
-    ros::TimerEvent timer_event;
     {
       // make sure the state doesn't change here
       std::scoped_lock lck(mutex_state_);
@@ -224,6 +222,8 @@ void ThreadTimer::Impl::threadFcn()
       // if the timer is a oneshot-type, automatically pause it
       // and do not fill out the expected fields in timer_event (we had no expectations...)
       const ros::Time now = ros::Time::now();
+      // prepare the timer event
+      ros::TimerEvent timer_event;
       if (oneshot_)
       {
         running_ = false;
@@ -241,8 +241,8 @@ void ThreadTimer::Impl::threadFcn()
         next_expected_ = now + delay_dur_;
       }
       last_real_ = now;
+      callback_(timer_event);
     }
-    callback_(timer_event);
   }
 }
 
