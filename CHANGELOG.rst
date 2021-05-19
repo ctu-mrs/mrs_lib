@@ -2,6 +2,30 @@
 Changelog for package mrs_lib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.1 (2021-05-16)
+------------------
+  Updating CI - added sanitizers to debug build type, removed PCL-dependent flags (`-march=native` etc)
+* [ScopeTimer]: added possibility to throttle output
+* fixed important bug in shandler
+* fixing some minor buggos, added support for custom-built PCL
+* --reuse-master in CI rostest
+* ServiceClientHandler: added option for repeat_delay
+* fixes to subscribe handler, other minor changes
+* [shandler]: fixed minor problem preventing compilation
+* [shandler]: deadlock due to timer stop() blocking until all callbacks return should be fixed not
+* [paramloader]: added the option to set a parameter name prefix
+* [shandler]: added a default constructor (with no parameters) for backward compatibility
+* [BatchVisualizer]: remove ros spinning
+* service client handler not dependent on mrs_lib anymore
+* updated service client docs
+* added service client handler test and docs
+* ServiceClientHandler: compiles, works
+* [shandler]: removed stuff related to time consistency since nobody seems to be using it
+* minor refactor of subscribe handler
+* reverting to single frequency notch filter
+* iir and notch filter done
+* Contributors: Daniel Hert, Matouš Vrba, Tomas Baca, Tomáš Báča, stibipet
+
 1.0.0 (2021-03-18)
 ------------------
 * Major release
