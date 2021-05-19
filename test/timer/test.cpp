@@ -23,7 +23,7 @@ struct obj_t
     n_cbks++;
     const ros::Duration dt = evt.current_real - evt.current_expected;
     // this is quite a large tolerance, but the ROS timer actually isn't capable of performing better, so it has to be
-    if (std::abs(dt.toSec()) > r.expectedCycleTime().toSec())
+    if (std::abs(dt.toSec()) > r.expectedCycleTime().toSec()/2.0)
     {
       ROS_ERROR_STREAM("Callback did not come in time! Expected: " << evt.current_expected << ", received: " << evt.current_real << " (period: " << r.expectedCycleTime() << ", difference: " << dt << ")");
       cbks_in_time = false;
