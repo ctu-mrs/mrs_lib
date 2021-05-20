@@ -8,6 +8,7 @@
 #define CYCLIC_H
 
 #include <cmath>
+#include <ostream>
 
 namespace mrs_lib
 {
@@ -230,6 +231,16 @@ namespace mrs_lib
         return d;
       }
 
+      static flt diff(const cyclic minuend, const cyclic subtrahend)
+      {
+        const flt d = minuend.val - subtrahend.val;
+        if (d < -half_range)
+          return d + range;
+        if (d >= half_range)
+          return d - range;
+        return d;
+      }
+
       /*!
        * \brief Returns the distane between the two circular values.
        *
@@ -385,6 +396,18 @@ namespace mrs_lib
     protected:
       flt val;
     };
+
+    template <typename flt, class spec>
+    bool operator<(const cyclic<flt, spec>& a, const cyclic<flt, spec>& b)
+    {
+      return cyclic<flt, spec>::diff(a, b) < flt(0);
+    }
+
+    template <typename flt, class spec>
+    std::ostream& operator<<(std::ostream &out, const cyclic<flt, spec>& a)
+    {
+      return (out << a.value());
+    }
 
     struct radians : public cyclic<double, radians>
     {
