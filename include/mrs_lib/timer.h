@@ -5,331 +5,237 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#include <atomic>
 
 namespace mrs_lib
 {
-
-// | ------------------------ ROSTimer ------------------------ |
-
-/* class ROSTimer //{ */
-
-/**
- * @brief ros::Timer wrapper. The interface is the same as with ros::Timer, except for the initialization method.
- */
-class ROSTimer {
-public:
-  ROSTimer(void);
-  ~ROSTimer(void);
+  bool breakable_sleep(const ros::Duration& dur, const std::atomic<bool>& continue_sleep);
 
   /**
-   * @brief copy constructor
+   * @brief Common wrapper representing the functionality of the ros::Timer.
    *
-   * @param other
-   */
-  ROSTimer(const ROSTimer& other);
-
-  /**
-   * @brief assignment operator
+   * The implementation can then use either ros::Timer (the ROSTimer class)
+   * or threads and synchronization primitives from the C++ standard library
+   * (the ThreadTimer class). Both these variants implement the same interface.
    *
-   * @param other
-   *
-   * @return
+   * @note Functionality of the two implementations differs in some details.
    */
-  ROSTimer& operator=(const ROSTimer& other);
+  class MRSTimer
+  {
+    public:
+    using callback_t = std::function<void(const ros::TimerEvent&)>;
+
+    /**
+     * @brief stop the timer
+     */
+    virtual void stop() = 0;
+
+    /**
+     * @brief start the timer
+     */
+    virtual void start() = 0;
+
+    /**
+     * @brief set the timer period/duration
+     *
+     * @param duration
+     * @param reset
+     */
+    virtual void setPeriod(const ros::Duration& duration, const bool reset = true) = 0;
+
+    /**
+     * @brief returns true if callbacks should be called
+     *
+     * @return true if timer is running
+     */
+    virtual bool running() = 0;
+
+    virtual ~MRSTimer() = default;
+    MRSTimer(const MRSTimer&) = default;
+    MRSTimer(MRSTimer&&) = default;
+    MRSTimer& operator=(const MRSTimer&) = default;
+    MRSTimer& operator=(MRSTimer&&) = default;
+
+    protected:
+    MRSTimer() = default;
+  };
+
+  // | ------------------------ ROSTimer ------------------------ |
+
+  /* class ROSTimer //{ */
 
   /**
-   * @brief constructor, oneshot = false, autostart = true
-   *
-   * @tparam ObjectType
-   * @param nh
-   * @param rate
-   * @param ObjectType::*const callback
-   * @param obj
+   * @brief ros::Timer wrapper. The interface is the same as with ros::Timer, except for the initialization method.
    */
-  template <class ObjectType>
-  ROSTimer(const ros::NodeHandle& nh, const ros::Rate& rate, void (ObjectType::*const callback)(const ros::TimerEvent& event), ObjectType* const obj);
+  class ROSTimer : public MRSTimer {
+  public:
+    ROSTimer();
+
+    /**
+     * @brief Constructs the object.
+     *
+     * @tparam ObjectType
+     * @param nh                            ROS node handle to be used for creating the underlying ros::Timer object.
+     * @param rate                          rate at which the callback should be called.
+     * @param ObjectType::*const callback   callback method to be called.
+     * @param obj                           object for the method.
+     * @param oneshot                       whether the callback should only be called once after starting.
+     * @param autostart                     whether the timer should immediately start after construction.
+     */
+    template <class ObjectType>
+    ROSTimer(const ros::NodeHandle& nh, const ros::Rate& rate, void (ObjectType::*const callback)(const ros::TimerEvent&), ObjectType* const obj,
+             const bool oneshot = false, const bool autostart = true);
+
+    /**
+     * @brief full constructor
+     *
+     * @tparam ObjectType
+     * @param nh                            ROS node handle to be used for creating the underlying ros::Timer object.
+     * @param duration                      desired callback period.
+     * @param ObjectType::*const callback   callback method to be called.
+     * @param obj                           object for the method.
+     * @param oneshot                       whether the callback should only be called once after starting.
+     * @param autostart                     whether the timer should immediately start after construction.
+     */
+    template <class ObjectType>
+    ROSTimer(const ros::NodeHandle& nh, const ros::Duration& duration, void (ObjectType::*const callback)(const ros::TimerEvent&), ObjectType* const obj,
+             const bool oneshot = false, const bool autostart = true);
+
+    /**
+     * @brief stop the timer
+     */
+    virtual void stop() override;
+
+    /**
+     * @brief start the timer
+     */
+    virtual void start() override;
+
+    /**
+     * @brief set the timer period/duration
+     *
+     * @param duration
+     * @param reset
+     */
+    virtual void setPeriod(const ros::Duration& duration, const bool reset = true) override;
+
+    /**
+     * @brief returns true if callbacks should be called
+     *
+     * @return true if timer is running
+     */
+    virtual bool running() override;
+
+    virtual ~ROSTimer() override {stop();};
+    // to keep rule of five since we have a custom destructor
+    ROSTimer(const ROSTimer&) = delete;
+    ROSTimer(ROSTimer&&) = delete;
+    ROSTimer& operator=(const ROSTimer&) = delete;
+    ROSTimer& operator=(ROSTimer&&) = delete;
+
+  private:
+    std::mutex mutex_timer_;
+
+    std::unique_ptr<ros::Timer> timer_;
+  };
+
+  //}
+
+  // | ----------------------- ThreadTimer ---------------------- |
+
+  /* class ThreadTimer //{ */
 
   /**
-   * @brief constructor, oneshot = false, autostart = true
-   *
-   * @tparam ObjectType
-   * @param nh
-   * @param duration
-   * @param ObjectType::*const callback
-   * @param obj
+   * @brief Custom thread-based Timers with the same interface as mrs_lib::ROSTimer.
    */
-  template <class ObjectType>
-  ROSTimer(const ros::NodeHandle& nh, const ros::Duration& duration, void (ObjectType::*const callback)(const ros::TimerEvent& event), ObjectType* const obj);
+  class ThreadTimer : public MRSTimer {
 
-  /**
-   * @brief constructor, autostart = true
-   *
-   * @tparam ObjectType
-   * @param nh
-   * @param rate
-   * @param ObjectType::*const callback
-   * @param obj
-   * @param oneshot
-   */
-  template <class ObjectType>
-  ROSTimer(const ros::NodeHandle& nh, const ros::Rate& rate, void (ObjectType::*const callback)(const ros::TimerEvent& event), ObjectType* const obj,
-           const bool& oneshot);
+  public:
+    ThreadTimer();
 
-  /**
-   * @brief constructor, autostart = true
-   *
-   * @tparam ObjectType
-   * @param nh
-   * @param duration
-   * @param ObjectType::*const callback
-   * @param obj
-   * @param oneshot
-   */
-  template <class ObjectType>
-  ROSTimer(const ros::NodeHandle& nh, const ros::Duration& duration, void (ObjectType::*const callback)(const ros::TimerEvent& event), ObjectType* const obj,
-           const bool& oneshot);
+    /**
+     * @brief Constructs the object.
+     *
+     * @tparam ObjectType
+     * @param nh                            ignored (used just for consistency with ROSTimer)
+     * @param rate                          rate at which the callback should be called.
+     * @param ObjectType::*const callback   callback method to be called.
+     * @param obj                           object for the method.
+     * @param oneshot                       whether the callback should only be called once after starting.
+     * @param autostart                     whether the timer should immediately start after construction.
+     */
+    template <class ObjectType>
+    ThreadTimer(const ros::NodeHandle& nh, const ros::Rate& rate, void (ObjectType::*const callback)(const ros::TimerEvent&), ObjectType* const obj,
+                const bool oneshot = false, const bool autostart = true);
 
-  /**
-   * @brief full constructor
-   *
-   * @tparam ObjectType
-   * @param nh
-   * @param rate
-   * @param ObjectType::*const callback
-   * @param obj
-   * @param oneshot
-   * @param autostart
-   */
-  template <class ObjectType>
-  ROSTimer(const ros::NodeHandle& nh, const ros::Rate& rate, void (ObjectType::*const callback)(const ros::TimerEvent& event), ObjectType* const obj,
-           const bool& oneshot, const bool& autostart);
+    /**
+     * @brief Constructs the object.
+     *
+     * @tparam ObjectType
+     * @param nh                            ignored (used just for consistency with ROSTimer)
+     * @param duration                      desired callback period.
+     * @param ObjectType::*const callback   callback method to be called.
+     * @param obj                           object for the method.
+     * @param oneshot                       whether the callback should only be called once after starting.
+     * @param autostart                     whether the timer should immediately start after construction.
+     */
+    template <class ObjectType>
+    ThreadTimer(const ros::NodeHandle& nh, const ros::Duration& duration, void (ObjectType::*const callback)(const ros::TimerEvent&), ObjectType* const obj,
+                bool oneshot = false, const bool autostart = true);
 
-  /**
-   * @brief full constructor
-   *
-   * @tparam ObjectType
-   * @param nh
-   * @param duration
-   * @param ObjectType::*const callback
-   * @param obj
-   * @param oneshot
-   * @param autostart
-   */
-  template <class ObjectType>
-  ROSTimer(const ros::NodeHandle& nh, const ros::Duration& duration, void (ObjectType::*const callback)(const ros::TimerEvent& event), ObjectType* const obj,
-           const bool& oneshot, const bool& autostart);
+    /**
+     * @brief stop the timer
+     *
+     * No more callbacks will be called after this method returns.
+     */
+    virtual void stop() override;
 
-  /**
-   * @brief stop the timer
-   */
-  void stop(void);
+    /**
+     * @brief start the timer
+     *
+     * The first callback will be called in now + period.
+     *
+     * @note If the timer is already started, nothing will change.
+     */
+    virtual void start() override;
 
-  /**
-   * @brief start the timer
-   */
-  void start(void);
+    /**
+     * @brief set the timer period/duration
+     *
+     * The new period will be applied after the next callback.
+     *
+     * @param duration the new desired callback period.
+     * @param reset    ignored in this implementation.
+     */
+    virtual void setPeriod(const ros::Duration& duration, const bool reset = true) override;
 
-  /**
-   * @brief set the timer period/duration
-   *
-   * @param duration
-   * @param reset
-   */
-  void setPeriod(const ros::Duration& duration, const bool& reset = true);
+    /**
+     * @brief returns true if callbacks should be called
+     *
+     * @return true if timer is running
+     */
+    virtual bool running() override;
 
-private:
-  std::mutex mutex_timer_;
+    /**
+     * @brief stops the timer and then destroys the object
+     *
+     * No more callbacks will be called when the destructor is started.
+     */
+    virtual ~ThreadTimer() override {stop();};
+    // to keep rule of five since we have a custom destructor
+    ThreadTimer(const ThreadTimer&) = delete;
+    ThreadTimer(ThreadTimer&&) = delete;
+    ThreadTimer& operator=(const ThreadTimer&) = delete;
+    ThreadTimer& operator=(ThreadTimer&&) = delete;
 
-  std::shared_ptr<ros::Timer> timer_;
-};
+  private:
+    class Impl;
 
-//}
+    std::unique_ptr<Impl> impl_;
 
-// | ----------------------- ThreadTimer ---------------------- |
+  };  // namespace mrs_lib
 
-/* class ThreadTimer //{ */
-
-/**
- * @brief Custom thread-based Timers with the same interface as mrs_lib::ROSTimer.
- */
-class ThreadTimer {
-
-public:
-  ThreadTimer();
-  ~ThreadTimer();
-
-  /**
-   * @brief copy constructor
-   *
-   * @param other
-   */
-  ThreadTimer(const ThreadTimer& other);
-
-  /**
-   * @brief assignment operator
-   *
-   * @param other
-   *
-   * @return ThreadTimer
-   */
-  ThreadTimer& operator=(const ThreadTimer& other);
-
-  /**
-   * @brief constructor, oneshot = false, autostart = true
-   *
-   * @tparam ObjectType
-   * @param nh node handle
-   * @param rate ros::Rate
-   * @param ObjectType::*const callback
-   * @param obj
-   */
-  template <class ObjectType>
-  ThreadTimer(const ros::NodeHandle& nh, const ros::Rate& rate, void (ObjectType::*const callback)(const ros::TimerEvent& event), ObjectType* const obj);
-
-  /**
-   * @brief constructor, oneshot = false, autostart = true
-   *
-   * @tparam ObjectType
-   * @param nh
-   * @param duration
-   * @param ObjectType::*const callback
-   * @param obj
-   */
-  template <class ObjectType>
-  ThreadTimer(const ros::NodeHandle& nh, const ros::Duration& duration, void (ObjectType::*const callback)(const ros::TimerEvent& event),
-              ObjectType* const obj);
-
-  /**
-   * @brief constructor, autostart = false
-   *
-   * @tparam ObjectType
-   * @param nh
-   * @param rate
-   * @param ObjectType::*const callback
-   * @param obj
-   * @param oneshot
-   */
-  template <class ObjectType>
-  ThreadTimer(const ros::NodeHandle& nh, const ros::Rate& rate, void (ObjectType::*const callback)(const ros::TimerEvent& event), ObjectType* const obj,
-              const bool& oneshot);
-
-  /**
-   * @brief constructor, autostart = false
-   *
-   * @tparam ObjectType
-   * @param nh
-   * @param duration
-   * @param ObjectType::*const callback
-   * @param obj
-   * @param oneshot
-   */
-  template <class ObjectType>
-  ThreadTimer(const ros::NodeHandle& nh, const ros::Duration& duration, void (ObjectType::*const callback)(const ros::TimerEvent& event), ObjectType* const obj,
-              const bool& oneshot);
-
-  /**
-   * @brief full constructor
-   *
-   * @tparam ObjectType
-   * @param nh
-   * @param rate
-   * @param ObjectType::*const callback
-   * @param obj
-   * @param oneshot
-   * @param autostart
-   */
-  template <class ObjectType>
-  ThreadTimer(const ros::NodeHandle& nh, const ros::Rate& rate, void (ObjectType::*const callback)(const ros::TimerEvent& event), ObjectType* const obj,
-              const bool& oneshot, const bool& autostart);
-
-  /**
-   * @brief full constructor
-   *
-   * @tparam ObjectType
-   * @param nh
-   * @param duration
-   * @param ObjectType::*const callback
-   * @param obj
-   * @param oneshot
-   * @param autostart
-   */
-  template <class ObjectType>
-  ThreadTimer(const ros::NodeHandle& nh, const ros::Duration& duration, void (ObjectType::*const callback)(const ros::TimerEvent& event), ObjectType* const obj,
-              const bool& oneshot, const bool& autostart);
-
-  /**
-   * @brief stop the timer
-   */
-  void stop(void);
-
-  /**
-   * @brief start the timer
-   */
-  void start(void);
-
-  /**
-   * @brief set the timer period/duration
-   *
-   * @param duration
-   * @param reset
-   */
-  void setPeriod(const ros::Duration& duration, const bool& reset = true);
-
-private:
-  class Impl;
-
-  std::shared_ptr<Impl> impl_;
-
-};  // namespace mrs_lib
-
-//}
-
-/* class ThreadTimer::Impl //{ */
-
-class ThreadTimer::Impl {
-public:
-  Impl();
-  ~Impl();
-
-  void start(void);
-  void stop(void);
-  void setPeriod(const ros::Duration& duration, const bool& reset = true);
-
-  bool          oneshot_;
-  bool          shoot_ = false;
-  ros::Rate     rate_;
-  ros::Duration duration_;
-
-  std::function<void(const ros::TimerEvent&)> callback_;
-
-private:
-  bool      running_;
-  ros::Time next_expected_;
-  ros::Time last_expected_;
-  ros::Time last_real_;
-
-  bool        thread_created_ = false;
-  std::thread thread_;
-
-  void threadFcn(void);
-
-  bool       rate_changed_ = false;
-  std::mutex mutex_time_;
-
-  // for oneshot
-
-  std::mutex              mutex_oneshot_;
-  std::condition_variable oneshot_cond_;
-  bool                    oneshot_stop_waiting_ = false;
-
-  bool       stop_oneshot_     = false;
-  bool       prolong_oneshot_  = false;
-  bool       oneshot_sleeping_ = false;
-  ros::Time  prolong_to_;
-  std::mutex mutex_prolong_;
-};
-
-//}
+  //}
 
 #include <impl/timer.hpp>
 

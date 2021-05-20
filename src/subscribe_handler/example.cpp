@@ -60,6 +60,20 @@ int main(int argc, char **argv)
   mrs_lib::SubscribeHandlerOptions shopts(nh);
   shopts.node_name = node_name;
   shopts.threadsafe = threadsafe;
+  shopts.no_message_timeout = no_message_timeout;
+  // This is an interesting switch. It selects whether the ROS-based timer implementation for timeout checks will be used
+  // (when it's false) or a STL thread-based custom implementation is used (whe it's true).
+  //
+  // * when it's false:
+  //   You'll see that the timeout callback is only called once per each spinOnce call even though the message
+  //   timeout is long overdue (it is set to 1s and spinOnce is called every 3s). This is because timer callbacks are processed
+  //   in the spinOnce call. This can cause problems in some cases (eg. when you run out of callback threads of a nodelet
+  //   manager), so watch out!
+  //
+  // * when it's true:
+  //   Our custom timer implementation will be used. The timeout callbacks will now be called every second without messages
+  //   irregardles of the spinOnce call. This is the prefferred behavior in many cases.
+  shopts.use_thread_timer = true;
 
   /* This is how a new SubscribeHandler object is initialized. */ 
   mrs_lib::SubscribeHandler<std_msgs::String> handler(
@@ -75,22 +89,8 @@ int main(int argc, char **argv)
             shopts,
             topic_name,
             no_message_timeout,
-            /* timeout_callback, */
-            /* message_callback */
             &SubObject::timeout_method, &sub_obj,
             &SubObject::callback_method, &sub_obj
-            );
-
-  /* A variation of the factory method for easier use with objects also exists. */ 
-  mrs_lib::construct_object(
-            handler,
-            shopts,
-            topic_name,
-            no_message_timeout,
-            /* timeout_callback, */
-            /* message_callback */
-            &SubObject::callback_method, &sub_obj,
-            &SubObject::timeout_method, &sub_obj
             );
 
   /* Type of the message may be accessed by C++11 decltype in case of need */ 
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
   ros::Publisher pub = nh.advertise<message_type>(topic_name, 5);
 
   /* Now let's just spin to process calbacks until the user decides to stop the program. */ 
-  ros::Rate r(2);
+  ros::Duration d(3.0);
   while (ros::ok())
   {
     message_type msg;
@@ -106,6 +106,6 @@ int main(int argc, char **argv)
     pub.publish(msg);
     ROS_INFO_THROTTLE(1.0, "[%s]: Spinning", ros::this_node::getName().c_str());
     ros::spinOnce();
-    r.sleep();
+    d.sleep();
   }
 }
