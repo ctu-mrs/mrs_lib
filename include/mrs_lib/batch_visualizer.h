@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <ros/ros.h>
+#include <mutex>
 #include <visualization_msgs/MarkerArray.h>
 #include <mrs_lib/geometry/shapes.h>
 #include <mrs_msgs/TrajectoryReference.h>
@@ -41,6 +42,22 @@ public:
    * @param parent_frame name of the frame to which the markers will be linked
    */
   BatchVisualizer(ros::NodeHandle &nh, std::string marker_topic_name, std::string parent_frame);
+
+  /**
+   * @brief copy constructor
+   *
+   * @param other
+   */
+  BatchVisualizer(const BatchVisualizer &other);
+
+  /**
+   * @brief assignment operator
+   *
+   * @param other
+   *
+   * @return new
+   */
+  BatchVisualizer& operator=(const BatchVisualizer &other);
 
   /**
    * @brief add a point to the buffer
@@ -192,15 +209,20 @@ public:
   void publish();
 
 private:
-  ros::Publisher                  visual_pub;
-  visualization_msgs::MarkerArray msg;
+  std::shared_ptr<ros::Publisher> visual_pub;
+  std::mutex     mutex_publisher_;
 
   std::string parent_frame;
   std::string marker_topic_name;
 
   visualization_msgs::Marker points_marker;
+  std::mutex                 mutex_points_marker_;
+
   visualization_msgs::Marker lines_marker;
+  std::mutex                 mutex_lines_marker_;
+
   visualization_msgs::Marker triangles_marker;
+  std::mutex                 mutex_triangles_marker_;
 
   bool initialized = false;
   void initialize(ros::NodeHandle &nh);
