@@ -497,12 +497,12 @@ namespace mrs_lib
     {
       if (quiet)
       {
-        ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: Exception caught while constructing transform from '%s' to '%s': %s", node_name_.c_str(),
-                          from_frame_resolved.c_str(), to_frame_resolved.c_str(), ex.what());
-      } else
-      {
         ROS_DEBUG("[%s]: Transformer: Exception caught while constructing transform from '%s' to '%s': %s", node_name_.c_str(), from_frame_resolved.c_str(),
                   to_frame_resolved.c_str(), ex.what());
+      } else
+      {
+        ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: Exception caught while constructing transform from '%s' to '%s': %s", node_name_.c_str(),
+                          from_frame_resolved.c_str(), to_frame_resolved.c_str(), ex.what());
       }
     }
 
