@@ -162,7 +162,7 @@ void ThreadTimer::Impl::setPeriod(const ros::Duration& duration, [[maybe_unused]
 //}
 
 /* ThreadTimer::breakableSleep() method //{ */
-void ThreadTimer::Impl::breakableSleep(const ros::Time& until)
+bool ThreadTimer::Impl::breakableSleep(const ros::Time& until)
 {
   while (ros::ok() && ros::Time::now() < until)
   {
@@ -173,8 +173,9 @@ void ThreadTimer::Impl::breakableSleep(const ros::Time& until)
       wakeup_cond_.wait_until(lck, until_stl);
     // check the flags while mutex_state_ is locked
     if (ending_ || !running_)
-      break;
+      return false;
   }
+  return true;
 }
 //}
 
@@ -205,7 +206,9 @@ void ThreadTimer::Impl::threadFcn()
       std::scoped_lock lck(mutex_state_);
       next_expected = next_expected_;
     }
-    breakableSleep(next_expected);
+    const bool interrupted = !breakableSleep(next_expected);
+    if (interrupted)
+      continue;
 
     {
       // make sure the state doesn't change here
