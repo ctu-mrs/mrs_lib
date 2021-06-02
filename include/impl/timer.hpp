@@ -52,7 +52,7 @@ private:
 
   bool oneshot_;
 
-  void breakableSleep(const ros::Time& until);
+  bool breakableSleep(const ros::Time& until);
   void threadFcn();
 
   std::mutex mutex_wakeup_;

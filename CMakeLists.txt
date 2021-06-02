@@ -439,6 +439,7 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(
     TimerTest
     MrsLibTimer 
+    MrsLibUtils 
     ${catkin_LIBRARIES}
   )
   add_dependencies(
