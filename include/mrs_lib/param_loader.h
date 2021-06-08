@@ -33,6 +33,11 @@ namespace mrs_lib
 * for user convenience. Special cases such as loading of Eigen matrices or loading
 * of std::vectors of various values are also provided.
 *
+* To load parameters into the `rosparam` server, use a launchfile prefferably.
+* See documentation of ROS launchfiles here: http://wiki.ros.org/roslaunch/XML.
+* Specifically, the `param` XML tag is used for loading parameters directly from the launchfile: http://wiki.ros.org/roslaunch/XML/param,
+* and the `rosparam` XML tag tag is used for loading parameters from a `yaml` file: http://wiki.ros.org/roslaunch/XML/rosparam.
+*
 */
 class ParamLoader
 {

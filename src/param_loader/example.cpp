@@ -11,6 +11,12 @@
 /**  \example "param_loader/example.cpp"
 
      This example may be run after building *mrs_lib* by executing `rosrun mrs_lib param_loader_example`.
+     It demonstrates loading of parameters from the `rosparam` server inside your node/nodelet using `ParamLoader`.
+
+     To load parameters into the `rosparam` server, use a launchfile prefferably.
+     See documentation of ROS launchfiles here: http://wiki.ros.org/roslaunch/XML.
+     Specifically, the `param` XML tag is used for loading parameters directly from the launchfile: http://wiki.ros.org/roslaunch/XML/param,
+     and the `rosparam` XML tag tag is used for loading parameters from a `yaml` file: http://wiki.ros.org/roslaunch/XML/rosparam.
 
      Example code for using the \ref ParamLoader (see documentation of the ParamLoader class):
  */
