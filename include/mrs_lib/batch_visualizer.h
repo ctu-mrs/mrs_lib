@@ -54,6 +54,17 @@ public:
   void addPoint(Eigen::Vector3d point, double r = 0.0, double g = 1.0, double b = 0.3, double a = 1.0);
 
   /**
+   * @brief add an arrow to the buffer
+   *
+   * @param point coordinates of the point
+   * @param r red color in range <0,1>
+   * @param g green color in range <0,1>
+   * @param b blue color in range <0,1>
+   * @param a alpha in range <0,1> (0 is fully transparent)
+   */
+  void addArrow(const Eigen::Vector3d& origin, const Eigen::Vector3d& end, double shaft_diameter, double head_diameter, double head_length = 0.0, double r = 0.0, double g = 1.0, double b = 0.3, double a = 1.0);
+
+  /**
    * @brief add a ray to the buffer
    *
    * @param ray ray to be added
@@ -201,6 +212,7 @@ private:
   visualization_msgs::Marker points_marker;
   visualization_msgs::Marker lines_marker;
   visualization_msgs::Marker triangles_marker;
+  visualization_msgs::MarkerArray arrow_markers;
 
   bool initialized = false;
   void initialize(ros::NodeHandle &nh);
@@ -211,6 +223,8 @@ private:
   void addNullPoint();
   void addNullLine();
   void addNullTriangle();
+  void addNullArrow();
+  void addDeleteAll(visualization_msgs::MarkerArray& to);
 
   std::vector<Eigen::Vector3d> buildEllipse(mrs_lib::geometry::Ellipse ellispe, int num_points = DEFAULT_ELLIPSE_POINTS);
 

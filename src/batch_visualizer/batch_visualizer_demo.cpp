@@ -49,6 +49,30 @@ int main(int argc, char** argv) {
     bv.clearVisuals();
     //}
 
+    /* RANDOM ARROWS //{ */
+    ROS_INFO("[%s]: Generating random arrows...", ros::this_node::getName().c_str());
+    for (int i = 0; (i < 200 && ros::ok()); i++) {
+      double          x1 = rand_dbl(generator);
+      double          y1 = rand_dbl(generator);
+      double          z1 = rand_dbl(generator);
+      Eigen::Vector3d point1(x1, y1, z1);
+      double          x2 = rand_dbl(generator);
+      double          y2 = rand_dbl(generator);
+      double          z2 = rand_dbl(generator);
+      Eigen::Vector3d point2(x2, y2, z2);
+      double          r   = ((x1 * x2) - range_min) / (range_max - range_min);
+      double          g   = ((y1 * y2) - range_min) / (range_max - range_min);
+      double          b   = ((z1 * z2) - range_min) / (range_max - range_min);
+      bv.addArrow(point1, point2, 0.1, 1.0, 0.0, r, g, b, 1);
+      bv.publish();
+      ros::spinOnce();
+      ros::Duration(0.01).sleep();
+    }
+    ROS_INFO("[%s]: Done", ros::this_node::getName().c_str());
+    bv.clearBuffers();
+    bv.clearVisuals();
+    //}
+
     /* RANDOM RAYS //{ */
     ROS_INFO("[%s]: Generating random rays...", ros::this_node::getName().c_str());
     for (int i = 0; (i < 200 && ros::ok()); i++) {

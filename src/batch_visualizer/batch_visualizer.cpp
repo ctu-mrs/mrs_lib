@@ -1,3 +1,5 @@
+#include "visualization_msgs/Marker.h"
+#include "visualization_msgs/MarkerArray.h"
 #include <string>
 #include <mrs_lib/batch_visualizer.h>
 #include <mrs_lib/geometry/shapes.h>
@@ -56,6 +58,8 @@ void BatchVisualizer::setParentFrame(const std::string parent_frame) {
   points_marker.header.frame_id    = parent_frame;
   triangles_marker.header.frame_id = parent_frame;
   lines_marker.header.frame_id     = parent_frame;
+  for (auto& msg : arrow_markers.markers)
+    msg.header.frame_id     = parent_frame;
 }
 
 //}
@@ -136,6 +140,34 @@ void BatchVisualizer::addPoint(Eigen::Vector3d p, double r, double g, double b, 
 
   geometry_msgs::Point gp = eigenToMsg(p);
   points_marker.points.push_back(gp);
+}
+//}
+
+/* addArrow //{ */
+void BatchVisualizer::addArrow(const Eigen::Vector3d& origin, const Eigen::Vector3d& end, double shaft_diameter, double head_diameter, double head_length, double r, double g, double b, double a)
+{
+  visualization_msgs::Marker arrow;
+
+  arrow.header.frame_id    = parent_frame;
+  arrow.header.stamp       = ros::Time::now();
+  arrow.ns                 = marker_topic_name + "_arrows";;
+  arrow.action             = visualization_msgs::Marker::ADD;
+  arrow.pose.orientation.w = 1.0;
+  arrow.id                 = 666+arrow_markers.markers.size();
+  arrow.type               = visualization_msgs::Marker::ARROW;
+
+  std_msgs::ColorRGBA color = generateColor(r, g, b, a);
+  arrow.color = color;
+  arrow.scale.x = shaft_diameter;
+  arrow.scale.y = head_diameter;
+  arrow.scale.z = head_length;
+
+  const geometry_msgs::Point orig_pt = eigenToMsg(origin);
+  const geometry_msgs::Point end_pt = eigenToMsg(end);
+  arrow.points.push_back(orig_pt);
+  arrow.points.push_back(end_pt);
+
+  arrow_markers.markers.push_back(arrow);
 }
 //}
 
@@ -345,6 +377,8 @@ void BatchVisualizer::clearBuffers() {
 
   triangles_marker.points.clear();
   triangles_marker.colors.clear();
+
+  arrow_markers.markers.clear();
 }
 //}
 
@@ -419,23 +453,43 @@ void BatchVisualizer::addNullTriangle() {
 }
 //}
 
+/* addNullArrow //{ */
+void BatchVisualizer::addNullArrow()
+{
+  visualization_msgs::Marker arrow;
+
+  arrow.header.frame_id    = parent_frame;
+  arrow.header.stamp       = ros::Time::now();
+  arrow.ns                 = marker_topic_name + "_arrows";;
+  arrow.action             = visualization_msgs::Marker::DELETE;
+  arrow.pose.orientation.w = 1.0;
+  arrow.id                 = 666;
+  arrow.type               = visualization_msgs::Marker::ARROW;
+
+  arrow_markers.markers.push_back(arrow);
+}
+//}
+
+/* addDeleteAll //{ */
+void BatchVisualizer::addDeleteAll(visualization_msgs::MarkerArray& to)
+{
+  visualization_msgs::Marker msg;
+
+  msg.header.frame_id    = parent_frame;
+  msg.header.stamp       = ros::Time::now();
+  msg.action             = visualization_msgs::Marker::DELETEALL;
+  msg.pose.orientation.w = 1.0;
+
+  to.markers.push_back(msg);
+}
+//}
+
 /* clearVisuals //{ */
 void BatchVisualizer::clearVisuals() {
-
-  visualization_msgs::Marker points_tmp    = points_marker;
-  visualization_msgs::Marker lines_tmp     = lines_marker;
-  visualization_msgs::Marker triangles_tmp = triangles_marker;
-
-  clearBuffers();
-  addNullPoint();
-  addNullLine();
-  addNullTriangle();
-
+  msg.markers.clear();
+  addDeleteAll(msg);
   publish();
-
-  points_marker    = points_tmp;
-  lines_marker     = lines_tmp;
-  triangles_marker = triangles_tmp;
+  visual_pub.publish(msg);
 }
 //}
 
@@ -449,9 +503,10 @@ void BatchVisualizer::publish() {
 
   msg.markers.clear();
 
-  bool resolve_empty_points    = points_marker.points.empty();
-  bool resolve_empty_lines     = lines_marker.points.empty();
-  bool resolve_empty_triangles = triangles_marker.points.empty();
+  const bool resolve_empty_points    = points_marker.points.empty();
+  const bool resolve_empty_lines     = lines_marker.points.empty();
+  const bool resolve_empty_triangles = triangles_marker.points.empty();
+  const bool resolve_empty_arrows    = arrow_markers.markers.empty();
 
   if (resolve_empty_points) {
     addNullPoint();
@@ -461,6 +516,9 @@ void BatchVisualizer::publish() {
   }
   if (resolve_empty_triangles) {
     addNullTriangle();
+  }
+  if (resolve_empty_arrows) {
+    addNullArrow();
   }
 
   points_marker.header.stamp = ros::Time::now();
@@ -474,6 +532,13 @@ void BatchVisualizer::publish() {
 
   triangles_marker.header.stamp = ros::Time::now();
   msg.markers.push_back(triangles_marker);
+
+  for (auto el : arrow_markers.markers)
+  {
+    el.header.stamp = ros::Time::now();
+    msg.markers.push_back(el);
+  }
+
   visual_pub.publish(msg);
 
   if (resolve_empty_points) {
@@ -487,6 +552,9 @@ void BatchVisualizer::publish() {
   if (resolve_empty_triangles) {
     triangles_marker.points.clear();
     triangles_marker.colors.clear();
+  }
+  if (resolve_empty_arrows) {
+    arrow_markers.markers.clear();
   }
 }
 //}
