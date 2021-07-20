@@ -72,7 +72,7 @@ namespace mrs_lib
   *
   * The callbacks and timeouts may be stopped and started using the stop() and start() methods.
   *
-  * For more details, see the example below.
+  * For more details, see the example below (I recommend starting with the simple_example which covers most use-cases).
   *
   */
   template <typename MessageType>
@@ -177,6 +177,12 @@ namespace mrs_lib
       virtual void stop() {assert(m_pimpl); return m_pimpl->stop();};
 
     public:
+    /*!
+      * \brief Default constructor to avoid having to use pointers.
+      *
+      * It does nothing and the SubscribeHandler it constructs will also do nothing.
+      * Use some of the other constructors for actual construction of a usable SubscribeHandler.
+      */
       SubscribeHandler() {};
 
     /*!
