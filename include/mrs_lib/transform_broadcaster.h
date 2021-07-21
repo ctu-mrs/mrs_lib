@@ -1,3 +1,6 @@
+#ifndef TRANSFORM_BROADCASTER_H
+#define TRANSFORM_BROADCASTER_H
+
 #include <tf2_ros/transform_broadcaster.h>
 
 namespace mrs_lib
@@ -50,3 +53,5 @@ private:
 //}
 
 }  // namespace mrs_lib
+
+#endif // TRANSFORM_BROADCASTER_H
