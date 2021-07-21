@@ -1,0 +1,4 @@
+<map id="mrs_lib::LKF&lt; n_states, n_inputs, n_measurements &gt;::inverse_exception" name="mrs_lib::LKF&lt; n_states, n_inputs, n_measurements &gt;::inverse_exception">
+<area shape="rect" id="node1" title="This exception is thrown when taking the inverse of a matrix fails." alt="" coords="5,80,208,136"/>
+<area shape="rect" id="node2" title=" " alt="" coords="63,5,150,32"/>
+</map>

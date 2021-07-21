@@ -1,0 +1,4 @@
+<map id="include/mrs_lib/geometry/shapes.h" name="include/mrs_lib/geometry/shapes.h">
+<area shape="rect" id="node1" title="Defines various geometrical shapes and their relations." alt="" coords="5,5,193,47"/>
+<area shape="rect" id="node2" href="$batch__visualizer_8h.html" title="For convenient and computationally lightweight drawing of geometry in RVIZ using marker arrays." alt="" coords="19,95,180,136"/>
+</map>

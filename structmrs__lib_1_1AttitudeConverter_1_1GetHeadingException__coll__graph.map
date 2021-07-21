@@ -1,0 +1,4 @@
+<map id="mrs_lib::AttitudeConverter::GetHeadingException" name="mrs_lib::AttitudeConverter::GetHeadingException">
+<area shape="rect" id="node1" title="is thrown when calculating of heading is not possible due to atan2 exception" alt="" coords="5,80,200,121"/>
+<area shape="rect" id="node2" title=" " alt="" coords="59,5,146,32"/>
+</map>

@@ -1,0 +1,7 @@
+<map id="include/impl/ukf.hpp" name="include/impl/ukf.hpp">
+<area shape="rect" id="node1" title="Implements UKF &#45; a class implementing the Unscented Kalman Filter." alt="" coords="85,5,239,32"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,80,84,107"/>
+<area shape="rect" id="node3" href="$ukf_8h.html" title="Defines UKF &#45; a class implementing the Unscented Kalman Filter ." alt="" coords="109,80,215,107"/>
+<area shape="rect" id="node4" href="$kalman__filter_8h.html" title="Defines KalmanFilter &#45; an abstract class, defining common interfaces and types for a generic Kalman f..." alt="" coords="77,155,247,181"/>
+<area shape="rect" id="node5" title=" " alt="" coords="111,229,213,256"/>
+</map>

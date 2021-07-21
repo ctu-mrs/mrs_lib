@@ -1,0 +1,10 @@
+<map id="include/mrs_lib/batch_visualizer.h" name="include/mrs_lib/batch_visualizer.h">
+<area shape="rect" id="node1" title="For convenient and computationally lightweight drawing of geometry in RVIZ using marker arrays." alt="" coords="188,5,349,47"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,102,68,129"/>
+<area shape="rect" id="node3" title=" " alt="" coords="92,102,171,129"/>
+<area shape="rect" id="node4" title=" " alt="" coords="195,95,342,136"/>
+<area shape="rect" id="node5" href="$shapes_8h.html" title="Defines various geometrical shapes and their relations." alt="" coords="367,102,565,129"/>
+<area shape="rect" id="node8" title=" " alt="" coords="589,102,823,129"/>
+<area shape="rect" id="node6" title=" " alt="" coords="321,184,464,211"/>
+<area shape="rect" id="node7" title=" " alt="" coords="488,184,591,211"/>
+</map>
