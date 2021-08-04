@@ -9,6 +9,9 @@
 
 #include <Eigen/Dense>
 
+#include <boost/circular_buffer.hpp>
+#include <ros/ros.h>
+
 namespace mrs_lib
 {
   /* KalmanFilter virtual class //{ */
@@ -46,6 +49,10 @@ namespace mrs_lib
       {
         x_t x;  /*!< \brief State vector. */
         P_t P;  /*!< \brief State covariance matrix. */
+        std::shared_ptr<boost::circular_buffer<double>> nis_buffer = nullptr;
+        ros::Time stamp;
+        bool measurement_jumped = false;
+        /* boost::circular_buffer<double> nis_buffer; */
       };
       //}
 
