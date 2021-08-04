@@ -174,7 +174,7 @@ public:
   struct InvalidAttitudeException : public std::exception
   {
     const char* what() const throw() {
-      return "AttitudeConverter: invalid attitude";
+      return "AttitudeConverter: invalid attitude, the input probably constains NaNs";
     }
   };
 

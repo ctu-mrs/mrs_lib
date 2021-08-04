@@ -223,6 +223,13 @@ target_link_libraries(subscribe_handler_example
   ${Eigen_LIBRARIES}
   )
 
+add_executable(subscribe_handler_simple_example src/subscribe_handler/simple_example.cpp)
+target_link_libraries(subscribe_handler_simple_example
+  MrsLibTimer
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
 add_executable(rheiv_example src/rheiv/example.cpp)
 target_link_libraries(rheiv_example
   ${catkin_LIBRARIES}
