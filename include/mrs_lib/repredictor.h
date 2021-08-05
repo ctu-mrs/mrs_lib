@@ -342,7 +342,7 @@ namespace mrs_lib
       // check if the new element would be added before the first element of the history buffer and ignore it if so
       if (next_it == std::begin(m_history) && !m_history.empty())
       {
-        ROS_WARN_STREAM("[Repredictor]: Added history point is older than the oldest by " << (next_it->stamp - info.stamp).toSec() << "s. Ignoring it! Consider increasing the history buffer size (currently: " << m_history.size() << ")");
+        ROS_WARN_STREAM_THROTTLE(1.0, "[Repredictor]: Added history point is older than the oldest by " << (next_it->stamp - info.stamp).toSec() << "s. Ignoring it! Consider increasing the history buffer size (currently: " << m_history.size() << ")");
         return std::end(m_history);
       }
 
