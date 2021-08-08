@@ -71,13 +71,13 @@ namespace mrs_lib
     {
       /* std::cout << "Creating jlkf" << std::endl; */
       Base_class::H = H;
-      debug_nis_pub = m_nh.advertise<mrs_msgs::Float64ArrayStamped>("debug_nis", 1);
-      debug_residual_pub = m_nh.advertise<mrs_msgs::Float64ArrayStamped>("debug_residual", 1);
-      debug_tmp_pub = m_nh.advertise<mrs_msgs::BoolStamped>("debug_crosscov", 1);
-      debug_meas_pub = m_nh.advertise<mrs_msgs::Float64ArrayStamped>("debug_meas", 1);
-      debug_cov_diff_pub = m_nh.advertise<mrs_msgs::Float64ArrayStamped>("debug_cov_diff", 1);
-      debug_cov_pub = m_nh.advertise<mrs_msgs::Float64ArrayStamped>("debug_cov_jlkf", 1);
-      debug_meas_jump_pub = m_nh.advertise<mrs_msgs::BoolStamped>("debug_meas_jump", 1);
+      /* debug_nis_pub = m_nh.advertise<mrs_msgs::Float64ArrayStamped>("debug_nis", 1); */
+      /* debug_residual_pub = m_nh.advertise<mrs_msgs::Float64ArrayStamped>("debug_residual", 1); */
+      /* debug_tmp_pub = m_nh.advertise<mrs_msgs::BoolStamped>("debug_crosscov", 1); */
+      /* debug_meas_pub = m_nh.advertise<mrs_msgs::Float64ArrayStamped>("debug_meas", 1); */
+      /* debug_cov_diff_pub = m_nh.advertise<mrs_msgs::Float64ArrayStamped>("debug_cov_diff", 1); */
+      /* debug_cov_pub = m_nh.advertise<mrs_msgs::Float64ArrayStamped>("debug_cov_jlkf", 1); */
+      /* debug_meas_jump_pub = m_nh.advertise<mrs_msgs::BoolStamped>("debug_meas_jump", 1); */
     };
 
     /* predict() method //{ */
@@ -175,16 +175,16 @@ namespace mrs_lib
         std::cout << "y: " << y << ", z: " << z << ", H: " << H << ", sc.x: " << sc.x << std::endl;
       }
 
-      if (H(0, 0) > 0)
-      {
-        mrs_msgs::Float64ArrayStamped msg_res;
-        msg_res.header.stamp = sc.stamp;
-        for (int i = 0; i < y.rows(); i++)
-        {
-          msg_res.values.push_back(y(i, 1));
-        }
-        debug_residual_pub.publish(msg_res);
-      }
+      /* if (H(0, 0) > 0) */
+      /* { */
+      /*   mrs_msgs::Float64ArrayStamped msg_res; */
+      /*   msg_res.header.stamp = sc.stamp; */
+      /*   for (int i = 0; i < y.rows(); i++) */
+      /*   { */
+      /*     msg_res.values.push_back(y(i, 1)); */
+      /*   } */
+      /*   debug_residual_pub.publish(msg_res); */
+      /* } */
 
       /* const double nis = (y.transpose() * W_inv * y)(0, 0); */
       nis = (y.transpose() * W_inv * y)(0, 0);
@@ -208,20 +208,20 @@ namespace mrs_lib
         /* } */
         /* debug_meas_jump_pub.publish(msg_jump); */
 
-        mrs_msgs::Float64ArrayStamped msg_meas;
-        msg_meas.header.stamp = sc.stamp;
-        msg_meas.values.push_back(z(0, 0));
-        debug_meas_pub.publish(msg_meas);
+        /* mrs_msgs::Float64ArrayStamped msg_meas; */
+        /* msg_meas.header.stamp = sc.stamp; */
+        /* msg_meas.values.push_back(z(0, 0)); */
+        /* debug_meas_pub.publish(msg_meas); */
 
-        mrs_msgs::Float64ArrayStamped msg;
-        msg.header.stamp = sc.stamp;
+        /* mrs_msgs::Float64ArrayStamped msg; */
+        /* msg.header.stamp = sc.stamp; */
 
-        msg.values.push_back(nis);
+        /* msg.values.push_back(nis); */
 
-        if (nis == 0)
-        {
-          std::cout << "nula, nis: " << nis << ", y: " << y << ", W_inv: " << W_inv << std::endl;
-        }
+        /* if (nis == 0) */
+        /* { */
+        /*   std::cout << "nula, nis: " << nis << ", y: " << y << ", W_inv: " << W_inv << std::endl; */
+        /* } */
 
         if (sc.nis_buffer != nullptr)
         {
@@ -240,7 +240,7 @@ namespace mrs_lib
           {
             nis_avg /= count;
           }
-          msg.values.push_back(nis_avg);
+          /* msg.values.push_back(nis_avg); */
         }
         /* if (nis > 3.9e-5) */
         /* if (H(0, 0) > 0 && count > 0 && nis_avg > 3.9e-5 / count) */
@@ -271,7 +271,7 @@ namespace mrs_lib
         /*     K(i) = 0; */
         /*   } */
         /* } */
-        debug_nis_pub.publish(msg);
+        /* debug_nis_pub.publish(msg); */
       }
 
       K_t test = H.transpose() * Base_class::invert_W(H * H.transpose());
@@ -291,13 +291,13 @@ namespace mrs_lib
       statecov_t ret;
       double nis = -1;
       H_t H_out;
-      mrs_msgs::Float64ArrayStamped msg_cov;
-      msg_cov.header.stamp = sc.stamp;
-      for (int i = 0; i < sc.P.size(); i++)
-      {
-        msg_cov.values.push_back(sc.P(i));
-      }
-      debug_cov_pub.publish(msg_cov);
+      /* mrs_msgs::Float64ArrayStamped msg_cov; */
+      /* msg_cov.header.stamp = sc.stamp; */
+      /* for (int i = 0; i < sc.P.size(); i++) */
+      /* { */
+      /*   msg_cov.values.push_back(sc.P(i)); */
+      /* } */
+      /* debug_cov_pub.publish(msg_cov); */
       const K_t K = computeKalmanGain(sc, z, R, H, nis, H_out, m_nis_thr, m_nis_avg_thr);
       ret.x = sc.x + K * (z - (H * sc.x));
       ret.P = (P_t::Identity() - (K * H_out)) * sc.P;
@@ -313,7 +313,8 @@ namespace mrs_lib
         typename std::enable_if < check<0, statecov_t>::type correction_impl(const statecov_t& sc, const z_t& z, const R_t& R, const H_t& H) const
     {
       // the correction phase
-      // THIS IS NOT USED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1111
+      // THIS IS NOT USED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      std::cout << "[Aloamgarm] jlkf.h, error - bad function" << std::endl;
       statecov_t ret;
       double nis = -1;
       H_t H_out;
@@ -328,13 +329,13 @@ namespace mrs_lib
   private:
     double m_sigma;
     ros::NodeHandle m_nh;
-    ros::Publisher debug_nis_pub;
-    ros::Publisher debug_residual_pub;
-    ros::Publisher debug_tmp_pub;
-    ros::Publisher debug_cov_diff_pub;
-    ros::Publisher debug_cov_pub;
-    ros::Publisher debug_meas_pub;
-    ros::Publisher debug_meas_jump_pub;
+    /* ros::Publisher debug_nis_pub; */
+    /* ros::Publisher debug_residual_pub; */
+    /* ros::Publisher debug_tmp_pub; */
+    /* ros::Publisher debug_cov_diff_pub; */
+    /* ros::Publisher debug_cov_pub; */
+    /* ros::Publisher debug_meas_pub; */
+    /* ros::Publisher debug_meas_jump_pub; */
     std::vector<double> m_nis_window;
     double m_nis_thr;
     double m_nis_avg_thr;
