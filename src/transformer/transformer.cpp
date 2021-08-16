@@ -491,7 +491,7 @@ namespace mrs_lib
       geometry_msgs::TransformStamped transform = tf_buffer_.lookupTransform(to_frame_resolved, from_frame_resolved, ros::Time(0));
 
       // return it
-      return mrs_lib::TransformStamped(from_frame_resolved, to_frame_resolved, ros::Time::now(), transform);
+      return mrs_lib::TransformStamped(from_frame_resolved, to_frame_resolved, transform.header.stamp, transform);
     }
     catch (tf2::TransformException& ex)
     {
