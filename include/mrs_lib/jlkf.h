@@ -60,7 +60,7 @@ namespace mrs_lib
      * \param H         the state to measurement mapping matrix.
      */
     JLKF(const generateA_t& generateA, const generateB_t& generateB, const H_t& H, const double& sigma, const ros::NodeHandle& nh, const double& nis_thr,
-          const double& nis_avg_thr)
+         const double& nis_avg_thr)
         : varstepLKF<n, m, p>(generateA, generateB, H),
           m_generateA(generateA),
           m_generateB(generateB),
@@ -71,7 +71,7 @@ namespace mrs_lib
     {
       /* std::cout << "Creating jlkf" << std::endl; */
       Base_class::H = H;
-      /* debug_nis_pub = m_nh.advertise<mrs_msgs::Float64ArrayStamped>("debug_nis", 1); */
+      debug_nis_pub = m_nh.advertise<mrs_msgs::Float64ArrayStamped>("debug_nis", 1);
       /* debug_residual_pub = m_nh.advertise<mrs_msgs::Float64ArrayStamped>("debug_residual", 1); */
       /* debug_tmp_pub = m_nh.advertise<mrs_msgs::BoolStamped>("debug_crosscov", 1); */
       /* debug_meas_pub = m_nh.advertise<mrs_msgs::Float64ArrayStamped>("debug_meas", 1); */
@@ -213,10 +213,10 @@ namespace mrs_lib
         /* msg_meas.values.push_back(z(0, 0)); */
         /* debug_meas_pub.publish(msg_meas); */
 
-        /* mrs_msgs::Float64ArrayStamped msg; */
-        /* msg.header.stamp = sc.stamp; */
+        mrs_msgs::Float64ArrayStamped msg;
+        msg.header.stamp = sc.stamp;
 
-        /* msg.values.push_back(nis); */
+        msg.values.push_back(nis);
 
         /* if (nis == 0) */
         /* { */
@@ -225,6 +225,12 @@ namespace mrs_lib
 
         if (sc.nis_buffer != nullptr)
         {
+
+          /* if(sc.nis_buffer->size() > 0){ */
+          /*   if(sc.nis_buffer->at(sc.nis_buffer->size() - 1) > nis_thr){ */
+          /*     nis_thr_tmp /= 10; */
+          /*   } */
+          /* } */
           sc.nis_buffer->push_back(nis);
           for (auto it = sc.nis_buffer->begin(); it != sc.nis_buffer->end(); it++)
           {
@@ -232,15 +238,16 @@ namespace mrs_lib
             count++;
             if (*it > nis_thr_tmp)
             {
-              nis_over_thr = true;
-
+              /* nis_over_thr = true; */
+              nis_thr_tmp /= 10;
             }
           }
           if (count > 0)
           {
             nis_avg /= count;
           }
-          /* msg.values.push_back(nis_avg); */
+          msg.values.push_back(nis_avg);
+          msg.values.push_back(nis_thr_tmp);
         }
         /* if (nis > 3.9e-5) */
         /* if (H(0, 0) > 0 && count > 0 && nis_avg > 3.9e-5 / count) */
@@ -249,7 +256,8 @@ namespace mrs_lib
         /* if (nis > nis_thr_tmp || (nis_over_thr) || sc.measurement_jumped) */
         /* if (nis > nis_thr_tmp || nis_over_thr) */
         /* if (nis > nis_thr_tmp || sc.measurement_jumped) */
-        if (nis > nis_thr)
+        /* if (nis > nis_thr) */
+        if (nis > nis_thr_tmp)
         /* if ((count > 0 && nis_avg > 3.9e-5)) */
         {
           // old jump correction
@@ -329,7 +337,7 @@ namespace mrs_lib
   private:
     double m_sigma;
     ros::NodeHandle m_nh;
-    /* ros::Publisher debug_nis_pub; */
+    ros::Publisher debug_nis_pub;
     /* ros::Publisher debug_residual_pub; */
     /* ros::Publisher debug_tmp_pub; */
     /* ros::Publisher debug_cov_diff_pub; */
