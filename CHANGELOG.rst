@@ -2,6 +2,27 @@
 Changelog for package mrs_lib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [shandler]: minor update (will no longer print error if getMsg before callback is called, will just quietly return nullptr!
+* fixed an error in transformer: the last message was published with ros::Time::now() time stamp, not with it's real stamp. (`#32 <https://github.com/ctu-mrs/mrs_lib/issues/32>`_)
+  oops, forgot to merge it :D
+* [shandler]: fixed docs for simple_example
+* removed weird stuff from mrs lkf model
+* added header guard to transform_broadcaster
+* [shandler]: added simple example to better demonstrate basic functionality and documented empty constructor
+* updated attitude convertor's exception text
+* [ParamLoader]: added links to ROS roslaunch documentation for parameter loading
+* [timer]: added more tests, fixes in tests and implementation (`#31 <https://github.com/ctu-mrs/mrs_lib/issues/31>`_)
+  hopefully this will fix stuff
+* fixed transformer logging
+* [cyclic] added comparison and ostream operators
+* Enable SubscribeHandler to use either ROSTimer or ThreadTimer (`#30 <https://github.com/ctu-mrs/mrs_lib/issues/30>`_)
+  * [shandler + timer]: reimplemented the custom thread-based timer, shandler can now use either ROS Timer or the STL thread-based timer
+  * [timer]: added documentation and testing
+  * [timer]: made the test a bit stricter
+* Contributors: Matej Petrlik, Matouš Vrba, Mykola Morgunenko, Tomas Baca
+
 1.0.1 (2021-05-16)
 ------------------
   Updating CI - added sanitizers to debug build type, removed PCL-dependent flags (`-march=native` etc)
