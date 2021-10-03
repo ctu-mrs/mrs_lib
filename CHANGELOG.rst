@@ -2,8 +2,8 @@
 Changelog for package mrs_lib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.2 (2021-10-03)
+------------------
 * [shandler]: minor update (will no longer print error if getMsg before callback is called, will just quietly return nullptr!
 * fixed an error in transformer: the last message was published with ros::Time::now() time stamp, not with it's real stamp. (`#32 <https://github.com/ctu-mrs/mrs_lib/issues/32>`_)
   oops, forgot to merge it :D
