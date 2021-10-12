@@ -194,8 +194,8 @@ namespace mrs_lib
 
       double nis_thr_tmp = nis_thr;
 
-      /* if (H(0, 0) > 0 && H(0, 3) != 0) */
-      if (H(0, 0) > 0)
+      if (H(0, 0) > 0 && H(0, 3) != 0)
+      /* if (H(0, 0) > 0) */
       {
         // measurement jump
         /* mrs_msgs::BoolStamped msg_jump; */

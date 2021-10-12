@@ -52,7 +52,6 @@ namespace mrs_lib
         std::shared_ptr<boost::circular_buffer<double>> nis_buffer = nullptr;
         ros::Time stamp;
         bool measurement_jumped = false;
-        /* boost::circular_buffer<double> nis_buffer; */
       };
       //}
 

@@ -67,7 +67,7 @@ public:
     assert(!m_history.empty());
     auto hist_it = std::begin(m_history);
     if (hist_it->is_measurement) {
-      /* hist_it++; */
+      // if the first history point is measurement, don't use it for correction (to prevent it from being used twice)
       hist_it->is_measurement = false;
     }
     // cur_stamp corresponds to the time point of cur_sc estimation
@@ -208,12 +208,6 @@ public:
     // add the point to the history buffer
     addInfo(info, next_it);
 
-    if (meas_id >= 0) {
-      // add buffer of normalized innovation squared for new measurement type
-      if (m_nis_buffers.size() <= meas_id) {
-        m_nis_buffers.push_back(std::make_shared<boost::circular_buffer<double>>());
-      }
-    }
   }
   //}
 
@@ -265,8 +259,6 @@ private:
   statecov_t m_sc;
   // default model to use for updates
   ModelPtr m_default_model;
-
-  std::vector<std::shared_ptr<boost::circular_buffer<double>>> m_nis_buffers;
 
 private:
   /* helper structs and usings //{ */
