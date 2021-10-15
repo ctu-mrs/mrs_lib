@@ -74,9 +74,6 @@ public:
     auto cur_stamp = hist_it->stamp;
     // cur_sc is the current state and covariance estimate
     auto cur_sc = m_sc;
-    if (m_sc.nis_buffer != nullptr) {
-      cur_sc.nis_buffer = std::make_shared<boost::circular_buffer<double>>(*m_sc.nis_buffer);
-    }
     do {
       cur_sc.stamp = hist_it->stamp;
       // do the correction if current history point is a measurement
@@ -196,15 +193,14 @@ public:
    * \note The measurement vector will not be added if it is older than the oldest element in the history buffer.
    *
    */
-  void addMeasurement(const z_t& z, const R_t& R, const ros::Time& stamp, const ModelPtr& model = nullptr, const double& meas_id = -1,
-                      const bool& measurement_jumped = false) {
+  void addMeasurement(const z_t& z, const R_t& R, const ros::Time& stamp, const ModelPtr& model = nullptr, const double& meas_id = -1) {
     assert(!m_history.empty());
     // helper variable for searching of the next point in the history buffer
     const auto next_it = std::lower_bound(std::begin(m_history), std::end(m_history), stamp, &Repredictor<Model>::earlier);
     // get the previous history point (or the first one to avoid out of bounds)
     const auto prev_it = next_it == std::begin(m_history) ? next_it : next_it - 1;
     // initialize a new history info point
-    const info_t info(stamp, z, R, model, *prev_it, meas_id, measurement_jumped);
+    const info_t info(stamp, z, R, model, *prev_it, meas_id);
     // add the point to the history buffer
     addInfo(info, next_it);
 
@@ -227,8 +223,14 @@ public:
    * \param hist_len       Length of the history buffer for system inputs and measurements.
    */
   Repredictor(const x_t& x0, const P_t& P0, const u_t& u0, const Q_t& Q0, const ros::Time& t0, const ModelPtr& model, const unsigned hist_len,
-              const std::shared_ptr<boost::circular_buffer<double>>& nis_buffer = nullptr)
+              const std::shared_ptr<boost::circular_buffer<double>>& nis_buffer)
       : m_sc{x0, P0, nis_buffer}, m_default_model(model), m_history(history_t(hist_len)) {
+    assert(hist_len > 0);
+    addInputChangeWithNoise(u0, Q0, t0, model);
+  };
+
+  Repredictor(const x_t& x0, const P_t& P0, const u_t& u0, const Q_t& Q0, const ros::Time& t0, const ModelPtr& model, const unsigned hist_len)
+      : m_sc{x0, P0}, m_default_model(model), m_history(history_t(hist_len)) {
     assert(hist_len > 0);
     addInputChangeWithNoise(u0, Q0, t0, model);
   };
@@ -278,7 +280,6 @@ private:
     ModelPtr correct_model;
     bool     is_measurement;
     int      meas_id;
-    bool     measurement_jumped = false;
 
     // constructor for a dummy info (for searching in the history)
     info_t(const ros::Time& stamp) : stamp(stamp), is_measurement(false){};
@@ -286,15 +287,9 @@ private:
     // constructor for a system input
     info_t(const ros::Time& stamp, const u_t& u, const Q_t& Q, const ModelPtr& model) : stamp(stamp), u(u), Q(Q), predict_model(model), is_measurement(false){};
 
-    // construcotr for a measurement
+    // constructor for a measurement
     info_t(const ros::Time& stamp, const z_t& z, const R_t& R, const ModelPtr& model, const info_t& prev_info, const int& meas_id)
         : stamp(stamp), z(z), R(R), correct_model(model), is_measurement(true), meas_id(meas_id) {
-      updateUsing(prev_info);
-    };
-
-    info_t(const ros::Time& stamp, const z_t& z, const R_t& R, const ModelPtr& model, const info_t& prev_info, const int& meas_id,
-           const bool& measurement_jumped)
-        : stamp(stamp), z(z), R(R), correct_model(model), is_measurement(true), meas_id(meas_id), measurement_jumped(measurement_jumped) {
       updateUsing(prev_info);
     };
 
@@ -400,7 +395,6 @@ private:
     assert(meas.is_measurement);
     const auto model          = meas.correct_model == nullptr ? m_default_model : meas.correct_model;
     auto       sc_tmp         = sc;
-    sc_tmp.measurement_jumped = meas.measurement_jumped;
     return model->correct(sc_tmp, meas.z, meas.R);
   }
   //}

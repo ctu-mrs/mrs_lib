@@ -6,8 +6,8 @@
 #ifndef JLKF_H
 #define JLKF_H
 
-#include <mrs_lib/kalman_filter.h>
-#include <mrs_lib/lkf.h>
+#include <mrs_lib/kalman_filter_aloamgarm.h>
+/* #include <mrs_lib/lkf.h> */
 #include <iostream>
 
 #include <vector>
@@ -23,14 +23,14 @@ namespace mrs_lib
 
   /* class JLKF */ /*//{*/
   template <int n_states, int n_inputs, int n_measurements, int n_biases>
-  class JLKF : public varstepLKF<n_states, n_inputs, n_measurements>
+  class JLKF : public KalmanFilterAloamGarm<n_states, n_inputs, n_measurements>
   {
   public:
     /* LKF definitions (typedefs, constants etc) //{ */
     static const int n = n_states;
     static const int m = n_inputs;
     static const int p = n_measurements;
-    using Base_class = varstepLKF<n, m, p>;
+    using Base_class = KalmanFilterAloamGarm<n, m, p>;
 
     using x_t = typename Base_class::x_t;
     using u_t = typename Base_class::u_t;
@@ -38,17 +38,42 @@ namespace mrs_lib
     using P_t = typename Base_class::P_t;
     using R_t = typename Base_class::R_t;
     using statecov_t = typename Base_class::statecov_t;
-    using A_t = typename Base_class::A_t;  // measurement mapping p*n
-    using B_t = typename Base_class::B_t;  // process covariance n*n
-    using H_t = typename Base_class::H_t;  // measurement mapping p*n
+    /* using A_t = typename Base_class::A_t;  // measurement mapping p*n */
+    /* using B_t = typename Base_class::B_t;  // process covariance n*n */
+    /* using H_t = typename Base_class::H_t;  // measurement mapping p*n */
     using Q_t = typename Base_class::Q_t;  // process covariance n*n
-    using K_t = typename Base_class::K_t;  // Kalman gain
+    /* using K_t = typename Base_class::K_t;  // Kalman gain */
+
+    typedef Eigen::Matrix<double, n, n> A_t;  /*!< \brief System transition matrix type \f$n \times n\f$ */
+    typedef Eigen::Matrix<double, n, m> B_t;  /*!< \brief Input to state mapping matrix type \f$n \times m\f$ */
+    typedef Eigen::Matrix<double, p, n> H_t;  /*!< \brief State to measurement mapping matrix type \f$p \times n\f$ */
+    typedef Eigen::Matrix<double, n, p> K_t;  /*!< \brief Kalman gain matrix type \f$n \times p\f$ */
 
     typedef Eigen::Matrix<double, p, p> C_t; /*!< \brief correntropy gain \f$p \times p\f$ */
     typedef Eigen::Matrix<double, n, n> D_t; /*!< \brief D \f$n \times n\f$ */
 
     using generateA_t = std::function<A_t(double)>;
     using generateB_t = std::function<B_t(double)>;
+    //}
+    
+  /*!
+    * \brief This exception is thrown when taking the inverse of a matrix fails.
+    *
+    * You should catch this exception in your code and act accordingly if it appears
+    * (e.g. reset the state and covariance or modify the measurement/process noise parameters).
+    */
+    struct inverse_exception : public std::exception
+    {
+    /*!
+      * \brief Returns the error message, describing what caused the exception.
+      *
+      * \return  The error message, describing what caused the exception.
+      */
+      const char* what() const throw()
+      {
+        return "LKF: could not compute matrix inversion!!! Fix your covariances (the measurement's is probably too low...)";
+      }
+    };
     //}
 
   public:
@@ -61,23 +86,15 @@ namespace mrs_lib
      */
     JLKF(const generateA_t& generateA, const generateB_t& generateB, const H_t& H, const double& sigma, const ros::NodeHandle& nh, const double& nis_thr,
          const double& nis_avg_thr)
-        : varstepLKF<n, m, p>(generateA, generateB, H),
-          m_generateA(generateA),
+        : m_generateA(generateA),
           m_generateB(generateB),
+          H(H),
           m_sigma(sigma),
           m_nh(nh),
           m_nis_thr(nis_thr),
           m_nis_avg_thr(nis_avg_thr)
     {
-      /* std::cout << "Creating jlkf" << std::endl; */
-      Base_class::H = H;
       debug_nis_pub = m_nh.advertise<mrs_msgs::Float64ArrayStamped>("debug_nis", 1);
-      /* debug_residual_pub = m_nh.advertise<mrs_msgs::Float64ArrayStamped>("debug_residual", 1); */
-      /* debug_tmp_pub = m_nh.advertise<mrs_msgs::BoolStamped>("debug_crosscov", 1); */
-      /* debug_meas_pub = m_nh.advertise<mrs_msgs::Float64ArrayStamped>("debug_meas", 1); */
-      /* debug_cov_diff_pub = m_nh.advertise<mrs_msgs::Float64ArrayStamped>("debug_cov_diff", 1); */
-      /* debug_cov_pub = m_nh.advertise<mrs_msgs::Float64ArrayStamped>("debug_cov_jlkf", 1); */
-      /* debug_meas_jump_pub = m_nh.advertise<mrs_msgs::BoolStamped>("debug_meas_jump", 1); */
     };
 
     /* predict() method //{ */
@@ -104,8 +121,8 @@ namespace mrs_lib
       statecov_t ret;
       A_t A = m_generateA(dt);
       B_t B = m_generateB(dt);
-      ret.x = Base_class::state_predict(A, sc.x, B, u);
-      ret.P = Base_class::covariance_predict(A, sc.P, Q, dt);
+      ret.x = state_predict(A, sc.x, B, u);
+      ret.P = covariance_predict(A, sc.P, Q, dt);
       ret.nis_buffer = sc.nis_buffer;
       return ret;
     };
@@ -127,30 +144,30 @@ namespace mrs_lib
     virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R) const override
     {
       /* return correct_optimized(sc, z, R, H); */
-      return correction_impl(sc, z, R, Base_class::H);
+      return correction_impl(sc, z, R, H);
     };
     //}
 
   protected:
     /* invert_W() method //{ */
-    /* static R_t invert_W(R_t W) */
-    /* { */
-    /*   Eigen::ColPivHouseholderQR<R_t> qr(W); */
-    /*   if (!qr.isInvertible()) */
-    /*   { */
-    /*     // add some stuff to the tmp matrix diagonal to make it invertible */
-    /*     R_t ident = R_t::Identity(W.rows(), W.cols()); */
-    /*     W += 1e-9 * ident; */
-    /*     qr.compute(W); */
-    /*     if (!qr.isInvertible()) */
-    /*     { */
-    /*       // never managed to make this happen except for explicitly putting NaNs in the input */
-    /*       throw inverse_exception(); */
-    /*     } */
-    /*   } */
-    /*   const R_t W_inv = qr.inverse(); */
-    /*   return W_inv; */
-    /* } */
+    static R_t invert_W(R_t W)
+    {
+      Eigen::ColPivHouseholderQR<R_t> qr(W);
+      if (!qr.isInvertible())
+      {
+        // add some stuff to the tmp matrix diagonal to make it invertible
+        R_t ident = R_t::Identity(W.rows(), W.cols());
+        W += 1e-9 * ident;
+        qr.compute(W);
+        if (!qr.isInvertible())
+        {
+          // never managed to make this happen except for explicitly putting NaNs in the input
+          throw inverse_exception();
+        }
+      }
+      const R_t W_inv = qr.inverse();
+      return W_inv;
+    }
     //}
 
 
@@ -160,31 +177,11 @@ namespace mrs_lib
     {
       // TODO return the parameters back to const
       H_out = H;
-      // calculation of the kalman gain K
-      /* const R_t W = H * sc.P * H.transpose() + R; */
-      /* const R_t W_inv = Base_class::invert_W(W); */
-      /* K_t K = sc.P * H.transpose() * W_inv; */
-      /* const z_t y = z - (H * sc.x); */
 
       R_t W = H * sc.P * H.transpose() + R;
-      R_t W_inv = Base_class::invert_W(W);
+      R_t W_inv = invert_W(W);
       K_t K = sc.P * H.transpose() * W_inv;
       z_t y = z - (H * sc.x);
-      if (y(0, 0) > 100)
-      {
-        std::cout << "y: " << y << ", z: " << z << ", H: " << H << ", sc.x: " << sc.x << std::endl;
-      }
-
-      /* if (H(0, 0) > 0) */
-      /* { */
-      /*   mrs_msgs::Float64ArrayStamped msg_res; */
-      /*   msg_res.header.stamp = sc.stamp; */
-      /*   for (int i = 0; i < y.rows(); i++) */
-      /*   { */
-      /*     msg_res.values.push_back(y(i, 1)); */
-      /*   } */
-      /*   debug_residual_pub.publish(msg_res); */
-      /* } */
 
       /* const double nis = (y.transpose() * W_inv * y)(0, 0); */
       nis = (y.transpose() * W_inv * y)(0, 0);
@@ -197,41 +194,14 @@ namespace mrs_lib
       if (H(0, 0) > 0 && H(0, 3) != 0)
       /* if (H(0, 0) > 0) */
       {
-        // measurement jump
-        /* mrs_msgs::BoolStamped msg_jump; */
-        /* msg_jump.stamp = sc.stamp; */
-        /* if (sc.measurement_jumped) */
-        /* { */
-        /*   msg_jump.data = true; */
-        /* } else */
-        /* { */
-        /*   msg_jump.data = false; */
-        /* } */
-        /* debug_meas_jump_pub.publish(msg_jump); */
-
-        /* mrs_msgs::Float64ArrayStamped msg_meas; */
-        /* msg_meas.header.stamp = sc.stamp; */
-        /* msg_meas.values.push_back(z(0, 0)); */
-        /* debug_meas_pub.publish(msg_meas); */
-
         mrs_msgs::Float64ArrayStamped msg;
         msg.header.stamp = sc.stamp;
 
         msg.values.push_back(nis);
 
-        /* if (nis == 0) */
-        /* { */
-        /*   std::cout << "nula, nis: " << nis << ", y: " << y << ", W_inv: " << W_inv << std::endl; */
-        /* } */
-
         if (sc.nis_buffer != nullptr)
         {
 
-          /* if(sc.nis_buffer->size() > 0){ */
-          /*   if(sc.nis_buffer->at(sc.nis_buffer->size() - 1) > nis_thr){ */
-          /*     nis_thr_tmp /= 10; */
-          /*   } */
-          /* } */
           sc.nis_buffer->push_back(nis);
           for (auto it = sc.nis_buffer->begin(); it != sc.nis_buffer->end(); it++)
           {
@@ -239,7 +209,6 @@ namespace mrs_lib
             count++;
             if (*it > nis_thr_tmp)
             {
-              /* nis_over_thr = true; */
               nis_thr_tmp /= 10;
             }
           }
@@ -250,16 +219,7 @@ namespace mrs_lib
           msg.values.push_back(nis_avg);
           msg.values.push_back(nis_thr_tmp);
         }
-        /* if (nis > 3.9e-5) */
-        /* if (H(0, 0) > 0 && count > 0 && nis_avg > 3.9e-5 / count) */
-        /* if (nis > nis_thr || (count > 0 && nis_avg > nis_avg_thr)) */
-        /* if (nis > nis_thr || (nis_over_thr && sc.measurement_jumped)) */
-        /* if (nis > nis_thr_tmp || (nis_over_thr) || sc.measurement_jumped) */
-        /* if (nis > nis_thr_tmp || nis_over_thr) */
-        /* if (nis > nis_thr_tmp || sc.measurement_jumped) */
-        /* if (nis > nis_thr) */
         if (nis > nis_thr_tmp)
-        /* if ((count > 0 && nis_avg > 3.9e-5)) */
         {
           // old jump correction
           K = K.Zero();
@@ -269,21 +229,14 @@ namespace mrs_lib
             mask(i, i) = 1;
           }
           const H_t H_bias_only = H * mask;
-          K = H_bias_only.transpose() * Base_class::invert_W(H_bias_only * H_bias_only.transpose());
+          K = H_bias_only.transpose() * invert_W(H_bias_only * H_bias_only.transpose());
           H_out = H_bias_only;
         }
 
-        /* for (int i = 0; i < K.size(); i++) */
-        /* { */
-        /*   if (abs(K(i)) < 1e-30) */
-        /*   { */
-        /*     K(i) = 0; */
-        /*   } */
-        /* } */
-        /* debug_nis_pub.publish(msg); */
+        debug_nis_pub.publish(msg);
       }
 
-      K_t test = H.transpose() * Base_class::invert_W(H * H.transpose());
+      K_t test = H.transpose() * invert_W(H * H.transpose());
 
       return K;
     }
@@ -293,27 +246,13 @@ namespace mrs_lib
     template <int check = n>
     typename std::enable_if<check >= 0, statecov_t>::type correction_impl(const statecov_t& sc, const z_t& z, const R_t& R, const H_t& H) const
     {
-
-      /* std::cout << "correction, sc.x: " << sc.x << std::endl; */
-
       // the correction phase
       statecov_t ret;
       double nis = -1;
       H_t H_out;
-      /* mrs_msgs::Float64ArrayStamped msg_cov; */
-      /* msg_cov.header.stamp = sc.stamp; */
-      /* for (int i = 0; i < sc.P.size(); i++) */
-      /* { */
-      /*   msg_cov.values.push_back(sc.P(i)); */
-      /* } */
-      /* debug_cov_pub.publish(msg_cov); */
       const K_t K = computeKalmanGain(sc, z, R, H, nis, H_out, m_nis_thr, m_nis_avg_thr);
       ret.x = sc.x + K * (z - (H * sc.x));
       ret.P = (P_t::Identity() - (K * H_out)) * sc.P;
-      if (abs(ret.x(0)) > 100)
-      {
-        std::cout << "ret.x: " << ret.x << ", sc.x: " << sc.x << ", z: " << z << ", H: " << H << ", K: " << K << ", sc.P: " << sc.P << std::endl;
-      }
       ret.nis_buffer = sc.nis_buffer;
       return ret;
     }
@@ -322,14 +261,12 @@ namespace mrs_lib
         typename std::enable_if < check<0, statecov_t>::type correction_impl(const statecov_t& sc, const z_t& z, const R_t& R, const H_t& H) const
     {
       // the correction phase
-      // THIS IS NOT USED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      std::cout << "[Aloamgarm] jlkf.h, error - bad function" << std::endl;
       statecov_t ret;
       double nis = -1;
       H_t H_out;
       const K_t K = computeKalmanGain(sc, z, R, H, nis, H_out, m_nis_thr, m_nis_avg_thr);
       ret.x = sc.x + K * (z - (H * sc.x));
-      ret.P = (P_t::Identity() - (K * H)) * sc.P;
+      ret.P = (P_t::Identity(sc.P.rows(), sc.P.cols()) - (K * H_out)) * sc.P;
       ret.nis_buffer = sc.nis_buffer;
       return ret;
     }
@@ -339,12 +276,6 @@ namespace mrs_lib
     double m_sigma;
     ros::NodeHandle m_nh;
     ros::Publisher debug_nis_pub;
-    /* ros::Publisher debug_residual_pub; */
-    /* ros::Publisher debug_tmp_pub; */
-    /* ros::Publisher debug_cov_diff_pub; */
-    /* ros::Publisher debug_cov_pub; */
-    /* ros::Publisher debug_meas_pub; */
-    /* ros::Publisher debug_meas_jump_pub; */
     std::vector<double> m_nis_window;
     double m_nis_thr;
     double m_nis_avg_thr;
@@ -353,6 +284,35 @@ namespace mrs_lib
   private:
     generateA_t m_generateA;
     generateB_t m_generateB;
+
+  public:
+    A_t A;  /*!< \brief The system transition matrix \f$n \times n\f$ */
+    B_t B;  /*!< \brief The input to state mapping matrix \f$n \times m\f$ */
+    H_t H;  /*!< \brief The state to measurement mapping matrix \f$p \times n\f$ */
+
+  protected:
+    /* covariance_predict() method //{ */
+    static P_t covariance_predict(const A_t& A, const P_t& P, const Q_t& Q, const double dt)
+    {
+      return A * P * A.transpose() + dt*Q;
+    }
+    //}
+
+    /* state_predict() method //{ */
+    template <int check = n_inputs>
+    static inline typename std::enable_if<check == 0, x_t>::type state_predict(const A_t& A, const x_t& x, [[maybe_unused]] const B_t& B,
+                                                                               [[maybe_unused]] const u_t& u)
+    {
+      return A * x;
+    }
+
+    template <int check = n_inputs>
+    static inline typename std::enable_if<check != 0, x_t>::type state_predict(const A_t& A, const x_t& x, const B_t& B, const u_t& u)
+    {
+      return A * x + B * u;
+    }
+    //}
+
   };  // namespace mrs_lib
   /*//}*/
 
