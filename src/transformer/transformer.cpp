@@ -253,6 +253,12 @@ namespace mrs_lib
       return std::nullopt;
   }
 
+  std::optional<Eigen::Vector3d> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const Eigen::Vector3d& what)
+  {
+    const Eigen::Vector3d output = tf.getTransformEigen().rotation()*what;
+    return output;
+  }
+
   std::optional<geometry_msgs::PoseStamped> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const geometry_msgs::PoseStamped& what)
   {
     geometry_msgs::PoseStamped ret = what;

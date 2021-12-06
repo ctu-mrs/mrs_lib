@@ -2,6 +2,8 @@
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="tf_publisher" args="1.0 2.0 3.0 1 1.57 2 uav1/local_origin uav1/fcu" />
 
+  <node pkg="tf2_ros" type="static_transform_publisher" name="tf_optframe_publisher" args="1.0 2.0 3.0 -0.5 0.5 -0.5 0.5 uav1/fcu uav1/camera" />
+
   <test pkg="mrs_lib" type="TransformerTest" test-name="transfomer_test" time-limit="10.0">
   </test>
 

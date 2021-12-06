@@ -351,6 +351,7 @@ namespace mrs_lib
     std::optional<mrs_msgs::ReferenceStamped> transformImpl(const mrs_lib::TransformStamped& tf, const mrs_msgs::ReferenceStamped& what);
     std::optional<geometry_msgs::PoseStamped> transformImpl(const mrs_lib::TransformStamped& tf, const geometry_msgs::PoseStamped& what);
     std::optional<geometry_msgs::Point> transformImpl(const mrs_lib::TransformStamped& tf, const geometry_msgs::Point& what);
+    std::optional<Eigen::Vector3d> transformImpl(const mrs_lib::TransformStamped& tf, const Eigen::Vector3d& what);
     /* std::optional<Eigen::MatrixXd> transformImpl(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what); */
     /* std::optional<Eigen::MatrixXd> transformMat2(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what); */
     /* std::optional<Eigen::MatrixXd> transformMat3(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what); */
