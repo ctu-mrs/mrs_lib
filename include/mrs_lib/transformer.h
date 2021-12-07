@@ -49,7 +49,7 @@ namespace tf2
     cloud_out.header.frame_id = transform.header.frame_id;
   }
 
-}
+}  // namespace tf2
 
 namespace mrs_lib
 {

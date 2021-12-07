@@ -104,18 +104,18 @@ TEST(TESTSuite, eigen_vector3d_test) {
     std::cout << "from: " << tf.from() << ", to: " << tf.to() << ", stamp: " << tf.stamp() << std::endl;
     std::cout << tf.getTransform() << std::endl;
 
-    std::vector<std::pair<Eigen::Vector3d,Eigen::Vector3d>> test_vectors = {{{1,0,0},{0,-1,0}},{{0,1,0},{0,0,-1}},{{0,0,1},{1,0,0}}};
+    std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d>> test_vectors = {{{1, 0, 0}, {0, -1, 0}}, {{0, 1, 0}, {0, 0, -1}}, {{0, 0, 1}, {1, 0, 0}}};
 
-    for (auto& tv : test_vectors){
-      auto rv = tfr.transformHeaderless(tf,tv.first);
-      if (!rv){
-        ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: Failed to transform vector [" << tv.first.transpose() << "]" );
+    for (auto& tv : test_vectors) {
+      auto rv = tfr.transformHeaderless(tf, tv.first);
+      if (!rv) {
+        ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: Failed to transform vector [" << tv.first.transpose() << "]");
         result *= 0;
-      }
-      else {
+      } else {
         Eigen::Vector3d vect_diff = rv.value() - tv.second;
         if (vect_diff.norm() > 1e-6) {
-        ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: rotated vector [" << tv.first.transpose() << "] with value of [" << rv.value().transpose() << "] does not match the expected value of [" << tv.second.transpose() << "]");
+          ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: rotated vector [" << tv.first.transpose() << "] with value of ["
+                                             << rv.value().transpose() << "] does not match the expected value of [" << tv.second.transpose() << "]");
           result *= 0;
         }
       }
