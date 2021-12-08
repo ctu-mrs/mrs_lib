@@ -76,6 +76,9 @@ namespace mrs_lib
     TransformStamped inverse(void) const;
     geometry_msgs::TransformStamped getTransform(void) const;
     Eigen::Affine3d getTransformEigen(void) const;
+    Eigen::Vector3d getTranslationEigen(void) const;
+    Eigen::Quaterniond getRotationEigen(void) const;
+    std::pair<Eigen::Vector3d,Eigen::Quaterniond> getTransformEigenDecomposed(void) const;
 
   private:
     geometry_msgs::TransformStamped transform_stamped_;

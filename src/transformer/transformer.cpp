@@ -723,4 +723,43 @@ namespace mrs_lib
   }
 
   //}
+  
+  /* getTranslationEigen() //{ */
+
+  Eigen::Vector3d TransformStamped::getTranslationEigen(void) const
+  {
+    auto translation = getTransform().transform.translation;
+    return Eigen::Vector3d(
+        translation.x,
+        translation.y,
+        translation.z
+        );
+  }
+
+  //}
+
+  /* getRotaitonEigen() //{ */
+
+  Eigen::Quaterniond TransformStamped::getRotationEigen(void) const
+  {
+    auto rotation = getTransform().transform.rotation;
+    return Eigen::Quaterniond(
+        rotation.w,
+        rotation.x,
+        rotation.y,
+        rotation.z
+        );
+  }
+
+  //}
+  
+  /* getTransformEigenDecomposed() //{ */
+
+  std::pair<Eigen::Vector3d,Eigen::Quaterniond> TransformStamped::getTransformEigenDecomposed(void) const
+  {
+    return {getTranslationEigen(),getRotationEigen()};
+  }
+
+  //}
+  
 }  // namespace mrs_lib

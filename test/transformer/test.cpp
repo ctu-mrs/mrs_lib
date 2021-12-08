@@ -130,6 +130,76 @@ TEST(TESTSuite, eigen_vector3d_test) {
 }
 
 //}
+//
+/* TEST(TESTSuite, eigen_decomposed_test) //{ */
+
+TEST(TESTSuite, eigen_decomposed_test) {
+
+  ROS_INFO("[%s]: Testing the Eigen translation and rotation extraction", ros::this_node::getName().c_str());
+
+  int result = 1;
+
+  auto tfr = mrs_lib::Transformer("TransformerTest", "uav1");
+
+  std::optional<mrs_lib::TransformStamped> tf_opt;
+
+  // get the transform
+  for (int it = 0; it < 1000 && ros::ok(); it++) {
+
+    tf_opt = tfr.getTransform("camera", "fcu");
+
+    if (tf_opt.has_value()) {
+      break;
+    }
+
+    ros::Duration(0.1).sleep();
+  }
+
+  if (tf_opt.has_value()) {
+
+    ROS_INFO("[%s]: got the transform", ros::this_node::getName().c_str());
+
+    auto tf = tf_opt.value();
+    std::cout << "from: " << tf.from() << ", to: " << tf.to() << ", stamp: " << tf.stamp() << std::endl;
+    std::cout << tf.getTransform() << std::endl;
+
+    /* std::vector<std::pair<Eigen::Vector3d,Eigen::Vector3d>> test_vectors = {{{1,0,0},{0,-1,0}},{{0,1,0},{0,0,-1}},{{0,0,1},{1,0,0}}}; */
+
+    auto [tran,rot] = tf.getTransformEigenDecomposed();
+
+    Eigen::Vector3d tran_template = {1.0,2.0,3.0};
+    Eigen::Vector3d vect_diff = tran - tran_template;
+    if (vect_diff.norm() > 1e-6) {
+      ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: translation vector \
+          [" << tran.transpose() << "]\
+          does not match the expected value of \
+          [" << tran_template.transpose() << "]");
+      result *= 0;
+    }
+
+    Eigen::Matrix3d rot_mat_template;
+    rot_mat_template <<
+        0.0,  0.0, 1.0, \
+       -1.0,  0.0, 0.0, \
+        0.0, -1.0, 0.0;
+    Eigen::Quaterniond rot_template(rot_mat_template);
+    if (rot_template.angularDistance(rot) > 1e-6) {
+      ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: rotation quaternion \
+          [" << rot.x() << "," << rot.y() << "," << rot.z() << "," << rot.w() << "]\
+          does not match the expected value of \
+          [" << rot_template.x() << "," << rot_template.y() << "," << rot_template.z() << "," << rot_template.w() << "]");
+      result *= 0;
+    }
+
+  } else {
+    ROS_ERROR_THROTTLE(1.0, "[%s]: missing tf", ros::this_node::getName().c_str());
+    result *= 0;
+  }
+
+  EXPECT_TRUE(result);
+}
+
+//}
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
 
