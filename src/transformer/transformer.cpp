@@ -44,7 +44,9 @@ namespace mrs_lib
     this->is_initialized_ = true;
   }
 
-  Transformer::Transformer(const std::string& node_name) : Transformer(node_name, ""){}
+  Transformer::Transformer(const std::string& node_name) : Transformer(node_name, "")
+  {
+  }
 
   Transformer::Transformer(const Transformer& other)
   {
@@ -253,6 +255,12 @@ namespace mrs_lib
       return std::nullopt;
   }
 
+  std::optional<Eigen::Vector3d> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const Eigen::Vector3d& what)
+  {
+    const Eigen::Vector3d output = tf.getTransformEigen().rotation() * what;
+    return output;
+  }
+
   std::optional<geometry_msgs::PoseStamped> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const geometry_msgs::PoseStamped& what)
   {
     geometry_msgs::PoseStamped ret = what;
@@ -299,10 +307,10 @@ namespace mrs_lib
 
       {
         const auto pose_opt = doTransform(start_to_utm_origin_tf_opt.value(), ret);
-        
+
         if (!pose_opt.has_value())
           return std::nullopt;
-        
+
         ret = std::move(pose_opt.value());
       }
 
@@ -372,10 +380,10 @@ namespace mrs_lib
 
       {
         const auto pose_opt = doTransform(start_to_utm_origin_tf_opt.value(), ret);
-        
+
         if (!pose_opt.has_value())
           return std::nullopt;
-        
+
         ret = std::move(pose_opt.value());
       }
 
@@ -565,11 +573,12 @@ namespace mrs_lib
 
         return in;
       }
-    } 
+    }
     /* else */
     /* { */
 
-    /*   ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: could not deduce a namespaced frame_id '%s' (did you instance the Transformer with the uav_name argument?)", */
+    /*   ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: could not deduce a namespaced frame_id '%s' (did you instance the Transformer with the uav_name argument?)",
+     */
     /*                     node_name_.c_str(), in.c_str()); */
     /* } */
 
