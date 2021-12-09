@@ -113,7 +113,10 @@ ScopeTimer::ScopeTimer(const std::string& label, const std::shared_ptr<ScopeTime
 /* ScopeTimer::checkpoint() //{ */
 
 void ScopeTimer::checkpoint(const std::string& label) {
-  checkpoints.push_back(time_point(label));
+
+  if (_enable_print_or_log) {
+    checkpoints.push_back(time_point(label));
+  }
 }
 
 //}
