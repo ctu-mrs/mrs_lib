@@ -305,8 +305,8 @@ namespace mrs_lib
 
     //}
 
-    public:
     // | ------------------- some helper methods ------------------ |
+  public:
     /*  //{ */
     
     static constexpr const std::string& frame_from(const geometry_msgs::TransformStamped& msg)
@@ -336,8 +336,10 @@ namespace mrs_lib
       tf2 = tf2.inverse();
       return create_transform(msg.child_frame_id, msg.header.frame_id, msg.header.stamp, tf2::toMsg(tf2));
     }
+    //}
 
-    private:
+  private:
+    /*  //{ */
     static geometry_msgs::TransformStamped create_transform(const std::string& from_frame, const std::string& to_frame, const ros::Time& time_stamp)
     {
       geometry_msgs::TransformStamped ret;
@@ -358,6 +360,7 @@ namespace mrs_lib
     }
     //}
 
+  public:
     Eigen::Vector3d LLtoUTM(const Eigen::Vector3d& what, [[maybe_unused]] const std::string& prefix);
     geometry_msgs::Point LLtoUTM(const geometry_msgs::Point& what, const std::string& prefix);
     geometry_msgs::Pose LLtoUTM(const geometry_msgs::Pose& what, const std::string& prefix);

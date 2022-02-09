@@ -357,10 +357,7 @@ TEST(TESTSuite, latlon_test)
     std::cout << "from: " << Transformer::frame_from(tf) << ", to: " << Transformer::frame_to(tf) << ", stamp: " << tf.header.stamp << std::endl;
     std::cout << tf << std::endl;
 
-    geometry_msgs::Point tv;
-    tv.x = 5;
-    tv.y = 6;
-    tv.z = 7;
+    const vec3_t tv(5, 6, 7);
     const auto rv = tfr.transform(tf, tv);
     if (!rv)
     {
