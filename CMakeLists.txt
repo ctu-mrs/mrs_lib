@@ -376,6 +376,7 @@ if(CATKIN_ENABLE_TESTING)
     TransformerTest
     test/transformer/transformer.test
     test/transformer/test.cpp
+    src/transform_broadcaster/transform_broadcaster.cpp
   )
 
   target_link_libraries(

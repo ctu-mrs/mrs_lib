@@ -51,7 +51,12 @@ namespace mrs_lib
      * \returns the heading angle.
      *
      */
-    double headingFromRot(const quat_t& rot);
+    template <typename T>
+    double headingFromRot(const T& rot)
+    {
+      const vec3_t rot_vec = rot*vec3_t::UnitX();
+      return std::atan2(rot_vec.y(), rot_vec.x());
+    }
 
     //}
 

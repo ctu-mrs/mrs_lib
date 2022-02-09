@@ -23,14 +23,6 @@ namespace mrs_lib
 
     //}
 
-    /* headingFromRot() //{ */
-    double headingFromRot(const quat_t& rot)
-    {
-      const vec3_t rot_vec = rot*vec3_t::UnitX();
-      return std::atan2(rot_vec.y(), rot_vec.x());
-    }
-    //}
-
     /* angleBetween() //{ */
 
     double angleBetween(const vec3_t& vec1, const vec3_t& vec2)

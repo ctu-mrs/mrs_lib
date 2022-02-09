@@ -237,8 +237,6 @@ namespace mrs_lib
      * @param from_frame The original frame of the transformation.
      * @param to_frame The target frame of the transformation.
      * @param time_stamp The time stamp of the transformation.
-     * @param use_last_if_fail If true, the latest available transformation will be used instead of time_stamp if the lookup fails.
-     * @param quiet Should not print excessively.
      *
      * @return \p std::nullopt if failed, optional containing the requested transformation otherwise.
      */
@@ -289,38 +287,21 @@ namespace mrs_lib
     std::string prefix_;
     std::string node_name_;
 
-    bool quiet_;
-    bool retry_lookup_newest_;
+    bool quiet_ = false;
+    bool retry_lookup_newest_ = false;
 
-    std::mutex mutex_current_control_frame_;
-    std::string current_control_frame_;
-    bool got_current_control_frame_ = false;
-
-    std::mutex mutex_utm_zone_;
     bool got_utm_zone_ = false;
-    char utm_zone_[10];
+    char utm_zone_[10] = {};
 
     std::string getFramePrefix(const std::string& frame_id);
 
     template <class T>
     std::optional<T> transformImpl(const geometry_msgs::TransformStamped& tf, const T& what);
     std::optional<mrs_msgs::ReferenceStamped> transformImpl(const geometry_msgs::TransformStamped& tf, const mrs_msgs::ReferenceStamped& what);
-    std::optional<geometry_msgs::PoseStamped> transformImpl(const geometry_msgs::TransformStamped& tf, const geometry_msgs::PoseStamped& what);
-    std::optional<geometry_msgs::Point> transformImpl(const geometry_msgs::TransformStamped& tf, const geometry_msgs::Point& what);
     std::optional<Eigen::Vector3d> transformImpl(const geometry_msgs::TransformStamped& tf, const Eigen::Vector3d& what);
 
     template <class T>
     std::optional<T> doTransform(const geometry_msgs::TransformStamped& tf, const T& what);
-
-    template <class T>
-    std::optional<T> transformFromLatLon(const std::string& to_frame, const ros::Time& at_time, const std::string& uav_prefix, const T& what);
-    std::optional<Eigen::Vector3d> transformFromLatLon(const std::string& to_frame, const ros::Time& at_time, const std::string& uav_prefix, const Eigen::Vector3d& what);
-    std::optional<geometry_msgs::Pose> transformFromLatLon(const std::string& to_frame, const ros::Time& at_time, const std::string& uav_prefix, const geometry_msgs::Pose& what);
-
-    template <class T>
-    std::optional<T> transformToLatLon(const std::string& from_frame, const ros::Time& at_time, const std::string& uav_prefix, const T& what);
-    std::optional<Eigen::Vector3d> transformToLatLon(const std::string& from_frame, const ros::Time& at_time, const std::string& uav_prefix, const Eigen::Vector3d& what);
-    std::optional<geometry_msgs::Pose> transformToLatLon(const std::string& from_frame, const ros::Time& at_time, const std::string& uav_prefix, const geometry_msgs::Pose& what);
 
     //}
 
@@ -377,6 +358,15 @@ namespace mrs_lib
     }
     //}
 
+    Eigen::Vector3d LLtoUTM(const Eigen::Vector3d& what, [[maybe_unused]] const std::string& prefix);
+    geometry_msgs::Point LLtoUTM(const geometry_msgs::Point& what, const std::string& prefix);
+    geometry_msgs::Pose LLtoUTM(const geometry_msgs::Pose& what, const std::string& prefix);
+    geometry_msgs::PoseStamped LLtoUTM(const geometry_msgs::PoseStamped& what, const std::string& prefix);
+
+    std::optional<Eigen::Vector3d> UTMtoLL(const Eigen::Vector3d& what, [[maybe_unused]] const std::string& prefix);
+    std::optional<geometry_msgs::Point> UTMtoLL(const geometry_msgs::Point& what, const std::string& prefix);
+    std::optional<geometry_msgs::Pose> UTMtoLL(const geometry_msgs::Pose& what, const std::string& prefix);
+    std::optional<geometry_msgs::PoseStamped> UTMtoLL(const geometry_msgs::PoseStamped& what, const std::string& prefix);
   };
 
 #include <impl/transformer.hpp>

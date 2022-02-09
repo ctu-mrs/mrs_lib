@@ -37,7 +37,7 @@ void setHeader(pcl::PointCloud<pt_t>& cloud, const std_msgs::Header& header)
 
 //}
 
-/* copyWithHeader() helper function //{ */
+/* copyChangeFrame() helper function //{ */
 
 namespace impl
 {
@@ -45,10 +45,17 @@ namespace impl
   using _has_header_member_chk = decltype( std::declval<T&>().header );
   template<typename T>
   constexpr bool has_header_member_v = std::experimental::is_detected<_has_header_member_chk, T>::value;
+
+  template<typename T>
+  using _UTMLL_method_chk = decltype(Transformer().UTMtoLL(std::declval<const T&>(), ""));
+  template<typename T>
+  using _LLUTM_method_chk = decltype(Transformer().LLtoUTM(std::declval<const T&>(), ""));
+  template<typename T>
+  constexpr bool UTMLL_exists_v = std::experimental::is_detected<_UTMLL_method_chk, T>::value && std::experimental::is_detected<_LLUTM_method_chk, T>::value;
 }
 
 template <typename T>
-void copyChangeFrame(const T& what, const std::string& frame_id)
+T copyChangeFrame(const T& what, const std::string& frame_id)
 {
   T ret = what;
   if constexpr (impl::has_header_member_v<T>)
@@ -74,9 +81,32 @@ std::optional<T> Transformer::transformImpl(const geometry_msgs::TransformStampe
     return copyChangeFrame(what, from_frame);
 
   std::string latlon_frame_name = resolveFrame(LATLON_ORIGIN);
-  // by default, transformation from/to LATLON is undefined
-  if (frame_from(tf) == latlon_frame_name || frame_to(tf) == latlon_frame_name)
+
+  std::optional<T> tmp = what;
+  // if conversion between UVM and LatLon coordinates is defined for this message, check for it
+  if constexpr (impl::UTMLL_exists_v<T>)
+  {
+    // check for transformation from LAT-LON GPS
+    if (from_frame == latlon_frame_name)
+      tmp = UTMtoLL(what, getFramePrefix(from_frame));
+    // check for transformation to LAT-LON GPS
+    else if (to_frame == latlon_frame_name)
+      tmp = LLtoUTM(what, getFramePrefix(to_frame));
+  }
+  else
+  {
+    // by default, transformation from/to LATLON is undefined, so return nullopt if it's attempted
+    if (from_frame == latlon_frame_name || to_frame == latlon_frame_name)
+    {
+      ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform message of this type to/from latitude/longtitude coordinates!", ros::this_node::getName().c_str());
+      return std::nullopt;
+    }
+  }
+
+  // this happens if UTMtoLL or LLtoUTM fails
+  if (!tmp.has_value())
     return std::nullopt;
+
   return doTransform(tf, what);
 }
 
@@ -150,17 +180,5 @@ std::optional<T> Transformer::doTransform(const geometry_msgs::TransformStamped&
 }
 
 //}
-
-template <class T>
-std::optional<T> Transformer::transformFromLatLon(const std::string& to_frame, const ros::Time& at_time, const std::string& uav_prefix, const T& what)
-{
-  return geometry::fromEigen(transformFromLatLon(to_frame, at_time, uav_prefix, geometry::toEigen(what)));
-}
-
-template <class T>
-std::optional<T> Transformer::transformToLatLon(const std::string& from_frame, const ros::Time& at_time, const std::string& uav_prefix, const T& what)
-{
-  return geometry::fromEigen(transformToLatLon(from_frame, at_time, uav_prefix, geometry::toEigen(what)));
-}
 
 #endif // TRANSFORMER_HPP

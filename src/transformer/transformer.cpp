@@ -70,57 +70,12 @@ namespace mrs_lib
   
   std::optional<Eigen::Vector3d> Transformer::transformImpl(const geometry_msgs::TransformStamped& tf, const Eigen::Vector3d& what)
   {
-    return tf2::transformToEigen(tf).rotation() * what;
-  }
-  
-  //}
-
-  /* specialization for geometry_msgs::PoseStamped //{ */
-  
-  std::optional<geometry_msgs::PoseStamped> Transformer::transformImpl(const geometry_msgs::TransformStamped& tf, const geometry_msgs::PoseStamped& what)
-  {
-    const std::string from = resolveFrame(frame_from(tf));
-    const std::string to = resolveFrame(frame_to(tf));
-    // if the from frame is the same as the to frame, do nothing
-    if (from == to)
-      return doTransform(tf, what);
-  
-    const std::string latlon_frame_name = resolveFrame(LATLON_ORIGIN);
-  
-    // check for transformation from LAT-LON GPS
-    if (from == latlon_frame_name)
-      return transformFromLatLon(to, tf.header.stamp, getFramePrefix(from), what);
-    // check for transformation to LAT-LON GPS
-    else if (to == latlon_frame_name)
-      return transformToLatLon(from, tf.header.stamp, getFramePrefix(to), what);
-    // if nothing interesting is requested, just do the plain old linear transformation
+    // just transform it as you would a geometry_msgs::Point
+    const auto opt = transformImpl(tf, geometry::fromEigen(what));
+    if (opt.has_value())
+      return geometry::toEigen(opt.value());
     else
-      return doTransform(tf, what);
-  }
-  
-  //}
-
-  /* specialization for geometry_msgs::Point //{ */
-  
-  std::optional<geometry_msgs::Point> Transformer::transformImpl(const geometry_msgs::TransformStamped& tf, const geometry_msgs::Point& what)
-  {
-    const std::string from = resolveFrame(frame_from(tf));
-    const std::string to = resolveFrame(frame_to(tf));
-    // if the from frame is the same as the to frame, do nothing
-    if (from == to)
-      return what;
-  
-    const std::string latlon_frame_name = resolveFrame(LATLON_ORIGIN);
-  
-    // check for transformation from LAT-LON GPS
-    if (from == latlon_frame_name)
-      return transformFromLatLon(to, tf.header.stamp, getFramePrefix(from), what);
-    // check for transformation to LAT-LON GPS
-    else if (to == latlon_frame_name)
-      return transformToLatLon(from, tf.header.stamp, getFramePrefix(to), what);
-    // if nothing interesting is requested, just do the plain old linear transformation
-    else
-      return doTransform(tf, what);
+      return std::nullopt;
   }
   
   //}
@@ -137,20 +92,44 @@ namespace mrs_lib
       return std::nullopt;
     }
 
-    const std::string to_frame = resolveFrame(to_frame_raw);
     const std::string from_frame = resolveFrame(from_frame_raw);
+    const std::string to_frame = resolveFrame(to_frame_raw);
     const std::string latlon_frame = resolveFrame(LATLON_ORIGIN);
 
+    // if the frames are the same, just return an identity transform
+    if (from_frame == to_frame)
+      return create_transform(from_frame, to_frame, time_stamp, tf2::toMsg(tf2::Transform::getIdentity()));
+
     // check for a transform from/to latlon coordinates - that is a special case handled separately
-    if (from_frame == latlon_frame || to_frame == latlon_frame)
-      return create_transform(from_frame, to_frame, time_stamp); // just return an empty transform with the frames
+    if (from_frame == latlon_frame)
+    {
+      // find the transformation between the UTM frame and the non-latlon frame to fill the returned tf
+      const std::string utm_frame = getFramePrefix(from_frame) + "/utm_origin";
+      auto tf_opt = getTransform(utm_frame, to_frame, time_stamp);
+      if (!tf_opt.has_value())
+        return std::nullopt;
+      // change the transformation frames to point from latlon
+      frame_from(*tf_opt) = from_frame;
+      return tf_opt;
+    }
+    else if (to_frame == latlon_frame)
+    {
+      // find the transformation between the UTM frame and the non-latlon frame to fill the returned tf
+      const std::string utm_frame = getFramePrefix(to_frame) + "/utm_origin";
+      auto tf_opt = getTransform(from_frame, utm_frame, time_stamp);
+      if (!tf_opt.has_value())
+        return std::nullopt;
+      // change the transformation frames to point to latlon
+      frame_to(*tf_opt) = to_frame;
+      return tf_opt;
+    }
 
     tf2::TransformException ex("");
     // first try to get transform at the requested time
     try
     {
       // try looking up and returning the transform
-      return tf_buffer_.lookupTransform(to_frame, from_frame, time_stamp);
+      return tf_buffer_.lookupTransform(from_frame, to_frame, time_stamp);
     }
     catch (tf2::TransformException& e)
     {
@@ -162,7 +141,7 @@ namespace mrs_lib
     {
       try
       {
-        return tf_buffer_.lookupTransform(to_frame, from_frame, ros::Time(0));
+        return tf_buffer_.lookupTransform(from_frame, to_frame, ros::Time(0));
       }
       catch (tf2::TransformException& e)
       {
@@ -173,11 +152,11 @@ namespace mrs_lib
     // if the flow got here, we've failed to look the transform up
     if (quiet_)
     {
-      ROS_DEBUG("[%s]: Transformer: Exception caught while constructing transform from '%s' to '%s': %s", node_name_.c_str(), from_frame.c_str(),
+      ROS_DEBUG("[%s]: Transformer: Exception caught while looking up transform from \"%s\" to \"%s\": %s", node_name_.c_str(), from_frame.c_str(),
                 to_frame.c_str(), ex.what());
     } else
     {
-      ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: Exception caught while constructing transform from '%s' to '%s': %s", node_name_.c_str(),
+      ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: Exception caught while looking up transform from \"%s\" to \"%s\": %s", node_name_.c_str(),
                         from_frame.c_str(), to_frame.c_str(), ex.what());
     }
 
@@ -207,33 +186,47 @@ namespace mrs_lib
   void Transformer::setLatLon(const double lat, const double lon)
   {
     double utm_x, utm_y;
-    LLtoUTM(lat, lon, utm_y, utm_x, utm_zone_);
+    mrs_lib::LLtoUTM(lat, lon, utm_y, utm_x, utm_zone_);
   }
 
   //}
 
-  /* transformFromLatLon() method //{ */
-  std::optional<Eigen::Vector3d> Transformer::transformFromLatLon(const std::string& to_frame, const ros::Time& at_time, const std::string& uav_prefix, const Eigen::Vector3d& what)
+  /* LLtoUTM() method //{ */
+  Eigen::Vector3d Transformer::LLtoUTM(const Eigen::Vector3d& what, [[maybe_unused]] const std::string& prefix)
   {
     // convert LAT-LON to UTM
     Eigen::Vector3d utm;
     mrs_lib::UTM(what.x(), what.y(), &(utm.x()), &(utm.y()));
     // copy the height from the input
     utm.z() = what.z();
-  
-    // utm_x and utm_y are now in 'utm_origin' frame
-    const std::string utm_frame_name = uav_prefix + "utm_origin";
-  
-    // transform from 'utm_origin' to the desired frame
-    const auto utm_origin_to_end_tf_opt = getTransform(utm_frame_name, to_frame, at_time);
-    if (!utm_origin_to_end_tf_opt.has_value())
-      return std::nullopt;
-    return doTransform(utm_origin_to_end_tf_opt.value(), utm);
+    return utm;
+  }
+
+  geometry_msgs::Point Transformer::LLtoUTM(const geometry_msgs::Point& what, const std::string& prefix)
+  {
+    return geometry::fromEigen(LLtoUTM(geometry::toEigen(what), prefix));
+  }
+
+  geometry_msgs::Pose Transformer::LLtoUTM(const geometry_msgs::Pose& what, const std::string& prefix)
+  {
+    geometry_msgs::Pose ret;
+    ret.position = LLtoUTM(what.position, prefix);
+    ret.orientation = what.orientation;
+    return ret;
+  }
+
+  geometry_msgs::PoseStamped Transformer::LLtoUTM(const geometry_msgs::PoseStamped& what, const std::string& prefix)
+  {
+    geometry_msgs::PoseStamped ret;
+    ret.header.frame_id = prefix + "/utm_origin";
+    ret.header.stamp = what.header.stamp;
+    ret.pose = LLtoUTM(what.pose, prefix);
+    return ret;
   }
   //}
 
-  /* transformToLatLon() method //{ */
-  std::optional<Eigen::Vector3d> Transformer::transformToLatLon(const std::string& from_frame, const ros::Time& at_time, const std::string& uav_prefix, const Eigen::Vector3d& what)
+  /* UTMtoLL() method //{ */
+  std::optional<Eigen::Vector3d> Transformer::UTMtoLL(const Eigen::Vector3d& what, [[maybe_unused]] const std::string& prefix)
   {
     // if no UTM zone was specified by the user, we don't know which one to use...
     if (!got_utm_zone_)
@@ -242,27 +235,49 @@ namespace mrs_lib
       return std::nullopt;
     }
   
-    // first, transform from the desired frame to 'utm_origin'
-    const std::string utm_frame_name = uav_prefix + "utm_origin";
-    const auto start_to_utm_origin_tf_opt = getTransform(from_frame, utm_frame_name, at_time);
-  
-    if (!start_to_utm_origin_tf_opt.has_value())
-      return std::nullopt;
-  
-    const std::optional<Eigen::Vector3d> utm = doTransform(start_to_utm_origin_tf_opt.value(), what);
-    if (!utm.has_value())
-      return std::nullopt;
-  
     // now apply the nonlinear transformation from UTM to LAT-LON
     Eigen::Vector3d latlon;
-    mrs_lib::UTMtoLL(utm->y(), utm->x(), utm_zone_, latlon.x(), latlon.y());
-    latlon.z() = utm->z();
-  
+    mrs_lib::UTMtoLL(what.y(), what.x(), utm_zone_, latlon.x(), latlon.y());
+    latlon.z() = what.z();
     return latlon;
+  }
+
+  std::optional<geometry_msgs::Point> Transformer::UTMtoLL(const geometry_msgs::Point& what, const std::string& prefix)
+  {
+    const auto opt = UTMtoLL(geometry::toEigen(what), prefix);
+    if (!opt.has_value())
+      return std::nullopt;
+
+    return geometry::fromEigen(opt.value());
+  }
+
+  std::optional<geometry_msgs::Pose> Transformer::UTMtoLL(const geometry_msgs::Pose& what, const std::string& prefix)
+  {
+    const auto opt = UTMtoLL(what.position, prefix);
+    if (!opt.has_value())
+      return std::nullopt;
+
+    geometry_msgs::Pose ret;
+    ret.position = opt.value();
+    ret.orientation = what.orientation;
+    return ret;
+  }
+
+  std::optional<geometry_msgs::PoseStamped> Transformer::UTMtoLL(const geometry_msgs::PoseStamped& what, const std::string& prefix)
+  {
+    const auto opt = UTMtoLL(what.pose, prefix);
+    if (!opt.has_value())
+      return std::nullopt;
+
+    geometry_msgs::PoseStamped ret;
+    ret.header.frame_id = prefix + "/utm_origin";
+    ret.header.stamp = what.header.stamp;
+    ret.pose = opt.value();
+    return ret;
   }
   //}
 
-  std::string getFramePrefix(const std::string& frame_id)
+  std::string Transformer::getFramePrefix(const std::string& frame_id)
   {
     return frame_id.substr(0, frame_id.find_first_of('/'));
   }
