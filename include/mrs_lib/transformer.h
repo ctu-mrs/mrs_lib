@@ -37,7 +37,6 @@
 
 //}
 
-
 namespace tf2
 {
 
@@ -58,39 +57,6 @@ namespace mrs_lib
   static const std::string LATLON_ORIGIN = "latlon_origin";
 
   /**
-   * @brief a wrapper around the standard transform object
-   */
-  /* class TransformStamped //{ */
-
-  class TransformStamped
-  {
-
-  public:
-    TransformStamped();
-    TransformStamped(const std::string from_frame, const std::string to_frame, const ros::Time stamp);
-    TransformStamped(const std::string from_frame, const std::string to_frame, const ros::Time stamp, const geometry_msgs::TransformStamped transform_stamped);
-
-    std::string from(void) const;
-    std::string to(void) const;
-    ros::Time stamp(void) const;
-    TransformStamped inverse(void) const;
-    geometry_msgs::TransformStamped getTransform(void) const;
-    Eigen::Affine3d getTransformEigen(void) const;
-    Eigen::Vector3d getTranslationEigen(void) const;
-    Eigen::Quaterniond getRotationEigen(void) const;
-    std::pair<Eigen::Vector3d,Eigen::Quaterniond> getTransformEigenDecomposed(void) const;
-
-  private:
-    geometry_msgs::TransformStamped transform_stamped_;
-
-    std::string from_frame_;
-    std::string to_frame_;
-    ros::Time stamp_;
-  };
-
-  //}
-
-  /**
    * @brief tf wrapper that simplifies transforming stuff, adding caching, frame_id deduction and simple functions for one-time execution without getting the
    * transform first
    */
@@ -98,15 +64,6 @@ namespace mrs_lib
 
   class Transformer
   {
-
-    //! is thrown when calculating of heading is not possible due to atan2 exception
-    struct TransformException : public std::exception
-    {
-      const char* what() const throw()
-      {
-        return "The object could not be transformed.";
-      }
-    };
 
   public:
     /* Constructor and overloads //{ */
@@ -117,93 +74,84 @@ namespace mrs_lib
     Transformer();
 
     /**
-     * @brief the constructor inc. uav_name for namespacing
-     *
-     * @param node_name the name of the node running the transformer, is used in ROS prints
-     * @param uav_name the name of the UAV (a namespace), is used to deduce un-namespaced frame-ids
-     */
-    Transformer(const std::string& node_name, const std::string& uav_name);
-
-    /**
      * @brief the constructor
      *
      * @param node_name the name of the node running the transformer, is used in ROS prints
      */
     Transformer(const std::string& node_name);
 
+    //}
+
+    /* set_default_frame() //{ */
+
     /**
-     * @brief the copy constructor
+     * @brief Sets the default frame ID to be used instead of any empty frame ID.
      *
-     * @param other other object
+     * @param The default frame ID.
      */
-    Transformer(const Transformer& other);
+    void set_default_frame(const std::string& frame_id)
+    {
+      default_frame_id_ = frame_id;
+    }
 
     //}
 
-    /* Assignment operator //{ */
+    /* set_default_prefix() //{ */
 
     /**
-     * @brief the assignment operator
+     * @brief Sets the default frame ID prefix to be used if no prefix is present in the frame.
      *
-     * @param other other object
-     *
-     * @return this
+     * @param The default frame ID prefix.
      */
-    Transformer& operator=(const Transformer& other);
+    void set_default_prefix(const std::string& prefix)
+    {
+      prefix_ = prefix;
+    }
 
     //}
 
-    /* setCurrentControlFrame() //{ */
+    /* set_lat_lon() //{ */
 
     /**
-     * @brief setter for the current frame_id into which the empty frame id will be deduced
+     * @brief Sets the curret lattitude and longitude for UTM zone calculation.
      *
-     * @param in the frame_id name
-     */
-    void setCurrentControlFrame(const std::string& in);
-
-    //}
-
-    /* setCurrentLatLon() //{ */
-
-    /**
-     * @brief set the curret lattitu and longitu
-     *
-     * The transformer uses this to deduce the current fly zone,
-     * so it could transform stuff back to latlon_origin.
+     * The transformer uses this to deduce the current UTM fly zone
+     * used for transforming stuff to latlon_origin.
      *
      * @param lat latitude in degrees
      * @param lon longitude in degrees
      */
-    void setCurrentLatLon(const double lat, const double lon);
+    void set_lat_lon(const double lat, const double lon);
 
     //}
 
-    /* transformSingle() //{ */
+    /* transform_single() //{ */
 
     /**
-     * @brief transform a message to new frame
+     * @brief Transforms a single message to a new frame.
      *
-     * @param to_frame target frame name
-     * @param what the object to be transformed
+     * @param to_frame The target fram ID.
+     * @param what The object to be transformed.
      *
-     * @return \p std::nullopt if failed, optional containing the transformed object otherwise
+     * @return \p std::nullopt if failed, optional containing the transformed object otherwise.
      */
     template <class T>
-    [[nodiscard]] std::optional<T> transformSingle(const std::string& to_frame, const T& what);
+    [[nodiscard]] std::optional<T> transform_single(const std::string& to_frame, const T& what);
 
     /**
-     * @brief transform a message to new frame
+     * @brief Transforms a single message to a new frame.
      *
-     * @param to_frame target frame name
-     * @param what the object to be transformed
+     * A convenience override for shared pointers to const.
      *
-     * @return \p std::nullopt if failed, optional containing the transformed object otherwise
+     * @param to_frame The target fram ID.
+     * @param what The object to be transformed.
+     *
+     * @return \p std::nullopt if failed, optional containing the transformed object otherwise.
      */
     template <class T>
-    [[nodiscard]] std::optional<boost::shared_ptr<T>> transformSingle(const std::string& to_frame, const boost::shared_ptr<const T>& what)
+    [[nodiscard]] std::optional<boost::shared_ptr<T>> transform_single(const std::string& to_frame, const boost::shared_ptr<const T>& what)
     {
-      auto ret = transformSingle(to_frame, *what);
+      auto ret = transform_single(to_frame, *what);
       if (ret == std::nullopt)
         return std::nullopt;
       else
@@ -211,17 +159,19 @@ namespace mrs_lib
     }
 
     /**
-     * @brief transform a message to new frame
+     * @brief Transforms a single message to a new frame.
      *
-     * @param to_frame target frame name
-     * @param what the object to be transformed
+     * A convenience override for shared pointers.
      *
-     * @return \p std::nullopt if failed, optional containing the transformed object otherwise
+     * @param to_frame The target fram ID.
+     * @param what The object to be transformed.
+     *
+     * @return \p std::nullopt if failed, optional containing the transformed object otherwise.
      */
     template <class T>
-    [[nodiscard]] std::optional<boost::shared_ptr<T>> transformSingle(const std::string& to_frame, const boost::shared_ptr<T>& what)
+    [[nodiscard]] std::optional<boost::shared_ptr<T>> transform_single(const std::string& to_frame, const boost::shared_ptr<T>& what)
     {
-      return transformSingle(to_frame, boost::shared_ptr<const T>(what));
+      return transform_single(to_frame, boost::shared_ptr<const T>(what));
     }
 
 
@@ -230,33 +180,25 @@ namespace mrs_lib
     /* transform() //{ */
 
     /**
-     * @brief transform an eigen matrix (interpreted as a set of column vectors) to new frame, given a particular tf
+     * @brief Transform a message to new frame using a particular transformation.
      *
-     * @param tf the tf to be used
-     * @param what the vectors to be transformed
+     * @param tf The transformation to be used.
+     * @param what The object to be transformed.
      *
-     * @return \p std::nullopt if failed, optional containing the transformed object otherwise
-     */
-    /* [[nodiscard]] std::optional<Eigen::MatrixXd> transform(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what); */
-
-    /**
-     * @brief transform a message to new frame, given a particular tf
-     *
-     * @param tf the tf to be used
-     * @param what the object to be transformed
-     *
-     * @return \p std::nullopt if failed, optional containing the transformed object otherwise
+     * @return \p std::nullopt if failed, optional containing the transformed object otherwise.
      */
     template <class T>
-    [[nodiscard]] std::optional<T> transform(const mrs_lib::TransformStamped& tf, const T& what);
+    [[nodiscard]] std::optional<T> transform(const geometry_msgs::TransformStamped& tf, const T& what);
 
     /**
-     * @brief transform a message to new frame, given a particular tf
+     * @brief Transform a message to new frame using a particular transformation.
      *
-     * @param tf the tf to be used
-     * @param what the object to be transformed
+     * A convenience override for shared pointers to const.
      *
-     * @return \p std::nullopt if failed, optional containing the transformed object otherwise
+     * @param tf The transformation to be used.
+     * @param what The object to be transformed.
+     *
+     * @return \p std::nullopt if failed, optional containing the transformed object otherwise.
      */
     template <class T>
     [[nodiscard]] std::optional<boost::shared_ptr<T>> transform(const mrs_lib::TransformStamped& tf, const boost::shared_ptr<const T>& what)
@@ -269,12 +211,14 @@ namespace mrs_lib
     }
 
     /**
-     * @brief transform a message to new frame, given a particular tf
+     * @brief Transform a message to new frame using a particular transformation.
      *
-     * @param tf the tf to be used
-     * @param what the object to be transformed
+     * A convenience override for shared pointers.
      *
-     * @return \p std::nullopt if failed, optional containing the transformed object otherwise
+     * @param tf The transformation to be used.
+     * @param what The object to be transformed.
+     *
+     * @return \p std::nullopt if failed, optional containing the transformed object otherwise.
      */
     template <class T>
     [[nodiscard]] std::optional<boost::shared_ptr<T>> transform(const mrs_lib::TransformStamped& tf, const boost::shared_ptr<T>& what)
@@ -283,69 +227,73 @@ namespace mrs_lib
     }
 
     /**
-     * @brief transform a message (without a header) to new frame, given a particular tf
+     * @brief Transform a message that does not contain a header to new frame using a particular transformation.
      *
-     * @param tf the tf to be used
-     * @param what the object to be transformed
+     * A convenience override for messages without a header (need a little special treatment).
      *
-     * @return \p std::nullopt if failed, optional containing the transformed object otherwise
+     * @param tf The transformation to be used.
+     * @param what The object to be transformed.
+     *
+     * @return \p std::nullopt if failed, optional containing the transformed object otherwise.
      */
     template <class T>
-    [[nodiscard]] std::optional<T> transformHeaderless(const mrs_lib::TransformStamped& tf, const T& what);
+    [[nodiscard]] std::optional<T> transform_headerless(const mrs_lib::TransformStamped& tf, const T& what);
 
     //}
 
-    /* getTransform() //{ */
+    /* get_transform() //{ */
 
     /**
-     * @brief gets a transform between two frames in a given time
+     * @brief Gets a transform between two frames in a given time.
      *
-     * if it fails to find it for the particular time stamp, it uses the last available time
+     * @param from_frame The original frame of the transformation.
+     * @param to_frame The target frame of the transformation.
+     * @param time_stamp The time stamp of the transformation.
+     * @param use_last_if_fail If true, the latest available transformation will be used instead of time_stamp if the lookup fails.
+     * @param quiet Should not print excessively.
      *
-     * @param from_frame the original frame
-     * @param to_frame the target frame
-     * @param time_stamp the time stamped to be used
-     * @param quiet should not print excessively
-     *
-     * @return \p std::nullopt if failed, optional containing the requested transform otherwise
+     * @return \p std::nullopt if failed, optional containing the requested transformation otherwise.
      */
-    [[nodiscard]] std::optional<mrs_lib::TransformStamped> getTransform(const std::string& from_frame, const std::string& to_frame,
-                                                                        const ros::Time& time_stamp = ros::Time(0), const bool quiet = false);
+    [[nodiscard]] std::optional<mrs_lib::TransformStamped> get_transform(const std::string& from_frame, const std::string& to_frame,
+                                                                         const ros::Time& time_stamp = ros::Time(0), const bool use_last_if_fail = false, const bool quiet = false);
 
     //}
 
+    /* resolve_frame() //{ */
     /**
-     * @brief deduced the full frame_id from a shortened or empty string
+     * @brief Deduce the full frame ID from a shortened or empty string.
      *
      * example:
      *   "" -> "uav1/gps_origin" (if the UAV is currently controlled in the gps_origin)
      *   "local_origin" -> "uav1/local_origin"
      *
-     * @param in the frame_id to be resolved
+     * @param frame_id The frame ID to be resolved.
      *
-     * @return resolved frame_id
+     * @return The resolved frame ID.
      */
-    std::string resolveFrameName(const std::string& in);
+    std::string resolve_frame(const std::string& frame_id);
+    //}
 
   private:
     /* private members, methods etc //{ */
 
+    std::string default_frame_id_;
+
+    std::mutex mutex_tf_buffer_;
     tf2_ros::Buffer tf_buffer_;
     std::unique_ptr<tf2_ros::TransformListener> tf_listener_ptr_;
-    std::mutex mutex_tf_buffer_;
 
     std::string node_name_;
 
-    std::string uav_name_;
-    bool got_uav_name_ = false;
+    std::string prefix_;
 
+    std::mutex mutex_current_control_frame_;
     std::string current_control_frame_;
     bool got_current_control_frame_ = false;
-    mutable std::mutex mutex_current_control_frame_;
 
+    std::mutex mutex_utm_zone_;
     bool got_utm_zone_ = false;
     char utm_zone_[10];
-    std::mutex mutex_utm_zone_;
 
     std::string getUAVFramePrefix(const std::string& in);
 
@@ -368,9 +316,10 @@ namespace mrs_lib
     /**
      * @brief keeps track whether a non-basic constructor was launched and the transform listener was initialized
      */
-    bool is_initialized_ = false;
+    bool initialized_ = false;
 
     //}
+
   };
 
 #include <impl/transformer.hpp>
