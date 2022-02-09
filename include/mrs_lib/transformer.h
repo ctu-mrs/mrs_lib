@@ -27,13 +27,14 @@
 #include <geometry_msgs/Vector3Stamped.h>
 #include <std_msgs/Header.h>
 
-#include <mrs_lib/attitude_converter.h>
+#include <mrs_lib/geometry/misc.h>
 
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <mutex>
+#include <experimental/type_traits>
 
 //}
 
@@ -82,35 +83,35 @@ namespace mrs_lib
 
     //}
 
-    /* set_default_frame() //{ */
+    /* setDefaultFrame() //{ */
 
     /**
      * @brief Sets the default frame ID to be used instead of any empty frame ID.
      *
      * @param The default frame ID.
      */
-    void set_default_frame(const std::string& frame_id)
+    void setDefaultFrame(const std::string& frame_id)
     {
       default_frame_id_ = frame_id;
     }
 
     //}
 
-    /* set_default_prefix() //{ */
+    /* setDefaultPrefix() //{ */
 
     /**
      * @brief Sets the default frame ID prefix to be used if no prefix is present in the frame.
      *
      * @param The default frame ID prefix.
      */
-    void set_default_prefix(const std::string& prefix)
+    void setDefaultPrefix(const std::string& prefix)
     {
       prefix_ = prefix;
     }
 
     //}
 
-    /* set_lat_lon() //{ */
+    /* setLatLon() //{ */
 
     /**
      * @brief Sets the curret lattitude and longitude for UTM zone calculation.
@@ -121,11 +122,11 @@ namespace mrs_lib
      * @param lat latitude in degrees
      * @param lon longitude in degrees
      */
-    void set_lat_lon(const double lat, const double lon);
+    void setLatLon(const double lat, const double lon);
 
     //}
 
-    /* transform_single() //{ */
+    /* transformSingle() //{ */
 
     /**
      * @brief Transforms a single message to a new frame.
@@ -136,7 +137,7 @@ namespace mrs_lib
      * @return \p std::nullopt if failed, optional containing the transformed object otherwise.
      */
     template <class T>
-    [[nodiscard]] std::optional<T> transform_single(const std::string& to_frame, const T& what);
+    [[nodiscard]] std::optional<T> transformSingle(const std::string& to_frame, const T& what);
 
     /**
      * @brief Transforms a single message to a new frame.
@@ -149,9 +150,9 @@ namespace mrs_lib
      * @return \p std::nullopt if failed, optional containing the transformed object otherwise.
      */
     template <class T>
-    [[nodiscard]] std::optional<boost::shared_ptr<T>> transform_single(const std::string& to_frame, const boost::shared_ptr<const T>& what)
+    [[nodiscard]] std::optional<boost::shared_ptr<T>> transformSingle(const std::string& to_frame, const boost::shared_ptr<const T>& what)
     {
-      auto ret = transform_single(to_frame, *what);
+      auto ret = transformSingle(to_frame, *what);
       if (ret == std::nullopt)
         return std::nullopt;
       else
@@ -169,9 +170,9 @@ namespace mrs_lib
      * @return \p std::nullopt if failed, optional containing the transformed object otherwise.
      */
     template <class T>
-    [[nodiscard]] std::optional<boost::shared_ptr<T>> transform_single(const std::string& to_frame, const boost::shared_ptr<T>& what)
+    [[nodiscard]] std::optional<boost::shared_ptr<T>> transformSingle(const std::string& to_frame, const boost::shared_ptr<T>& what)
     {
-      return transform_single(to_frame, boost::shared_ptr<const T>(what));
+      return transformSingle(to_frame, boost::shared_ptr<const T>(what));
     }
 
 
@@ -201,7 +202,7 @@ namespace mrs_lib
      * @return \p std::nullopt if failed, optional containing the transformed object otherwise.
      */
     template <class T>
-    [[nodiscard]] std::optional<boost::shared_ptr<T>> transform(const mrs_lib::TransformStamped& tf, const boost::shared_ptr<const T>& what)
+    [[nodiscard]] std::optional<boost::shared_ptr<T>> transform(const geometry_msgs::TransformStamped& tf, const boost::shared_ptr<const T>& what)
     {
       auto ret = transform(tf, *what);
       if (ret == std::nullopt)
@@ -221,27 +222,14 @@ namespace mrs_lib
      * @return \p std::nullopt if failed, optional containing the transformed object otherwise.
      */
     template <class T>
-    [[nodiscard]] std::optional<boost::shared_ptr<T>> transform(const mrs_lib::TransformStamped& tf, const boost::shared_ptr<T>& what)
+    [[nodiscard]] std::optional<boost::shared_ptr<T>> transform(const geometry_msgs::TransformStamped& tf, const boost::shared_ptr<T>& what)
     {
       return transform(tf, boost::shared_ptr<const T>(what));
     }
 
-    /**
-     * @brief Transform a message that does not contain a header to new frame using a particular transformation.
-     *
-     * A convenience override for messages without a header (need a little special treatment).
-     *
-     * @param tf The transformation to be used.
-     * @param what The object to be transformed.
-     *
-     * @return \p std::nullopt if failed, optional containing the transformed object otherwise.
-     */
-    template <class T>
-    [[nodiscard]] std::optional<T> transform_headerless(const mrs_lib::TransformStamped& tf, const T& what);
-
     //}
 
-    /* get_transform() //{ */
+    /* getTransform() //{ */
 
     /**
      * @brief Gets a transform between two frames in a given time.
@@ -254,12 +242,11 @@ namespace mrs_lib
      *
      * @return \p std::nullopt if failed, optional containing the requested transformation otherwise.
      */
-    [[nodiscard]] std::optional<mrs_lib::TransformStamped> get_transform(const std::string& from_frame, const std::string& to_frame,
-                                                                         const ros::Time& time_stamp = ros::Time(0), const bool use_last_if_fail = false, const bool quiet = false);
+    [[nodiscard]] std::optional<geometry_msgs::TransformStamped> getTransform(const std::string& from_frame, const std::string& to_frame, const ros::Time& time_stamp = ros::Time(0));
 
     //}
 
-    /* resolve_frame() //{ */
+    /* resolveFrame() //{ */
     /**
      * @brief Deduce the full frame ID from a shortened or empty string.
      *
@@ -271,21 +258,39 @@ namespace mrs_lib
      *
      * @return The resolved frame ID.
      */
-    std::string resolve_frame(const std::string& frame_id);
+    std::string resolveFrame(const std::string& frame_id);
+    //}
+
+    /* configuration methods //{ */
+    void retryLookupNewest(const bool retry = true)
+    {
+      retry_lookup_newest_ = retry;
+    }
+    
+    void beQuiet(const bool quiet = true)
+    {
+      quiet_ = quiet;
+    }
     //}
 
   private:
     /* private members, methods etc //{ */
 
-    std::string default_frame_id_;
+    /**
+     * @brief keeps track whether a non-basic constructor was called and the transform listener is initialized
+     */
+    bool initialized_ = false;
 
     std::mutex mutex_tf_buffer_;
     tf2_ros::Buffer tf_buffer_;
     std::unique_ptr<tf2_ros::TransformListener> tf_listener_ptr_;
 
+    std::string default_frame_id_;
+    std::string prefix_;
     std::string node_name_;
 
-    std::string prefix_;
+    bool quiet_;
+    bool retry_lookup_newest_;
 
     std::mutex mutex_current_control_frame_;
     std::string current_control_frame_;
@@ -295,29 +300,81 @@ namespace mrs_lib
     bool got_utm_zone_ = false;
     char utm_zone_[10];
 
-    std::string getUAVFramePrefix(const std::string& in);
+    std::string getFramePrefix(const std::string& frame_id);
 
     template <class T>
-    std::optional<T> transformImpl(const mrs_lib::TransformStamped& tf, const T& what);
-    std::optional<mrs_msgs::ReferenceStamped> transformImpl(const mrs_lib::TransformStamped& tf, const mrs_msgs::ReferenceStamped& what);
-    std::optional<geometry_msgs::PoseStamped> transformImpl(const mrs_lib::TransformStamped& tf, const geometry_msgs::PoseStamped& what);
-    std::optional<geometry_msgs::Point> transformImpl(const mrs_lib::TransformStamped& tf, const geometry_msgs::Point& what);
-    std::optional<Eigen::Vector3d> transformImpl(const mrs_lib::TransformStamped& tf, const Eigen::Vector3d& what);
-    /* std::optional<Eigen::MatrixXd> transformImpl(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what); */
-    /* std::optional<Eigen::MatrixXd> transformMat2(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what); */
-    /* std::optional<Eigen::MatrixXd> transformMat3(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what); */
+    std::optional<T> transformImpl(const geometry_msgs::TransformStamped& tf, const T& what);
+    std::optional<mrs_msgs::ReferenceStamped> transformImpl(const geometry_msgs::TransformStamped& tf, const mrs_msgs::ReferenceStamped& what);
+    std::optional<geometry_msgs::PoseStamped> transformImpl(const geometry_msgs::TransformStamped& tf, const geometry_msgs::PoseStamped& what);
+    std::optional<geometry_msgs::Point> transformImpl(const geometry_msgs::TransformStamped& tf, const geometry_msgs::Point& what);
+    std::optional<Eigen::Vector3d> transformImpl(const geometry_msgs::TransformStamped& tf, const Eigen::Vector3d& what);
 
     template <class T>
-    std::optional<T> doTransform(const mrs_lib::TransformStamped& tf, const T& what);
+    std::optional<T> doTransform(const geometry_msgs::TransformStamped& tf, const T& what);
 
-    geometry_msgs::PoseStamped prepareMessage(const mrs_msgs::ReferenceStamped& what);
-    mrs_msgs::ReferenceStamped postprocessMessage(const geometry_msgs::PoseStamped& what);
+    template <class T>
+    std::optional<T> transformFromLatLon(const std::string& to_frame, const ros::Time& at_time, const std::string& uav_prefix, const T& what);
+    std::optional<Eigen::Vector3d> transformFromLatLon(const std::string& to_frame, const ros::Time& at_time, const std::string& uav_prefix, const Eigen::Vector3d& what);
+    std::optional<geometry_msgs::Pose> transformFromLatLon(const std::string& to_frame, const ros::Time& at_time, const std::string& uav_prefix, const geometry_msgs::Pose& what);
 
-    /**
-     * @brief keeps track whether a non-basic constructor was launched and the transform listener was initialized
-     */
-    bool initialized_ = false;
+    template <class T>
+    std::optional<T> transformToLatLon(const std::string& from_frame, const ros::Time& at_time, const std::string& uav_prefix, const T& what);
+    std::optional<Eigen::Vector3d> transformToLatLon(const std::string& from_frame, const ros::Time& at_time, const std::string& uav_prefix, const Eigen::Vector3d& what);
+    std::optional<geometry_msgs::Pose> transformToLatLon(const std::string& from_frame, const ros::Time& at_time, const std::string& uav_prefix, const geometry_msgs::Pose& what);
 
+    //}
+
+    public:
+    // | ------------------- some helper methods ------------------ |
+    /*  //{ */
+    
+    static constexpr const std::string& frame_from(const geometry_msgs::TransformStamped& msg)
+    {
+      return msg.header.frame_id;
+    }
+    
+    static constexpr std::string& frame_from(geometry_msgs::TransformStamped& msg)
+    {
+      return msg.header.frame_id;
+    }
+
+    static constexpr const std::string& frame_to(const geometry_msgs::TransformStamped& msg)
+    {
+      return msg.child_frame_id;
+    }
+
+    static constexpr std::string& frame_to(geometry_msgs::TransformStamped& msg)
+    {
+      return msg.child_frame_id;
+    }
+
+    static geometry_msgs::TransformStamped inverse(const geometry_msgs::TransformStamped& msg)
+    {
+      tf2::Transform tf2;
+      tf2::fromMsg(msg.transform, tf2);
+      tf2 = tf2.inverse();
+      return create_transform(msg.child_frame_id, msg.header.frame_id, msg.header.stamp, tf2::toMsg(tf2));
+    }
+
+    private:
+    static geometry_msgs::TransformStamped create_transform(const std::string& from_frame, const std::string& to_frame, const ros::Time& time_stamp)
+    {
+      geometry_msgs::TransformStamped ret;
+      frame_from(ret) = from_frame;
+      frame_to(ret) = to_frame;
+      ret.header.stamp = time_stamp;
+      return ret;
+    }
+
+    static geometry_msgs::TransformStamped create_transform(const std::string& from_frame, const std::string& to_frame, const ros::Time& time_stamp, const geometry_msgs::Transform& tf)
+    {
+      geometry_msgs::TransformStamped ret;
+      frame_from(ret) = from_frame;
+      frame_to(ret) = to_frame;
+      ret.header.stamp = time_stamp;
+      ret.transform = tf;
+      return ret;
+    }
     //}
 
   };

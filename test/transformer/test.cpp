@@ -1,4 +1,5 @@
 #include <mrs_lib/transformer.h>
+#include <mrs_lib/geometry/conversions.h>
 #include <mrs_lib/attitude_converter.h>
 #include <geometry_msgs/PointStamped.h>
 
@@ -17,9 +18,9 @@ TEST(TESTSuite, main_test) {
 
   int result = 1;
 
-  auto tfr = mrs_lib::Transformer("TransformerTest", "uav1");
+  auto tfr = mrs_lib::Transformer("TransformerTest");
 
-  std::optional<mrs_lib::TransformStamped> tf_opt;
+  std::optional<geometry_msgs::TransformStamped> tf_opt;
 
   // get the transform
   for (int it = 0; it < 1000 && ros::ok(); it++) {
@@ -37,21 +38,21 @@ TEST(TESTSuite, main_test) {
 
     ROS_INFO("[%s]: got the transform", ros::this_node::getName().c_str());
 
-    auto tf = tf_opt.value();
-    std::cout << "from: " << tf.from() << ", to: " << tf.to() << ", stamp: " << tf.stamp() << std::endl;
-    std::cout << tf.getTransform() << std::endl;
+    const auto tf = tf_opt.value();
+    std::cout << "from: " << Transformer::frame_from(tf) << ", to: " << Transformer::frame_to(tf) << ", stamp: " << tf.header.stamp << std::endl;
+    std::cout << tf << std::endl;
 
-    auto tf_inv = tf.inverse();
-    std::cout << "from: " << tf_inv.from() << ", to: " << tf_inv.to() << ", stamp: " << tf_inv.stamp() << std::endl;
-    std::cout << tf_inv.getTransform() << std::endl;
+    const auto tf_inv = Transformer::inverse(tf);
+    std::cout << "from: " << Transformer::frame_from(tf_inv) << ", to: " << Transformer::frame_to(tf_inv) << ", stamp: " << tf_inv.header.stamp << std::endl;
+    std::cout << tf_inv << std::endl;
 
-    if (fabs(tf_inv.getTransform().transform.translation.x - 1) > 1e-6 || fabs(tf_inv.getTransform().transform.translation.y - 2) > 1e-6 ||
-        fabs(tf_inv.getTransform().transform.translation.z - 3) > 1e-6) {
+    if (fabs(tf_inv.transform.translation.x - 1) > 1e-6 || fabs(tf_inv.transform.translation.y - 2) > 1e-6 ||
+        fabs(tf_inv.transform.translation.z - 3) > 1e-6) {
       ROS_ERROR_THROTTLE(1.0, "[%s]: translation does not match", ros::this_node::getName().c_str());
       result *= 0;
     }
 
-    auto [r, p, y] = mrs_lib::AttitudeConverter(tf_inv.getTransform().transform.rotation).getIntrinsicRPY();
+    auto [r, p, y] = mrs_lib::AttitudeConverter(tf_inv.transform.rotation).getIntrinsicRPY();
 
     ROS_INFO("[%s]: r: %.2f", ros::this_node::getName().c_str(), r);
     ROS_INFO("[%s]: p: %.2f", ros::this_node::getName().c_str(), p);
@@ -80,9 +81,9 @@ TEST(TESTSuite, eigen_vector3d_test) {
 
   int result = 1;
 
-  auto tfr = mrs_lib::Transformer("TransformerTest", "uav1");
+  auto tfr = mrs_lib::Transformer("TransformerTest");
 
-  std::optional<mrs_lib::TransformStamped> tf_opt;
+  std::optional<geometry_msgs::TransformStamped> tf_opt;
 
   // get the transform
   for (int it = 0; it < 1000 && ros::ok(); it++) {
@@ -100,14 +101,14 @@ TEST(TESTSuite, eigen_vector3d_test) {
 
     ROS_INFO("[%s]: got the transform", ros::this_node::getName().c_str());
 
-    auto tf = tf_opt.value();
-    std::cout << "from: " << tf.from() << ", to: " << tf.to() << ", stamp: " << tf.stamp() << std::endl;
-    std::cout << tf.getTransform() << std::endl;
+    const auto tf = tf_opt.value();
+    std::cout << "from: " << Transformer::frame_from(tf) << ", to: " << Transformer::frame_to(tf) << ", stamp: " << tf.header.stamp << std::endl;
+    std::cout << tf << std::endl;
 
     std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d>> test_vectors = {{{1, 0, 0}, {0, -1, 0}}, {{0, 1, 0}, {0, 0, -1}}, {{0, 0, 1}, {1, 0, 0}}};
 
-    for (auto& tv : test_vectors) {
-      auto rv = tfr.transformHeaderless(tf, tv.first);
+    for (const auto& tv : test_vectors) {
+      const auto rv = tfr.transform(tf, tv.first);
       if (!rv) {
         ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: Failed to transform vector [" << tv.first.transpose() << "]");
         result *= 0;
@@ -130,18 +131,18 @@ TEST(TESTSuite, eigen_vector3d_test) {
 }
 
 //}
-//
-/* TEST(TESTSuite, eigen_decomposed_test) //{ */
 
-TEST(TESTSuite, eigen_decomposed_test) {
+/* TEST(TESTSuite, mrs_reference_test) //{ */
 
-  ROS_INFO("[%s]: Testing the Eigen translation and rotation extraction", ros::this_node::getName().c_str());
+TEST(TESTSuite, mrs_reference_test) {
+
+  ROS_INFO("[%s]: Testing the mrs_msgs::ReferenceStamped transformation", ros::this_node::getName().c_str());
 
   int result = 1;
 
-  auto tfr = mrs_lib::Transformer("TransformerTest", "uav1");
+  auto tfr = mrs_lib::Transformer("TransformerTest");
 
-  std::optional<mrs_lib::TransformStamped> tf_opt;
+  std::optional<geometry_msgs::TransformStamped> tf_opt;
 
   // get the transform
   for (int it = 0; it < 1000 && ros::ok(); it++) {
@@ -159,13 +160,98 @@ TEST(TESTSuite, eigen_decomposed_test) {
 
     ROS_INFO("[%s]: got the transform", ros::this_node::getName().c_str());
 
-    auto tf = tf_opt.value();
-    std::cout << "from: " << tf.from() << ", to: " << tf.to() << ", stamp: " << tf.stamp() << std::endl;
-    std::cout << tf.getTransform() << std::endl;
+    const auto tf = tf_opt.value();
+    std::cout << "from: " << Transformer::frame_from(tf) << ", to: " << Transformer::frame_to(tf) << ", stamp: " << tf.header.stamp << std::endl;
+    std::cout << tf << std::endl;
+
+    const std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d>> test_vectors = {{{1, 0, 0}, {0, -1, 0}}, {{0, 1, 0}, {0, 0, -1}}, {{0, 0, 1}, {1, 0, 0}}};
+    std::vector<std::pair<mrs_msgs::ReferenceStamped, mrs_msgs::ReferenceStamped>> test_refs;
+    mrs_msgs::ReferenceStamped orig, tfd;
+    orig.header.frame_id = "camera";
+    orig.header.stamp = ros::Time::now();
+    tfd.header.frame_id = "fcu";
+    tfd.header.stamp = orig.header.stamp;
+    for (const auto& vecs : test_vectors)
+    {
+      orig.reference.position.x = vecs.first.x();
+      orig.reference.position.y = vecs.first.y();
+      orig.reference.position.z = vecs.first.z();
+      orig.reference.heading = std::atan2(vecs.first.y(), vecs.first.z());
+
+      tfd.reference.position.x = vecs.second.x();
+      tfd.reference.position.y = vecs.second.y();
+      tfd.reference.position.z = vecs.second.z();
+      tfd.reference.heading = std::atan2(vecs.second.y(), vecs.second.z());
+
+      test_refs.push_back({orig, tfd});
+    }
+
+    for (const auto& tv : test_refs) {
+      const auto rv_opt = tfr.transformSingle("fcu", tv.first);
+      if (!rv_opt) {
+        ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: Failed to transform reference [" << tv.first << "]");
+        result *= 0;
+      } else {
+        const auto rv = rv_opt.value();
+        const auto gt = tv.second;
+        const Eigen::Vector3d vect_diff = mrs_lib::geometry::toEigen(rv.reference.position) - mrs_lib::geometry::toEigen(gt.reference.position);
+        const double heading_diff = std::abs(rv.reference.heading - gt.reference.heading);
+        if (vect_diff.norm() > 1e-6 || heading_diff > 1e-6)
+        {
+          ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: transformed reference [" << tv.first << "] with value of ["
+                                             << rv << "] does not match the expected value of [" << gt << "]");
+          result *= 0;
+        }
+      }
+    }
+
+  } else {
+    ROS_ERROR_THROTTLE(1.0, "[%s]: missing tf", ros::this_node::getName().c_str());
+    result *= 0;
+  }
+
+  EXPECT_TRUE(result);
+}
+
+//}
+
+/* TEST(TESTSuite, eigen_decomposed_test) //{ */
+
+TEST(TESTSuite, eigen_decomposed_test) {
+
+  ROS_INFO("[%s]: Testing the Eigen translation and rotation extraction", ros::this_node::getName().c_str());
+
+  int result = 1;
+
+  auto tfr = mrs_lib::Transformer("TransformerTest");
+
+  std::optional<geometry_msgs::TransformStamped> tf_opt;
+
+  // get the transform
+  for (int it = 0; it < 1000 && ros::ok(); it++) {
+
+    tf_opt = tfr.getTransform("camera", "fcu");
+
+    if (tf_opt.has_value()) {
+      break;
+    }
+
+    ros::Duration(0.1).sleep();
+  }
+
+  if (tf_opt.has_value()) {
+
+    ROS_INFO("[%s]: got the transform", ros::this_node::getName().c_str());
+
+    const auto tf = tf_opt.value();
+    std::cout << "from: " << Transformer::frame_from(tf) << ", to: " << Transformer::frame_to(tf) << ", stamp: " << tf.header.stamp << std::endl;
+    std::cout << tf << std::endl;
 
     /* std::vector<std::pair<Eigen::Vector3d,Eigen::Vector3d>> test_vectors = {{{1,0,0},{0,-1,0}},{{0,1,0},{0,0,-1}},{{0,0,1},{1,0,0}}}; */
 
-    auto [tran,rot] = tf.getTransformEigenDecomposed();
+    const auto etf = tf2::transformToEigen(tf);
+    const Eigen::Vector3d tran = etf.translation();
+    const Eigen::Quaterniond rot(etf.rotation());
 
     Eigen::Vector3d tran_template = {1.0,2.0,3.0};
     Eigen::Vector3d vect_diff = tran - tran_template;

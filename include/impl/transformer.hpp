@@ -1,3 +1,6 @@
+#ifndef TRANSFORMER_HPP
+#define TRANSFORMER_HPP
+
 // clang: MatousFormat
 
 /* getHeader() overloads for different message types (pointers, pointclouds etc) //{ */
@@ -36,14 +39,24 @@ void setHeader(pcl::PointCloud<pt_t>& cloud, const std_msgs::Header& header)
 
 /* copyWithHeader() helper function //{ */
 
+namespace impl
+{
+  template<typename T>
+  using _has_header_member_chk = decltype( std::declval<T&>().header );
+  template<typename T>
+  constexpr bool has_header_member_v = std::experimental::is_detected<_has_header_member_chk, T>::value;
+}
+
 template <typename T>
-T copyWithHeader(const T& what, const std::string& frame_id, const ros::Time& stamp)
+void copyChangeFrame(const T& what, const std::string& frame_id)
 {
   T ret = what;
-  std_msgs::Header new_header;
-  new_header.frame_id = frame_id;
-  new_header.stamp = stamp;
-  setHeader(ret, new_header);
+  if constexpr (impl::has_header_member_v<T>)
+  {
+    std_msgs::Header new_header = getHeader(what);
+    new_header.frame_id = frame_id;
+    setHeader(ret, new_header);
+  }
   return ret;
 }
 
@@ -52,11 +65,17 @@ T copyWithHeader(const T& what, const std::string& frame_id, const ros::Time& st
 /* transformImpl() //{ */
 
 template <class T>
-std::optional<T> Transformer::transformImpl(const mrs_lib::TransformStamped& tf, const T& what)
+std::optional<T> Transformer::transformImpl(const geometry_msgs::TransformStamped& tf, const T& what)
 {
-  std::string latlon_frame_name = resolveFrameName(LATLON_ORIGIN);
+  const std::string from_frame = frame_from(tf);
+  const std::string to_frame = frame_to(tf);
+
+  if (from_frame == to_frame)
+    return copyChangeFrame(what, from_frame);
+
+  std::string latlon_frame_name = resolveFrame(LATLON_ORIGIN);
   // by default, transformation from/to LATLON is undefined
-  if (tf.from() == latlon_frame_name || tf.to() == latlon_frame_name)
+  if (frame_from(tf) == latlon_frame_name || frame_to(tf) == latlon_frame_name)
     return std::nullopt;
   return doTransform(tf, what);
 }
@@ -66,26 +85,23 @@ std::optional<T> Transformer::transformImpl(const mrs_lib::TransformStamped& tf,
 /* transformSingle() //{ */
 
 template <class T>
-std::optional<T> Transformer::transformSingle(const std::string& to_frame, const T& what)
+std::optional<T> Transformer::transformSingle(const std::string& to_frame_raw, const T& what)
 {
-  if (!is_initialized_)
+  if (!initialized_)
   {
     ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
     return std::nullopt;
   }
 
   const std_msgs::Header orig_header = getHeader(what);
-  const std::string from_frame_resolved = resolveFrameName(orig_header.frame_id);
-  const std::string to_frame_resolved = resolveFrameName(to_frame);
-
-  if (from_frame_resolved == to_frame_resolved)
-    return copyWithHeader(what, from_frame_resolved, orig_header.stamp);
+  const std::string from_frame = resolveFrame(orig_header.frame_id);
+  const std::string to_frame = resolveFrame(to_frame_raw);
 
   // get the transform
-  const auto tf_opt = getTransform(from_frame_resolved, to_frame_resolved, orig_header.stamp);
+  const auto tf_opt = getTransform(from_frame, to_frame, orig_header.stamp);
   if (!tf_opt.has_value())
     return std::nullopt;
-  mrs_lib::TransformStamped tf = tf_opt.value();
+  const geometry_msgs::TransformStamped& tf = tf_opt.value();
 
   // do the transformation
   const auto result_opt = transform(tf, what);
@@ -97,39 +113,19 @@ std::optional<T> Transformer::transformSingle(const std::string& to_frame, const
 /* transform() //{ */
 
 template <class T>
-std::optional<T> Transformer::transform(const mrs_lib::TransformStamped& tf, const T& what)
+std::optional<T> Transformer::transform(const geometry_msgs::TransformStamped& tf, const T& what)
 {
-  if (!is_initialized_)
+  if (!initialized_)
   {
     ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
     return std::nullopt;
   }
 
-  if (tf.from() == tf.to())
-    return copyWithHeader(what, tf.from(), tf.stamp());
+  const std::string from_frame = resolveFrame(frame_from(tf));
+  const std::string to_frame = resolveFrame(frame_to(tf));
+  const geometry_msgs::TransformStamped tf_resolved = create_transform(from_frame, to_frame, tf.header.stamp, tf.transform);
 
-  const auto result_opt = transformImpl(tf, what);
-  return result_opt;
-}
-
-/* //} */
-
-/* transformHeaderless() //{ */
-
-template <class T>
-std::optional<T> Transformer::transformHeaderless(const mrs_lib::TransformStamped& tf, const T& what)
-{
-  if (!is_initialized_)
-  {
-    ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
-    return std::nullopt;
-  }
-
-  if (tf.from() == tf.to())
-    return what;
-
-  const auto result_opt = transformImpl(tf, what);
-  return result_opt;
+  return transformImpl(tf_resolved, what);
 }
 
 /* //} */
@@ -137,21 +133,34 @@ std::optional<T> Transformer::transformHeaderless(const mrs_lib::TransformStampe
 /* doTransform() //{ */
 
 template <class T>
-std::optional<T> Transformer::doTransform(const mrs_lib::TransformStamped& tf, const T& what)
+std::optional<T> Transformer::doTransform(const geometry_msgs::TransformStamped& tf, const T& what)
 {
   try
   {
     T result;
-    geometry_msgs::TransformStamped transform = tf.getTransform();
-    tf2::doTransform(what, result, transform);
+    tf2::doTransform(what, result, tf);
     return result;
   }
   catch (tf2::TransformException& ex)
   {
-    ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: Error during transform from \"%s\" frame to \"%s\" frame.\n\tMSG: %s", node_name_.c_str(), tf.from().c_str(),
-                      tf.to().c_str(), ex.what());
+    ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: Error during transform from \"%s\" frame to \"%s\" frame.\n\tMSG: %s", node_name_.c_str(), frame_from(tf).c_str(),
+                      frame_to(tf).c_str(), ex.what());
     return std::nullopt;
   }
 }
 
 //}
+
+template <class T>
+std::optional<T> Transformer::transformFromLatLon(const std::string& to_frame, const ros::Time& at_time, const std::string& uav_prefix, const T& what)
+{
+  return geometry::fromEigen(transformFromLatLon(to_frame, at_time, uav_prefix, geometry::toEigen(what)));
+}
+
+template <class T>
+std::optional<T> Transformer::transformToLatLon(const std::string& from_frame, const ros::Time& at_time, const std::string& uav_prefix, const T& what)
+{
+  return geometry::fromEigen(transformToLatLon(from_frame, at_time, uav_prefix, geometry::toEigen(what)));
+}
+
+#endif // TRANSFORMER_HPP
