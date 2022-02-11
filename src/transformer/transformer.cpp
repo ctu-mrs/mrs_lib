@@ -6,12 +6,12 @@
 
 using test_t = mrs_msgs::ReferenceStamped;
 /* using test_t = pcl::PointCloud<pcl::PointXYZ>; */
-template std::optional<test_t> mrs_lib::Transformer::transform<test_t>(const geometry_msgs::TransformStamped& to_frame, const test_t& what);
-template std::optional<test_t::Ptr> mrs_lib::Transformer::transform<test_t>(const geometry_msgs::TransformStamped& to_frame, const test_t::Ptr& what);
-template std::optional<test_t::Ptr> mrs_lib::Transformer::transform<test_t>(const geometry_msgs::TransformStamped& to_frame, const test_t::ConstPtr& what);
-template std::optional<test_t> mrs_lib::Transformer::transformSingle<test_t>(const std::string& to_frame, const test_t& what);
-template std::optional<test_t::Ptr> mrs_lib::Transformer::transformSingle<test_t>(const std::string& to_frame, const test_t::Ptr& what);
-template std::optional<test_t::Ptr> mrs_lib::Transformer::transformSingle<test_t>(const std::string& to_frame, const test_t::ConstPtr& what);
+template std::optional<test_t> mrs_lib::Transformer::transform<test_t>(const test_t& what, const geometry_msgs::TransformStamped& to_frame);
+template std::optional<test_t::Ptr> mrs_lib::Transformer::transform<test_t>(const test_t::Ptr& what, const geometry_msgs::TransformStamped& to_frame);
+template std::optional<test_t::Ptr> mrs_lib::Transformer::transform<test_t>(const test_t::ConstPtr& what, const geometry_msgs::TransformStamped& to_frame);
+template std::optional<test_t> mrs_lib::Transformer::transformSingle<test_t>(const test_t& what, const std::string& to_frame);
+template std::optional<test_t::Ptr> mrs_lib::Transformer::transformSingle<test_t>(const test_t::Ptr& what, const std::string& to_frame);
+template std::optional<test_t::Ptr> mrs_lib::Transformer::transformSingle<test_t>(const test_t::ConstPtr& what, const std::string& to_frame);
 
 namespace mrs_lib
 {
@@ -25,7 +25,7 @@ namespace mrs_lib
   }
 
   Transformer::Transformer(const std::string& node_name)
-    : initialized_(true), tf_listener_ptr_(std::make_unique<tf2_ros::TransformListener>(tf_buffer_, node_name)), node_name_(node_name)
+    : initialized_(true), node_name_(node_name), tf_listener_ptr_(std::make_unique<tf2_ros::TransformListener>(tf_buffer_, node_name))
   {
   }
 
@@ -129,7 +129,7 @@ namespace mrs_lib
     try
     {
       // try looking up and returning the transform
-      return tf_buffer_.lookupTransform(from_frame, to_frame, time_stamp);
+      return tf_buffer_.lookupTransform(from_frame, to_frame, time_stamp, lookup_timeout_);
     }
     catch (tf2::TransformException& e)
     {
@@ -141,7 +141,91 @@ namespace mrs_lib
     {
       try
       {
-        return tf_buffer_.lookupTransform(from_frame, to_frame, ros::Time(0));
+        return tf_buffer_.lookupTransform(from_frame, to_frame, ros::Time(0), lookup_timeout_);
+      }
+      catch (tf2::TransformException& e)
+      {
+        ex = e;
+      }
+    }
+
+    // if the flow got here, we've failed to look the transform up
+    if (quiet_)
+    {
+      ROS_DEBUG("[%s]: Transformer: Exception caught while looking up transform from \"%s\" to \"%s\": %s", node_name_.c_str(), from_frame.c_str(),
+                to_frame.c_str(), ex.what());
+    } else
+    {
+      ROS_WARN_THROTTLE(1.0, "[%s]: Transformer: Exception caught while looking up transform from \"%s\" to \"%s\": %s", node_name_.c_str(),
+                        from_frame.c_str(), to_frame.c_str(), ex.what());
+    }
+
+    return std::nullopt;
+  }
+
+  //}
+
+  /* getTransform() //{ */
+
+  std::optional<geometry_msgs::TransformStamped> Transformer::getTransform(const std::string& from_frame_raw, const ros::Time& from_stamp, const std::string& to_frame_raw, const ros::Time& to_stamp, const std::string& fixed_frame_raw)
+  {
+    if (!initialized_)
+    {
+      ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot provide transform, not initialized", ros::this_node::getName().c_str());
+      return std::nullopt;
+    }
+
+    const std::string from_frame = resolveFrame(from_frame_raw);
+    const std::string to_frame = resolveFrame(to_frame_raw);
+    const std::string fixed_frame = resolveFrame(fixed_frame_raw);
+    const std::string latlon_frame = resolveFrame(LATLON_ORIGIN);
+
+    // if the frames are the same, just return an identity transform
+    if (from_frame == to_frame)
+      return create_transform(from_frame, to_frame, to_stamp, tf2::toMsg(tf2::Transform::getIdentity()));
+
+    // check for a transform from/to latlon coordinates - that is a special case handled separately
+    if (from_frame == latlon_frame)
+    {
+      // find the transformation between the UTM frame and the non-latlon frame to fill the returned tf
+      const std::string utm_frame = getFramePrefix(from_frame) + "/utm_origin";
+      auto tf_opt = getTransform(utm_frame, from_stamp, to_frame, to_stamp, fixed_frame);
+      if (!tf_opt.has_value())
+        return std::nullopt;
+      // change the transformation frames to point from latlon
+      frame_from(*tf_opt) = from_frame;
+      return tf_opt;
+    }
+    else if (to_frame == latlon_frame)
+    {
+      // find the transformation between the UTM frame and the non-latlon frame to fill the returned tf
+      const std::string utm_frame = getFramePrefix(to_frame) + "/utm_origin";
+      auto tf_opt = getTransform(from_frame, from_stamp, utm_frame, to_stamp, fixed_frame);
+      if (!tf_opt.has_value())
+        return std::nullopt;
+      // change the transformation frames to point to latlon
+      frame_to(*tf_opt) = to_frame;
+      return tf_opt;
+    }
+
+    tf2::TransformException ex("");
+    // first try to get transform at the requested time
+    try
+    {
+      // try looking up and returning the transform
+      return tf_buffer_.lookupTransform(from_frame, from_stamp, to_frame, to_stamp, fixed_frame, lookup_timeout_);
+    }
+    catch (tf2::TransformException& e)
+    {
+      ex = e;
+    }
+
+    // if that failed, try to get the newest one if requested
+    if (retry_lookup_newest_)
+    {
+      try
+      {
+        return tf_buffer_.lookupTransform(from_frame, to_frame, ros::Time(0), lookup_timeout_);
       }
       catch (tf2::TransformException& e)
       {
@@ -187,6 +271,7 @@ namespace mrs_lib
   {
     double utm_x, utm_y;
     mrs_lib::LLtoUTM(lat, lon, utm_y, utm_x, utm_zone_);
+    got_utm_zone_ = true;
   }
 
   //}
@@ -277,9 +362,48 @@ namespace mrs_lib
   }
   //}
 
+  /* getFramePrefix() method //{ */
   std::string Transformer::getFramePrefix(const std::string& frame_id)
   {
     return frame_id.substr(0, frame_id.find_first_of('/'));
   }
+  //}
+
+  /* methods for converting between Eigen and geometry_msgs types //{ */
+  geometry_msgs::Point Transformer::fromEigen(const Eigen::Vector3d& what)
+  {
+    geometry_msgs::Point pt;
+    pt.x = what.x();
+    pt.y = what.y();
+    pt.z = what.z();
+    return pt;
+  }
+  
+  Eigen::Vector3d Transformer::toEigen(const geometry_msgs::Point& what)
+  {
+    return {what.x, what.y, what.z};
+  }
+  
+  geometry_msgs::Quaternion Transformer::fromEigen(const Eigen::Quaterniond& what)
+  {
+    geometry_msgs::Quaternion q;
+    q.x = what.x();
+    q.y = what.y();
+    q.z = what.z();
+    q.w = what.w();
+    return q;
+  }
+  
+  Eigen::Quaterniond Transformer::toEigen(const geometry_msgs::Quaternion& what)
+  {
+    // better to do this manually than through the constructor to avoid ambiguities (e.g. position of x and w)
+    Eigen::Quaterniond q;
+    q.x() = what.x;
+    q.y() = what.y;
+    q.z() = what.z;
+    q.w() = what.w;
+    return q;
+  }
+  //}
 
 }  // namespace mrs_lib

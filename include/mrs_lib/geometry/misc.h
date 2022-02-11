@@ -296,14 +296,6 @@ namespace mrs_lib
 
     //}
 
-    // | ------------------ Conversion functions ------------------ |
-
-    geometry_msgs::Quaternion fromEigen(const Eigen::Quaterniond& what);
-    geometry_msgs::Point fromEigen(const Eigen::Vector3d& what);
-    
-    Eigen::Vector3d toEigen(const geometry_msgs::Point& what);
-    Eigen::Quaterniond toEigen(const geometry_msgs::Quaternion& what);
-
   }  // namespace geometry
 }  // namespace mrs_lib
 

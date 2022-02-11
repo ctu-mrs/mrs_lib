@@ -1,4 +1,5 @@
 #include <mrs_lib/transformer.h>
+#include <mrs_lib/gps_conversions.h>
 #include <mrs_lib/geometry/conversions.h>
 #include <mrs_lib/attitude_converter.h>
 #include <tf2_ros/transform_broadcaster.h>
@@ -127,6 +128,108 @@ TEST(TESTSuite, main_test)
 
 //}
 
+/* TEST(TESTSuite, tf_times_test) //{ */
+
+geometry_msgs::Vector3 e2tf(const vec3_t& e)
+{
+  geometry_msgs::Vector3 ret;
+  ret.x = e.x();
+  ret.y = e.y();
+  ret.z = e.z();
+  return ret;
+}
+
+TEST(TESTSuite, tf_times_test)
+{
+  std::cout << "Running tf_times_test\n";
+
+  int result = 1;
+
+  auto tfr = mrs_lib::Transformer("TransformerTest");
+
+  const ros::Time t1 = ros::Time(1);
+  const std::string from = "uav1/fcu";
+  const ros::Time t2 = ros::Time(2);
+  const std::string to = "uav2/fcu";
+  const std::string fixed = "common_origin";
+
+  // create and publish the transformations
+  geometry_msgs::TransformStamped tf;
+  tf.header.frame_id = fixed;
+  tf.transform.rotation.w = 1;
+  Eigen::Isometry3d common2uav1, common2uav2;
+
+  // UAV1 is at position [-1,0,0] at time t1
+  tf.header.stamp = t1;
+  tf.child_frame_id = from;
+  common2uav1.translation() = vec3_t(1, 0, 0);
+  tf.transform.translation = e2tf(common2uav1.translation());
+  bc->sendTransform(tf);
+  ros::spinOnce();
+
+  // UAV2 is at position [-10,0,0] at time t1
+  tf.header.stamp = t1;
+  tf.child_frame_id = to;
+  common2uav2.translation() = vec3_t(10, 0, 0);
+  tf.transform.translation = e2tf(common2uav2.translation());
+  bc->sendTransform(tf);
+  ros::spinOnce();
+
+  // UAV1 is at position [3,0,0] at time t2
+  tf.header.stamp = t2;
+  tf.child_frame_id = from;
+  common2uav1.translation() = vec3_t(-3, 0, 0);
+  tf.transform.translation = e2tf(common2uav1.translation());
+  bc->sendTransform(tf);
+  ros::spinOnce();
+
+  // UAV2 is at position [60,0,0] at time t2
+  tf.header.stamp = t2;
+  tf.child_frame_id = to;
+  common2uav2.translation() = vec3_t(-60, 0, 0);
+  tf.transform.translation = e2tf(common2uav2.translation());
+  bc->sendTransform(tf);
+  ros::spinOnce();
+
+  std::cout << "Waiting for transformation from " << from << " to " << to << " through " << fixed << ".\n";
+  tfr.setLookupTimeout(ros::Duration(2));
+  // where was UAV1 at time t1 relative to position of UAV2 at time t2 assuming common_frame is fixed??
+  const std::optional<geometry_msgs::TransformStamped> tf_opt = tfr.getTransform(from, t1, to, t2, fixed);
+
+  if (tf_opt.has_value())
+  {
+    ROS_INFO("[%s]: got the transform", ros::this_node::getName().c_str());
+
+    const auto tf = tf_opt.value();
+    std::cout << "from: " << Transformer::frame_from(tf) << ", to: " << Transformer::frame_to(tf) << ", stamp: " << tf.header.stamp << std::endl;
+    std::cout << tf << std::endl;
+
+    // the expected transformation is a translation of [-61, 0, 0]
+    if (fabs(tf.transform.translation.x - -61) > 1e-6 || fabs(tf.transform.translation.y - 0) > 1e-6 ||
+        fabs(tf.transform.translation.z - 0) > 1e-6) {
+      ROS_ERROR_STREAM_THROTTLE(1.0, "translation does not match (gt: " << local2fcu.translation().transpose() << ")");
+      result *= 0;
+    }
+
+    const Eigen::Isometry3d etf = tf2::transformToEigen(tf);
+    const quat_t etf_rot(etf.rotation());
+    const double angle_diff = etf_rot.angularDistance(quat_t::Identity());
+
+    if (angle_diff > 1e-6) {
+      ROS_ERROR_STREAM_THROTTLE(1.0, "translation does not match (by angle: " << angle_diff << ")");
+      result *= 0;
+    }
+
+  } else {
+    ROS_ERROR_THROTTLE(1.0, "[%s]: missing tf", ros::this_node::getName().c_str());
+    result *= 0;
+  }
+
+  EXPECT_TRUE(result);
+}
+
+//}
+
 /* TEST(TESTSuite, eigen_vector3d_test) //{ */
 
 TEST(TESTSuite, eigen_vector3d_test) {
@@ -155,7 +258,7 @@ TEST(TESTSuite, eigen_vector3d_test) {
     std::vector<Eigen::Vector3d> test_vectors = {{1, 0, 0}, {0, -1, 666}, {0, 0, 0}, {0, 1.1, -1}, {0, 0, 18}, {3, 0, 0}};
 
     for (const auto& tv : test_vectors) {
-      const auto rv = tfr.transform(tf, tv);
+      const auto rv = tfr.transform(tv, tf);
       if (!rv)
       {
         ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: Failed to transform vector [" << tv.transpose() << "]");
@@ -167,7 +270,7 @@ TEST(TESTSuite, eigen_vector3d_test) {
         const vec3_t vect_diff = rv.value() - gt;
         if (vect_diff.norm() > 1e-6)
         {
-          ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: rotated vector [" << gt.transpose() << "] with value of ["
+          ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: transformed vector [" << gt.transpose() << "] with value of ["
                                              << rv.value().transpose() << "] does not match the expected value of [" << gt.transpose() << "]");
           result *= 0;
         }
@@ -177,6 +280,88 @@ TEST(TESTSuite, eigen_vector3d_test) {
   } else {
     ROS_ERROR_THROTTLE(1.0, "[%s]: missing tf", ros::this_node::getName().c_str());
     result *= 0;
+  }
+
+  EXPECT_TRUE(result);
+}
+
+//}
+
+/* TEST(TESTSuite, transform_single) //{ */
+
+TEST(TESTSuite, transform_single) {
+
+  ROS_INFO("[%s]: Testing transformSingle", ros::this_node::getName().c_str());
+
+  int result = 1;
+
+  auto tfr = mrs_lib::Transformer("TransformerTest");
+  tfr.setDefaultPrefix("uav66");
+
+  const ros::Time t = ros::Time::now();
+  publish_transforms(t);
+
+  const std::string from = "uav66/camera";
+  const std::string to = "fcu";
+  wait_for_tf(from, to, tfr, t);
+
+  // test transforming a geometry_msgs::PointStamped message
+  {
+    geometry_msgs::PointStamped::Ptr pt = boost::make_shared<geometry_msgs::PointStamped>();
+    pt->point.x = 666;
+    pt->point.y = 667;
+    pt->point.z = 668;
+    pt->header.frame_id = from;
+    pt->header.stamp = t;
+    const vec3_t tv(pt->point.x, pt->point.y, pt->point.z);
+    
+    const auto rv_opt = tfr.transformSingle(pt, to);
+    if (!rv_opt)
+    {
+      ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: Failed to transform vector [" << tv.transpose() << "]");
+      result *= 0;
+    }
+    else
+    {
+      const vec3_t rv(rv_opt.value()->point.x, rv_opt.value()->point.y, rv_opt.value()->point.z);
+      const vec3_t gt = fcu2cam.inverse()*tv;
+      const vec3_t vect_diff = rv - gt;
+      if (vect_diff.norm() > 1e-6)
+      {
+        ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: transformed vector [" << gt.transpose() << "] with value of ["
+                                           << rv.transpose() << "] does not match the expected value of [" << gt.transpose() << "]");
+        result *= 0;
+      }
+    }
+  }
+
+  // test transforming a headerless message
+  {
+    const quat_t tv( anax_t(2, vec3_t::UnitZ()) * anax_t(-0, vec3_t::UnitX()) );
+    geometry_msgs::Quaternion::Ptr q = boost::make_shared<geometry_msgs::Quaternion>();
+    q->x = tv.x();
+    q->y = tv.y();
+    q->z = tv.z();
+    q->w = tv.w();
+    geometry_msgs::Quaternion::ConstPtr cq = q;
+    
+    const auto rv_opt = tfr.transformSingle(from, cq, to, t);
+    if (!rv_opt)
+    {
+      ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: Failed to transform vector [" << tv.vec() << ", " << tv.w() << "]");
+      result *= 0;
+    }
+    else
+    {
+      const quat_t rv(rv_opt.value()->w, rv_opt.value()->x, rv_opt.value()->y, rv_opt.value()->z);
+      const quat_t gt(fcu2cam.inverse().rotation()*tv);
+      const double ang_diff = rv.angularDistance(gt);
+      if (ang_diff > 1e-6)
+      {
+        ROS_ERROR_STREAM("Transformed quaternion doesn't match (angular difference is " << ang_diff << ")");
+        result *= 0;
+      }
+    }
   }
 
   EXPECT_TRUE(result);
@@ -233,7 +418,7 @@ TEST(TESTSuite, mrs_reference_test) {
     }
 
     for (const auto& tv : test_refs) {
-      const auto rv_opt = tfr.transform(tf, tv.first);
+      const auto rv_opt = tfr.transform(tv.first, tf);
       if (!rv_opt) {
         ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: Failed to transform reference [" << tv.first << "]");
         result *= 0;
@@ -296,7 +481,7 @@ TEST(TESTSuite, quaternion_test)
 
     for (const auto& tv : tsts)
     {
-      const auto rv = tfr.transform(tf, tv);
+      const auto rv = tfr.transform(tv, tf);
       if (!rv)
       {
         ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: Failed to transform quaternion [" << tv << "]");
@@ -311,7 +496,7 @@ TEST(TESTSuite, quaternion_test)
         const double angle_diff = gt.angularDistance(tfd);
         if (angle_diff > 1e-6)
         {
-          ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: rotated quaternion [" << tv << "] with value of ["
+          ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: transformed quaternion [" << tv << "] with value of ["
                                              << rv.value() << "] does not match the expected value of [" << tf2::toMsg(gt) << "]");
           result *= 0;
         }
@@ -332,6 +517,88 @@ TEST(TESTSuite, quaternion_test)
 
 /* TEST(TESTSuite, latlon_test) //{ */
 
+bool compare_gt_latlon(const vec3_t& tv, const vec3_t& rv, const char utm_zone[10], const bool ll2local)
+{
+  vec3_t gt;
+  if (ll2local)
+  {
+    // convert LAT-LON to UTM
+    Eigen::Vector3d utm;
+    mrs_lib::UTM(tv.x(), tv.y(), &(utm.x()), &(utm.y()));
+    // copy the height from the input
+    utm.z() = tv.z();
+    const vec3_t local = local2utm.inverse()*utm;
+    gt = local;
+  }
+  else
+  {
+    const vec3_t utm = local2utm*tv;
+    Eigen::Vector3d latlon;
+    mrs_lib::UTMtoLL(utm.y(), utm.x(), utm_zone, latlon.x(), latlon.y());
+    latlon.z() = utm.z();
+    gt = latlon;
+  }
+
+  const Eigen::Vector3d vect_diff = rv - gt;
+  if (vect_diff.norm() > 1e-6)
+  {
+    ROS_ERROR_STREAM("<< Transformed [" << tv.transpose() << "] with value of ["
+                                       << rv.transpose() << "] does not match the expected value of [" << gt.transpose() << "]");
+    return false;
+  }
+
+  std::cout << "<< Expected success happened\n";
+  return true;
+}
+
+bool compare_gt_latlon([[maybe_unused]] const quat_t& tv, [[maybe_unused]] const quat_t& rv, [[maybe_unused]] const char utm_zone[10], [[maybe_unused]] const bool ll2local)
+{
+  ROS_ERROR_STREAM("this should never happen");
+  return false;
+}
+
+template <typename T>
+bool trytransform_latlon(const T& tv, mrs_lib::Transformer& tfr, const char utm_zone[10], const bool ll2local, const bool expect_ok)
+{
+  const std::string local = "local_origin";
+  const std::string ll = mrs_lib::LATLON_ORIGIN;
+  const auto tf_opt = ll2local ? wait_for_tf(ll, local, tfr) : wait_for_tf(local, ll, tfr);
+
+  if (!tf_opt.has_value())
+  {
+    ROS_ERROR("[%s]: missing tf", ros::this_node::getName().c_str());
+    return false;
+  }
+
+  ROS_INFO("[%s]: got the transform", ros::this_node::getName().c_str());
+
+  const auto tf = tf_opt.value();
+  std::cout << "from: " << Transformer::frame_from(tf) << ", to: " << Transformer::frame_to(tf) << ", stamp: " << tf.header.stamp << std::endl;
+  std::cout << tf << std::endl;
+
+  const auto rv_opt = tfr.transform(tv, tf);
+  if (!rv_opt)
+  {
+    if (!expect_ok)
+    {
+      std::cout << "<< Expected failure happened\n";
+      return true;
+    }
+
+    ROS_ERROR_STREAM("<< Failed to transform message");
+    return false;
+  }
+
+  if (rv_opt && !expect_ok)
+  {
+    ROS_ERROR_STREAM("<< Transformed message - that should not be possible!");
+    return false;
+  }
+
+  const auto rv = rv_opt.value();
+  return compare_gt_latlon(tv, rv, utm_zone, ll2local);
+}
+
 TEST(TESTSuite, latlon_test)
 {
 
@@ -341,38 +608,44 @@ TEST(TESTSuite, latlon_test)
 
   auto tfr = mrs_lib::Transformer("TransformerTest");
   tfr.setDefaultPrefix("uav66");
-  tfr.setLatLon(0, 0);
 
   publish_transforms();
 
-  const std::string from = "local_origin";
-  const std::string to = mrs_lib::LATLON_ORIGIN;
-  const auto tf_opt = wait_for_tf(from, to, tfr);
+  const double lat = 1;
+  const double lon = 2;
+  double utm_x, utm_y;
+  char utm_zone_[10];
+  mrs_lib::LLtoUTM(lat, lon, utm_y, utm_x, utm_zone_);
 
-  if (tf_opt.has_value())
-  {
-    ROS_INFO("[%s]: got the transform", ros::this_node::getName().c_str());
+  const vec3_t tv(5, 6, 7);
+  const quat_t tq(1, 0, 0, 0);
+  // try transforming a vector from latlon to local frame and expect a failure
+  ROS_INFO("[%s]: Testing transformation of vector from local to latlon, expecting failure >>", ros::this_node::getName().c_str());
+  result = result && trytransform_latlon(tv, tfr, utm_zone_, false, false);
 
-    const auto tf = tf_opt.value();
-    std::cout << "from: " << Transformer::frame_from(tf) << ", to: " << Transformer::frame_to(tf) << ", stamp: " << tf.header.stamp << std::endl;
-    std::cout << tf << std::endl;
+  // try transforming a vector from local to latlon frame and expect everything OK
+  ROS_INFO("[%s]: Testing transformation of vector from latlon to local, expecting all OK >>", ros::this_node::getName().c_str());
+  result = result && trytransform_latlon(tv, tfr, utm_zone_, true, true);
 
-    const vec3_t tv(5, 6, 7);
-    const auto rv = tfr.transform(tf, tv);
-    if (!rv)
-    {
-      ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: Failed to transform vector [" << tv << "]");
-      result *= 0;
-    }
-    else
-    {
-    }
-  }
-  else
-  {
-    ROS_ERROR_THROTTLE(1.0, "[%s]: missing tf", ros::this_node::getName().c_str());
-    result *= 0;
-  }
+  // try transforming a quaternion from local to latlon frame and expect failure because there's no UTMtoLL method for quaternion
+  ROS_INFO("[%s]: Testing transformation of quaternion from latlon to local, expecting failure >>", ros::this_node::getName().c_str());
+  result = result && trytransform_latlon(tq, tfr, utm_zone_, true, false);
+
+  // after latlon is set, lookup from utm to latlon should be OK
+  ROS_INFO("[%s]: Setting lattitude and longitude to Transformer, UTM->latlon should be fine now.", ros::this_node::getName().c_str());
+  tfr.setLatLon(1, 2);
+
+  // try transforming a vector from latlon to local frame and expect everything OK
+  ROS_INFO("[%s]: Testing transformation of vector from local to latlon, expecting all OK >>", ros::this_node::getName().c_str());
+  result = result && trytransform_latlon(tv, tfr, utm_zone_, false, true);
+
+  // try transforming a vector from local to latlon frame and expect everything OK
+  ROS_INFO("[%s]: Testing transformation of vector from latlon to local, expecting all OK >>", ros::this_node::getName().c_str());
+  result = result && trytransform_latlon(tv, tfr, utm_zone_, true, true);
+
+  // try transforming a quaternion from latlon to local frame and expect failure because there's no UTMtoLL method for quaternion
+  ROS_INFO("[%s]: Testing transformation of quaternion from local to latlon, expecting failure >>", ros::this_node::getName().c_str());
+  result = result && trytransform_latlon(tq, tfr, utm_zone_, false, false);
 
   EXPECT_TRUE(result);
 }
@@ -541,8 +814,8 @@ TEST(TESTSuite, prefix_test)
 
 //}
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
-
+int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
+{
   // Set up ROS.
   ros::init(argc, argv, "transformer_tests");
   ros::NodeHandle nh = ros::NodeHandle("~");
@@ -552,7 +825,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
   local2local.translation() = 10*vec3_t::Random();
   local2fcu = anax_t(1.2, vec3_t::UnitZ()) * anax_t(0.2, vec3_t::UnitX());
   local2fcu.translation() = vec3_t::Random();
-  local2utm = Eigen::Affine3d::Identity();
+  local2utm = anax_t(2.2, vec3_t::UnitZ()) * anax_t(0.1, vec3_t::UnitX());
+  local2utm.translation() = vec3_t::Random();
   fcu2cam = anax_t(1.54, vec3_t::UnitZ()) * anax_t(1.54, vec3_t::UnitX()) * anax_t(1.54, vec3_t::UnitY());
   fcu2cam.translation() = vec3_t(0.2, 0, 0);
 
