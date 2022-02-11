@@ -99,9 +99,11 @@ namespace mrs_lib
     /**
      * \brief Sets the default frame ID to be used instead of any empty frame ID.
      *
-     * Set to an empty string to disable this functionality (disabled by default).
+     * If you call e.g. the transform() method with a message that has an empty header.frame_id field, this value will be used instead.
      *
-     * \param frame_id the default frame ID.
+     * \param frame_id the default frame ID. Use an empty string to disable default frame ID deduction.
+     *
+     * \note Disabled by default.
      */
     void setDefaultFrame(const std::string& frame_id)
     {
@@ -115,9 +117,15 @@ namespace mrs_lib
     /**
      * \brief Sets the default frame ID prefix to be used if no prefix is present in the frame.
      *
-     * Set to an empty string to disable this functionality (disabled by default).
+     * If you call any method with a frame ID that doesn't begin with this string, it will be automatically prefixed including a forward slash between the prefix and raw frame ID.
+     * The forward slash should therefore *not* be included in the prefix.
      *
-     * \param prefix the default frame ID prefix.
+     * Example frame ID resolution assuming default prefix is "uav1":
+     *   "local_origin" -> "uav1/local_origin"
+     *
+     * \param prefix the default frame ID prefix (without the forward slash at the end). Use an empty string to disable default frame ID prefixing.
+     *
+     * \note Disabled by default. The prefix will be applied as a namespace (with a forward slash between the prefix and raw frame ID).
      */
     void setDefaultPrefix(const std::string& prefix)
     {
@@ -132,10 +140,11 @@ namespace mrs_lib
      * \brief Sets the curret lattitude and longitude for UTM zone calculation.
      *
      * The Transformer uses this to deduce the current UTM zone used for transforming stuff to latlon_origin.
-     * \note Any transformation to latlon_origin will fail if this function is not called!
      *
      * \param lat the latitude in degrees.
      * \param lon the longitude in degrees.
+     *
+     * \note Any transformation to latlon_origin will fail if this function is not called first!
      */
     void setLatLon(const double lat, const double lon);
 
@@ -148,7 +157,7 @@ namespace mrs_lib
      *
      * The transform lookup operation will block up to this duration if the transformation is not available immediately.
      *
-     * \note This functionality is disabled by default.
+     * \note Disabled by default.
      *
      * \param timeout the lookup timeout. Set to zero to disable blocking.
      */
@@ -167,7 +176,7 @@ namespace mrs_lib
      * If enabled, a failed transform lookup will be retried.
      * The new try will ignore the requested timestamp and will attempt to fetch the latest transformation between the two frames.
      *
-     * \note This functionality is disabled by default.
+     * \note Disabled by default.
      *
      * \param retry enables or disables retry.
      */
@@ -183,9 +192,9 @@ namespace mrs_lib
     /**
      * \brief Enable/disable some prints that may be too noisy.
      *
-     * \note This functionality is disabled by default.
-     *
      * \param quiet enables or disables quiet mode.
+     *
+     * \note Disabled by default.
      */
     void beQuiet(const bool quiet = true)
     {
@@ -347,7 +356,7 @@ namespace mrs_lib
     /**
      * \brief Deduce the full frame ID from a shortened or empty string using current default prefix and default frame rules.
      *
-     * example assuming default prefix is "uav1" and default frame is "uav1/gps_origin":
+     * Example assuming default prefix is "uav1" and default frame is "uav1/gps_origin":
      *   "" -> "uav1/gps_origin"
      *   "local_origin" -> "uav1/local_origin"
      *
@@ -362,7 +371,7 @@ namespace mrs_lib
     /* private members, methods etc //{ */
 
     /**
-     * @brief keeps track whether a non-basic constructor was called and the transform listener is initialized
+     * \brief keeps track whether a non-basic constructor was called and the transform listener is initialized
      */
     bool initialized_ = false;
     std::string node_name_;
