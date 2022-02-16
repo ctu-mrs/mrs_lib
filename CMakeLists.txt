@@ -54,16 +54,20 @@ find_package(PCL REQUIRED)
 ## catkin specific configuration ##
 ###################################
 
+set(LIBRARIES
+  MrsLibSafetyZone MrsLibProfiler MrsLibScopeTimer MrsLibIirFilter MrsLibNotchFilter MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibOdomLKF MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibTimer MrsLibTransformBroadcaster
+  )
+
 catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs pcl_ros mrs_msgs
   DEPENDS Eigen
-  LIBRARIES MrsLibSafetyZone MrsLibProfiler MrsLibScopeTimer MrsLibIirFilter MrsLibNotchFilter MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibOdomLKF MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibTimer MrsLibTransformBroadcaster
+  LIBRARIES ${LIBRARIES}
   )
 
-###########
-## Build ##
-###########
+## --------------------------------------------------------------
+## |                            Build                           |
+## --------------------------------------------------------------
 
 include_directories(
   include
@@ -293,9 +297,28 @@ target_link_libraries(cyclic_example
   ${Eigen_LIBRARIES}
   )
 
-#############
-## Testing ##
-#############
+## --------------------------------------------------------------
+## |                           Install                          |
+## --------------------------------------------------------------
+
+install(TARGETS ${LIBRARIES}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+  )
+
+install(DIRECTORY include/
+  DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
+  )
+
+install(DIRECTORY ./
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  FILES_MATCHING PATTERN "*.xml"
+  )
+
+## --------------------------------------------------------------
+## |                           Testing                          |
+## --------------------------------------------------------------
 
 if(CATKIN_ENABLE_TESTING)
 
@@ -305,187 +328,187 @@ if(CATKIN_ENABLE_TESTING)
     GeometryTest
     test/geometry/geometry.test
     test/geometry/test.cpp
-  )
+    )
 
   target_link_libraries(
     GeometryTest
     MrsLibGeometry
     ${catkin_LIBRARIES}
-  )
+    )
 
   add_dependencies(
     GeometryTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
-  )
+    )
 
   add_rostest_gtest(
     AttitudeConverterTest
     test/attitude_converter/attitude_converter.test
     test/attitude_converter/test.cpp
-  )
+    )
 
   target_link_libraries(
     AttitudeConverterTest
     MrsLibAttitudeConverter
     ${catkin_LIBRARIES}
-  )
+    )
 
   add_dependencies(
     AttitudeConverterTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
-  )
+    )
 
   add_rostest_gtest(
     UtilsTest
     test/utils/utils.test
     test/utils/test.cpp
-  )
+    )
 
   target_link_libraries(
     UtilsTest
     MrsLibUtils
     ${catkin_LIBRARIES}
-  )
+    )
 
   add_dependencies(
     UtilsTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
-  )
+    )
 
   add_rostest_gtest(
     UkfTest
     test/ukf/ukf.test
     test/ukf/test.cpp
-  )
+    )
 
   target_link_libraries(
     UkfTest
     ${catkin_LIBRARIES}
-  )
+    )
 
   add_dependencies(
     UkfTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
-  )
+    )
 
   add_rostest_gtest(
     TransformerTest
     test/transformer/transformer.test
     test/transformer/test.cpp
-  )
+    )
 
   target_link_libraries(
     TransformerTest
     MrsLibTransformer
     MrsLibAttitudeConverter
     ${catkin_LIBRARIES}
-  )
+    )
 
   add_dependencies(
     TransformerTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
-  )
+    )
 
   add_rostest_gtest(
     ParamLoaderTest
     test/param_loader/param_loader.test
     test/param_loader/test.cpp
-  )
+    )
   target_link_libraries(
     ParamLoaderTest
     MrsLibParamLoader
     ${catkin_LIBRARIES}
-  )
+    )
   add_dependencies(
     ParamLoaderTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
-  )
+    )
 
   add_rostest_gtest(
     SubscribeHandlerTest
     test/subscribe_handler/subscribe_handler.test
     test/subscribe_handler/test.cpp
-  )
+    )
   target_link_libraries(
     SubscribeHandlerTest
-    MrsLibTimer 
+    MrsLibTimer
     ${catkin_LIBRARIES}
-  )
+    )
   add_dependencies(
     SubscribeHandlerTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
-  )
+    )
 
   add_rostest_gtest(
     RepredictorTest
     test/repredictor/repredictor.test
     test/repredictor/test.cpp
-  )
+    )
   target_link_libraries(
     RepredictorTest
     ${catkin_LIBRARIES}
-  )
+    )
   add_dependencies(
     RepredictorTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
-  )
+    )
 
   add_rostest_gtest(
     TimerTest
     test/timer/timer.test
     test/timer/test.cpp
-  )
+    )
   target_link_libraries(
     TimerTest
-    MrsLibTimer 
-    MrsLibUtils 
+    MrsLibTimer
+    MrsLibUtils
     ${catkin_LIBRARIES}
-  )
+    )
   add_dependencies(
     TimerTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
-  )
+    )
 
   add_rostest_gtest(
     ServiceClientHandlerTest
     test/service_client_handler/service_client_handler.test
     test/service_client_handler/test.cpp
-  )
+    )
   target_link_libraries(
     ServiceClientHandlerTest
     ${catkin_LIBRARIES}
-  )
+    )
   add_dependencies(
     ServiceClientHandlerTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
-  )
+    )
 
   add_rostest_gtest(
     VectorConverterTest
     test/vector_converter/vector_converter.test
     test/vector_converter/test.cpp
-  )
+    )
   target_link_libraries(
     VectorConverterTest
     ${catkin_LIBRARIES}
-  )
+    )
   target_include_directories(VectorConverterTest PRIVATE
     ${PCL_INCLUDE_DIRS}
-  )
+    )
   add_dependencies(
     VectorConverterTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
-  )
+    )
 
 endif()
