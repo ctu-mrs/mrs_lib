@@ -10,7 +10,8 @@ namespace mrs_lib
 
 /* class EulerAttitude //{ */
 
-EulerAttitude::EulerAttitude(const double& roll, const double& pitch, const double& yaw) : roll_(roll), pitch_(pitch), yaw_(yaw){}
+EulerAttitude::EulerAttitude(const double& roll, const double& pitch, const double& yaw) : roll_(roll), pitch_(pitch), yaw_(yaw) {
+}
 
 double EulerAttitude::roll(void) const {
   return roll_;
@@ -82,7 +83,17 @@ AttitudeConverter::AttitudeConverter(const double& roll, const double& pitch, co
       break;
     }
     case RPY_INTRINSIC: {
-      tf2_quaternion_.setRPY(yaw, pitch, roll);
+
+      Eigen::Matrix3d Y, P, R;
+
+      Y << cos(yaw), -sin(yaw), 0, sin(yaw), cos(yaw), 0, 0, 0, 1;
+
+      P << cos(pitch), 0, sin(pitch), 0, 1, 0, -sin(pitch), 0, cos(pitch);
+
+      R << 1, 0, 0, 0, cos(roll), -sin(roll), 0, sin(roll), cos(roll);
+
+      tf2_quaternion_ = AttitudeConverter(R * P * Y);
+
       break;
     }
   }
@@ -364,9 +375,11 @@ std::tuple<double, double, double> AttitudeConverter::getExtrinsicRPY(void) {
 
 std::tuple<double, double, double> AttitudeConverter::getIntrinsicRPY(void) {
 
-  auto [roll_e, pitch_e, yaw_e] = *this;
+  Eigen::Matrix3d rot = AttitudeConverter(*this);
 
-  return std::tuple(yaw_e, pitch_e, roll_e);
+  Eigen::Vector3d eulers = rot.eulerAngles(0, 1, 2);
+
+  return std::tuple(eulers[0], eulers[1], eulers[2]);
 }
 
 //}
@@ -444,6 +457,8 @@ AttitudeConverter AttitudeConverter::setHeading(const double& heading) {
 
 // | ------------------------ internal ------------------------ |
 
+/* calculateRPY() //{ */
+
 void AttitudeConverter::calculateRPY(void) {
 
   if (!got_rpy_) {
@@ -452,6 +467,10 @@ void AttitudeConverter::calculateRPY(void) {
   }
 }
 
+//}
+
+/* validateOrientation() //{ */
+
 void AttitudeConverter::validateOrientation(void) {
 
   if (!std::isfinite(tf2_quaternion_.x()) || !std::isfinite(tf2_quaternion_.y()) || !std::isfinite(tf2_quaternion_.z()) ||
@@ -459,5 +478,7 @@ void AttitudeConverter::validateOrientation(void) {
     throw InvalidAttitudeException();
   }
 }
+
+//}
 
 }  // namespace mrs_lib
