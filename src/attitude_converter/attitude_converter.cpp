@@ -386,38 +386,6 @@ std::tuple<double, double, double> AttitudeConverter::getIntrinsicRPY(void) {
 
 /* setters //{ */
 
-AttitudeConverter AttitudeConverter::setHeadingByYaw(const double& heading) {
-
-  // get the X and Z unit vector after the original rotation
-  Eigen::Vector3d b1 = getVectorX();
-  Eigen::Vector3d b3 = getVectorZ();
-
-  // check for singularity: z component of the thrust vector is 0
-  if (fabs(b3[2]) < 1e-3) {
-    throw SetHeadingByYawException();
-  }
-
-  // get the desired heading as a vector in 3D
-  Eigen::Vector3d h(cos(heading), sin(heading), 0);
-
-  // cast down the heading vector to the plane orthogonal to b3 (the thrust vector)
-  Eigen::Vector3d heading_vec_sklop(h[0], h[1], (-b3[0] * h[0] - b3[1] * h[1]) / b3[2]);
-
-  // get the relative angle between the projected heading and b1
-  double yaw_diff = mrs_lib::geometry::angleBetween(b1, heading_vec_sklop);
-
-  // get the rotation around b3 about yaw_diff
-  Eigen::Matrix3d rotator = Eigen::AngleAxisd(-yaw_diff, b3).toRotationMatrix();
-
-  // get the original rotation in the matrix form
-  Eigen::Matrix3d original_attitude = *this;
-
-  // concatenate the transformations
-  Eigen::Matrix3d new_attitude = rotator * original_attitude;
-
-  return AttitudeConverter(new_attitude);
-}
-
 AttitudeConverter AttitudeConverter::setYaw(const double& new_yaw) {
 
   auto [roll, pitch, yaw] = *this;
@@ -440,15 +408,35 @@ AttitudeConverter AttitudeConverter::setHeading(const double& heading) {
   // get the desired heading as a vector in 3D
   Eigen::Vector3d h(cos(heading), sin(heading), 0);
 
-  Eigen::Vector3d b2_new = b3.cross(h);
-  b2_new.normalize();
-
-  Eigen::Vector3d b1_new = b2_new.cross(b3);
-
   Eigen::Matrix3d new_R;
-  new_R.col(0) = b1_new;
-  new_R.col(1) = b2_new;
+
   new_R.col(2) = b3;
+
+  // construct the oblique projection
+  Eigen::Matrix3d projector_body_z_compl = (Eigen::Matrix3d::Identity(3, 3) - b3 * b3.transpose());
+
+  // create a basis of the body-z complement subspace
+  Eigen::MatrixXd A = Eigen::MatrixXd(3, 2);
+  A.col(0)          = projector_body_z_compl.col(0);
+  A.col(1)          = projector_body_z_compl.col(1);
+
+  // create the basis of the projection null-space complement
+  Eigen::MatrixXd B = Eigen::MatrixXd(3, 2);
+  B.col(0)          = Eigen::Vector3d(1, 0, 0);
+  B.col(1)          = Eigen::Vector3d(0, 1, 0);
+
+  // oblique projector to <range_basis>
+  Eigen::MatrixXd Bt_A               = B.transpose() * A;
+  Eigen::MatrixXd Bt_A_pseudoinverse = ((Bt_A.transpose() * Bt_A).inverse()) * Bt_A.transpose();
+  Eigen::MatrixXd oblique_projector  = A * Bt_A_pseudoinverse * B.transpose();
+
+  new_R.col(0) = oblique_projector * h;
+  new_R.col(0).normalize();
+
+  // | ------------------------- body y ------------------------- |
+
+  new_R.col(1) = new_R.col(2).cross(new_R.col(0));
+  new_R.col(1).normalize();
 
   return AttitudeConverter(new_R);
 }
