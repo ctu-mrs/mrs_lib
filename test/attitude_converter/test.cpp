@@ -155,7 +155,7 @@ TEST(TESTSuite, set_heading_by_yaw) {
       printf("setting heading to %1.2f:\n", new_desired_heading);
       printf("this is the propper way how to update the heading part of an existing orientation without chaning the Z axis direction\n");
 
-      tf2::Quaternion new_attitude = AttitudeConverter(old_attitude).setHeadingByYaw(new_desired_heading);
+      tf2::Quaternion new_attitude = AttitudeConverter(old_attitude).setHeading(new_desired_heading);
       double          new_heading  = AttitudeConverter(new_attitude).getHeading();
 
       Eigen::Vector3d new_z_vec = AttitudeConverter(new_attitude).getVectorZ();
@@ -203,7 +203,7 @@ TEST(TESTSuite, get_heading_by_yaw_exception) {
   printf("Testing the setHeading() exception:\n");
 
   try {
-    [[maybe_unused]] tf2::Quaternion attitude = AttitudeConverter(0, M_PI_2, 0).setHeadingByYaw(1.0);
+    [[maybe_unused]] tf2::Quaternion attitude = AttitudeConverter(0, M_PI_2, 0).setHeading(1.0);
   }
   catch (const mrs_lib::AttitudeConverter::SetHeadingByYawException& e) {
     printf("exception correctly caught: %s\n", e.what());
