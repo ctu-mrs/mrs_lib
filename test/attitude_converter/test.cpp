@@ -10,6 +10,13 @@
 using namespace mrs_lib;
 using namespace std;
 
+double randd(const double from, const double to) {
+
+  double zero_to_one = double((float)rand()) / double(RAND_MAX);
+
+  return floor(to - from) * zero_to_one + from;
+}
+
 /* TEST(TESTSuite, conversion_chain) //{ */
 
 TEST(TESTSuite, conversion_chain) {
@@ -196,38 +203,62 @@ TEST(TESTSuite, set_heading) {
   {
     printf("Testing setHeading():\n");
 
-    double roll  = 0.2;
-    double pitch = 0.35;
-    double yaw   = 0.42;
+    for (int i = 0; i < 1000; i++) {
 
-    tf2::Quaternion old_attitude = AttitudeConverter(roll, pitch, yaw);
+      double roll  = randd(-3.14, 3.14);
+      double pitch = randd(-3.14, 3.14);
+      double yaw   = randd(-3.14, 3.14);
 
-    double          old_heading = AttitudeConverter(old_attitude).getHeading();
-    Eigen::Vector3d old_z_vec   = AttitudeConverter(old_attitude).getVectorZ();
+      tf2::Quaternion old_attitude = AttitudeConverter(roll, pitch, yaw);
 
-    printf("original input: heading: %1.2f, yaw: %1.2f, z vec: [%1.2f, %1.2f, %1.2f]\n", old_heading, yaw, old_z_vec[0], old_z_vec[1], old_z_vec[2]);
+      double old_heading;
 
-    {
-      double new_desired_heading = -1.58;
-      printf("setting heading to %1.2f:\n", new_desired_heading);
-      printf("this is the propper way how to update the heading part of an existing orientation without chaning the Z axis direction\n");
-
-      tf2::Quaternion new_attitude = AttitudeConverter(old_attitude).setHeading(new_desired_heading);
-      double          new_heading  = AttitudeConverter(new_attitude).getHeading();
-
-      Eigen::Vector3d new_z_vec = AttitudeConverter(new_attitude).getVectorZ();
-      double          new_yaw   = AttitudeConverter(new_attitude).getYaw();
-
-      printf("results: heading: %1.2f, yaw: %1.2f, z vec: [%1.2f, %1.2f, %1.2f]\n", new_heading, new_yaw, new_z_vec[0], new_z_vec[1], new_z_vec[2]);
-
-      if (fabs(new_heading - new_desired_heading) > 1e-6) {
-        printf("new heading does not match!\n");
-        result *= 0;
+      try {
+        old_heading = AttitudeConverter(old_attitude).getHeading();
+      }
+      catch (const mrs_lib::AttitudeConverter::GetHeadingException& e) {
+        continue;
       }
 
-      if (fabs(new_z_vec[0] - old_z_vec[0]) > 1e-6 || fabs(new_z_vec[1] - old_z_vec[1]) > 1e-6 || fabs(new_z_vec[2] - old_z_vec[2]) > 1e-6) {
-        printf("new z vec does not match!");
-        result *= 0;
+      Eigen::Vector3d old_z_vec = AttitudeConverter(old_attitude).getVectorZ();
+
+      printf("original input: heading: %1.2f, yaw: %1.2f, z vec: [%1.2f, %1.2f, %1.2f]\n", old_heading, yaw, old_z_vec[0], old_z_vec[1], old_z_vec[2]);
+
+      {
+        double new_desired_heading = randd(-3.14, 3.14);
+        printf("setting heading to %1.2f:\n", new_desired_heading);
+
+        tf2::Quaternion new_attitude;
+
+        try {
+          new_attitude = AttitudeConverter(old_attitude).setHeading(new_desired_heading);
+        }
+        catch (const mrs_lib::AttitudeConverter::SetHeadingException& e) {
+          continue;
+        }
+
+        double new_heading;
+
+        try {
+          new_heading = AttitudeConverter(new_attitude).getHeading();
+        }
+        catch (const mrs_lib::AttitudeConverter::GetHeadingException& e) {
+          continue;
+        }
+
+        Eigen::Vector3d new_z_vec = AttitudeConverter(new_attitude).getVectorZ();
+
+        printf("results: heading: %1.2f, z vec: [%1.2f, %1.2f, %1.2f]\n", new_heading, new_z_vec[0], new_z_vec[1], new_z_vec[2]);
+
+        if (fabs(new_heading - new_desired_heading) > 1e-3) {
+          printf("new heading does not match!\n");
+          result *= 0;
+        }
+
+        if (fabs(new_z_vec[0] - old_z_vec[0]) > 1e-3 || fabs(new_z_vec[1] - old_z_vec[1]) > 1e-3 || fabs(new_z_vec[2] - old_z_vec[2]) > 1e-3) {
+          printf("new z vec does not match!");
+          result *= 0;
+        }
       }
     }
 
@@ -379,6 +410,8 @@ TEST(TESTSuite, input_nan_checks) {
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
 
   testing::InitGoogleTest(&argc, argv);
+
+  srand(static_cast<unsigned int>(std::chrono::system_clock::now().time_since_epoch().count()));
 
   return RUN_ALL_TESTS();
 }
