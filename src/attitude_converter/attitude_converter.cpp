@@ -78,10 +78,12 @@ Vector3Converter::operator geometry_msgs::Vector3() const {
 AttitudeConverter::AttitudeConverter(const double& roll, const double& pitch, const double& yaw, const RPY_convention_t& format) {
 
   switch (format) {
+
     case RPY_EXTRINSIC: {
       tf2_quaternion_.setRPY(roll, pitch, yaw);
       break;
     }
+
     case RPY_INTRINSIC: {
 
       Eigen::Matrix3d Y, P, R;
@@ -102,6 +104,7 @@ AttitudeConverter::AttitudeConverter(const double& roll, const double& pitch, co
 }
 
 AttitudeConverter::AttitudeConverter(const tf::Quaternion quaternion) {
+
   tf2_quaternion_.setX(quaternion.x());
   tf2_quaternion_.setY(quaternion.y());
   tf2_quaternion_.setZ(quaternion.z());
@@ -368,9 +371,11 @@ Vector3Converter AttitudeConverter::getVectorZ(void) {
 
 std::tuple<double, double, double> AttitudeConverter::getExtrinsicRPY(void) {
 
-  auto [roll, pitch, yaw] = *this;
+  Eigen::Matrix3d rot = AttitudeConverter(*this);
 
-  return std::tuple(roll, pitch, yaw);
+  Eigen::Vector3d eulers = rot.eulerAngles(2, 1, 0);
+
+  return std::tuple(eulers[2], eulers[1], eulers[0]);
 }
 
 std::tuple<double, double, double> AttitudeConverter::getIntrinsicRPY(void) {
