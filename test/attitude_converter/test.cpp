@@ -3,6 +3,7 @@
 #include <mrs_lib/geometry/cyclic.h>
 #include <cmath>
 #include <iostream>
+#include <chrono>
 
 #include <gtest/gtest.h>
 #include <log4cxx/logger.h>
