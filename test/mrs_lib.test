@@ -1,36 +1,36 @@
 <launch>
 
-  <!-- <include file="$(find mrs_lib)/test/geometry/geometry.test"> -->
-  <!-- </include> -->
+  <include file="$(find mrs_lib)/test/geometry/geometry.test">
+  </include>
 
   <include file="$(find mrs_lib)/test/attitude_converter/attitude_converter.test">
   </include>
 
-  <!-- <include file="$(find mrs_lib)/test/utils/utils.test"> -->
-  <!-- </include> -->
+  <include file="$(find mrs_lib)/test/utils/utils.test">
+  </include>
 
-  <!-- <include file="$(find mrs_lib)/test/ukf/ukf.test"> -->
-  <!-- </include> -->
+  <include file="$(find mrs_lib)/test/ukf/ukf.test">
+  </include>
 
-  <!-- <include file="$(find mrs_lib)/test/transformer/transformer.test"> -->
-  <!-- </include> -->
+  <include file="$(find mrs_lib)/test/transformer/transformer.test">
+  </include>
 
-  <!-- <include file="$(find mrs_lib)/test/param_loader/param_loader.test"> -->
-  <!-- </include> -->
+  <include file="$(find mrs_lib)/test/param_loader/param_loader.test">
+  </include>
 
-  <!-- <include file="$(find mrs_lib)/test/subscribe_handler/subscribe_handler.test"> -->
-  <!-- </include> -->
+  <include file="$(find mrs_lib)/test/subscribe_handler/subscribe_handler.test">
+  </include>
 
-  <!-- <include file="$(find mrs_lib)/test/timer/timer.test"> -->
-  <!-- </include> -->
+  <include file="$(find mrs_lib)/test/timer/timer.test">
+  </include>
 
-  <!-- <include file="$(find mrs_lib)/test/repredictor/repredictor.test"> -->
-  <!-- </include> -->
+  <include file="$(find mrs_lib)/test/repredictor/repredictor.test">
+  </include>
 
-  <!-- <include file="$(find mrs_lib)/test/service_client_handler/service_client_handler.test"> -->
-  <!-- </include> -->
+  <include file="$(find mrs_lib)/test/service_client_handler/service_client_handler.test">
+  </include>
 
-  <!-- <include file="$(find mrs_lib)/test/vector_converter/vector_converter.test"> -->
-  <!-- </include> -->
+  <include file="$(find mrs_lib)/test/vector_converter/vector_converter.test">
+  </include>
 
 </launch>
