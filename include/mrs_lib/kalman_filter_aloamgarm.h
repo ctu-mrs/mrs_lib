@@ -50,7 +50,7 @@ namespace mrs_lib
         x_t x;  /*!< \brief State vector. */
         P_t P;  /*!< \brief State covariance matrix. */
         std::shared_ptr<boost::circular_buffer<double>> nis_buffer = nullptr;
-        ros::Time stamp;
+        ros::Time stamp = ros::Time(0);
         bool measurement_jumped = false;
 
         statecov_t& operator=(statecov_t other)

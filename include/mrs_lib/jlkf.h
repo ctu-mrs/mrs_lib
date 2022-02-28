@@ -84,12 +84,11 @@ namespace mrs_lib
      * \param generateB a function, which returns the input to state mapping matrix \p B based on the time difference \p dt.
      * \param H         the state to measurement mapping matrix.
      */
-    JLKF(const generateA_t& generateA, const generateB_t& generateB, const H_t& H, const double& sigma, const ros::NodeHandle& nh, const double& nis_thr,
+    JLKF(const generateA_t& generateA, const generateB_t& generateB, const H_t& H, const ros::NodeHandle& nh, const double& nis_thr,
          const double& nis_avg_thr)
         : m_generateA(generateA),
           m_generateB(generateB),
           H(H),
-          m_sigma(sigma),
           m_nh(nh),
           m_nis_thr(nis_thr),
           m_nis_avg_thr(nis_avg_thr)
@@ -175,7 +174,6 @@ namespace mrs_lib
     virtual K_t computeKalmanGain(const statecov_t& sc, [[maybe_unused]] const z_t& z, const R_t& R, const H_t& H, double& nis, H_t& H_out,
                                   const double& nis_thr, const double& nis_avg_thr) const
     {
-      // TODO return the parameters back to const
       H_out = H;
 
       R_t W = H * sc.P * H.transpose() + R;
@@ -273,7 +271,6 @@ namespace mrs_lib
     //}
 
   private:
-    double m_sigma;
     ros::NodeHandle m_nh;
     ros::Publisher debug_nis_pub;
     std::vector<double> m_nis_window;

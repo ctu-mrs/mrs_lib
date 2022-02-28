@@ -8,8 +8,6 @@
 #include <ros/ros.h>
 #include <mrs_lib/utils.h>
 
-#include <vector>
-
 namespace mrs_lib
 {
 /**
@@ -209,6 +207,7 @@ public:
 
 public:
   /* constructor //{ */
+
   /*!
    * \brief The main constructor.
    *
@@ -222,15 +221,29 @@ public:
    * \param model          Default prediction and correction model.
    * \param hist_len       Length of the history buffer for system inputs and measurements.
    */
-  Repredictor(const x_t& x0, const P_t& P0, const u_t& u0, const Q_t& Q0, const ros::Time& t0, const ModelPtr& model, const unsigned hist_len,
-              const std::shared_ptr<boost::circular_buffer<double>>& nis_buffer)
-      : m_sc{x0, P0, nis_buffer}, m_default_model(model), m_history(history_t(hist_len)) {
+  Repredictor(const x_t& x0, const P_t& P0, const u_t& u0, const Q_t& Q0, const ros::Time& t0, const ModelPtr& model, const unsigned hist_len)
+      : m_sc{x0, P0}, m_default_model(model), m_history(history_t(hist_len)) {
     assert(hist_len > 0);
     addInputChangeWithNoise(u0, Q0, t0, model);
   };
 
-  Repredictor(const x_t& x0, const P_t& P0, const u_t& u0, const Q_t& Q0, const ros::Time& t0, const ModelPtr& model, const unsigned hist_len)
-      : m_sc{x0, P0}, m_default_model(model), m_history(history_t(hist_len)) {
+  /*!
+   * \brief Variation of the constructor for kalman filter using nis_buffer (ALOAMGARM)
+   *
+   * Initializes the Repredictor with the necessary initial and default values.
+   *
+   * \param x0             Initial state.
+   * \param P0             Covariance matrix of the initial state uncertainty.
+   * \param u0             Initial system input.
+   * \param Q0             Default covariance matrix of the process noise.
+   * \param t0             Time stamp of the initial state.
+   * \param model          Default prediction and correction model.
+   * \param hist_len       Length of the history buffer for system inputs and measurements.
+   * \param nis_buffer     Circular buffer for NIS values.
+   */
+  Repredictor(const x_t& x0, const P_t& P0, const u_t& u0, const Q_t& Q0, const ros::Time& t0, const ModelPtr& model, const unsigned hist_len,
+              const std::shared_ptr<boost::circular_buffer<double>>& nis_buffer)
+      : m_sc{x0, P0, nis_buffer}, m_default_model(model), m_history(history_t(hist_len)) {
     assert(hist_len > 0);
     addInputChangeWithNoise(u0, Q0, t0, model);
   };
