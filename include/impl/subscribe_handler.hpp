@@ -36,6 +36,7 @@ namespace mrs_lib
           m_used_data(false),
           m_last_msg_received(ros::Time::now()),
           m_timeout_callback(options.timeout_callback),
+          m_latest_message(nullptr),
           m_message_callback(message_callback),
           m_queue_size(options.queue_size),
           m_transport_hints(options.transport_hints)
@@ -75,10 +76,10 @@ namespace mrs_lib
     /* peekMsg() method //{ */
     virtual typename MessageType::ConstPtr peekMsg()
     {
-      assert(m_got_data);
-      if (!m_got_data)
-        ROS_ERROR("[%s]: No data received yet from topic '%s' (forgot to check hasMsg()?)! Returning empty message.", m_node_name.c_str(),
-                  topicName().c_str());
+      /* assert(m_got_data); */
+      /* if (!m_got_data) */
+      /*   ROS_ERROR("[%s]: No data received yet from topic '%s' (forgot to check hasMsg()?)! Returning empty message.", m_node_name.c_str(), */
+      /*             topicName().c_str()); */
       return m_latest_message;
     }
     //}

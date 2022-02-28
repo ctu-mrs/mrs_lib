@@ -44,8 +44,6 @@ namespace mrs_lib
     x = x + dt * dx + 0.5 * dt * dt * ddx;
     dx = dx + dt * ddx;
     ddx = 0.9 * ddx + 0.1 * u(0);
-    ddx = ddx + dt * u(0);
-    /* ddx = ddx; */
     return ret;
   }
   //}
