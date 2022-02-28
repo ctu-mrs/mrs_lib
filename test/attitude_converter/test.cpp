@@ -3,12 +3,20 @@
 #include <mrs_lib/geometry/cyclic.h>
 #include <cmath>
 #include <iostream>
+#include <chrono>
 
 #include <gtest/gtest.h>
 #include <log4cxx/logger.h>
 
 using namespace mrs_lib;
 using namespace std;
+
+double randd(const double from, const double to) {
+
+  double zero_to_one = double((float)rand()) / double(RAND_MAX);
+
+  return floor(to - from) * zero_to_one + from;
+}
 
 /* TEST(TESTSuite, conversion_chain) //{ */
 
@@ -51,7 +59,7 @@ TEST(TESTSuite, conversion_chain) {
 
 //}
 
-/* TEST(TESTSuite, conversion_chain) //{ */
+/* TEST(TESTSuite, rpy_settters_getters) //{ */
 
 TEST(TESTSuite, rpy_settters_getters) {
 
@@ -61,12 +69,12 @@ TEST(TESTSuite, rpy_settters_getters) {
 
   printf("the Z vector should point to [1, 0, 0], \n");
 
-  double e_roll  = 1.57;
-  double e_pitch = 1.57;
-  double e_yaw   = 1.57;
+  double e_roll  = M_PI / 2;
+  double e_pitch = M_PI / 2;
+  double e_yaw   = M_PI / 2;
 
   double i_roll  = 0;
-  double i_pitch = 1.57;
+  double i_pitch = M_PI / 2;
   double i_yaw   = 0;
 
   tf2::Quaternion quat_from_ext = AttitudeConverter(e_roll, e_pitch, e_yaw, mrs_lib::RPY_EXTRINSIC);  // the default option without the argument
@@ -81,21 +89,78 @@ TEST(TESTSuite, rpy_settters_getters) {
   printf("from extrinsic: z_vec: [%1.2f, %1.2f, %1.2f]\n", z_vec_ext[0], z_vec_ext[1], z_vec_ext[2]);
   printf("from intrinsic: z_vec: [%1.2f, %1.2f, %1.2f]\n", z_vec_int[0], z_vec_int[1], z_vec_int[2]);
 
-  printf("\n");
-
-  printf("Testing the getters (the rotations should be the same as the input):\n");
-  auto [roll, pitch, yaw] = AttitudeConverter(quat_from_int).getExtrinsicRPY();
-  printf("ext from int: roll: %1.2f, pitch: %1.2f, yaw: %1.2f\n", roll, pitch, yaw);
-
-  if (fabs(i_roll - roll) > 1e-6 || fabs(i_pitch - pitch) > 1e-6 || fabs(i_yaw - yaw) > 1e-6) {
+  if (fabs(z_vec_int[0] - z_vec_ext[0]) > 1e-6 || fabs(z_vec_int[1] - z_vec_ext[1]) > 1e-6 || fabs(z_vec_int[2] - z_vec_ext[2]) > 1e-6) {
+    printf("z vector's don't match\n");
     result *= 0;
   }
 
-  tie(roll, pitch, yaw) = AttitudeConverter(quat_from_ext).getIntrinsicRPY();
-  printf("int from ext: roll: %1.2f, pitch: %1.2f, yaw: %1.2f\n", roll, pitch, yaw);
+  printf("\n");
 
-  if (fabs(e_roll - roll) > 1e-6 || fabs(e_pitch - pitch) > 1e-6 || fabs(e_yaw - yaw) > 1e-6) {
-    result *= 0;
+  {
+    printf("Testing the getters (the rotations should be the same as the input):\n");
+
+    // test quaternion
+    tf2::Quaternion quat(0.71, 0.00, 0.71, 0.00);
+    quat.normalize();
+
+    Eigen::Matrix3d ref_R = mrs_lib::AttitudeConverter(quat);
+    std::cout << "ref R = " << std::endl << ref_R << std::endl;
+
+    Eigen::Vector3d x_vec_ref = AttitudeConverter(quat).getVectorX();
+    Eigen::Vector3d y_vec_ref = AttitudeConverter(quat).getVectorY();
+    Eigen::Vector3d z_vec_ref = AttitudeConverter(quat).getVectorZ();
+
+    auto [roll, pitch, yaw] = AttitudeConverter(quat).getExtrinsicRPY();
+    printf("ext from quat: roll: %1.2f, pitch: %1.2f, yaw: %1.2f\n", roll, pitch, yaw);
+
+    Eigen::Matrix3d ref_ext_R = mrs_lib::AttitudeConverter(roll, pitch, yaw, mrs_lib::RPY_EXTRINSIC);
+    std::cout << "ref throught ext R = " << std::endl << ref_ext_R << std::endl;
+    ;
+
+    Eigen::Vector3d x_vec = AttitudeConverter(roll, pitch, yaw).getVectorX();
+    Eigen::Vector3d y_vec = AttitudeConverter(roll, pitch, yaw).getVectorY();
+    Eigen::Vector3d z_vec = AttitudeConverter(roll, pitch, yaw).getVectorZ();
+
+    if (fabs(x_vec_ref[0] - x_vec[0]) > 1e-6 || fabs(x_vec_ref[1] - x_vec[1]) > 1e-6 || fabs(x_vec_ref[2] - x_vec[2]) > 1e-6) {
+      printf("x vector's don't match\n");
+      result *= 0;
+    }
+
+    if (fabs(y_vec_ref[0] - y_vec[0]) > 1e-6 || fabs(y_vec_ref[1] - y_vec[1]) > 1e-6 || fabs(y_vec_ref[2] - y_vec[2]) > 1e-6) {
+      printf("y vector's don't match\n");
+      result *= 0;
+    }
+
+    if (fabs(z_vec_ref[0] - z_vec[0]) > 1e-6 || fabs(z_vec_ref[1] - z_vec[1]) > 1e-6 || fabs(z_vec_ref[2] - z_vec[2]) > 1e-6) {
+      printf("z vector's don't match\n");
+      result *= 0;
+    }
+
+    tie(roll, pitch, yaw) = AttitudeConverter(quat).getIntrinsicRPY();
+    printf("int from quat: roll: %1.2f, pitch: %1.2f, yaw: %1.2f\n", roll, pitch, yaw);
+
+    Eigen::Matrix3d ref_int_R = mrs_lib::AttitudeConverter(roll, pitch, yaw, mrs_lib::RPY_INTRINSIC);
+    std::cout << "ref throught int R = " << std::endl << ref_int_R << std::endl;
+    ;
+
+    x_vec = AttitudeConverter(roll, pitch, yaw, mrs_lib::RPY_INTRINSIC).getVectorX();
+    y_vec = AttitudeConverter(roll, pitch, yaw, mrs_lib::RPY_INTRINSIC).getVectorY();
+    z_vec = AttitudeConverter(roll, pitch, yaw, mrs_lib::RPY_INTRINSIC).getVectorZ();
+
+    if (fabs(x_vec_ref[0] - x_vec[0]) > 1e-6 || fabs(x_vec_ref[1] - x_vec[1]) > 1e-6 || fabs(x_vec_ref[2] - x_vec[2]) > 1e-6) {
+      printf("x vector's don't match\n");
+      result *= 0;
+    }
+
+    if (fabs(y_vec_ref[0] - y_vec[0]) > 1e-6 || fabs(y_vec_ref[1] - y_vec[1]) > 1e-6 || fabs(y_vec_ref[2] - y_vec[2]) > 1e-6) {
+      printf("y vector's don't match\n");
+      result *= 0;
+    }
+
+    if (fabs(z_vec_ref[0] - z_vec[0]) > 1e-6 || fabs(z_vec_ref[1] - z_vec[1]) > 1e-6 || fabs(z_vec_ref[2] - z_vec[2]) > 1e-6) {
+      printf("z vector's don't match\n");
+      result *= 0;
+    }
   }
 
   printf("\n");
@@ -128,89 +193,78 @@ TEST(TESTSuite, get_heading_exception) {
 
 //}
 
-/* TEST(TESTSuite, set_heading_by_yaw) //{ */
+/* TEST(TESTSuite, set_heading) //{ */
 
-TEST(TESTSuite, set_heading_by_yaw) {
+TEST(TESTSuite, set_heading) {
 
   int result = 1;
 
-  // | ----------------- test setHeadingByYaw() ----------------- |
+  // | ----------------- test setHeading() ----------------- |
 
   {
-    printf("Testing setHeadingByYaw():\n");
+    printf("Testing setHeading():\n");
 
-    double roll  = 0.2;
-    double pitch = 0.35;
-    double yaw   = 0.42;
+    for (int i = 0; i < 1000; i++) {
 
-    tf2::Quaternion old_attitude = AttitudeConverter(roll, pitch, yaw);
+      double roll  = randd(-3.14, 3.14);
+      double pitch = randd(-3.14, 3.14);
+      double yaw   = randd(-3.14, 3.14);
 
-    double          old_heading = AttitudeConverter(old_attitude).getHeading();
-    Eigen::Vector3d old_z_vec   = AttitudeConverter(old_attitude).getVectorZ();
+      tf2::Quaternion old_attitude = AttitudeConverter(roll, pitch, yaw);
 
-    printf("original input: heading: %1.2f, yaw: %1.2f, z vec: [%1.2f, %1.2f, %1.2f]\n", old_heading, yaw, old_z_vec[0], old_z_vec[1], old_z_vec[2]);
+      double old_heading;
 
-    {
-      double new_desired_heading = -1.58;
-      printf("setting heading to %1.2f:\n", new_desired_heading);
-      printf("this is the propper way how to update the heading part of an existing orientation without chaning the Z axis direction\n");
-
-      tf2::Quaternion new_attitude = AttitudeConverter(old_attitude).setHeadingByYaw(new_desired_heading);
-      double          new_heading  = AttitudeConverter(new_attitude).getHeading();
-
-      Eigen::Vector3d new_z_vec = AttitudeConverter(new_attitude).getVectorZ();
-      double          new_yaw   = AttitudeConverter(new_attitude).getYaw();
-
-      printf("results:        heading: %1.2f, yaw: %1.2f, z vec: [%1.2f, %1.2f, %1.2f]\n", new_heading, new_yaw, new_z_vec[0], new_z_vec[1], new_z_vec[2]);
-
-      if (fabs(new_z_vec[0] - old_z_vec[0]) > 1e-6 || fabs(new_z_vec[1] - old_z_vec[1]) > 1e-6 || fabs(new_z_vec[2] - old_z_vec[2]) > 1e-6) {
-        result *= 0;
+      try {
+        old_heading = AttitudeConverter(old_attitude).getHeading();
       }
-    }
+      catch (const mrs_lib::AttitudeConverter::GetHeadingException& e) {
+        continue;
+      }
 
-    {
-      double new_desired_yaw = -1.57;
-      printf("setting yaw to %1.2f:\n", new_desired_yaw);
-      printf("this should not work, setting yaw directly will result in change of the Z axis direction\n");
+      Eigen::Vector3d old_z_vec = AttitudeConverter(old_attitude).getVectorZ();
 
-      tf2::Quaternion new_attitude = AttitudeConverter(old_attitude).setYaw(new_desired_yaw);
-      double          new_heading  = AttitudeConverter(new_attitude).getHeading();
+      printf("original input: heading: %1.2f, yaw: %1.2f, z vec: [%1.2f, %1.2f, %1.2f]\n", old_heading, yaw, old_z_vec[0], old_z_vec[1], old_z_vec[2]);
 
-      Eigen::Vector3d new_z_vec = AttitudeConverter(new_attitude).getVectorZ();
-      double          new_yaw   = AttitudeConverter(new_attitude).getYaw();
+      {
+        double new_desired_heading = randd(-3.14, 3.14);
+        printf("setting heading to %1.2f:\n", new_desired_heading);
 
-      printf("results:        heading: %1.2f, yaw: %1.2f, z vec: [%1.2f, %1.2f, %1.2f]\n", new_heading, new_yaw, new_z_vec[0], new_z_vec[1], new_z_vec[2]);
+        tf2::Quaternion new_attitude;
 
-      if (fabs(new_z_vec[0] - old_z_vec[0]) < 1e-6 && fabs(new_z_vec[1] - old_z_vec[1]) < 1e-6 && fabs(new_z_vec[2] - old_z_vec[2]) < 1e-6) {
-        result *= 0;
+        try {
+          new_attitude = AttitudeConverter(old_attitude).setHeading(new_desired_heading);
+        }
+        catch (const mrs_lib::AttitudeConverter::SetHeadingException& e) {
+          continue;
+        }
+
+        double new_heading;
+
+        try {
+          new_heading = AttitudeConverter(new_attitude).getHeading();
+        }
+        catch (const mrs_lib::AttitudeConverter::GetHeadingException& e) {
+          continue;
+        }
+
+        Eigen::Vector3d new_z_vec = AttitudeConverter(new_attitude).getVectorZ();
+
+        printf("results: heading: %1.2f, z vec: [%1.2f, %1.2f, %1.2f]\n", new_heading, new_z_vec[0], new_z_vec[1], new_z_vec[2]);
+
+        if (fabs(new_heading - new_desired_heading) > 1e-3) {
+          printf("new heading does not match!\n");
+          result *= 0;
+        }
+
+        if (fabs(new_z_vec[0] - old_z_vec[0]) > 1e-3 || fabs(new_z_vec[1] - old_z_vec[1]) > 1e-3 || fabs(new_z_vec[2] - old_z_vec[2]) > 1e-3) {
+          printf("new z vec does not match!");
+          result *= 0;
+        }
       }
     }
 
     printf("\n");
   }
-
-  EXPECT_TRUE(result);
-}
-
-//}
-
-/* TEST(TESTSuite, get_heading_by_yaw_exception) //{ */
-
-TEST(TESTSuite, get_heading_by_yaw_exception) {
-
-  int result = 0;
-
-  printf("Testing the setHeading() exception:\n");
-
-  try {
-    [[maybe_unused]] tf2::Quaternion attitude = AttitudeConverter(0, M_PI_2, 0).setHeadingByYaw(1.0);
-  }
-  catch (const mrs_lib::AttitudeConverter::SetHeadingByYawException& e) {
-    printf("exception correctly caught: %s\n", e.what());
-    result = 1;
-  }
-
-  printf("\n");
 
   EXPECT_TRUE(result);
 }
@@ -233,7 +287,7 @@ TEST(TESTSuite, get_heading_rate) {
   Eigen::Vector3d        w_eig = Vector3Converter(w);
 
   double dt  = 0.1;  // [s]
-  int    len = 2 * M_PI / dt;
+  int    len = int(round(2 * M_PI / dt));
 
   double heading = AttitudeConverter(R).getHeading();
 
@@ -357,6 +411,8 @@ TEST(TESTSuite, input_nan_checks) {
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
 
   testing::InitGoogleTest(&argc, argv);
+
+  srand(static_cast<unsigned int>(std::chrono::system_clock::now().time_since_epoch().count()));
 
   return RUN_ALL_TESTS();
 }

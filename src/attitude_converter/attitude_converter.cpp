@@ -10,7 +10,8 @@ namespace mrs_lib
 
 /* class EulerAttitude //{ */
 
-EulerAttitude::EulerAttitude(const double& roll, const double& pitch, const double& yaw) : roll_(roll), pitch_(pitch), yaw_(yaw){}
+EulerAttitude::EulerAttitude(const double& roll, const double& pitch, const double& yaw) : roll_(roll), pitch_(pitch), yaw_(yaw) {
+}
 
 double EulerAttitude::roll(void) const {
   return roll_;
@@ -77,12 +78,24 @@ Vector3Converter::operator geometry_msgs::Vector3() const {
 AttitudeConverter::AttitudeConverter(const double& roll, const double& pitch, const double& yaw, const RPY_convention_t& format) {
 
   switch (format) {
+
     case RPY_EXTRINSIC: {
       tf2_quaternion_.setRPY(roll, pitch, yaw);
       break;
     }
+
     case RPY_INTRINSIC: {
-      tf2_quaternion_.setRPY(yaw, pitch, roll);
+
+      Eigen::Matrix3d Y, P, R;
+
+      Y << cos(yaw), -sin(yaw), 0, sin(yaw), cos(yaw), 0, 0, 0, 1;
+
+      P << cos(pitch), 0, sin(pitch), 0, 1, 0, -sin(pitch), 0, cos(pitch);
+
+      R << 1, 0, 0, 0, cos(roll), -sin(roll), 0, sin(roll), cos(roll);
+
+      tf2_quaternion_ = AttitudeConverter(R * P * Y);
+
       break;
     }
   }
@@ -91,6 +104,7 @@ AttitudeConverter::AttitudeConverter(const double& roll, const double& pitch, co
 }
 
 AttitudeConverter::AttitudeConverter(const tf::Quaternion quaternion) {
+
   tf2_quaternion_.setX(quaternion.x());
   tf2_quaternion_.setY(quaternion.y());
   tf2_quaternion_.setZ(quaternion.z());
@@ -357,53 +371,25 @@ Vector3Converter AttitudeConverter::getVectorZ(void) {
 
 std::tuple<double, double, double> AttitudeConverter::getExtrinsicRPY(void) {
 
-  auto [roll, pitch, yaw] = *this;
+  Eigen::Matrix3d rot = AttitudeConverter(*this);
 
-  return std::tuple(roll, pitch, yaw);
+  Eigen::Vector3d eulers = rot.eulerAngles(2, 1, 0);
+
+  return std::tuple(eulers[2], eulers[1], eulers[0]);
 }
 
 std::tuple<double, double, double> AttitudeConverter::getIntrinsicRPY(void) {
 
-  auto [roll_e, pitch_e, yaw_e] = *this;
+  Eigen::Matrix3d rot = AttitudeConverter(*this);
 
-  return std::tuple(yaw_e, pitch_e, roll_e);
+  Eigen::Vector3d eulers = rot.eulerAngles(0, 1, 2);
+
+  return std::tuple(eulers[0], eulers[1], eulers[2]);
 }
 
 //}
 
 /* setters //{ */
-
-AttitudeConverter AttitudeConverter::setHeadingByYaw(const double& heading) {
-
-  // get the X and Z unit vector after the original rotation
-  Eigen::Vector3d b1 = getVectorX();
-  Eigen::Vector3d b3 = getVectorZ();
-
-  // check for singularity: z component of the thrust vector is 0
-  if (fabs(b3[2]) < 1e-3) {
-    throw SetHeadingByYawException();
-  }
-
-  // get the desired heading as a vector in 3D
-  Eigen::Vector3d h(cos(heading), sin(heading), 0);
-
-  // cast down the heading vector to the plane orthogonal to b3 (the thrust vector)
-  Eigen::Vector3d heading_vec_sklop(h[0], h[1], (-b3[0] * h[0] - b3[1] * h[1]) / b3[2]);
-
-  // get the relative angle between the projected heading and b1
-  double yaw_diff = mrs_lib::geometry::angleBetween(b1, heading_vec_sklop);
-
-  // get the rotation around b3 about yaw_diff
-  Eigen::Matrix3d rotator = Eigen::AngleAxisd(-yaw_diff, b3).toRotationMatrix();
-
-  // get the original rotation in the matrix form
-  Eigen::Matrix3d original_attitude = *this;
-
-  // concatenate the transformations
-  Eigen::Matrix3d new_attitude = rotator * original_attitude;
-
-  return AttitudeConverter(new_attitude);
-}
 
 AttitudeConverter AttitudeConverter::setYaw(const double& new_yaw) {
 
@@ -427,15 +413,35 @@ AttitudeConverter AttitudeConverter::setHeading(const double& heading) {
   // get the desired heading as a vector in 3D
   Eigen::Vector3d h(cos(heading), sin(heading), 0);
 
-  Eigen::Vector3d b2_new = b3.cross(h);
-  b2_new.normalize();
-
-  Eigen::Vector3d b1_new = b2_new.cross(b3);
-
   Eigen::Matrix3d new_R;
-  new_R.col(0) = b1_new;
-  new_R.col(1) = b2_new;
+
   new_R.col(2) = b3;
+
+  // construct the oblique projection
+  Eigen::Matrix3d projector_body_z_compl = (Eigen::Matrix3d::Identity(3, 3) - b3 * b3.transpose());
+
+  // create a basis of the body-z complement subspace
+  Eigen::MatrixXd A = Eigen::MatrixXd(3, 2);
+  A.col(0)          = projector_body_z_compl.col(0);
+  A.col(1)          = projector_body_z_compl.col(1);
+
+  // create the basis of the projection null-space complement
+  Eigen::MatrixXd B = Eigen::MatrixXd(3, 2);
+  B.col(0)          = Eigen::Vector3d(1, 0, 0);
+  B.col(1)          = Eigen::Vector3d(0, 1, 0);
+
+  // oblique projector to <range_basis>
+  Eigen::MatrixXd Bt_A               = B.transpose() * A;
+  Eigen::MatrixXd Bt_A_pseudoinverse = ((Bt_A.transpose() * Bt_A).inverse()) * Bt_A.transpose();
+  Eigen::MatrixXd oblique_projector  = A * Bt_A_pseudoinverse * B.transpose();
+
+  new_R.col(0) = oblique_projector * h;
+  new_R.col(0).normalize();
+
+  // | ------------------------- body y ------------------------- |
+
+  new_R.col(1) = new_R.col(2).cross(new_R.col(0));
+  new_R.col(1).normalize();
 
   return AttitudeConverter(new_R);
 }
@@ -443,6 +449,8 @@ AttitudeConverter AttitudeConverter::setHeading(const double& heading) {
 //}
 
 // | ------------------------ internal ------------------------ |
+
+/* calculateRPY() //{ */
 
 void AttitudeConverter::calculateRPY(void) {
 
@@ -452,6 +460,10 @@ void AttitudeConverter::calculateRPY(void) {
   }
 }
 
+//}
+
+/* validateOrientation() //{ */
+
 void AttitudeConverter::validateOrientation(void) {
 
   if (!std::isfinite(tf2_quaternion_.x()) || !std::isfinite(tf2_quaternion_.y()) || !std::isfinite(tf2_quaternion_.z()) ||
@@ -459,5 +471,7 @@ void AttitudeConverter::validateOrientation(void) {
     throw InvalidAttitudeException();
   }
 }
+
+//}
 
 }  // namespace mrs_lib

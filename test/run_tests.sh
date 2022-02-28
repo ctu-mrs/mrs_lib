@@ -6,7 +6,7 @@ trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 trap 'echo "$0: \"${last_command}\" command failed with exit code $?"' ERR
 
 PACKAGE="mrs_lib"
-VERBOSE=0
+VERBOSE=1
 
 [ "$VERBOSE" = "0" ] && TEXT_OUTPUT=""
 [ "$VERBOSE" = "1" ] && TEXT_OUTPUT="-t"
@@ -19,12 +19,8 @@ catkin build $PACKAGE --catkin-make-args tests
 TEST_RESULT_PATH=$(realpath /tmp/$RANDOM)
 mkdir -p $TEST_RESULT_PATH
 
-export ROS_MASTER_URI=http://localhost:11311
-
-roscore &
-
 # run the test
-rostest --reuse-master $PACKAGE mrs_lib.test $TEXT_OUTPUT --results-filename=$PACKAGE.test --results-base-dir="$TEST_RESULT_PATH"
+rostest $PACKAGE mrs_lib.test $TEXT_OUTPUT --results-filename=$PACKAGE.test --results-base-dir="$TEST_RESULT_PATH"
 
 # evaluate the test results
 echo test result path is $TEST_RESULT_PATH

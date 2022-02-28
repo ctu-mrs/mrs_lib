@@ -49,7 +49,7 @@ namespace tf2
     cloud_out.header.frame_id = transform.header.frame_id;
   }
 
-}
+}  // namespace tf2
 
 namespace mrs_lib
 {
@@ -76,6 +76,9 @@ namespace mrs_lib
     TransformStamped inverse(void) const;
     geometry_msgs::TransformStamped getTransform(void) const;
     Eigen::Affine3d getTransformEigen(void) const;
+    Eigen::Vector3d getTranslationEigen(void) const;
+    Eigen::Quaterniond getRotationEigen(void) const;
+    std::pair<Eigen::Vector3d,Eigen::Quaterniond> getTransformEigenDecomposed(void) const;
 
   private:
     geometry_msgs::TransformStamped transform_stamped_;
@@ -351,6 +354,7 @@ namespace mrs_lib
     std::optional<mrs_msgs::ReferenceStamped> transformImpl(const mrs_lib::TransformStamped& tf, const mrs_msgs::ReferenceStamped& what);
     std::optional<geometry_msgs::PoseStamped> transformImpl(const mrs_lib::TransformStamped& tf, const geometry_msgs::PoseStamped& what);
     std::optional<geometry_msgs::Point> transformImpl(const mrs_lib::TransformStamped& tf, const geometry_msgs::Point& what);
+    std::optional<Eigen::Vector3d> transformImpl(const mrs_lib::TransformStamped& tf, const Eigen::Vector3d& what);
     /* std::optional<Eigen::MatrixXd> transformImpl(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what); */
     /* std::optional<Eigen::MatrixXd> transformMat2(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what); */
     /* std::optional<Eigen::MatrixXd> transformMat3(const mrs_lib::TransformStamped& tf, const Eigen::MatrixXd& what); */
