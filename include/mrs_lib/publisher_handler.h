@@ -1,0 +1,143 @@
+/**  \file
+     \brief Defines PublisherHandler and related convenience classes for upgrading the ROS publisher
+     \author Tomas Baca - tomas.baca@fel.cvut.cz
+ */
+#ifndef PUBLISHER_HANDLER_H
+#define PUBLISHER_HANDLER_H
+
+#include <ros/ros.h>
+#include <ros/package.h>
+
+#include <string>
+#include <mutex>
+
+namespace mrs_lib
+{
+
+/* class PublisherHandler_impl //{ */
+
+/**
+ * @brief implementation of the publisher handler
+ */
+template <class TopicType>
+class PublisherHandler_impl {
+
+public:
+  /**
+   * @brief default constructor
+   */
+  PublisherHandler_impl(void);
+
+  /**
+   * @brief default destructor
+   */
+  ~PublisherHandler_impl(void){};
+
+  /**
+   * @brief constructor
+   *
+   * @param nh ROS node handler
+   * @param address topic address
+   * @param buffer_size buffer size
+   * @param latch latching
+   */
+  PublisherHandler_impl(ros::NodeHandle& nh, const std::string& address, const unsigned int &buffer_size = 1, const bool &latch = false);
+
+  /**
+   * @brief publish message
+   *
+   * @param msg data
+   *
+   */
+  void publish(TopicType& msg);
+
+private:
+  ros::Publisher    publisher_;
+  std::mutex        mutex_publisher_;
+  std::atomic<bool> publisher_initialized_;
+
+  std::string _address_;
+};
+
+//}
+
+/* class PublisherHandler //{ */
+
+/**
+ * @brief user wrapper of the publisher handler implementation
+ */
+template <class TopicType>
+class PublisherHandler {
+
+public:
+  /**
+   * @brief generic constructor
+   */
+  PublisherHandler(void){};
+
+  /**
+   * @brief generic destructor
+   */
+  ~PublisherHandler(void){};
+
+  /**
+   * @brief operator=
+   *
+   * @param other
+   *
+   * @return
+   */
+  PublisherHandler& operator=(const PublisherHandler& other);
+
+  /**
+   * @brief copy constructor
+   *
+   * @param other
+   */
+  PublisherHandler(const PublisherHandler& other);
+
+  /**
+   * @brief constructor
+   *
+   * @param nh ROS node handler
+   * @param address topic address
+   */
+  PublisherHandler(ros::NodeHandle& nh, const std::string& address);
+
+  /**
+   * @brief constructor
+   *
+   * @param nh ROS node handler
+   * @param address topic address
+   * @param buffer_size buffer size
+   * @param latch latching
+   */
+  PublisherHandler(ros::NodeHandle& nh, const std::string& address, const unsigned int &buffer_size = 1, const bool &latch = false);
+
+  /**
+   * @brief initializer
+   *
+   * @param nh ROS node handler
+   * @param address topic address
+   */
+  void initialize(ros::NodeHandle& nh, const std::string& address);
+
+  /**
+   * @brief publish message
+   *
+   * @param msg data
+   *
+   */
+  void publish(TopicType& msg);
+
+private:
+  std::shared_ptr<PublisherHandler_impl<TopicType>> impl_;
+};
+
+//}
+
+}  // namespace mrs_lib
+
+#include <impl/publisher_handler.hpp>
+
+#endif  // PUBLISHER_HANDLER_H
