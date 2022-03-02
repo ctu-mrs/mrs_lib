@@ -10,6 +10,8 @@
 
 #include <cmath>
 #include <Eigen/Dense>
+#include <geometry_msgs/Point.h>
+#include <geometry_msgs/Quaternion.h>
 
 namespace mrs_lib
 {
@@ -23,6 +25,9 @@ namespace mrs_lib
     using pt3_t = vec_t<3>;
     using vec3_t = vec_t<3>;
 
+    using quat_t = Eigen::Quaterniond;
+    using anax_t = Eigen::AngleAxisd;
+
     template <int dims>
     vec_t<dims + 1> toHomogenous(const vec_t<dims>& vec)
     {
@@ -33,6 +38,27 @@ namespace mrs_lib
     // | ----------------- Angle-related functions ---------------- |
 
     /* angle-related functions //{ */
+
+    /* headingFromRot() //{ */
+
+    /*!
+     * \brief Returns the heading angle from the rotation.
+     *
+     * Heading is defined as the angle of a [1,0,0] vector rotated by the rotation and projected to the XY plane from the X axis.
+     *
+     * \param rot the rotation to extract the heading angle from.
+     *
+     * \returns the heading angle.
+     *
+     */
+    template <typename T>
+    double headingFromRot(const T& rot)
+    {
+      const vec3_t rot_vec = rot*vec3_t::UnitX();
+      return std::atan2(rot_vec.y(), rot_vec.x());
+    }
+
+    //}
 
     /* angleBetween() //{ */
 
@@ -81,7 +107,7 @@ namespace mrs_lib
      * \returns    rotation from \p a to \p b.
      *
      */
-    Eigen::AngleAxisd angleaxisBetween(const vec3_t& a, const vec3_t& b, const double tolerance = 1e-9);
+    anax_t angleaxisBetween(const vec3_t& a, const vec3_t& b, const double tolerance = 1e-9);
 
     //}
 
@@ -98,7 +124,7 @@ namespace mrs_lib
      * \returns    rotation from \p a to \p b.
      *
      */
-    Eigen::Quaterniond quaternionBetween(const vec3_t& a, const vec3_t& b, const double tolerance = 1e-9);
+    quat_t quaternionBetween(const vec3_t& a, const vec3_t& b, const double tolerance = 1e-9);
 
     //}
 
@@ -171,7 +197,7 @@ namespace mrs_lib
      *
      * @return quaternion
      */
-    Eigen::Quaterniond quaternionFromEuler(double x, double y, double z);
+    quat_t quaternionFromEuler(double x, double y, double z);
 
     /**
      * @brief create a quaternion from Euler angles provided as a vector
@@ -180,9 +206,20 @@ namespace mrs_lib
      *
      * @return quaternion
      */
-    Eigen::Quaterniond quaternionFromEuler(Eigen::Vector3d euler);
+    quat_t quaternionFromEuler(const Eigen::Vector3d& euler);
 
     //}
+
+    /**
+     * @brief create a quaternion from heading
+     *
+     * Heading is defined as the angle of a [1,0,0] vector rotated by the rotation and projected to the XY plane from the X axis.
+     *
+     * @param heading the heading angle.
+     *
+     * @return the quaternion corresponding to the heading rotation.
+     */
+    quat_t quaternionFromHeading(const double heading);
 
     //}
 

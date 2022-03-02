@@ -45,7 +45,7 @@ namespace mrs_lib
 
     /* angleaxisBetween() //{ */
 
-    Eigen::AngleAxisd angleaxisBetween(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2, const double tolerance)
+    anax_t angleaxisBetween(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2, const double tolerance)
     {
       // Find the rotation matrix to rotate vec1 to point in the direction of vec2
       const Eigen::Vector3d a = vec1.normalized();
@@ -54,13 +54,13 @@ namespace mrs_lib
       const double sin_ab = v.norm();
       const double cos_ab = a.dot(b);
       const double angle = std::atan2(sin_ab, cos_ab);
-      Eigen::AngleAxisd ret;
+      anax_t ret;
       if (abs(angle) < tolerance)
-        ret = Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitX());
+        ret = anax_t(0.0, Eigen::Vector3d::UnitX());
       else if (abs(abs(angle) - M_PI) < tolerance)
-        ret = Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitX());
+        ret = anax_t(M_PI, Eigen::Vector3d::UnitX());
       else
-        ret = Eigen::AngleAxisd(angle, v.normalized());
+        ret = anax_t(angle, v.normalized());
       return ret;
     }
 
@@ -68,12 +68,32 @@ namespace mrs_lib
 
     /* quaternionBetween() //{ */
 
-    Eigen::Quaterniond quaternionBetween(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2, const double tolerance)
+    quat_t quaternionBetween(const Eigen::Vector3d& vec1, const Eigen::Vector3d& vec2, const double tolerance)
     {
       const auto rot = angleaxisBetween(vec1, vec2, tolerance);
-      const Eigen::Quaterniond ret(rot);
+      const quat_t ret(rot);
       return ret;
     }
+
+    /* quaternionFromEuler() overloads //{ */
+    quat_t quaternionFromEuler(double x, double y, double z)
+    {
+      return anax_t(x, vec3_t::UnitX()) * anax_t(y, vec3_t::UnitY()) * anax_t(z, vec3_t::UnitZ());
+    }
+
+    quat_t quaternionFromEuler(const Eigen::Vector3d& euler)
+    {
+      return anax_t(euler.x(), vec3_t::UnitX()) * anax_t(euler.y(), vec3_t::UnitY())
+             * anax_t(euler.z(), vec3_t::UnitZ());
+    }
+    //}
+
+    /* quaternionFromHeading //{ */
+    quat_t quaternionFromHeading(const double heading)
+    {
+      return quat_t(anax_t(heading, Eigen::Vector3d::UnitZ()));
+    }
+    //}
 
     //}
 
@@ -159,20 +179,6 @@ namespace mrs_lib
       return (a - b).norm();
     }
 
-    //}
-
-    /* quaternionFromEuler() overloads //{ */
-    Eigen::Quaterniond quaternionFromEuler(double x, double y, double z)
-    {
-      return Eigen::AngleAxisd(x, Eigen::Vector3d::UnitX()) * Eigen::AngleAxisd(y, Eigen::Vector3d::UnitY()) * Eigen::AngleAxisd(z, Eigen::Vector3d::UnitZ());
-    }
-
-    Eigen::Quaterniond quaternionFromEuler(Eigen::Vector3d euler)
-    {
-
-      return Eigen::AngleAxisd(euler.x(), Eigen::Vector3d::UnitX()) * Eigen::AngleAxisd(euler.y(), Eigen::Vector3d::UnitY())
-             * Eigen::AngleAxisd(euler.z(), Eigen::Vector3d::UnitZ());
-    }
     //}
 
   }  // namespace geometry

@@ -188,7 +188,7 @@ target_link_libraries(MrsLibAttitudeConverter
 
 add_library(MrsLibTransformer src/transformer/transformer.cpp)
 target_link_libraries(MrsLibTransformer
-  MrsLibAttitudeConverter
+  MrsLibGeometry
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
@@ -404,7 +404,7 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(
     TransformerTest
     MrsLibTransformer
-    MrsLibAttitudeConverter
+    MrsLibGeometry
     ${catkin_LIBRARIES}
     )
 
