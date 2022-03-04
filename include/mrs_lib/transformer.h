@@ -88,7 +88,7 @@ namespace mrs_lib
      *
      * @param node_name the name of the node running the transformer, is used in ROS prints. If you don't care, just set it to an empty string.
      */
-    Transformer(const std::string& node_name);
+    Transformer(const ros::NodeHandle& nh, const std::string& node_name = std::string());
 
     //}
 
