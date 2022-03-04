@@ -139,7 +139,7 @@ namespace mrs_lib
      */
     void setDefaultPrefix(const std::string& prefix)
     {
-      prefix_ = prefix;
+      prefix_ = prefix + "/";
     }
 
     //}
@@ -391,7 +391,7 @@ namespace mrs_lib
 
     // user-configurable options
     std::string default_frame_id_ = "";
-    std::string prefix_ = "";
+    std::string prefix_ = ""; // if not empty, includes the forward slash
     bool quiet_ = false;
     ros::Duration lookup_timeout_ = ros::Duration(0);
     bool retry_lookup_newest_ = false;
@@ -399,6 +399,7 @@ namespace mrs_lib
     bool got_utm_zone_ = false;
     char utm_zone_[10] = {};
 
+    // returns the first namespace prefix of the frame (if any) includin the forward slash
     std::string getFramePrefix(const std::string& frame_id);
 
     template <class T>

@@ -7,8 +7,10 @@ int main(int argc, char* argv[])
   ros::NodeHandle nh("~");
   mrs_lib::Transformer tfr(nh);
 
-  const std::string from = "from";
-  const std::string to = "to";
+  const std::string from = mrs_lib::LATLON_ORIGIN;
+  const std::string to = mrs_lib::UTM_ORIGIN;
+  geometry_msgs::Point pt;
+
   ros::Rate r(10); // 10 hz
   while (ros::ok())
   {
@@ -21,7 +23,11 @@ int main(int argc, char* argv[])
       std::cout << "Was looking for transformation from \"" << from << "\" to \"" << to << "\".\n";
       std::cout << "Received transformation from \"" << mrs_lib::Transformer::frame_from(tf) << "\" to \"" << mrs_lib::Transformer::frame_to(tf) << "\":\n";
       std::cout << tf << std::endl;
+      const auto tfd_opt = tfr.transform(pt, tf);
+      std::cout << tfd_opt.value() << std::endl;
       break;
     }
   }
+
+  return 0;
 }

@@ -110,7 +110,7 @@ namespace mrs_lib
     if (from_frame == latlon_frame)
     {
       // find the transformation between the UTM frame and the non-latlon frame to fill the returned tf
-      const std::string utm_frame = getFramePrefix(from_frame) + "/utm_origin";
+      const std::string utm_frame = getFramePrefix(from_frame) + "utm_origin";
       auto tf_opt = getTransform(utm_frame, to_frame, time_stamp);
       if (!tf_opt.has_value())
         return std::nullopt;
@@ -121,7 +121,7 @@ namespace mrs_lib
     else if (to_frame == latlon_frame)
     {
       // find the transformation between the UTM frame and the non-latlon frame to fill the returned tf
-      const std::string utm_frame = getFramePrefix(to_frame) + "/utm_origin";
+      const std::string utm_frame = getFramePrefix(to_frame) + "utm_origin";
       auto tf_opt = getTransform(from_frame, utm_frame, time_stamp);
       if (!tf_opt.has_value())
         return std::nullopt;
@@ -194,7 +194,7 @@ namespace mrs_lib
     if (from_frame == latlon_frame)
     {
       // find the transformation between the UTM frame and the non-latlon frame to fill the returned tf
-      const std::string utm_frame = getFramePrefix(from_frame) + "/utm_origin";
+      const std::string utm_frame = getFramePrefix(from_frame) + "utm_origin";
       auto tf_opt = getTransform(utm_frame, from_stamp, to_frame, to_stamp, fixed_frame);
       if (!tf_opt.has_value())
         return std::nullopt;
@@ -205,7 +205,7 @@ namespace mrs_lib
     else if (to_frame == latlon_frame)
     {
       // find the transformation between the UTM frame and the non-latlon frame to fill the returned tf
-      const std::string utm_frame = getFramePrefix(to_frame) + "/utm_origin";
+      const std::string utm_frame = getFramePrefix(to_frame) + "utm_origin";
       auto tf_opt = getTransform(from_frame, from_stamp, utm_frame, to_stamp, fixed_frame);
       if (!tf_opt.has_value())
         return std::nullopt;
@@ -264,7 +264,7 @@ namespace mrs_lib
 
     // if there is a default prefix set and the frame does not start with it, prefix it
     if (!prefix_.empty() && frame_id.substr(0, prefix_.length()) != prefix_)
-      return prefix_ + "/" + frame_id;
+      return prefix_ + frame_id;
 
     return frame_id;
   }
@@ -304,7 +304,7 @@ namespace mrs_lib
   geometry_msgs::PoseStamped Transformer::LLtoUTM(const geometry_msgs::PoseStamped& what, const std::string& prefix)
   {
     geometry_msgs::PoseStamped ret;
-    ret.header.frame_id = prefix + "/utm_origin";
+    ret.header.frame_id = prefix + "utm_origin";
     ret.header.stamp = what.header.stamp;
     ret.pose = LLtoUTM(what.pose, prefix);
     return ret;
@@ -347,7 +347,7 @@ namespace mrs_lib
       return std::nullopt;
 
     geometry_msgs::PoseStamped ret;
-    ret.header.frame_id = prefix + "/utm_origin";
+    ret.header.frame_id = prefix + "utm_origin";
     ret.header.stamp = what.header.stamp;
     ret.pose = opt.value();
     return ret;
@@ -357,7 +357,11 @@ namespace mrs_lib
   /* getFramePrefix() method //{ */
   std::string Transformer::getFramePrefix(const std::string& frame_id)
   {
-    return frame_id.substr(0, frame_id.find_first_of('/'));
+    const auto firstof = frame_id.find_first_of('/');
+    if (firstof == std::string::npos)
+      return "";
+    else
+      return frame_id.substr(0, firstof+1);
   }
   //}
 
