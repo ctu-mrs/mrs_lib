@@ -20,6 +20,11 @@ namespace mrs_lib
       return {what.x, what.y, what.z};
     }
 
+    Eigen::Vector3d toEigen(const geometry_msgs::Vector3& what)
+    {
+      return {what.x, what.y, what.z};
+    }
+
     geometry_msgs::Quaternion fromEigen(const Eigen::Quaterniond& what)
     {
       geometry_msgs::Quaternion q;

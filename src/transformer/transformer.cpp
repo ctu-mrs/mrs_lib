@@ -24,6 +24,11 @@ namespace mrs_lib
   {
   }
 
+  Transformer::Transformer(const std::string& node_name)
+    : initialized_(true), node_name_(node_name), tf_listener_ptr_(std::make_unique<tf2_ros::TransformListener>(tf_buffer_))
+  {
+  }
+
   Transformer::Transformer(const ros::NodeHandle& nh, const std::string& node_name)
     : initialized_(true), node_name_(node_name), tf_listener_ptr_(std::make_unique<tf2_ros::TransformListener>(tf_buffer_, nh))
   {
@@ -71,7 +76,8 @@ namespace mrs_lib
   std::optional<Eigen::Vector3d> Transformer::transformImpl(const geometry_msgs::TransformStamped& tf, const Eigen::Vector3d& what)
   {
     // just transform it as you would a geometry_msgs::Point
-    const auto opt = transformImpl(tf, geometry::fromEigen(what));
+    const geometry_msgs::Point as_pt = geometry::fromEigen(what);
+    const auto opt = transformImpl(tf, as_pt);
     if (opt.has_value())
       return geometry::toEigen(opt.value());
     else
@@ -129,7 +135,7 @@ namespace mrs_lib
     try
     {
       // try looking up and returning the transform
-      return tf_buffer_.lookupTransform(from_frame, to_frame, time_stamp, lookup_timeout_);
+      return tf_buffer_.lookupTransform(to_frame, from_frame, time_stamp, lookup_timeout_);
     }
     catch (tf2::TransformException& e)
     {
@@ -141,7 +147,7 @@ namespace mrs_lib
     {
       try
       {
-        return tf_buffer_.lookupTransform(from_frame, to_frame, ros::Time(0), lookup_timeout_);
+        return tf_buffer_.lookupTransform(to_frame, from_frame, ros::Time(0), lookup_timeout_);
       }
       catch (tf2::TransformException& e)
       {
@@ -213,7 +219,7 @@ namespace mrs_lib
     try
     {
       // try looking up and returning the transform
-      return tf_buffer_.lookupTransform(from_frame, from_stamp, to_frame, to_stamp, fixed_frame, lookup_timeout_);
+      return tf_buffer_.lookupTransform(to_frame, to_stamp, from_frame, from_stamp, fixed_frame, lookup_timeout_);
     }
     catch (tf2::TransformException& e)
     {
@@ -225,7 +231,7 @@ namespace mrs_lib
     {
       try
       {
-        return tf_buffer_.lookupTransform(from_frame, to_frame, ros::Time(0), lookup_timeout_);
+        return tf_buffer_.lookupTransform(to_frame, from_frame, ros::Time(0), lookup_timeout_);
       }
       catch (tf2::TransformException& e)
       {
@@ -277,19 +283,14 @@ namespace mrs_lib
   //}
 
   /* LLtoUTM() method //{ */
-  Eigen::Vector3d Transformer::LLtoUTM(const Eigen::Vector3d& what, [[maybe_unused]] const std::string& prefix)
+  geometry_msgs::Point Transformer::LLtoUTM(const geometry_msgs::Point& what, [[maybe_unused]] const std::string& prefix)
   {
     // convert LAT-LON to UTM
-    Eigen::Vector3d utm;
-    mrs_lib::UTM(what.x(), what.y(), &(utm.x()), &(utm.y()));
+    geometry_msgs::Point utm;
+    mrs_lib::UTM(what.x, what.y, &utm.x, &utm.y);
     // copy the height from the input
-    utm.z() = what.z();
+    utm.z = what.z;
     return utm;
-  }
-
-  geometry_msgs::Point Transformer::LLtoUTM(const geometry_msgs::Point& what, const std::string& prefix)
-  {
-    return geometry::fromEigen(LLtoUTM(geometry::toEigen(what), prefix));
   }
 
   geometry_msgs::Pose Transformer::LLtoUTM(const geometry_msgs::Pose& what, const std::string& prefix)
@@ -311,7 +312,7 @@ namespace mrs_lib
   //}
 
   /* UTMtoLL() method //{ */
-  std::optional<Eigen::Vector3d> Transformer::UTMtoLL(const Eigen::Vector3d& what, [[maybe_unused]] const std::string& prefix)
+  std::optional<geometry_msgs::Point> Transformer::UTMtoLL(const geometry_msgs::Point& what, [[maybe_unused]] const std::string& prefix)
   {
     // if no UTM zone was specified by the user, we don't know which one to use...
     if (!got_utm_zone_)
@@ -321,19 +322,10 @@ namespace mrs_lib
     }
   
     // now apply the nonlinear transformation from UTM to LAT-LON
-    Eigen::Vector3d latlon;
-    mrs_lib::UTMtoLL(what.y(), what.x(), utm_zone_, latlon.x(), latlon.y());
-    latlon.z() = what.z();
+    geometry_msgs::Point latlon;
+    mrs_lib::UTMtoLL(what.y, what.x, utm_zone_, latlon.x, latlon.y);
+    latlon.z = what.z;
     return latlon;
-  }
-
-  std::optional<geometry_msgs::Point> Transformer::UTMtoLL(const geometry_msgs::Point& what, const std::string& prefix)
-  {
-    const auto opt = UTMtoLL(geometry::toEigen(what), prefix);
-    if (!opt.has_value())
-      return std::nullopt;
-
-    return geometry::fromEigen(opt.value());
   }
 
   std::optional<geometry_msgs::Pose> Transformer::UTMtoLL(const geometry_msgs::Pose& what, const std::string& prefix)
