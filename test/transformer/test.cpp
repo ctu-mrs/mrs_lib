@@ -29,30 +29,30 @@ void publish_transforms(const ros::Time& t = ros::Time::now())
   geometry_msgs::TransformStamped tf;
 
   tf = tf2::eigenToTransform(local2local);
-  tf.header.frame_id = "uav3/local_origin";
+  tf.child_frame_id = "uav3/local_origin";
+  tf.header.frame_id = "uav66/local_origin";
   tf.header.stamp = t;
-  tf.child_frame_id = "uav66/local_origin";
   bc->sendTransform(tf);
   ros::spinOnce();
 
   tf = tf2::eigenToTransform(local2fcu);
-  tf.header.frame_id = "uav66/local_origin";
+  tf.child_frame_id = "uav66/local_origin";
+  tf.header.frame_id = "uav66/fcu";
   tf.header.stamp = t;
-  tf.child_frame_id = "uav66/fcu";
   bc->sendTransform(tf);
   ros::spinOnce();
 
-  tf = tf2::eigenToTransform(local2utm);
+  tf = tf2::eigenToTransform(local2utm.inverse());
+  tf.child_frame_id = "uav66/utm_origin";
   tf.header.frame_id = "uav66/local_origin";
   tf.header.stamp = t;
-  tf.child_frame_id = "uav66/utm_origin";
   bc->sendTransform(tf);
   ros::spinOnce();
 
   tf = tf2::eigenToTransform(fcu2cam);
-  tf.header.frame_id = "uav66/fcu";
+  tf.child_frame_id = "uav66/fcu";
+  tf.header.frame_id = "uav66/camera";
   tf.header.stamp = t;
-  tf.child_frame_id = "uav66/camera";
   bc->sendTransform(tf);
   ros::spinOnce();
 }
@@ -159,34 +159,34 @@ TEST(TESTSuite, tf_times_test)
   tf.transform.rotation.w = 1;
   Eigen::Isometry3d common2uav1, common2uav2;
 
-  // UAV1 is at position [-1,0,0] at time t1
+  // UAV1 is at position [-1,0,2] at time t1
   tf.header.stamp = t1;
   tf.child_frame_id = from;
-  common2uav1.translation() = vec3_t(1, 0, 0);
+  common2uav1.translation() = vec3_t(-1, 0, 2);
   tf.transform.translation = e2tf(common2uav1.translation());
   bc->sendTransform(tf);
   ros::spinOnce();
 
-  // UAV2 is at position [-10,0,0] at time t1
+  // UAV2 is at position [-10,0,3] at time t1
   tf.header.stamp = t1;
   tf.child_frame_id = to;
-  common2uav2.translation() = vec3_t(10, 0, 0);
+  common2uav2.translation() = vec3_t(-10, 0, 3);
   tf.transform.translation = e2tf(common2uav2.translation());
   bc->sendTransform(tf);
   ros::spinOnce();
 
-  // UAV1 is at position [3,0,0] at time t2
+  // UAV1 is at position [3,0,2] at time t2
   tf.header.stamp = t2;
   tf.child_frame_id = from;
-  common2uav1.translation() = vec3_t(-3, 0, 0);
+  common2uav1.translation() = vec3_t(3, 0, 2);
   tf.transform.translation = e2tf(common2uav1.translation());
   bc->sendTransform(tf);
   ros::spinOnce();
 
-  // UAV2 is at position [60,0,0] at time t2
+  // UAV2 is at position [60,0,3] at time t2
   tf.header.stamp = t2;
   tf.child_frame_id = to;
-  common2uav2.translation() = vec3_t(-60, 0, 0);
+  common2uav2.translation() = vec3_t(60, 0, 3);
   tf.transform.translation = e2tf(common2uav2.translation());
   bc->sendTransform(tf);
   ros::spinOnce();
@@ -204,10 +204,10 @@ TEST(TESTSuite, tf_times_test)
     std::cout << "from: " << Transformer::frame_from(tf) << ", to: " << Transformer::frame_to(tf) << ", stamp: " << tf.header.stamp << std::endl;
     std::cout << tf << std::endl;
 
-    // the expected transformation is a translation of [-61, 0, 0]
-    if (fabs(tf.transform.translation.x - -61) > 1e-6 || fabs(tf.transform.translation.y - 0) > 1e-6 ||
-        fabs(tf.transform.translation.z - 0) > 1e-6) {
-      ROS_ERROR_STREAM_THROTTLE(1.0, "translation does not match (gt: " << local2fcu.translation().transpose() << ")");
+    // the expected transformation is a translation [-61, 0, -1]
+    const vec3_t tr = toEigen(tf.transform.translation);
+    if (fabs(tr.x() - -61) > 1e-6 || fabs(tr.y() - 0) > 1e-6 || fabs(tr.z() - -1) > 1e-6) {
+      ROS_ERROR_STREAM_THROTTLE(1.0, "translation does not match (gt: -61, 0, -1), actual: " << tr.transpose() << ")");
       result *= 0;
     }
 
@@ -216,7 +216,7 @@ TEST(TESTSuite, tf_times_test)
     const double angle_diff = etf_rot.angularDistance(quat_t::Identity());
 
     if (angle_diff > 1e-6) {
-      ROS_ERROR_STREAM_THROTTLE(1.0, "translation does not match (by angle: " << angle_diff << ")");
+      ROS_ERROR_STREAM_THROTTLE(1.0, "rotation does not match (by angle: " << angle_diff << ")");
       result *= 0;
     }
 

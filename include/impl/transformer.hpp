@@ -93,7 +93,7 @@ std::optional<T> Transformer::transformImpl(const geometry_msgs::TransformStampe
     // by default, transformation from/to LATLON is undefined, so return nullopt if it's attempted
     if (from_frame == latlon_frame_name || to_frame == latlon_frame_name)
     {
-      ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform message of this type to/from latitude/longitude coordinates!", ros::this_node::getName().c_str());
+      ROS_ERROR_STREAM_THROTTLE(1.0, "[" << node_name_ << "]: Transformer: cannot transform message of this type (" << typeid(T).name() << ") to/from latitude/longitude coordinates!");
       return std::nullopt;
     }
   }

@@ -88,6 +88,16 @@ namespace mrs_lib
      *
      * @param node_name the name of the node running the transformer, is used in ROS prints. If you don't care, just set it to an empty string.
      */
+    Transformer(const std::string& node_name);
+
+    /**
+     * @brief The main constructor that actually initializes stuff.
+     *
+     * This constructor initializes the class and the TF2 transform listener.
+     *
+     * @param nh        the node handle to be used for subscribing to the transformations.
+     * @param node_name the name of the node running the transformer, is used in ROS prints. If you don't care, just set it to an empty string.
+     */
     Transformer(const ros::NodeHandle& nh, const std::string& node_name = std::string());
 
     //}
@@ -129,7 +139,7 @@ namespace mrs_lib
      */
     void setDefaultPrefix(const std::string& prefix)
     {
-      prefix_ = prefix;
+      prefix_ = prefix + "/";
     }
 
     //}
@@ -381,7 +391,7 @@ namespace mrs_lib
 
     // user-configurable options
     std::string default_frame_id_ = "";
-    std::string prefix_ = "";
+    std::string prefix_ = ""; // if not empty, includes the forward slash
     bool quiet_ = false;
     ros::Duration lookup_timeout_ = ros::Duration(0);
     bool retry_lookup_newest_ = false;
@@ -389,6 +399,7 @@ namespace mrs_lib
     bool got_utm_zone_ = false;
     char utm_zone_[10] = {};
 
+    // returns the first namespace prefix of the frame (if any) includin the forward slash
     std::string getFramePrefix(const std::string& frame_id);
 
     template <class T>
@@ -407,22 +418,22 @@ namespace mrs_lib
     
     static constexpr const std::string& frame_from(const geometry_msgs::TransformStamped& msg)
     {
-      return msg.header.frame_id;
+      return msg.child_frame_id;
     }
     
     static constexpr std::string& frame_from(geometry_msgs::TransformStamped& msg)
     {
-      return msg.header.frame_id;
+      return msg.child_frame_id;
     }
 
     static constexpr const std::string& frame_to(const geometry_msgs::TransformStamped& msg)
     {
-      return msg.child_frame_id;
+      return msg.header.frame_id;
     }
 
     static constexpr std::string& frame_to(geometry_msgs::TransformStamped& msg)
     {
-      return msg.child_frame_id;
+      return msg.header.frame_id;
     }
 
     static geometry_msgs::TransformStamped inverse(const geometry_msgs::TransformStamped& msg)
@@ -430,7 +441,7 @@ namespace mrs_lib
       tf2::Transform tf2;
       tf2::fromMsg(msg.transform, tf2);
       tf2 = tf2.inverse();
-      return create_transform(msg.child_frame_id, msg.header.frame_id, msg.header.stamp, tf2::toMsg(tf2));
+      return create_transform(frame_to(msg), frame_from(msg), msg.header.stamp, tf2::toMsg(tf2));
     }
     //}
 
@@ -480,21 +491,19 @@ namespace mrs_lib
     //}
 
     /* methods for converting between lattitude/longitude and UTM coordinates //{ */
-    Eigen::Vector3d LLtoUTM(const Eigen::Vector3d& what, [[maybe_unused]] const std::string& prefix);
     geometry_msgs::Point LLtoUTM(const geometry_msgs::Point& what, const std::string& prefix);
     geometry_msgs::Pose LLtoUTM(const geometry_msgs::Pose& what, const std::string& prefix);
     geometry_msgs::PoseStamped LLtoUTM(const geometry_msgs::PoseStamped& what, const std::string& prefix);
     
-    std::optional<Eigen::Vector3d> UTMtoLL(const Eigen::Vector3d& what, [[maybe_unused]] const std::string& prefix);
     std::optional<geometry_msgs::Point> UTMtoLL(const geometry_msgs::Point& what, const std::string& prefix);
     std::optional<geometry_msgs::Pose> UTMtoLL(const geometry_msgs::Pose& what, const std::string& prefix);
     std::optional<geometry_msgs::PoseStamped> UTMtoLL(const geometry_msgs::PoseStamped& what, const std::string& prefix);
     
     // helper types and member for detecting whether the UTMtoLL and LLtoUTM methods are defined for a certain message
     template<typename T>
-    using UTMLL_method_chk = decltype(Transformer().UTMtoLL(std::declval<const T&>(), ""));
+    using UTMLL_method_chk = decltype(std::declval<Transformer>().UTMtoLL(std::declval<const T&>(), ""));
     template<typename T>
-    using LLUTM_method_chk = decltype(Transformer().LLtoUTM(std::declval<const T&>(), ""));
+    using LLUTM_method_chk = decltype(std::declval<Transformer>().LLtoUTM(std::declval<const T&>(), ""));
     template<typename T>
     static constexpr bool UTMLL_exists_v = std::experimental::is_detected<UTMLL_method_chk, T>::value && std::experimental::is_detected<LLUTM_method_chk, T>::value;
     //}
