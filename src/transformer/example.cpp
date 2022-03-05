@@ -1,6 +1,6 @@
 #include <mrs_lib/transformer.h>
 
-// very rudimentary
+// very rudimentary usage example, more of a test
 int main(int argc, char* argv[])
 {
   ros::init(argc, argv, "transformer_example");

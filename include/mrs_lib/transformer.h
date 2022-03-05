@@ -88,7 +88,7 @@ namespace mrs_lib
      *
      * @param node_name the name of the node running the transformer, is used in ROS prints. If you don't care, just set it to an empty string.
      */
-    Transformer(const std::string& node_name = std::string());
+    Transformer(const std::string& node_name);
 
     /**
      * @brief The main constructor that actually initializes stuff.
@@ -501,9 +501,9 @@ namespace mrs_lib
     
     // helper types and member for detecting whether the UTMtoLL and LLtoUTM methods are defined for a certain message
     template<typename T>
-    using UTMLL_method_chk = decltype(Transformer().UTMtoLL(std::declval<const T&>(), ""));
+    using UTMLL_method_chk = decltype(std::declval<Transformer>().UTMtoLL(std::declval<const T&>(), ""));
     template<typename T>
-    using LLUTM_method_chk = decltype(Transformer().LLtoUTM(std::declval<const T&>(), ""));
+    using LLUTM_method_chk = decltype(std::declval<Transformer>().LLtoUTM(std::declval<const T&>(), ""));
     template<typename T>
     static constexpr bool UTMLL_exists_v = std::experimental::is_detected<UTMLL_method_chk, T>::value && std::experimental::is_detected<LLUTM_method_chk, T>::value;
     //}
