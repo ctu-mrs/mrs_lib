@@ -196,6 +196,13 @@ target_include_directories(MrsLibTransformer PRIVATE
   ${PCL_INCLUDE_DIRS}
   )
 
+add_executable(transformer_example src/transformer/example.cpp)
+target_link_libraries(transformer_example
+  MrsLibTransformer
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
 add_library(MrsLibUtils src/utils/utils.cpp)
 target_link_libraries(MrsLibUtils
   ${catkin_LIBRARIES}
