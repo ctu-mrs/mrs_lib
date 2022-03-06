@@ -69,7 +69,7 @@ std::optional<T> Transformer::transformImpl(const geometry_msgs::TransformStampe
 
   // First, check if the transformation is from/to the latlon frame
   // if conversion between UVM and LatLon coordinates is defined for this message, it may be resolved
-  if constexpr (UTMLL_exists_v<T>)
+  if constexpr (UTMLL_exists_v<Transformer, T>)
   {
     // check for transformation from LAT-LON GPS
     if (from_frame == latlon_frame_name)
