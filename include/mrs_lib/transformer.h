@@ -500,12 +500,12 @@ namespace mrs_lib
     std::optional<geometry_msgs::PoseStamped> UTMtoLL(const geometry_msgs::PoseStamped& what, const std::string& prefix);
     
     // helper types and member for detecting whether the UTMtoLL and LLtoUTM methods are defined for a certain message
-    template<typename T>
-    using UTMLL_method_chk = decltype(std::declval<Transformer>().UTMtoLL(std::declval<const T&>(), ""));
-    template<typename T>
-    using LLUTM_method_chk = decltype(std::declval<Transformer>().LLtoUTM(std::declval<const T&>(), ""));
-    template<typename T>
-    static constexpr bool UTMLL_exists_v = std::experimental::is_detected<UTMLL_method_chk, T>::value && std::experimental::is_detected<LLUTM_method_chk, T>::value;
+    template<class Class, typename Message>
+    using UTMLL_method_chk = decltype(std::declval<Class>().UTMtoLL(std::declval<const Message&>(), ""));
+    template<class Class, typename Message>
+    using LLUTM_method_chk = decltype(std::declval<Class>().LLtoUTM(std::declval<const Message&>(), ""));
+    template<class Class, typename Message>
+    static constexpr bool UTMLL_exists_v = std::experimental::is_detected<UTMLL_method_chk, Class, Message>::value && std::experimental::is_detected<LLUTM_method_chk, Class, Message>::value;
     //}
 
     /* methods for converting between Eigen and geometry_msgs types //{ */
