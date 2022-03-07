@@ -118,7 +118,7 @@ std::optional<T> Transformer::transformSingle(const std::string& from_frame_raw,
 {
   if (!initialized_)
   {
-    ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
+    ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform, not initialized", node_name_.c_str());
     return std::nullopt;
   }
 
@@ -145,7 +145,7 @@ std::optional<T> Transformer::transform(const T& what, const geometry_msgs::Tran
 {
   if (!initialized_)
   {
-    ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform, not initialized", ros::this_node::getName().c_str());
+    ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform, not initialized", node_name_.c_str());
     return std::nullopt;
   }
 
