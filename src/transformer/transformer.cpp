@@ -3,6 +3,7 @@
 #include <mrs_lib/transformer.h>
 #include <mrs_lib/gps_conversions.h>
 #include <mrs_lib/geometry/conversions.h>
+#include <mutex>
 
 using test_t = mrs_msgs::ReferenceStamped;
 /* using test_t = pcl::PointCloud<pcl::PointXYZ>; */
@@ -17,6 +18,8 @@ namespace mrs_lib
 {
 
   // | ----------------------- Transformer ---------------------- |
+
+  // | ------------------ user-callable methods ----------------- |
 
   /* Transformer() (constructors)//{ */
 
@@ -35,6 +38,60 @@ namespace mrs_lib
   }
 
   //}
+
+  /* getTransform() //{ */
+
+  std::optional<geometry_msgs::TransformStamped> Transformer::getTransform(const std::string& from_frame_raw, const std::string& to_frame_raw, const ros::Time& time_stamp)
+  {
+    std::scoped_lock lck(mutex_);
+
+    if (!initialized_)
+    {
+      ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot provide transform, not initialized!", node_name_.c_str());
+      return std::nullopt;
+    }
+
+    // resolve the frames
+    const std::string from_frame = resolveFrame(from_frame_raw);
+    const std::string to_frame = resolveFrame(to_frame_raw);
+    const std::string latlon_frame = resolveFrame(LATLON_ORIGIN);
+
+    return getTransformImpl(from_frame, to_frame, time_stamp, latlon_frame);
+  }
+
+  std::optional<geometry_msgs::TransformStamped> Transformer::getTransform(const std::string& from_frame_raw, const ros::Time& from_stamp, const std::string& to_frame_raw, const ros::Time& to_stamp, const std::string& fixed_frame_raw)
+  {
+    std::scoped_lock lck(mutex_);
+
+    if (!initialized_)
+    {
+      ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot provide transform, not initialized", node_name_.c_str());
+      return std::nullopt;
+    }
+
+    const std::string from_frame = resolveFrame(from_frame_raw);
+    const std::string to_frame = resolveFrame(to_frame_raw);
+    const std::string fixed_frame = resolveFrame(fixed_frame_raw);
+    const std::string latlon_frame = resolveFrame(LATLON_ORIGIN);
+
+    return getTransformImpl(from_frame, from_stamp, to_frame, to_stamp, fixed_frame, latlon_frame);
+  }
+  //}
+
+  /* setLatLon() //{ */
+
+  void Transformer::setLatLon(const double lat, const double lon)
+  {
+    std::scoped_lock lck(mutex_);
+
+    double utm_x, utm_y;
+    mrs_lib::LLtoUTM(lat, lon, utm_y, utm_x, utm_zone_);
+    got_utm_zone_ = true;
+  }
+
+  //}
+
+  // | ------------- helper implementation methods -------------- |
 
   /* transformImpl() //{ */
 
@@ -88,19 +145,17 @@ namespace mrs_lib
 
   //}
 
-  /* getTransform() //{ */
+  /* getTransformImpl() //{ */
 
-  std::optional<geometry_msgs::TransformStamped> Transformer::getTransform(const std::string& from_frame_raw, const std::string& to_frame_raw, const ros::Time& time_stamp)
+  std::optional<geometry_msgs::TransformStamped> Transformer::getTransformImpl(const std::string& from_frame, const std::string& to_frame, const ros::Time& time_stamp, const std::string& latlon_frame)
   {
+    std::scoped_lock lck(mutex_);
+
     if (!initialized_)
     {
       ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot provide transform, not initialized!", node_name_.c_str());
       return std::nullopt;
     }
-
-    const std::string from_frame = resolveFrame(from_frame_raw);
-    const std::string to_frame = resolveFrame(to_frame_raw);
-    const std::string latlon_frame = resolveFrame(LATLON_ORIGIN);
 
     // if any of the frames is empty, then the query is invalid, return nullopt
     if (from_frame.empty() || to_frame.empty())
@@ -118,7 +173,7 @@ namespace mrs_lib
     {
       // find the transformation between the UTM frame and the non-latlon frame to fill the returned tf
       const std::string utm_frame = getFramePrefix(from_frame) + "utm_origin";
-      auto tf_opt = getTransform(utm_frame, to_frame, time_stamp);
+      auto tf_opt = getTransformImpl(utm_frame, to_frame, time_stamp, latlon_frame);
       if (!tf_opt.has_value())
         return std::nullopt;
       // change the transformation frames to point from latlon
@@ -129,7 +184,7 @@ namespace mrs_lib
     {
       // find the transformation between the UTM frame and the non-latlon frame to fill the returned tf
       const std::string utm_frame = getFramePrefix(to_frame) + "utm_origin";
-      auto tf_opt = getTransform(from_frame, utm_frame, time_stamp);
+      auto tf_opt = getTransformImpl(from_frame, utm_frame, time_stamp, latlon_frame);
       if (!tf_opt.has_value())
         return std::nullopt;
       // change the transformation frames to point to latlon
@@ -176,22 +231,13 @@ namespace mrs_lib
     return std::nullopt;
   }
 
-  //}
-
-  /* getTransform() //{ */
-
-  std::optional<geometry_msgs::TransformStamped> Transformer::getTransform(const std::string& from_frame_raw, const ros::Time& from_stamp, const std::string& to_frame_raw, const ros::Time& to_stamp, const std::string& fixed_frame_raw)
+  std::optional<geometry_msgs::TransformStamped> Transformer::getTransformImpl(const std::string& from_frame, const ros::Time& from_stamp, const std::string& to_frame, const ros::Time& to_stamp, const std::string& fixed_frame, const std::string& latlon_frame)
   {
     if (!initialized_)
     {
       ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot provide transform, not initialized", node_name_.c_str());
       return std::nullopt;
     }
-
-    const std::string from_frame = resolveFrame(from_frame_raw);
-    const std::string to_frame = resolveFrame(to_frame_raw);
-    const std::string fixed_frame = resolveFrame(fixed_frame_raw);
-    const std::string latlon_frame = resolveFrame(LATLON_ORIGIN);
 
     // if the frames are the same, just return an identity transform
     if (from_frame == to_frame)
@@ -202,7 +248,7 @@ namespace mrs_lib
     {
       // find the transformation between the UTM frame and the non-latlon frame to fill the returned tf
       const std::string utm_frame = getFramePrefix(from_frame) + "utm_origin";
-      auto tf_opt = getTransform(utm_frame, from_stamp, to_frame, to_stamp, fixed_frame);
+      auto tf_opt = getTransformImpl(utm_frame, from_stamp, to_frame, to_stamp, fixed_frame, latlon_frame);
       if (!tf_opt.has_value())
         return std::nullopt;
       // change the transformation frames to point from latlon
@@ -213,7 +259,7 @@ namespace mrs_lib
     {
       // find the transformation between the UTM frame and the non-latlon frame to fill the returned tf
       const std::string utm_frame = getFramePrefix(to_frame) + "utm_origin";
-      auto tf_opt = getTransform(from_frame, from_stamp, utm_frame, to_stamp, fixed_frame);
+      auto tf_opt = getTransformImpl(from_frame, from_stamp, utm_frame, to_stamp, fixed_frame, latlon_frame);
       if (!tf_opt.has_value())
         return std::nullopt;
       // change the transformation frames to point to latlon
@@ -262,9 +308,9 @@ namespace mrs_lib
 
   //}
 
-  /* resolveFrame() //{ */
+  /* resolveFrameImpl() //{*/
 
-  std::string Transformer::resolveFrame(const std::string& frame_id)
+  std::string Transformer::resolveFrameImpl(const std::string& frame_id)
   {
     // if the frame is empty, return the default frame id
     if (frame_id.empty())
@@ -279,17 +325,6 @@ namespace mrs_lib
       return prefix_ + frame_id;
 
     return frame_id;
-  }
-
-  //}
-
-  /* setLatLon() //{ */
-
-  void Transformer::setLatLon(const double lat, const double lon)
-  {
-    double utm_x, utm_y;
-    mrs_lib::LLtoUTM(lat, lon, utm_y, utm_x, utm_zone_);
-    got_utm_zone_ = true;
   }
 
   //}
