@@ -117,6 +117,7 @@ namespace mrs_lib
      */
     void setDefaultFrame(const std::string& frame_id)
     {
+      std::scoped_lock lck(mutex_);
       default_frame_id_ = frame_id;
     }
 
@@ -139,6 +140,7 @@ namespace mrs_lib
      */
     void setDefaultPrefix(const std::string& prefix)
     {
+      std::scoped_lock lck(mutex_);
       if (prefix.empty())
         prefix_ = "";
       else
@@ -176,6 +178,7 @@ namespace mrs_lib
      */
     void setLookupTimeout(const ros::Duration timeout = ros::Duration(0))
     {
+      std::scoped_lock lck(mutex_);
       lookup_timeout_ = timeout;
     }
 
@@ -195,6 +198,7 @@ namespace mrs_lib
      */
     void retryLookupNewest(const bool retry = true)
     {
+      std::scoped_lock lck(mutex_);
       retry_lookup_newest_ = retry;
     }
 
@@ -211,9 +215,29 @@ namespace mrs_lib
      */
     void beQuiet(const bool quiet = true)
     {
+      std::scoped_lock lck(mutex_);
       quiet_ = quiet;
     }
 
+    //}
+
+    /* resolveFrame() //{ */
+    /**
+     * \brief Deduce the full frame ID from a shortened or empty string using current default prefix and default frame rules.
+     *
+     * Example assuming default prefix is "uav1" and default frame is "uav1/gps_origin":
+     *   "" -> "uav1/gps_origin"
+     *   "local_origin" -> "uav1/local_origin"
+     *
+     * \param frame_id The frame ID to be resolved.
+     *
+     * \return The resolved frame ID.
+     */
+    std::string resolveFrame(const std::string& frame_id)
+    {
+      std::scoped_lock lck(mutex_);
+      return resolveFrameImpl(frame_id);
+    }
     //}
 
     /* transformSingle() //{ */
@@ -230,19 +254,20 @@ namespace mrs_lib
     [[nodiscard]] std::optional<T> transformSingle(const T& what, const std::string& to_frame);
 
     /**
-     * \brief Transforms a single variable to a new frame and returns it or \p std::nullopt if transformation fails.
+     * \brief Transforms a single variable to a new frame.
      *
-     * A convenience overload for headerless variables.
+     * A convenience override for shared pointers.
      *
-     * \param from_frame the original target frame ID.
-     * \param what the object to be transformed.
-     * \param to_frame the target frame ID.
-     * \param time_stamp the time of the transformation.
+     * \param what The object to be transformed.
+     * \param to_frame The target fram ID.
      *
      * \return \p std::nullopt if failed, optional containing the transformed object otherwise.
      */
     template <class T>
-    [[nodiscard]] std::optional<T> transformSingle(const std::string& from_frame_raw, const T& what, const std::string& to_frame_raw, const ros::Time& time_stamp = ros::Time(0));
+    [[nodiscard]] std::optional<boost::shared_ptr<T>> transformSingle(const boost::shared_ptr<T>& what, const std::string& to_frame)
+    {
+      return transformSingle(boost::shared_ptr<const T>(what), to_frame);
+    }
 
     /**
      * \brief Transforms a single variable to a new frame.
@@ -265,19 +290,58 @@ namespace mrs_lib
     }
 
     /**
-     * \brief Transforms a single variable to a new frame.
+     * \brief Transforms a single variable to a new frame and returns it or \p std::nullopt if transformation fails.
      *
-     * A convenience override for shared pointers.
+     * A convenience overload for headerless variables.
      *
-     * \param what The object to be transformed.
-     * \param to_frame The target fram ID.
+     * \param from_frame the original target frame ID.
+     * \param what the object to be transformed.
+     * \param to_frame the target frame ID.
+     * \param time_stamp the time of the transformation.
      *
      * \return \p std::nullopt if failed, optional containing the transformed object otherwise.
      */
     template <class T>
-    [[nodiscard]] std::optional<boost::shared_ptr<T>> transformSingle(const boost::shared_ptr<T>& what, const std::string& to_frame)
+    [[nodiscard]] std::optional<T> transformSingle(const std::string& from_frame, const T& what, const std::string& to_frame, const ros::Time& time_stamp = ros::Time(0));
+
+    /**
+     * \brief Transforms a single variable to a new frame and returns it or \p std::nullopt if transformation fails.
+     *
+     * A convenience overload for shared pointers to headerless variables.
+     *
+     * \param from_frame the original target frame ID.
+     * \param what the object to be transformed.
+     * \param to_frame the target frame ID.
+     * \param time_stamp the time of the transformation.
+     *
+     * \return \p std::nullopt if failed, optional containing the transformed object otherwise.
+     */
+    template <class T>
+    [[nodiscard]] std::optional<boost::shared_ptr<T>> transformSingle(const std::string& from_frame, const boost::shared_ptr<T>& what, const std::string& to_frame, const ros::Time& time_stamp = ros::Time(0))
     {
-      return transformSingle(boost::shared_ptr<const T>(what), to_frame);
+      return transformSingle(from_frame, boost::shared_ptr<const T>(what), to_frame, time_stamp);
+    }
+
+    /**
+     * \brief Transforms a single variable to a new frame and returns it or \p std::nullopt if transformation fails.
+     *
+     * A convenience overload for shared pointers to const headerless variables.
+     *
+     * \param from_frame the original target frame ID.
+     * \param what the object to be transformed.
+     * \param to_frame the target frame ID.
+     * \param time_stamp the time of the transformation.
+     *
+     * \return \p std::nullopt if failed, optional containing the transformed object otherwise.
+     */
+    template <class T>
+    [[nodiscard]] std::optional<boost::shared_ptr<T>> transformSingle(const std::string& from_frame, const boost::shared_ptr<const T>& what, const std::string& to_frame, const ros::Time& time_stamp = ros::Time(0))
+    {
+      auto ret = transformSingle(from_frame, *what, to_frame, time_stamp);
+      if (ret == std::nullopt)
+        return std::nullopt;
+      else
+        return boost::make_shared<T>(std::move(ret.value()));
     }
 
     //}
@@ -365,27 +429,12 @@ namespace mrs_lib
 
     //}
 
-    /* resolveFrame() //{ */
-    /**
-     * \brief Deduce the full frame ID from a shortened or empty string using current default prefix and default frame rules.
-     *
-     * Example assuming default prefix is "uav1" and default frame is "uav1/gps_origin":
-     *   "" -> "uav1/gps_origin"
-     *   "local_origin" -> "uav1/local_origin"
-     *
-     * \param frame_id The frame ID to be resolved.
-     *
-     * \return The resolved frame ID.
-     */
-    std::string resolveFrame(const std::string& frame_id);
-    //}
-
   private:
     /* private members, methods etc //{ */
 
-    /**
-     * \brief keeps track whether a non-basic constructor was called and the transform listener is initialized
-     */
+    std::mutex mutex_;
+
+    // keeps track whether a non-basic constructor was called and the transform listener is initialized
     bool initialized_ = false;
     std::string node_name_;
 
@@ -409,6 +458,11 @@ namespace mrs_lib
     std::optional<T> transformImpl(const geometry_msgs::TransformStamped& tf, const T& what);
     std::optional<mrs_msgs::ReferenceStamped> transformImpl(const geometry_msgs::TransformStamped& tf, const mrs_msgs::ReferenceStamped& what);
     std::optional<Eigen::Vector3d> transformImpl(const geometry_msgs::TransformStamped& tf, const Eigen::Vector3d& what);
+
+    [[nodiscard]] std::optional<geometry_msgs::TransformStamped> getTransformImpl(const std::string& from_frame, const std::string& to_frame, const ros::Time& time_stamp, const std::string& latlon_frame);
+    [[nodiscard]] std::optional<geometry_msgs::TransformStamped> getTransformImpl(const std::string& from_frame, const ros::Time& from_stamp, const std::string& to_frame, const ros::Time& to_stamp, const std::string& fixed_frame, const std::string& latlon_frame);
+
+    std::string resolveFrameImpl(const std::string& frame_id);
 
     template <class T>
     std::optional<T> doTransform(const T& what, const geometry_msgs::TransformStamped& tf);

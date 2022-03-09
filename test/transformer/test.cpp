@@ -65,7 +65,7 @@ std::optional<geometry_msgs::TransformStamped> wait_for_tf(const std::string& fr
   std::cout << "Waiting for transformation from " << from << " to " << to << ".\n";
   std::optional<geometry_msgs::TransformStamped> tf_opt;
   // get the transform
-  for (int it = 0; it < 20 && ros::ok(); it++)
+  for (int it = 0; it < 10 && ros::ok(); it++)
   {
     publish_transforms(publish_t);
     ros::spinOnce();
@@ -74,7 +74,7 @@ std::optional<geometry_msgs::TransformStamped> wait_for_tf(const std::string& fr
     if (tf_opt.has_value())
       break;
 
-    ros::Duration(0.1).sleep();
+    ros::Duration(0.05).sleep();
   }
   return tf_opt;
 }
