@@ -94,13 +94,20 @@ namespace mrs_lib
   {
     if (!initialized_)
     {
-      ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot provide transform, not initialized", ros::this_node::getName().c_str());
+      ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot provide transform, not initialized!", node_name_.c_str());
       return std::nullopt;
     }
 
     const std::string from_frame = resolveFrame(from_frame_raw);
     const std::string to_frame = resolveFrame(to_frame_raw);
     const std::string latlon_frame = resolveFrame(LATLON_ORIGIN);
+
+    // if any of the frames is empty, then the query is invalid, return nullopt
+    if (from_frame.empty() || to_frame.empty())
+    {
+      ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform to/from an empty frame!", node_name_.c_str());
+      return std::nullopt;
+    }
 
     // if the frames are the same, just return an identity transform
     if (from_frame == to_frame)
@@ -177,7 +184,7 @@ namespace mrs_lib
   {
     if (!initialized_)
     {
-      ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot provide transform, not initialized", ros::this_node::getName().c_str());
+      ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot provide transform, not initialized", node_name_.c_str());
       return std::nullopt;
     }
 
@@ -259,11 +266,16 @@ namespace mrs_lib
 
   std::string Transformer::resolveFrame(const std::string& frame_id)
   {
+    // if the frame is empty, return the default frame id
     if (frame_id.empty())
       return default_frame_id_;
 
+    // if there is no prefix set, just return the raw frame id
+    if (prefix_.empty())
+      return frame_id;
+
     // if there is a default prefix set and the frame does not start with it, prefix it
-    if (!prefix_.empty() && frame_id.substr(0, prefix_.length()) != prefix_)
+    if (frame_id.substr(0, prefix_.length()) != prefix_)
       return prefix_ + frame_id;
 
     return frame_id;

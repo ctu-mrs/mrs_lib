@@ -139,7 +139,10 @@ namespace mrs_lib
      */
     void setDefaultPrefix(const std::string& prefix)
     {
-      prefix_ = prefix + "/";
+      if (prefix.empty())
+        prefix_ = "";
+      else
+        prefix_ = prefix + "/";
     }
 
     //}

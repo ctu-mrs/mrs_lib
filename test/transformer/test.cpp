@@ -24,6 +24,7 @@ Eigen::Affine3d local2utm;
 Eigen::Affine3d fcu2cam;
 std::unique_ptr<tf2_ros::TransformBroadcaster> bc;
 
+//{ publish_transform helper function
 void publish_transforms(const ros::Time& t = ros::Time::now())
 {
   geometry_msgs::TransformStamped tf;
@@ -56,7 +57,9 @@ void publish_transforms(const ros::Time& t = ros::Time::now())
   bc->sendTransform(tf);
   ros::spinOnce();
 }
+//}
 
+/* //{ wait_for_tf helper function*/
 std::optional<geometry_msgs::TransformStamped> wait_for_tf(const std::string& from, const std::string& to, mrs_lib::Transformer& tfr, const ros::Time& publish_t = ros::Time::now(), const ros::Time& stamp = ros::Time(0))
 {
   std::cout << "Waiting for transformation from " << from << " to " << to << ".\n";
@@ -75,6 +78,7 @@ std::optional<geometry_msgs::TransformStamped> wait_for_tf(const std::string& fr
   }
   return tf_opt;
 }
+//}
 
 /* TEST(TESTSuite, main_test) //{ */
 
@@ -84,7 +88,7 @@ TEST(TESTSuite, main_test)
 
   int result = 1;
 
-  auto tfr = mrs_lib::Transformer("TransformerTest");
+  auto tfr = mrs_lib::Transformer("Transformer_main_test");
   tfr.setDefaultPrefix("uav66");
 
   const std::string from = "fcu";
@@ -145,7 +149,7 @@ TEST(TESTSuite, tf_times_test)
 
   int result = 1;
 
-  auto tfr = mrs_lib::Transformer("TransformerTest");
+  auto tfr = mrs_lib::Transformer("Transformer_tf_times_test");
 
   const ros::Time t1 = ros::Time(1);
   const std::string from = "uav1/fcu";
@@ -232,13 +236,14 @@ TEST(TESTSuite, tf_times_test)
 
 /* TEST(TESTSuite, eigen_vector3d_test) //{ */
 
-TEST(TESTSuite, eigen_vector3d_test) {
+TEST(TESTSuite, eigen_vector3d_test)
+{
 
   ROS_INFO("[%s]: Testing the Eigen::Vector3d transformation", ros::this_node::getName().c_str());
 
   int result = 1;
 
-  auto tfr = mrs_lib::Transformer("TransformerTest");
+  auto tfr = mrs_lib::Transformer("Transformer_eigen_vector3d_test");
   tfr.setDefaultPrefix("uav66");
 
   publish_transforms();
@@ -289,13 +294,14 @@ TEST(TESTSuite, eigen_vector3d_test) {
 
 /* TEST(TESTSuite, transform_single) //{ */
 
-TEST(TESTSuite, transform_single) {
+TEST(TESTSuite, transform_single)
+{
 
   ROS_INFO("[%s]: Testing transformSingle", ros::this_node::getName().c_str());
 
   int result = 1;
 
-  auto tfr = mrs_lib::Transformer("TransformerTest");
+  auto tfr = mrs_lib::Transformer("Transformer_transform_single");
   tfr.setDefaultPrefix("uav66");
 
   const ros::Time t = ros::Time::now();
@@ -371,13 +377,14 @@ TEST(TESTSuite, transform_single) {
 
 /* TEST(TESTSuite, mrs_reference_test) //{ */
 
-TEST(TESTSuite, mrs_reference_test) {
+TEST(TESTSuite, mrs_reference_test)
+{
 
   ROS_INFO("[%s]: Testing the mrs_msgs::ReferenceStamped transformation", ros::this_node::getName().c_str());
 
   int result = 1;
 
-  auto tfr = mrs_lib::Transformer("TransformerTest");
+  auto tfr = mrs_lib::Transformer("Transformer_mrs_reference_test");
   tfr.setDefaultPrefix("uav66");
 
   publish_transforms();
@@ -455,7 +462,7 @@ TEST(TESTSuite, quaternion_test)
 
   int result = 1;
 
-  auto tfr = mrs_lib::Transformer("TransformerTest");
+  auto tfr = mrs_lib::Transformer("Transformer_quaternion_test");
   tfr.setDefaultPrefix("uav66");
 
   publish_transforms();
@@ -606,7 +613,7 @@ TEST(TESTSuite, latlon_test)
 
   int result = 1;
 
-  auto tfr = mrs_lib::Transformer("TransformerTest");
+  auto tfr = mrs_lib::Transformer("Transformer_latlon_test");
   tfr.setDefaultPrefix("uav66");
 
   publish_transforms();
@@ -654,13 +661,14 @@ TEST(TESTSuite, latlon_test)
 
 /* TEST(TESTSuite, eigen_decomposed_test) //{ */
 
-TEST(TESTSuite, eigen_decomposed_test) {
+TEST(TESTSuite, eigen_decomposed_test)
+{
 
   ROS_INFO("[%s]: Testing the Eigen translation and rotation extraction", ros::this_node::getName().c_str());
 
   int result = 1;
 
-  auto tfr = mrs_lib::Transformer("TransformerTest");
+  auto tfr = mrs_lib::Transformer("Transformer_eigen_decomposed_test");
   tfr.setDefaultPrefix("uav66");
 
   publish_transforms();
@@ -720,13 +728,14 @@ TEST(TESTSuite, eigen_decomposed_test) {
 
 /* TEST(TESTSuite, retry_latest_test) //{ */
 
-TEST(TESTSuite, retry_latest_test) {
+TEST(TESTSuite, retry_latest_test)
+{
 
   ROS_INFO("[%s]: Testing the functionality of retrying with latest time in case of failure", ros::this_node::getName().c_str());
 
   int result = 1;
 
-  auto tfr = mrs_lib::Transformer("TransformerTest");
+  auto tfr = mrs_lib::Transformer("Transformer_retry_latest_test");
   tfr.setDefaultPrefix("uav66");
 
   const ros::Time t = ros::Time::now();
@@ -762,11 +771,11 @@ TEST(TESTSuite, retry_latest_test) {
 TEST(TESTSuite, prefix_test)
 {
 
-  ROS_INFO("[%s]: Testing the functionality of retrying with latest time in case of failure", ros::this_node::getName().c_str());
+  ROS_INFO("[%s]: Testing the functionality of default prefix", ros::this_node::getName().c_str());
 
   int result = 1;
 
-  auto tfr = mrs_lib::Transformer("TransformerTest");
+  auto tfr = mrs_lib::Transformer("Transformer_prefix_test");
 
   const ros::Time t = ros::Time::now();
   publish_transforms(t);
@@ -809,6 +818,60 @@ TEST(TESTSuite, prefix_test)
   if (tf_opt.has_value())
   {
     ROS_ERROR_THROTTLE(1.0, "got the transform (that should not happen)");
+    result *= 0;
+  }
+
+  EXPECT_TRUE(result);
+}
+
+//}
+
+/* TEST(TESTSuite, empty_frame_test) //{ */
+
+TEST(TESTSuite, default_frame_test)
+{
+
+  ROS_INFO("[%s]: Testing the functionality of default frame name", ros::this_node::getName().c_str());
+
+  int result = 1;
+
+  auto tfr = mrs_lib::Transformer("Transformer_default_frame_test");
+  tfr.setDefaultPrefix("uav66");
+  tfr.setLookupTimeout(ros::Duration(0.1));
+
+  const ros::Time t = ros::Time::now();
+  publish_transforms(t);
+
+  auto tf_opt = tfr.getTransform("camera", "");
+  if (tf_opt.has_value())
+  {
+    ROS_ERROR_THROTTLE(1.0, "got the transform (that should not happen)");
+    result *= 0;
+  }
+
+  tf_opt = std::nullopt;
+  tf_opt = tfr.getTransform("", "fcu");
+  if (tf_opt.has_value())
+  {
+    ROS_ERROR_THROTTLE(1.0, "got the transform (that should not happen)");
+    result *= 0;
+  }
+
+  tf_opt = std::nullopt;
+  tf_opt = tfr.getTransform("", "");
+  if (tf_opt.has_value())
+  {
+    ROS_ERROR_THROTTLE(1.0, "got the transform (that should not happen)");
+    result *= 0;
+  }
+
+  ROS_INFO("[%s]: Setting the default frame name", ros::this_node::getName().c_str());
+  tfr.setDefaultFrame("uav66/fcu");
+  tf_opt = std::nullopt;
+  tf_opt = tfr.getTransform("", "");
+  if (!tf_opt.has_value())
+  {
+    ROS_ERROR_THROTTLE(1.0, "didn't get the transformation!");
     result *= 0;
   }
 
