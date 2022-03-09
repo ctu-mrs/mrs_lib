@@ -67,7 +67,7 @@ std::optional<T> Transformer::transformImpl(const geometry_msgs::TransformStampe
   if (from_frame == to_frame)
     return copyChangeFrame(what, from_frame);
 
-  const std::string latlon_frame_name = resolveFrame(LATLON_ORIGIN);
+  const std::string latlon_frame_name = resolveFrameImpl(LATLON_ORIGIN);
 
   // First, check if the transformation is from/to the latlon frame
   // if conversion between UVM and LatLon coordinates is defined for this message, it may be resolved
@@ -149,9 +149,9 @@ std::optional<T> Transformer::transformSingle(const std::string& from_frame_raw,
     return std::nullopt;
   }
 
-  const std::string from_frame = resolveFrame(from_frame_raw);
-  const std::string to_frame = resolveFrame(to_frame_raw);
-  const std::string latlon_frame = resolveFrame(LATLON_ORIGIN);
+  const std::string from_frame = resolveFrameImpl(from_frame_raw);
+  const std::string to_frame = resolveFrameImpl(to_frame_raw);
+  const std::string latlon_frame = resolveFrameImpl(LATLON_ORIGIN);
 
   // get the transform
   const auto tf_opt = getTransformImpl(from_frame, to_frame, time_stamp, latlon_frame);
@@ -179,8 +179,8 @@ std::optional<T> Transformer::transform(const T& what, const geometry_msgs::Tran
     return std::nullopt;
   }
 
-  const std::string from_frame = resolveFrame(frame_from(tf));
-  const std::string to_frame = resolveFrame(frame_to(tf));
+  const std::string from_frame = resolveFrameImpl(frame_from(tf));
+  const std::string to_frame = resolveFrameImpl(frame_to(tf));
   const geometry_msgs::TransformStamped tf_resolved = create_transform(from_frame, to_frame, tf.header.stamp, tf.transform);
 
   return transformImpl(tf_resolved, what);

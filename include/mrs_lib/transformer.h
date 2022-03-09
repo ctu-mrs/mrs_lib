@@ -254,19 +254,20 @@ namespace mrs_lib
     [[nodiscard]] std::optional<T> transformSingle(const T& what, const std::string& to_frame);
 
     /**
-     * \brief Transforms a single variable to a new frame and returns it or \p std::nullopt if transformation fails.
+     * \brief Transforms a single variable to a new frame.
      *
-     * A convenience overload for headerless variables.
+     * A convenience override for shared pointers.
      *
-     * \param from_frame the original target frame ID.
-     * \param what the object to be transformed.
-     * \param to_frame the target frame ID.
-     * \param time_stamp the time of the transformation.
+     * \param what The object to be transformed.
+     * \param to_frame The target fram ID.
      *
      * \return \p std::nullopt if failed, optional containing the transformed object otherwise.
      */
     template <class T>
-    [[nodiscard]] std::optional<T> transformSingle(const std::string& from_frame_raw, const T& what, const std::string& to_frame_raw, const ros::Time& time_stamp = ros::Time(0));
+    [[nodiscard]] std::optional<boost::shared_ptr<T>> transformSingle(const boost::shared_ptr<T>& what, const std::string& to_frame)
+    {
+      return transformSingle(boost::shared_ptr<const T>(what), to_frame);
+    }
 
     /**
      * \brief Transforms a single variable to a new frame.
@@ -289,19 +290,58 @@ namespace mrs_lib
     }
 
     /**
-     * \brief Transforms a single variable to a new frame.
+     * \brief Transforms a single variable to a new frame and returns it or \p std::nullopt if transformation fails.
      *
-     * A convenience override for shared pointers.
+     * A convenience overload for headerless variables.
      *
-     * \param what The object to be transformed.
-     * \param to_frame The target fram ID.
+     * \param from_frame the original target frame ID.
+     * \param what the object to be transformed.
+     * \param to_frame the target frame ID.
+     * \param time_stamp the time of the transformation.
      *
      * \return \p std::nullopt if failed, optional containing the transformed object otherwise.
      */
     template <class T>
-    [[nodiscard]] std::optional<boost::shared_ptr<T>> transformSingle(const boost::shared_ptr<T>& what, const std::string& to_frame)
+    [[nodiscard]] std::optional<T> transformSingle(const std::string& from_frame, const T& what, const std::string& to_frame, const ros::Time& time_stamp = ros::Time(0));
+
+    /**
+     * \brief Transforms a single variable to a new frame and returns it or \p std::nullopt if transformation fails.
+     *
+     * A convenience overload for shared pointers to headerless variables.
+     *
+     * \param from_frame the original target frame ID.
+     * \param what the object to be transformed.
+     * \param to_frame the target frame ID.
+     * \param time_stamp the time of the transformation.
+     *
+     * \return \p std::nullopt if failed, optional containing the transformed object otherwise.
+     */
+    template <class T>
+    [[nodiscard]] std::optional<boost::shared_ptr<T>> transformSingle(const std::string& from_frame, const boost::shared_ptr<T>& what, const std::string& to_frame, const ros::Time& time_stamp = ros::Time(0))
     {
-      return transformSingle(boost::shared_ptr<const T>(what), to_frame);
+      return transformSingle(from_frame, boost::shared_ptr<const T>(what), to_frame, time_stamp);
+    }
+
+    /**
+     * \brief Transforms a single variable to a new frame and returns it or \p std::nullopt if transformation fails.
+     *
+     * A convenience overload for shared pointers to const headerless variables.
+     *
+     * \param from_frame the original target frame ID.
+     * \param what the object to be transformed.
+     * \param to_frame the target frame ID.
+     * \param time_stamp the time of the transformation.
+     *
+     * \return \p std::nullopt if failed, optional containing the transformed object otherwise.
+     */
+    template <class T>
+    [[nodiscard]] std::optional<boost::shared_ptr<T>> transformSingle(const std::string& from_frame, const boost::shared_ptr<const T>& what, const std::string& to_frame, const ros::Time& time_stamp = ros::Time(0))
+    {
+      auto ret = transformSingle(from_frame, *what, to_frame, time_stamp);
+      if (ret == std::nullopt)
+        return std::nullopt;
+      else
+        return boost::make_shared<T>(std::move(ret.value()));
     }
 
     //}

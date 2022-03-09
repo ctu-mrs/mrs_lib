@@ -52,9 +52,9 @@ namespace mrs_lib
     }
 
     // resolve the frames
-    const std::string from_frame = resolveFrame(from_frame_raw);
-    const std::string to_frame = resolveFrame(to_frame_raw);
-    const std::string latlon_frame = resolveFrame(LATLON_ORIGIN);
+    const std::string from_frame = resolveFrameImpl(from_frame_raw);
+    const std::string to_frame = resolveFrameImpl(to_frame_raw);
+    const std::string latlon_frame = resolveFrameImpl(LATLON_ORIGIN);
 
     return getTransformImpl(from_frame, to_frame, time_stamp, latlon_frame);
   }
@@ -69,10 +69,10 @@ namespace mrs_lib
       return std::nullopt;
     }
 
-    const std::string from_frame = resolveFrame(from_frame_raw);
-    const std::string to_frame = resolveFrame(to_frame_raw);
-    const std::string fixed_frame = resolveFrame(fixed_frame_raw);
-    const std::string latlon_frame = resolveFrame(LATLON_ORIGIN);
+    const std::string from_frame = resolveFrameImpl(from_frame_raw);
+    const std::string to_frame = resolveFrameImpl(to_frame_raw);
+    const std::string fixed_frame = resolveFrameImpl(fixed_frame_raw);
+    const std::string latlon_frame = resolveFrameImpl(LATLON_ORIGIN);
 
     return getTransformImpl(from_frame, from_stamp, to_frame, to_stamp, fixed_frame, latlon_frame);
   }
@@ -149,8 +149,6 @@ namespace mrs_lib
 
   std::optional<geometry_msgs::TransformStamped> Transformer::getTransformImpl(const std::string& from_frame, const std::string& to_frame, const ros::Time& time_stamp, const std::string& latlon_frame)
   {
-    std::scoped_lock lck(mutex_);
-
     if (!initialized_)
     {
       ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot provide transform, not initialized!", node_name_.c_str());
