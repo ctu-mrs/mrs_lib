@@ -37,7 +37,45 @@ PublisherHandler_impl<TopicType>::PublisherHandler_impl(ros::NodeHandle& nh, con
 /* publish(TopicType& msg) //{ */
 
 template <class TopicType>
-void PublisherHandler_impl<TopicType>::publish(TopicType& msg) {
+void PublisherHandler_impl<TopicType>::publish(const TopicType& msg) {
+
+  if (!publisher_initialized_) {
+    return;
+  }
+
+  try {
+    publisher_.publish(msg);
+  }
+  catch (...) {
+    ROS_ERROR("exception caught during publishing topic '%s'", publisher_.getTopic().c_str());
+  }
+}
+
+//}
+
+/* publish(const boost::shared_ptr<TopicType>& msg) //{ */
+
+template <class TopicType>
+void PublisherHandler_impl<TopicType>::publish(const boost::shared_ptr<TopicType>& msg) {
+
+  if (!publisher_initialized_) {
+    return;
+  }
+
+  try {
+    publisher_.publish(msg);
+  }
+  catch (...) {
+    ROS_ERROR("exception caught during publishing topic '%s'", publisher_.getTopic().c_str());
+  }
+}
+
+//}
+
+/* publish(const boost::shared_ptr<TopicType const>& msg) //{ */
+
+template <class TopicType>
+void PublisherHandler_impl<TopicType>::publish(const boost::shared_ptr<TopicType const>& msg) {
 
   if (!publisher_initialized_) {
     return;
@@ -107,10 +145,30 @@ void PublisherHandler<TopicType>::initialize(ros::NodeHandle& nh, const std::str
 
 //}
 
-/* publish(TopicType& msg) //{ */
+/* publish(const TopicType& msg) //{ */
 
 template <class TopicType>
-void PublisherHandler<TopicType>::publish(TopicType& msg) {
+void PublisherHandler<TopicType>::publish(const TopicType& msg) {
+
+  impl_->publish(msg);
+}
+
+//}
+
+/* publish(const boost::shared_ptr<TopicType>& msg) //{ */
+
+template <class TopicType>
+void PublisherHandler<TopicType>::publish(const boost::shared_ptr<TopicType>& msg) {
+
+  impl_->publish(msg);
+}
+
+//}
+
+/* publish(const boost::shared_ptr<TopicType const>& msg) //{ */
+
+template <class TopicType>
+void PublisherHandler<TopicType>::publish(const boost::shared_ptr<TopicType const>& msg) {
 
   impl_->publish(msg);
 }
