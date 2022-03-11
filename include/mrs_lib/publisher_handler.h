@@ -51,9 +51,26 @@ public:
    */
   void publish(const TopicType& msg);
 
+  /**
+   * @brief publish message, boost ptr overload
+   *
+   * @param msg
+   */
   void publish(const boost::shared_ptr<TopicType>& msg);
 
+  /**
+   * @brief publish message, boost const ptr overload
+   *
+   * @param msg
+   */
   void publish(const boost::shared_ptr<TopicType const>& msg);
+
+  /**
+   * @brief get number of subscribers
+   *
+   * @return the number of subscribers
+   */
+  unsigned int getNumSubscribers(void);
 
 private:
   ros::Publisher    publisher_;
@@ -126,11 +143,33 @@ public:
    */
   void initialize(ros::NodeHandle& nh, const std::string& address);
 
+  /**
+   * @brief publish message
+   *
+   * @param msg
+   */
   void publish(const TopicType& msg);
 
+  /**
+   * @brief publish message, boost ptr overload
+   *
+   * @param msg
+   */
   void publish(const boost::shared_ptr<TopicType>& msg);
 
+  /**
+   * @brief publish message, boost const ptr overload
+   *
+   * @param msg
+   */
   void publish(const boost::shared_ptr<TopicType const>& msg);
+
+  /**
+   * @brief get number of subscribers
+   *
+   * @return the number of subscribers
+   */
+  unsigned int getNumSubscribers(void);
 
 private:
   std::shared_ptr<PublisherHandler_impl<TopicType>> impl_;

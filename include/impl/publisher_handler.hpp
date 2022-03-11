@@ -19,7 +19,7 @@ PublisherHandler_impl<TopicType>::PublisherHandler_impl(void) : publisher_initia
 /* PublisherHandler_impl(ros::NodeHandle& nh, const std::string& address, const unsigned int &buffer_size, const bool &latch) //{ */
 
 template <class TopicType>
-PublisherHandler_impl<TopicType>::PublisherHandler_impl(ros::NodeHandle& nh, const std::string& address, const unsigned int &buffer_size, const bool &latch) {
+PublisherHandler_impl<TopicType>::PublisherHandler_impl(ros::NodeHandle& nh, const std::string& address, const unsigned int& buffer_size, const bool& latch) {
 
   {
     std::scoped_lock lock(mutex_publisher_);
@@ -91,6 +91,16 @@ void PublisherHandler_impl<TopicType>::publish(const boost::shared_ptr<TopicType
 
 //}
 
+/* getNumSubscribers(void) //{ */
+
+template <class TopicType>
+unsigned int PublisherHandler_impl<TopicType>::getNumSubscribers(void) {
+
+  return publisher_.getNumSubscribers();
+}
+
+//}
+
 // --------------------------------------------------------------
 // |                      PublisherHandler                      |
 // --------------------------------------------------------------
@@ -128,7 +138,7 @@ PublisherHandler<TopicType>::PublisherHandler(const PublisherHandler<TopicType>&
 /* PublisherHandler(ros::NodeHandle& nh, const std::string& address, const unsigned int &buffer_size, const bool &latch) //{ */
 
 template <class TopicType>
-PublisherHandler<TopicType>::PublisherHandler(ros::NodeHandle& nh, const std::string& address, const unsigned int &buffer_size, const bool &latch) {
+PublisherHandler<TopicType>::PublisherHandler(ros::NodeHandle& nh, const std::string& address, const unsigned int& buffer_size, const bool& latch) {
 
   impl_ = std::make_shared<PublisherHandler_impl<TopicType>>(nh, address, buffer_size, latch);
 }
@@ -171,6 +181,16 @@ template <class TopicType>
 void PublisherHandler<TopicType>::publish(const boost::shared_ptr<TopicType const>& msg) {
 
   impl_->publish(msg);
+}
+
+//}
+
+/* getNumSubscribers(void) //{ */
+
+template <class TopicType>
+unsigned int PublisherHandler<TopicType>::getNumSubscribers(void) {
+
+  return impl_->getNumSubscribers();
 }
 
 //}
