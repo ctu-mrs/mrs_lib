@@ -501,6 +501,21 @@ if(CATKIN_ENABLE_TESTING)
     )
 
   add_rostest_gtest(
+    PublisherHandlerTest
+    test/publisher_handler/publisher_handler.test
+    test/publisher_handler/test.cpp
+    )
+  target_link_libraries(
+    PublisherHandlerTest
+    ${catkin_LIBRARIES}
+    )
+  add_dependencies(
+    PublisherHandlerTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+    )
+
+  add_rostest_gtest(
     VectorConverterTest
     test/vector_converter/vector_converter.test
     test/vector_converter/test.cpp

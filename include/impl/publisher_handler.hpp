@@ -19,15 +19,29 @@ PublisherHandler_impl<TopicType>::PublisherHandler_impl(void) : publisher_initia
 /* PublisherHandler_impl(ros::NodeHandle& nh, const std::string& address, const unsigned int &buffer_size, const bool &latch) //{ */
 
 template <class TopicType>
-PublisherHandler_impl<TopicType>::PublisherHandler_impl(ros::NodeHandle& nh, const std::string& address, const unsigned int& buffer_size, const bool& latch) {
+PublisherHandler_impl<TopicType>::PublisherHandler_impl(ros::NodeHandle& nh, const std::string& address, const unsigned int& buffer_size, const bool& latch,
+                                                        const double& rate) {
 
   {
     std::scoped_lock lock(mutex_publisher_);
 
     publisher_ = nh.advertise<TopicType>(address, buffer_size, latch);
-  }
 
-  _address_ = address;
+    if (rate > 0.0) {
+
+      throttle_ = true;
+
+      throttle_min_dt_ = 1.0 / rate;
+
+    } else {
+
+      throttle_ = false;
+
+      throttle_min_dt_ = 0;
+    }
+
+    last_time_published_ = ros::Time(0);
+  }
 
   publisher_initialized_ = true;
 }
@@ -43,11 +57,24 @@ void PublisherHandler_impl<TopicType>::publish(const TopicType& msg) {
     return;
   }
 
-  try {
-    publisher_.publish(msg);
-  }
-  catch (...) {
-    ROS_ERROR("exception caught during publishing topic '%s'", publisher_.getTopic().c_str());
+  {
+    std::scoped_lock lock(mutex_publisher_);
+
+    if (throttle_) {
+
+      if ((ros::Time::now() - last_time_published_).toSec() < throttle_min_dt_) {
+        return;
+      }
+
+      last_time_published_ = ros::Time::now();
+    }
+
+    try {
+      publisher_.publish(msg);
+    }
+    catch (...) {
+      ROS_ERROR("exception caught during publishing topic '%s'", publisher_.getTopic().c_str());
+    }
   }
 }
 
@@ -62,11 +89,24 @@ void PublisherHandler_impl<TopicType>::publish(const boost::shared_ptr<TopicType
     return;
   }
 
-  try {
-    publisher_.publish(msg);
-  }
-  catch (...) {
-    ROS_ERROR("exception caught during publishing topic '%s'", publisher_.getTopic().c_str());
+  {
+    std::scoped_lock lock(mutex_publisher_);
+
+    if (throttle_) {
+
+      if ((ros::Time::now() - last_time_published_).toSec() < throttle_min_dt_) {
+        return;
+      }
+
+      last_time_published_ = ros::Time::now();
+    }
+
+    try {
+      publisher_.publish(msg);
+    }
+    catch (...) {
+      ROS_ERROR("exception caught during publishing topic '%s'", publisher_.getTopic().c_str());
+    }
   }
 }
 
@@ -81,11 +121,24 @@ void PublisherHandler_impl<TopicType>::publish(const boost::shared_ptr<TopicType
     return;
   }
 
-  try {
-    publisher_.publish(msg);
-  }
-  catch (...) {
-    ROS_ERROR("exception caught during publishing topic '%s'", publisher_.getTopic().c_str());
+  {
+    std::scoped_lock lock(mutex_publisher_);
+
+    if (throttle_) {
+
+      if ((ros::Time::now() - last_time_published_).toSec() < throttle_min_dt_) {
+        return;
+      }
+
+      last_time_published_ = ros::Time::now();
+    }
+
+    try {
+      publisher_.publish(msg);
+    }
+    catch (...) {
+      ROS_ERROR("exception caught during publishing topic '%s'", publisher_.getTopic().c_str());
+    }
   }
 }
 
@@ -96,7 +149,11 @@ void PublisherHandler_impl<TopicType>::publish(const boost::shared_ptr<TopicType
 template <class TopicType>
 unsigned int PublisherHandler_impl<TopicType>::getNumSubscribers(void) {
 
-  return publisher_.getNumSubscribers();
+  {
+    std::scoped_lock lock(mutex_publisher_);
+
+    return publisher_.getNumSubscribers();
+  }
 }
 
 //}
@@ -138,19 +195,10 @@ PublisherHandler<TopicType>::PublisherHandler(const PublisherHandler<TopicType>&
 /* PublisherHandler(ros::NodeHandle& nh, const std::string& address, const unsigned int &buffer_size, const bool &latch) //{ */
 
 template <class TopicType>
-PublisherHandler<TopicType>::PublisherHandler(ros::NodeHandle& nh, const std::string& address, const unsigned int& buffer_size, const bool& latch) {
+PublisherHandler<TopicType>::PublisherHandler(ros::NodeHandle& nh, const std::string& address, const unsigned int& buffer_size, const bool& latch,
+                                              const double& rate) {
 
-  impl_ = std::make_shared<PublisherHandler_impl<TopicType>>(nh, address, buffer_size, latch);
-}
-
-//}
-
-/* initialize(ros::NodeHandle& nh, const std::string& address) //{ */
-
-template <class TopicType>
-void PublisherHandler<TopicType>::initialize(ros::NodeHandle& nh, const std::string& address) {
-
-  impl_ = std::make_shared<PublisherHandler_impl<TopicType>>(nh, address);
+  impl_ = std::make_shared<PublisherHandler_impl<TopicType>>(nh, address, buffer_size, latch, rate);
 }
 
 //}

@@ -41,7 +41,8 @@ public:
    * @param buffer_size buffer size
    * @param latch latching
    */
-  PublisherHandler_impl(ros::NodeHandle& nh, const std::string& address, const unsigned int &buffer_size = 1, const bool &latch = false);
+  PublisherHandler_impl(ros::NodeHandle& nh, const std::string& address, const unsigned int& buffer_size = 1, const bool& latch = false,
+                        const double& rate = 0.0);
 
   /**
    * @brief publish message
@@ -77,7 +78,9 @@ private:
   std::mutex        mutex_publisher_;
   std::atomic<bool> publisher_initialized_;
 
-  std::string _address_;
+  bool      throttle_ = false;
+  double    throttle_min_dt_;
+  ros::Time last_time_published_;
 };
 
 //}
@@ -122,26 +125,10 @@ public:
    *
    * @param nh ROS node handler
    * @param address topic address
-   */
-  PublisherHandler(ros::NodeHandle& nh, const std::string& address);
-
-  /**
-   * @brief constructor
-   *
-   * @param nh ROS node handler
-   * @param address topic address
    * @param buffer_size buffer size
    * @param latch latching
    */
-  PublisherHandler(ros::NodeHandle& nh, const std::string& address, const unsigned int &buffer_size = 1, const bool &latch = false);
-
-  /**
-   * @brief initializer
-   *
-   * @param nh ROS node handler
-   * @param address topic address
-   */
-  void initialize(ros::NodeHandle& nh, const std::string& address);
+  PublisherHandler(ros::NodeHandle& nh, const std::string& address, const unsigned int& buffer_size = 1, const bool& latch = false, const double& rate = 0);
 
   /**
    * @brief publish message
