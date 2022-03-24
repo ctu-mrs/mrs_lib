@@ -86,19 +86,21 @@ namespace mrs_lib
      *
      * This constructor initializes the class and the TF2 transform listener.
      *
-     * \param node_name the name of the node running the transformer, is used in ROS prints. If you don't care, just set it to an empty string.
+     * \param node_name   the name of the node running the transformer, is used in ROS prints. If you don't care, just set it to an empty string.
+     * \param cache_time  duration of the transformation buffer's cache into the past that will be kept.
      */
-    Transformer(const std::string& node_name);
+    Transformer(const std::string& node_name, const ros::Duration& cache_time = ros::Duration(tf2_ros::Buffer::DEFAULT_CACHE_TIME));
 
     /**
      * \brief The main constructor that actually initializes stuff.
      *
      * This constructor initializes the class and the TF2 transform listener.
      *
-     * \param nh        the node handle to be used for subscribing to the transformations.
-     * \param node_name the name of the node running the transformer, is used in ROS prints. If you don't care, just set it to an empty string.
+     * \param nh          the node handle to be used for subscribing to the transformations.
+     * \param node_name   the name of the node running the transformer, is used in ROS prints. If you don't care, just set it to an empty string.
+     * \param cache_time  duration of the transformation buffer's cache into the past that will be kept.
      */
-    Transformer(const ros::NodeHandle& nh, const std::string& node_name = std::string());
+    Transformer(const ros::NodeHandle& nh, const std::string& node_name = std::string(), const ros::Duration& cache_time = ros::Duration(tf2_ros::Buffer::DEFAULT_CACHE_TIME));
 
     /**
      * \brief A convenience move assignment operator.

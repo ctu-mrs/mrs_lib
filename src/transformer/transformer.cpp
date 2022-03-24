@@ -27,13 +27,13 @@ namespace mrs_lib
   {
   }
 
-  Transformer::Transformer(const std::string& node_name)
-    : initialized_(true), node_name_(node_name), tf_buffer_(std::make_unique<tf2_ros::Buffer>()), tf_listener_ptr_(std::make_unique<tf2_ros::TransformListener>(*tf_buffer_))
+  Transformer::Transformer(const std::string& node_name, const ros::Duration& cache_time)
+    : initialized_(true), node_name_(node_name), tf_buffer_(std::make_unique<tf2_ros::Buffer>(cache_time)), tf_listener_ptr_(std::make_unique<tf2_ros::TransformListener>(*tf_buffer_))
   {
   }
 
-  Transformer::Transformer(const ros::NodeHandle& nh, const std::string& node_name)
-    : initialized_(true), node_name_(node_name), tf_buffer_(std::make_unique<tf2_ros::Buffer>()), tf_listener_ptr_(std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, nh))
+  Transformer::Transformer(const ros::NodeHandle& nh, const std::string& node_name, const ros::Duration& cache_time)
+    : initialized_(true), node_name_(node_name), tf_buffer_(std::make_unique<tf2_ros::Buffer>(cache_time)), tf_listener_ptr_(std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, nh))
   {
   }
 
