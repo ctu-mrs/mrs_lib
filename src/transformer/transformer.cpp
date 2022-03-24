@@ -28,13 +28,34 @@ namespace mrs_lib
   }
 
   Transformer::Transformer(const std::string& node_name)
-    : initialized_(true), node_name_(node_name), tf_listener_ptr_(std::make_unique<tf2_ros::TransformListener>(tf_buffer_))
+    : initialized_(true), node_name_(node_name), tf_buffer_(std::make_unique<tf2_ros::Buffer>()), tf_listener_ptr_(std::make_unique<tf2_ros::TransformListener>(*tf_buffer_))
   {
   }
 
   Transformer::Transformer(const ros::NodeHandle& nh, const std::string& node_name)
-    : initialized_(true), node_name_(node_name), tf_listener_ptr_(std::make_unique<tf2_ros::TransformListener>(tf_buffer_, nh))
+    : initialized_(true), node_name_(node_name), tf_buffer_(std::make_unique<tf2_ros::Buffer>()), tf_listener_ptr_(std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, nh))
   {
+  }
+
+  Transformer& Transformer::operator=(Transformer&& other)
+  {
+    std::scoped_lock lck(other.mutex_);
+
+    initialized_ = std::move(other.initialized_);
+    node_name_ = std::move(other.node_name_);
+    tf_buffer_ = std::move(other.tf_buffer_);
+    tf_listener_ptr_ = std::move(other.tf_listener_ptr_);
+
+    default_frame_id_ = std::move(other.default_frame_id_);
+    prefix_ = std::move(other.prefix_);
+    quiet_ = std::move(other.quiet_);
+    lookup_timeout_ = std::move(other.lookup_timeout_);
+    retry_lookup_newest_ = std::move(other.retry_lookup_newest_);
+
+    got_utm_zone_ = std::move(other.got_utm_zone_);
+    utm_zone_ = std::move(other.utm_zone_);
+
+    return *this;
   }
 
   //}
@@ -85,7 +106,7 @@ namespace mrs_lib
     std::scoped_lock lck(mutex_);
 
     double utm_x, utm_y;
-    mrs_lib::LLtoUTM(lat, lon, utm_y, utm_x, utm_zone_);
+    mrs_lib::LLtoUTM(lat, lon, utm_y, utm_x, utm_zone_.data());
     got_utm_zone_ = true;
   }
 
@@ -195,7 +216,7 @@ namespace mrs_lib
     try
     {
       // try looking up and returning the transform
-      return tf_buffer_.lookupTransform(to_frame, from_frame, time_stamp, lookup_timeout_);
+      return tf_buffer_->lookupTransform(to_frame, from_frame, time_stamp, lookup_timeout_);
     }
     catch (tf2::TransformException& e)
     {
@@ -207,7 +228,7 @@ namespace mrs_lib
     {
       try
       {
-        return tf_buffer_.lookupTransform(to_frame, from_frame, ros::Time(0), lookup_timeout_);
+        return tf_buffer_->lookupTransform(to_frame, from_frame, ros::Time(0), lookup_timeout_);
       }
       catch (tf2::TransformException& e)
       {
@@ -270,7 +291,7 @@ namespace mrs_lib
     try
     {
       // try looking up and returning the transform
-      return tf_buffer_.lookupTransform(to_frame, to_stamp, from_frame, from_stamp, fixed_frame, lookup_timeout_);
+      return tf_buffer_->lookupTransform(to_frame, to_stamp, from_frame, from_stamp, fixed_frame, lookup_timeout_);
     }
     catch (tf2::TransformException& e)
     {
@@ -282,7 +303,7 @@ namespace mrs_lib
     {
       try
       {
-        return tf_buffer_.lookupTransform(to_frame, from_frame, ros::Time(0), lookup_timeout_);
+        return tf_buffer_->lookupTransform(to_frame, from_frame, ros::Time(0), lookup_timeout_);
       }
       catch (tf2::TransformException& e)
       {
@@ -368,7 +389,7 @@ namespace mrs_lib
   
     // now apply the nonlinear transformation from UTM to LAT-LON
     geometry_msgs::Point latlon;
-    mrs_lib::UTMtoLL(what.y, what.x, utm_zone_, latlon.x, latlon.y);
+    mrs_lib::UTMtoLL(what.y, what.x, utm_zone_.data(), latlon.x, latlon.y);
     latlon.z = what.z;
     return latlon;
   }

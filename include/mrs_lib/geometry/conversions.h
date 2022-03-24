@@ -25,6 +25,15 @@ namespace mrs_lib
       return {what.x, what.y, what.z};
     }
 
+    Eigen::Matrix<double, 6, 6> toEigenMatrix(const boost::array<double, 36>& what)
+    {
+      Eigen::Matrix<double, 6, 6> ret;
+      for (int r = 0; r < 6; r++)
+        for (int c = 0; c < 6; c++)
+          ret(r, c) = what.at(6 * r + c);
+      return ret;
+    }
+
     geometry_msgs::Quaternion fromEigen(const Eigen::Quaterniond& what)
     {
       geometry_msgs::Quaternion q;

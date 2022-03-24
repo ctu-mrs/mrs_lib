@@ -69,7 +69,7 @@ namespace mrs_lib
   {
 
   public:
-    /* Constructor and overloads //{ */
+    /* Constructor, assignment operator and overloads //{ */
 
     /**
      * \brief A convenience constructor that doesn't initialize anything.
@@ -82,23 +82,33 @@ namespace mrs_lib
     Transformer();
 
     /**
-     * @brief The main constructor that actually initializes stuff.
+     * \brief The main constructor that actually initializes stuff.
      *
      * This constructor initializes the class and the TF2 transform listener.
      *
-     * @param node_name the name of the node running the transformer, is used in ROS prints. If you don't care, just set it to an empty string.
+     * \param node_name the name of the node running the transformer, is used in ROS prints. If you don't care, just set it to an empty string.
      */
     Transformer(const std::string& node_name);
 
     /**
-     * @brief The main constructor that actually initializes stuff.
+     * \brief The main constructor that actually initializes stuff.
      *
      * This constructor initializes the class and the TF2 transform listener.
      *
-     * @param nh        the node handle to be used for subscribing to the transformations.
-     * @param node_name the name of the node running the transformer, is used in ROS prints. If you don't care, just set it to an empty string.
+     * \param nh        the node handle to be used for subscribing to the transformations.
+     * \param node_name the name of the node running the transformer, is used in ROS prints. If you don't care, just set it to an empty string.
      */
     Transformer(const ros::NodeHandle& nh, const std::string& node_name = std::string());
+
+    /**
+     * \brief A convenience move assignment operator.
+     *
+     * This operator moves all data from the object that is being assigned from, invalidating it.
+     *
+     * \param  other  the object to assign from. It will be invalid after this method returns.
+     * \return        a reference to the object being assigned to.
+     */
+    Transformer& operator=(Transformer&& other);
 
     //}
 
@@ -438,7 +448,7 @@ namespace mrs_lib
     bool initialized_ = false;
     std::string node_name_;
 
-    tf2_ros::Buffer tf_buffer_;
+    std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
     std::unique_ptr<tf2_ros::TransformListener> tf_listener_ptr_;
 
     // user-configurable options
@@ -449,7 +459,7 @@ namespace mrs_lib
     bool retry_lookup_newest_ = false;
 
     bool got_utm_zone_ = false;
-    char utm_zone_[10] = {};
+    std::array<char, 10> utm_zone_ = {};
 
     // returns the first namespace prefix of the frame (if any) includin the forward slash
     std::string getFramePrefix(const std::string& frame_id);
@@ -473,26 +483,60 @@ namespace mrs_lib
   public:
     /* frame_from(), frame_to() and inverse() methods //{ */
     
+    /**
+     * \brief A convenience function that returns the frame from which the message transforms.
+     *
+     * \param msg the message representing the transformation.
+     * \return    the frame from which the transformation in \msg transforms.
+     */
     static constexpr const std::string& frame_from(const geometry_msgs::TransformStamped& msg)
     {
       return msg.child_frame_id;
     }
     
+    /**
+     * \brief A convenience function that returns the frame from which the message transforms.
+     *
+     * This overload returns a reference to the string in the message representing the frame id so that it can be modified.
+     *
+     * \param msg the message representing the transformation.
+     * \return    a reference to the field in the message containing the string with the frame id from which the transformation in \msg transforms.
+     */
     static constexpr std::string& frame_from(geometry_msgs::TransformStamped& msg)
     {
       return msg.child_frame_id;
     }
-
+    
+    /**
+     * \brief A convenience function that returns the frame to which the message transforms.
+     *
+     * \param msg the message representing the transformation.
+     * \return    the frame to which the transformation in \msg transforms.
+     */
     static constexpr const std::string& frame_to(const geometry_msgs::TransformStamped& msg)
     {
       return msg.header.frame_id;
     }
 
+    /**
+     * \brief A convenience function that returns the frame to which the message transforms.
+     *
+     * This overload returns a reference to the string in the message representing the frame id so that it can be modified.
+     *
+     * \param msg the message representing the transformation.
+     * \return    a reference to the field in the message containing the string with the frame id to which the transformation in \msg transforms.
+     */
     static constexpr std::string& frame_to(geometry_msgs::TransformStamped& msg)
     {
       return msg.header.frame_id;
     }
 
+    /**
+     * \brief A convenience function implements returns the inverse of the transform message as a one-liner.
+     *
+     * \param msg the message representing the transformation.
+     * \return    a new message representing an inverse of the original transformation.
+     */
     static geometry_msgs::TransformStamped inverse(const geometry_msgs::TransformStamped& msg)
     {
       tf2::Transform tf2;
@@ -575,10 +619,10 @@ namespace mrs_lib
 
   };
 
-#include <impl/transformer.hpp>
-
   //}
 
 }  // namespace mrs_lib
+
+#include <impl/transformer.hpp>
 
 #endif  // TRANSFORMER_H
