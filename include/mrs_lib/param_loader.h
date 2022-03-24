@@ -757,6 +757,36 @@ public:
     loadParam(name, ret, default_value);
     return ret;
   }
+
+  /*!
+    * \brief An overload for loading std_msgs::ColorRGBA.
+    *
+    * The color will be loaded as several \p double -typed variables, representing the R, G, B and A color elements.
+    *
+    * \param name          Name of the parameter in the rosparam server.
+    * \param default_value This value will be used if the parameter name is not found in the rosparam server.
+    * \return              The loaded parameter value.
+    */
+  XmlRpc::XmlRpcValue loadParam2(const std::string& name, const XmlRpc::XmlRpcValue& default_value)
+  {
+    const auto loaded = load<XmlRpc::XmlRpcValue>(name, default_value, OPTIONAL, UNIQUE);
+    return loaded.first;
+  }
+
+  /*!
+    * \brief An overload for loading std_msgs::ColorRGBA.
+    *
+    * The color will be loaded as several \p double -typed variables, representing the R, G, B and A color elements.
+    *
+    * \param name          Name of the parameter in the rosparam server.
+    * \param default_value This value will be used if the parameter name is not found in the rosparam server.
+    * \return              The loaded parameter value.
+    */
+  XmlRpc::XmlRpcValue loadParam2(const std::string& name)
+  {
+    const auto loaded = load<XmlRpc::XmlRpcValue>(name, {}, COMPULSORY, UNIQUE);
+    return loaded.first;
+  }
   
   //}
 

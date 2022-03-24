@@ -25,6 +25,8 @@ namespace mrs_lib
     using pt3_t = vec_t<3>;
     using vec3_t = vec_t<3>;
 
+    using mat3_t = Eigen::Matrix3d;
+
     using quat_t = Eigen::Quaterniond;
     using anax_t = Eigen::AngleAxisd;
 
@@ -294,6 +296,26 @@ namespace mrs_lib
      */
     double sphericalTriangleArea(Eigen::Vector3d a, Eigen::Vector3d b, Eigen::Vector3d c);
 
+    //}
+
+    /* rotateCovariance() //{ */
+    
+    /*!
+     * \brief Returns the covariance rotated using the specified rotation.
+     *
+     * \param cov the covariance to be rotated.
+     * \param rot the rotation use.
+     *
+     * \returns a new matrix object containing the rotated covariance.
+     *
+     */
+    template <typename T>
+    mat3_t rotateCovariance(const mat3_t& cov, const T& rot)
+    {
+      const mat3_t matrot(rot);
+      return matrot*cov*matrot.transpose();
+    }
+    
     //}
 
   }  // namespace geometry

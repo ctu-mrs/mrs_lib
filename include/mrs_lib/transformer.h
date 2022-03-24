@@ -86,19 +86,21 @@ namespace mrs_lib
      *
      * This constructor initializes the class and the TF2 transform listener.
      *
-     * \param node_name the name of the node running the transformer, is used in ROS prints. If you don't care, just set it to an empty string.
+     * \param node_name   the name of the node running the transformer, is used in ROS prints. If you don't care, just set it to an empty string.
+     * \param cache_time  duration of the transformation buffer's cache into the past that will be kept.
      */
-    Transformer(const std::string& node_name);
+    Transformer(const std::string& node_name, const ros::Duration& cache_time = ros::Duration(tf2_ros::Buffer::DEFAULT_CACHE_TIME));
 
     /**
      * \brief The main constructor that actually initializes stuff.
      *
      * This constructor initializes the class and the TF2 transform listener.
      *
-     * \param nh        the node handle to be used for subscribing to the transformations.
-     * \param node_name the name of the node running the transformer, is used in ROS prints. If you don't care, just set it to an empty string.
+     * \param nh          the node handle to be used for subscribing to the transformations.
+     * \param node_name   the name of the node running the transformer, is used in ROS prints. If you don't care, just set it to an empty string.
+     * \param cache_time  duration of the transformation buffer's cache into the past that will be kept.
      */
-    Transformer(const ros::NodeHandle& nh, const std::string& node_name = std::string());
+    Transformer(const ros::NodeHandle& nh, const std::string& node_name = std::string(), const ros::Duration& cache_time = ros::Duration(tf2_ros::Buffer::DEFAULT_CACHE_TIME));
 
     /**
      * \brief A convenience move assignment operator.
@@ -607,14 +609,6 @@ namespace mrs_lib
     using LLUTM_method_chk = decltype(std::declval<Class>().LLtoUTM(std::declval<const Message&>(), ""));
     template<class Class, typename Message>
     static constexpr bool UTMLL_exists_v = std::experimental::is_detected<UTMLL_method_chk, Class, Message>::value && std::experimental::is_detected<LLUTM_method_chk, Class, Message>::value;
-    //}
-
-    /* methods for converting between Eigen and geometry_msgs types //{ */
-    geometry_msgs::Quaternion fromEigen(const Eigen::Quaterniond& what);
-    geometry_msgs::Point fromEigen(const Eigen::Vector3d& what);
-    
-    Eigen::Vector3d toEigen(const geometry_msgs::Point& what);
-    Eigen::Quaterniond toEigen(const geometry_msgs::Quaternion& what);
     //}
 
   };

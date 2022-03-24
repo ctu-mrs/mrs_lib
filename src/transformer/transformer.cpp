@@ -27,13 +27,13 @@ namespace mrs_lib
   {
   }
 
-  Transformer::Transformer(const std::string& node_name)
-    : initialized_(true), node_name_(node_name), tf_buffer_(std::make_unique<tf2_ros::Buffer>()), tf_listener_ptr_(std::make_unique<tf2_ros::TransformListener>(*tf_buffer_))
+  Transformer::Transformer(const std::string& node_name, const ros::Duration& cache_time)
+    : initialized_(true), node_name_(node_name), tf_buffer_(std::make_unique<tf2_ros::Buffer>(cache_time)), tf_listener_ptr_(std::make_unique<tf2_ros::TransformListener>(*tf_buffer_))
   {
   }
 
-  Transformer::Transformer(const ros::NodeHandle& nh, const std::string& node_name)
-    : initialized_(true), node_name_(node_name), tf_buffer_(std::make_unique<tf2_ros::Buffer>()), tf_listener_ptr_(std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, nh))
+  Transformer::Transformer(const ros::NodeHandle& nh, const std::string& node_name, const ros::Duration& cache_time)
+    : initialized_(true), node_name_(node_name), tf_buffer_(std::make_unique<tf2_ros::Buffer>(cache_time)), tf_listener_ptr_(std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, nh))
   {
   }
 
@@ -428,43 +428,6 @@ namespace mrs_lib
       return "";
     else
       return frame_id.substr(0, firstof+1);
-  }
-  //}
-
-  /* methods for converting between Eigen and geometry_msgs types //{ */
-  geometry_msgs::Point Transformer::fromEigen(const Eigen::Vector3d& what)
-  {
-    geometry_msgs::Point pt;
-    pt.x = what.x();
-    pt.y = what.y();
-    pt.z = what.z();
-    return pt;
-  }
-  
-  Eigen::Vector3d Transformer::toEigen(const geometry_msgs::Point& what)
-  {
-    return {what.x, what.y, what.z};
-  }
-  
-  geometry_msgs::Quaternion Transformer::fromEigen(const Eigen::Quaterniond& what)
-  {
-    geometry_msgs::Quaternion q;
-    q.x = what.x();
-    q.y = what.y();
-    q.z = what.z();
-    q.w = what.w();
-    return q;
-  }
-  
-  Eigen::Quaterniond Transformer::toEigen(const geometry_msgs::Quaternion& what)
-  {
-    // better to do this manually than through the constructor to avoid ambiguities (e.g. position of x and w)
-    Eigen::Quaterniond q;
-    q.x() = what.x;
-    q.y() = what.y;
-    q.z() = what.z;
-    q.w() = what.w;
-    return q;
   }
   //}
 
