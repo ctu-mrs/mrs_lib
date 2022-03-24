@@ -188,12 +188,19 @@ target_link_libraries(MrsLibAttitudeConverter
 
 add_library(MrsLibTransformer src/transformer/transformer.cpp)
 target_link_libraries(MrsLibTransformer
-  MrsLibAttitudeConverter
+  MrsLibGeometry
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
 target_include_directories(MrsLibTransformer PRIVATE
   ${PCL_INCLUDE_DIRS}
+  )
+
+add_executable(transformer_example src/transformer/example.cpp)
+target_link_libraries(transformer_example
+  MrsLibTransformer
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
   )
 
 add_library(MrsLibUtils src/utils/utils.cpp)
@@ -404,7 +411,7 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(
     TransformerTest
     MrsLibTransformer
-    MrsLibAttitudeConverter
+    MrsLibGeometry
     ${catkin_LIBRARIES}
     )
 
@@ -489,6 +496,21 @@ if(CATKIN_ENABLE_TESTING)
     )
   add_dependencies(
     ServiceClientHandlerTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+    )
+
+  add_rostest_gtest(
+    PublisherHandlerTest
+    test/publisher_handler/publisher_handler.test
+    test/publisher_handler/test.cpp
+    )
+  target_link_libraries(
+    PublisherHandlerTest
+    ${catkin_LIBRARIES}
+    )
+  add_dependencies(
+    PublisherHandlerTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
     )
