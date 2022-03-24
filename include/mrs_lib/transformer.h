@@ -609,14 +609,6 @@ namespace mrs_lib
     static constexpr bool UTMLL_exists_v = std::experimental::is_detected<UTMLL_method_chk, Class, Message>::value && std::experimental::is_detected<LLUTM_method_chk, Class, Message>::value;
     //}
 
-    /* methods for converting between Eigen and geometry_msgs types //{ */
-    geometry_msgs::Quaternion fromEigen(const Eigen::Quaterniond& what);
-    geometry_msgs::Point fromEigen(const Eigen::Vector3d& what);
-    
-    Eigen::Vector3d toEigen(const geometry_msgs::Point& what);
-    Eigen::Quaterniond toEigen(const geometry_msgs::Quaternion& what);
-    //}
-
   };
 
   //}
