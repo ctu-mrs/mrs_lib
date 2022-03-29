@@ -55,7 +55,7 @@ find_package(PCL REQUIRED)
 ###################################
 
 set(LIBRARIES
-  MrsLibSafetyZone MrsLibProfiler MrsLibScopeTimer MrsLibIirFilter MrsLibNotchFilter MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibOdomLKF MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibTimer MrsLibTransformBroadcaster
+  MrsLibSafetyZone MrsLibProfiler MrsLibScopeTimer MrsLibIirFilter MrsLibNotchFilter MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibOdomLKF MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibTimer MrsLibTransformBroadcaster MrsLibMath
   )
 
 catkin_package(
@@ -278,6 +278,11 @@ target_link_libraries(batch_visualizer_demo
   ${GAZEBO_INCLUDE_DIRS}
   )
 
+add_library(MrsLibMath src/math/math.cpp)
+target_link_libraries(MrsLibMath
+  ${catkin_LIBRARIES}
+  )
+
 add_library(MrsLibGeometry src/geometry/misc.cpp src/geometry/cyclic.cpp src/geometry/shapes.cpp)
 target_link_libraries(MrsLibGeometry
   ${catkin_LIBRARIES}
@@ -330,6 +335,21 @@ install(DIRECTORY ./
 if(CATKIN_ENABLE_TESTING)
 
   find_package(rostest REQUIRED)
+
+  add_rostest_gtest(MathTest
+    test/math/math.test
+    test/math/test.cpp
+    )
+
+  target_link_libraries(MathTest
+    MrsLibMath
+    ${catkin_LIBRARIES}
+    )
+
+  add_dependencies(MathTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+    )
 
   add_rostest_gtest(
     GeometryTest

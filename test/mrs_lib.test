@@ -1,5 +1,8 @@
 <launch>
 
+  <include file="$(find mrs_lib)/test/math/math.test">
+  </include>
+
   <include file="$(find mrs_lib)/test/geometry/geometry.test">
   </include>
 
