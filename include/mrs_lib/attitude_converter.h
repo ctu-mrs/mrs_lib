@@ -13,7 +13,7 @@
 #define ATTITUDE_CONVERTER_H
 
 #include <vector>
-#include <math.h>
+#include <cmath>
 #include <Eigen/Dense>
 #include <tuple>
 

@@ -1,7 +1,7 @@
 #ifndef QUADRATIC_THRUST_MODEL_H
 #define QUADRATIC_THRUST_MODEL_H
 
-#include <math.h>
+#include <cmath>
 
 namespace mrs_lib
 {
