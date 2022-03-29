@@ -20,15 +20,15 @@ TEST(TESTSuite, inv_cdf)
   {
     const double in = probit_ins[it];
     const double gt = probit_gts[it];
-    const double val = mrs_lib::inv_cdf(in);
+    const double val = mrs_lib::probit(in);
     if (in == 0.0 || in == 1.0)
       EXPECT_EQ(gt, val);
     else
       EXPECT_LT(fabs(gt-val), eps);
   }
 
-  EXPECT_TRUE(std::isnan(mrs_lib::inv_cdf(-0.1)));
-  EXPECT_TRUE(std::isnan(mrs_lib::inv_cdf(1.1)));
+  EXPECT_TRUE(std::isnan(mrs_lib::probit(-0.1)));
+  EXPECT_TRUE(std::isnan(mrs_lib::probit(1.1)));
 }
 
 //}
