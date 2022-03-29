@@ -2,12 +2,8 @@
 
 namespace mrs_lib
 {
-  /* inv_cdf() method //{ */
-  // Inverse cumulative distribution function of a normal probability distribution (aka the probit function)
-  // The implementation uses the Beasley-Springer-Moro approximation
-  // (see page 68 of Glasserman, Paul, "Monte Carlo Methods in Financial Engineering. Stochastic Modelling and Applied Probability", 2003, doi:10.1007/978-0-387-21617-1)
-  // (see https://sci-hub.se/10.1007/978-0-387-21617-1)
-  double inv_cdf(const double quantile)
+  /* probit() function //{ */
+  double probit(const double quantile)
   {
     // polynomial coefficients of the numerator for rational polynomial approximation in the range (0.08; 0.92)
     constexpr double a[4] =
@@ -41,6 +37,7 @@ namespace mrs_lib
       0.0000003960315187
     };
 
+    // correctly handle special values
     if (quantile == 1.0)
       return std::numeric_limits<double>::infinity();
     if (quantile == 0.0)
