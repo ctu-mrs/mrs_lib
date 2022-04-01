@@ -39,7 +39,7 @@ namespace mrs_lib
 
   Transformer& Transformer::operator=(Transformer&& other)
   {
-    std::scoped_lock lck(other.mutex_);
+    std::scoped_lock lck(other.mutex_, mutex_);
 
     initialized_ = std::move(other.initialized_);
     node_name_ = std::move(other.node_name_);
