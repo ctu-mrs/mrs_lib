@@ -160,6 +160,12 @@ target_link_libraries(MrsLibScopeTimer
   ${Eigen_LIBRARIES}
   )
 
+add_library(MrsLibMedianFilter src/median_filter/median_filter.cpp)
+target_link_libraries(MrsLibMedianFilter
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
 add_library(MrsLibIirFilter src/iir_filter/iir_filter.cpp)
 target_link_libraries(MrsLibIirFilter
   ${catkin_LIBRARIES}
@@ -243,12 +249,6 @@ target_link_libraries(subscribe_handler_simple_example
 
 add_executable(rheiv_example src/rheiv/example.cpp)
 target_link_libraries(rheiv_example
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  )
-
-add_library(MrsLibMedianFilter src/median_filter/median_filter.cpp)
-target_link_libraries(MrsLibMedianFilter
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
@@ -501,6 +501,22 @@ if(CATKIN_ENABLE_TESTING)
     )
   add_dependencies(
     TimerTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+    )
+
+  add_rostest_gtest(
+    MedianFilterTest
+    test/median_filter/median_filter.test
+    test/median_filter/test.cpp
+    )
+  target_link_libraries(
+    MedianFilterTest
+    MrsLibMedianFilter
+    ${catkin_LIBRARIES}
+    )
+  add_dependencies(
+    MedianFilterTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
     )

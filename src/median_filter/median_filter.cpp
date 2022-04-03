@@ -1,145 +1,183 @@
-/* author: Daniel Hert */
-
 #include <mrs_lib/median_filter.h>
 
-/* constructor //{ */
+namespace mrs_lib
+{
+  /* constructor overloads //{ */
 
-MedianFilter::MedianFilter(int buffer_size, double max_valid_value, double min_valid_value, double max_difference) {
-
-  is_filled = false;
-
-  // maximum value that is considered valid
-  this->max_valid_value = max_valid_value;
-
-  // minimum value that is considered valid
-  this->min_valid_value = min_valid_value;
-
-  // if new value is more different from the filter median than this value, it is classified as invalid
-  this->max_difference = max_difference;
-
-  this->buffer_size = buffer_size;
-
-  buffer.resize(buffer_size);
-  next     = 0;
-  m_median = 0;
-  ROS_INFO("[MedianFilter]: initialized, buffer size: %d", buffer_size);
-}
-
-//}
-
-/* isValid() //{ */
-
-bool MedianFilter::isValid(double input) {
-
-  double value = input;
-
-  // add new value to the filter buffer
-  buffer[next] = value;
-  next++;
-
-  if (next == buffer_size) {
-    next      = 0;
-    is_filled = true;
-  }
-
-  // check if new value is valid
-  if (input > max_valid_value || input < min_valid_value) {
-    return false;
-  }
-
-  int    current_value  = 0;
-  int    best_med_value = std::numeric_limits<int>::max();
-  int    zero_counter   = 0;
-  double median         = 0;
-  bool   valid          = true;
-
-  // calculate the median from the filter buffer
-  for (int i = 0; i < buffer_size; i++) {
-    if (buffer[i] == 0) {
-      zero_counter++;
-    }
-  }
-
-  // if there is more zeroes in the buffer than half of the buffer size, the median value is automatically zero
-  if (zero_counter < buffer_size / 2) {
-
-    for (int i = 0; i < buffer_size; i++) {
-
-      current_value = 0;
-
-      if (buffer[i] == 0) {
-        continue;
-      }
-
-      for (int j = 0; j < buffer_size; j++) {
-
-        if (i == j) {
-          continue;
-        }
-
-        if (buffer[i] > buffer[j]) {
-          current_value++;
-        } else if (buffer[i] < buffer[j]) {
-          current_value--;
-        }
-      }
-
-      if (abs(current_value) < best_med_value) {
-        best_med_value = abs(current_value);
-        median         = buffer[i];
-      }
-    }
-  } else {
-    median = 0;
-  }
-
+  MedianFilter::MedianFilter(const size_t buffer_length, const double min_value, const double max_value, const double max_diff)
+    : m_median(std::nullopt),
+      m_min_valid(min_value),
+      m_max_valid(max_value),
+      m_max_diff(max_diff)
   {
-    std::scoped_lock lock(mutex_median);
-
-    m_median = median;
+    m_buffer.set_capacity(buffer_length);
+    m_buffer_sorted.reserve(buffer_length);
   }
 
-  // if a new value is not close to the median, it is discarded
-  if (fabs(value - median) > max_difference) {
-    valid = false;
-  } else {
-    valid = true;
-  }
-
-  // check whether the output is finite
-  if (std::isfinite(value)) {
-    return valid;
-  } else {
-
-    ROS_WARN_THROTTLE(1.0, "[MedianFilter]: received value is not a finite number!");
-    return false;
-  }
-}
-
-//}
-
-/* isFilled() //{ */
-
-bool MedianFilter::isFilled() {
-  return is_filled;
-}
-
-//}
-
-/* getMedian() //{ */
-
-
-double MedianFilter::getMedian() {
-
-  double median;
-
+  MedianFilter::MedianFilter()
+    : m_median(std::nullopt),
+      m_min_valid(0.0),
+      m_max_valid(0.0),
+      m_max_diff(0.0)
   {
-    std::scoped_lock lock(mutex_median);
-
-    median = m_median;
+    m_buffer.set_capacity(0);
   }
-  return median;
-}
 
+  MedianFilter::MedianFilter(const MedianFilter& other)
+  {
+    *this = other;
+  }
 
-//}
+  MedianFilter::MedianFilter(MedianFilter&& other)
+  {
+    *this = other;
+  }
+
+  //}
+
+  /* operator=() method and overloads //{ */
+  MedianFilter& MedianFilter::operator=(const MedianFilter& other)
+  {
+    std::scoped_lock lck(other.m_mtx, m_mtx);
+  
+    m_buffer = other.m_buffer;
+    m_buffer_sorted = other.m_buffer_sorted;
+    m_median = other.m_median;
+  
+    // parameters specified by the user
+    m_min_valid = other.m_min_valid;
+    m_max_valid = other.m_max_valid;
+    m_max_diff = other.m_max_diff;
+  
+    return *this;
+  }
+
+  MedianFilter& MedianFilter::operator=(MedianFilter&& other)
+  {
+    std::scoped_lock lck(other.m_mtx, m_mtx);
+
+    m_buffer = std::move(other.m_buffer);
+    m_buffer_sorted = std::move(other.m_buffer_sorted);
+    m_median = std::move(other.m_median);
+
+    // parameters specified by the user
+    m_min_valid = other.m_min_valid;
+    m_max_valid = other.m_max_valid;
+    m_max_diff = other.m_max_diff;
+
+    return *this;
+  }
+  //}
+
+  /* add() method //{ */
+  bool MedianFilter::add(const double value)
+  {
+    std::scoped_lock lck(m_mtx);
+    // check if all constraints are met
+    const double diff = m_buffer.empty() ? 0.0 : std::abs(median() - value);
+    if (value > m_min_valid && value < m_max_valid && diff < m_max_diff)
+    {
+      // only add the value if constraints are met
+      m_buffer.push_back(value);
+      // reset the cached median value
+      m_median = std::nullopt;
+      return true;
+    }
+    else
+      return false;
+  }
+  //}
+
+  /* clear() method //{ */
+  void MedianFilter::clear()
+  {
+    std::scoped_lock lck(m_mtx);
+    m_median = std::nullopt;
+    m_buffer.clear();
+  }
+  //}
+
+  /* full() method //{ */
+  bool MedianFilter::full() const
+  {
+    std::scoped_lock lck(m_mtx);
+    return m_buffer.full();
+  }
+  //}
+
+  /* median() method //{ */
+  double MedianFilter::median() const
+  {
+    std::scoped_lock lck(m_mtx);
+    // if the value was already calculated, just return it
+    if (m_median.has_value())
+      return m_median.value();
+  
+    // check if there are even any numbers to calculate the median from
+    if (m_buffer.empty())
+    {
+      m_median = std::numeric_limits<double>::quiet_NaN();
+      return m_median.value();
+    }
+  
+    // remove any elements from buffer_sorted
+    m_buffer_sorted.clear();
+    // copy all elements from the input buffer to buffer_sorted
+    m_buffer_sorted.insert(std::end(m_buffer_sorted), std::begin(m_buffer), std::end(m_buffer));
+    // check for the special case of the median when there is an even number of numbers in the set
+    const bool even_set = m_buffer_sorted.size() % 2 == 0;
+  
+    // if it's an even set, we'll need one more element sorted than for an odd set of numbers
+    const size_t median_pos = even_set ? std::ceil(m_buffer_sorted.size()/2.0) : std::floor(m_buffer_sorted.size()/2.0);
+    // actually sort the elements in buffer_sorted up to the n-th element
+    std::nth_element(std::begin(m_buffer_sorted), std::begin(m_buffer_sorted)+median_pos, std::end(m_buffer_sorted));
+  
+    // special case for a median of an even set of numbers
+    if (even_set)
+      m_median = (m_buffer_sorted.at(median_pos) + m_buffer_sorted.at(median_pos-1))/2.0;
+    // the "normal" case with an odd set
+    else
+      m_median = m_buffer_sorted.at(median_pos);
+    // return the now-cached value
+    return m_median.value();
+  }
+  //}
+
+  /* setBufferLength() method //{ */
+  void MedianFilter::setBufferLength(const size_t buffer_length)
+  {
+    std::scoped_lock lck(m_mtx);
+    // the median may change if the some values are discarded
+    if (buffer_length < m_buffer.size())
+      m_median = std::nullopt;
+  
+    m_buffer.set_capacity(buffer_length);
+    m_buffer_sorted.reserve(buffer_length);
+  }
+  //}
+
+  /* setMinValue() method //{ */
+  void MedianFilter::setMinValue(const double min_value)
+  {
+    std::scoped_lock lck(m_mtx);
+    m_min_valid = min_value;
+  }
+  //}
+
+  /* setMaxValue() method //{ */
+  void MedianFilter::setMaxValue(const double max_value)
+  {
+    std::scoped_lock lck(m_mtx);
+    m_max_valid = max_value;
+  }
+  //}
+
+  /* setMaxDifference() method //{ */
+  void MedianFilter::setMaxDifference(const double max_diff)
+  {
+    std::scoped_lock lck(m_mtx);
+    m_max_diff = max_diff;
+  }
+  //}
+
+} // namespace mrs_lib
