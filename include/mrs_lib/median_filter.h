@@ -10,6 +10,7 @@
 #include <boost/circular_buffer.hpp>
 #include <mutex>
 #include <cmath>
+#include <vector>
 
 namespace mrs_lib
 {
