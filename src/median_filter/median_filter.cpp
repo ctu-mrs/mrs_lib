@@ -143,6 +143,14 @@ namespace mrs_lib
   }
   //}
 
+  /* initialized() method //{ */
+  bool MedianFilter::initialized() const
+  {
+    std::scoped_lock lck(m_mtx);
+    return m_buffer.size() > 0;
+  }
+  //}
+
   /* setBufferLength() method //{ */
   void MedianFilter::setBufferLength(const size_t buffer_length)
   {

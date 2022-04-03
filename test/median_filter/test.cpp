@@ -165,6 +165,7 @@ TEST(TESTSuite, copy)
   {
     // empty constructor that will construct an object with a zero-length buffer
     mrs_lib::MedianFilter fil2;
+    EXPECT_FALSE(fil2.initialized());
     EXPECT_TRUE(fil2.full());
     fil2.setMinValue(-100);
     fil2.setMaxValue(100);

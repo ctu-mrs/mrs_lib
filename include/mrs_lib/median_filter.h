@@ -11,6 +11,7 @@
 #include <mutex>
 #include <cmath>
 #include <vector>
+#include <optional>
 
 namespace mrs_lib
 {
@@ -34,7 +35,9 @@ namespace mrs_lib
       /*!
        * \brief A convenience empty constructor that will construct an invalid filter.
        *
-       * \warning This constructor will will construct an invalid filter with a zero-length buffer. To actually initialize this object, use the main constructor.
+       * \warning This constructor will construct an unusable filter with a zero-length buffer.
+       * To actually initialize this object, use the main constructor.
+       * You can use the initialized() method to check whether the object is valid.
        *
        */
       MedianFilter();
@@ -117,6 +120,13 @@ namespace mrs_lib
        * \return        the current median value (returns \p nan if the input buffer is empty).
        */
       double median() const;
+
+      /*!
+       * \brief Check whether the filter was initialized with a valid buffer length.
+       *
+       * \return true if the buffer length is larger than zero.
+       */
+      bool initialized() const;
 
       /*!
        * \brief Set a new size of the buffer.
