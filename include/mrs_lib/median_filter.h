@@ -83,17 +83,37 @@ namespace mrs_lib
       MedianFilter& operator=(MedianFilter&& other);
 
       /*!
-       * \brief Add a new value to the buffer if it complies with the constraints.
+       * \brief Add a new value to the buffer.
        *
-       * The value will only be added if it's above the \p min_value, below the \p max_value
-       * and it's (absolute) difference from the current mean is below \p max_diff.
-       *
-       * \note The updated median value will not be calculated until the median() method is called (lazy evaluation).
+       * \note The median value will not be updated until the median() method is called (lazy evaluation).
        *
        * \param value   the new value to be added to the buffer.
-       * \return        true if the value was added, false otherwise.
        */
-      bool add(const double value);
+      void add(const double value);
+
+      /*!
+       * \brief Check whether a value complies with the constraints.
+       *
+       * The value is compliant if it's above the \p min_value, below the \p max_value
+       * and its (absolute) difference from the current mean is below \p max_diff.
+       *
+       * \param value   the value to be checked.
+       * \return        true if the value is compliant, false otherwise.
+       */
+      bool check(const double value);
+
+      /*!
+       * \brief Add a new value to the buffer and check if it complies with the constraints.
+       *
+       * The value is compliant if it's above the \p min_value, below the \p max_value
+       * and its (absolute) difference from the current mean is below \p max_diff.
+       *
+       * \note The median value will not be updated until the median() method is called (lazy evaluation).
+       *
+       * \param value   the new value to be added to the buffer and checked.
+       * \return        true if the value is compliant, false otherwise.
+       */
+      bool addCheck(const double value);
 
       /*!
        * \brief Clear the buffer of all values.

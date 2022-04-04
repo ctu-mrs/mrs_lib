@@ -70,21 +70,32 @@ namespace mrs_lib
   //}
 
   /* add() method //{ */
-  bool MedianFilter::add(const double value)
+  void MedianFilter::add(const double value)
+  {
+    std::scoped_lock lck(m_mtx);
+    // add the value to the buffer
+    m_buffer.push_back(value);
+    // reset the cached median value
+    m_median = std::nullopt;
+  }
+  //}
+
+  /* check() method //{ */
+  bool MedianFilter::check(const double value)
   {
     std::scoped_lock lck(m_mtx);
     // check if all constraints are met
     const double diff = m_buffer.empty() ? 0.0 : std::abs(median() - value);
-    if (value > m_min_valid && value < m_max_valid && diff < m_max_diff)
-    {
-      // only add the value if constraints are met
-      m_buffer.push_back(value);
-      // reset the cached median value
-      m_median = std::nullopt;
-      return true;
-    }
-    else
-      return false;
+    return value > m_min_valid && value < m_max_valid && diff < m_max_diff;
+  }
+  //}
+
+  /* addCheck() method //{ */
+  bool MedianFilter::addCheck(const double value)
+  {
+    std::scoped_lock lck(m_mtx);
+    add(value);
+    return check(value);
   }
   //}
 

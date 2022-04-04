@@ -27,35 +27,35 @@ TEST(TESTSuite, constraints)
   mrs_lib::MedianFilter fil(bfr_len, min, max, max_diff);
 
   // doesn't comply with min constraint
-  EXPECT_FALSE(fil.add(-1));
+  EXPECT_FALSE(fil.check(-1));
   // doesn't comply with max constraint
-  EXPECT_FALSE(fil.add(11));
+  EXPECT_FALSE(fil.check(11));
 
   // fine
-  EXPECT_TRUE(fil.add(1));
+  EXPECT_TRUE(fil.addCheck(1));
   // now, the median value should be 1
   EXPECT_EQ(fil.median(), 1);
   // doesn't comply with max. diff. constraint
-  EXPECT_FALSE(fil.add(9));
+  EXPECT_FALSE(fil.check(9));
 
   // fine
-  EXPECT_TRUE(fil.add(3));
+  EXPECT_TRUE(fil.addCheck(3));
   // now, the median value should be 2
   EXPECT_EQ(fil.median(), 2);
 
   fil.setMaxValue(20);
   // should still fail due to max. threshold
-  EXPECT_FALSE(fil.add(11));
+  EXPECT_FALSE(fil.check(11));
 
   fil.setMaxDifference(10);
   // now should be fine
-  EXPECT_TRUE(fil.add(11));
+  EXPECT_TRUE(fil.addCheck(11));
   // now, the median value should be 3
   EXPECT_EQ(fil.median(), 3);
 
   fil.setMinValue(-10);
   // now should be fine
-  EXPECT_TRUE(fil.add(-1));
+  EXPECT_TRUE(fil.addCheck(-1));
   // now, the median value should be 2 again
   EXPECT_EQ(fil.median(), 2);
 }
@@ -70,24 +70,24 @@ TEST(TESTSuite, median)
   mrs_lib::MedianFilter fil(bfr_len);
 
   EXPECT_TRUE(std::isnan(fil.median()));
-  EXPECT_TRUE(fil.add(0));
+  EXPECT_TRUE(fil.addCheck(0));
   EXPECT_EQ(fil.median(), 0);
-  EXPECT_TRUE(fil.add(1));
+  EXPECT_TRUE(fil.addCheck(1));
   EXPECT_EQ(fil.median(), 0.5);
-  EXPECT_TRUE(fil.add(2));
+  EXPECT_TRUE(fil.addCheck(2));
   EXPECT_EQ(fil.median(), 1);
-  EXPECT_TRUE(fil.add(3));
+  EXPECT_TRUE(fil.addCheck(3));
   EXPECT_EQ(fil.median(), 1.5);
-  EXPECT_TRUE(fil.add(4));
+  EXPECT_TRUE(fil.addCheck(4));
   EXPECT_EQ(fil.median(), 2);
-  EXPECT_TRUE(fil.add(5));
+  EXPECT_TRUE(fil.addCheck(5));
   EXPECT_EQ(fil.median(), 3);
-  EXPECT_TRUE(fil.add(100));
+  EXPECT_TRUE(fil.addCheck(100));
   EXPECT_EQ(fil.median(), 4);
 
   fil.clear();
   EXPECT_TRUE(std::isnan(fil.median()));
-  EXPECT_TRUE(fil.add(666));
+  EXPECT_TRUE(fil.addCheck(666));
   EXPECT_EQ(fil.median(), 666);
 }
 
@@ -101,24 +101,24 @@ TEST(TESTSuite, full)
   mrs_lib::MedianFilter fil(bfr_len);
 
   EXPECT_FALSE(fil.full());
-  EXPECT_TRUE(fil.add(1));
+  EXPECT_TRUE(fil.addCheck(1));
   EXPECT_FALSE(fil.full());
-  EXPECT_TRUE(fil.add(2));
+  EXPECT_TRUE(fil.addCheck(2));
   EXPECT_FALSE(fil.full());
-  EXPECT_TRUE(fil.add(3));
+  EXPECT_TRUE(fil.addCheck(3));
   EXPECT_FALSE(fil.full());
-  EXPECT_TRUE(fil.add(4));
+  EXPECT_TRUE(fil.addCheck(4));
   EXPECT_FALSE(fil.full());
-  EXPECT_TRUE(fil.add(5));
+  EXPECT_TRUE(fil.addCheck(5));
   EXPECT_TRUE(fil.full());
   fil.clear();
   EXPECT_FALSE(fil.full());
 
-  EXPECT_TRUE(fil.add(1));
+  EXPECT_TRUE(fil.addCheck(1));
   EXPECT_FALSE(fil.full());
-  EXPECT_TRUE(fil.add(2));
+  EXPECT_TRUE(fil.addCheck(2));
   EXPECT_FALSE(fil.full());
-  EXPECT_TRUE(fil.add(3));
+  EXPECT_TRUE(fil.addCheck(3));
   EXPECT_FALSE(fil.full());
   fil.setBufferLength(3);
   EXPECT_TRUE(fil.full());
@@ -136,15 +136,15 @@ TEST(TESTSuite, copy)
   mrs_lib::MedianFilter fil(bfr_len);
 
   EXPECT_FALSE(fil.full());
-  EXPECT_TRUE(fil.add(1));
+  EXPECT_TRUE(fil.addCheck(1));
   EXPECT_FALSE(fil.full());
-  EXPECT_TRUE(fil.add(2));
+  EXPECT_TRUE(fil.addCheck(2));
   EXPECT_FALSE(fil.full());
-  EXPECT_TRUE(fil.add(3));
+  EXPECT_TRUE(fil.addCheck(3));
   EXPECT_FALSE(fil.full());
-  EXPECT_TRUE(fil.add(4));
+  EXPECT_TRUE(fil.addCheck(4));
   EXPECT_FALSE(fil.full());
-  EXPECT_TRUE(fil.add(5));
+  EXPECT_TRUE(fil.addCheck(5));
   EXPECT_TRUE(fil.full());
   EXPECT_EQ(fil.median(), 3);
 
@@ -171,7 +171,7 @@ TEST(TESTSuite, copy)
     fil2.setMaxValue(100);
     fil2.setMaxDifference(200);
     EXPECT_TRUE(std::isnan(fil2.median()));
-    EXPECT_TRUE(fil2.add(1));
+    EXPECT_TRUE(fil2.addCheck(1));
     EXPECT_TRUE(std::isnan(fil2.median()));
   }
 }
