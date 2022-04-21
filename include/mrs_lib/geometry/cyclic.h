@@ -417,17 +417,6 @@ namespace mrs_lib
       /*!
        * \brief Addition compound operator.
        *
-       * \param other value to be added (will be wrapped).
-       * \return      reference to self.
-       */
-      cyclic& operator+=(const flt other)
-      {
-        val = wrap(val + other);
-        return *this;
-      };
-      /*!
-       * \brief Addition compound operator.
-       *
        * \param other value to be added.
        * \return      reference to self.
        */
@@ -448,6 +437,18 @@ namespace mrs_lib
       {
         lhs += rhs;
         return lhs;
+      }
+
+      /*!
+       * \brief Subtraction operator (uses the diff() method).
+       *
+       * \param lhs left-hand-side.
+       * \param rhs right-hand-side.
+       * \return    reference to the result.
+       */
+      friend double operator-(cyclic lhs, const cyclic& rhs)
+      {
+        return diff(lhs, rhs);
       }
 
     protected:
