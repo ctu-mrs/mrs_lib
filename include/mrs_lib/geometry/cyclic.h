@@ -65,28 +65,14 @@ namespace mrs_lib
        * \param val initialization value.
        */
       cyclic(const cyclic& other) : val(other.val){};
+
       /*!
-       * \brief Assignment operator.
+       * \brief Cast operator.
        *
-       * \param nval value to be assigned (will be wrapped).
-       * \return     reference to self.
+       * Necessary for correct functioning of the addition operator and similar.
        */
-      cyclic& operator=(const flt nval)
-      {
-        val = wrap(nval);
-        return *this;
-      };
-      /*!
-       * \brief Assignment operator.
-       *
-       * \param other value to be assigned.
-       * \return      reference to self.
-       */
-      cyclic& operator=(const cyclic& other)
-      {
-        val = other.val;
-        return *this;
-      };
+      operator spec() {return spec(*this);};
+
       /*!
        * \brief Getter for \p val.
        *
@@ -391,6 +377,77 @@ namespace mrs_lib
       other_t convert() const
       {
         return other_t(val / range * other_t::range);
+      }
+
+      // | ------------------------ Operators ----------------------- |
+      /*!
+       * \brief Assignment operator.
+       *
+       * \param nval value to be assigned (will be wrapped).
+       * \return     reference to self.
+       */
+      cyclic& operator=(const flt nval)
+      {
+        val = wrap(nval);
+        return *this;
+      };
+      /*!
+       * \brief Assignment operator.
+       *
+       * \param other value to be assigned.
+       * \return      reference to self.
+       */
+      cyclic& operator=(const cyclic& other)
+      {
+        val = other.val;
+        return *this;
+      };
+      /*!
+       * \brief Move operator.
+       *
+       * \param other value to be assigned.
+       * \return      reference to self.
+       */
+      cyclic& operator=(cyclic&& other)
+      {
+        val = other.val;
+        return *this;
+      };
+
+      /*!
+       * \brief Addition compound operator.
+       *
+       * \param other value to be added (will be wrapped).
+       * \return      reference to self.
+       */
+      cyclic& operator+=(const flt other)
+      {
+        val = wrap(val + other);
+        return *this;
+      };
+      /*!
+       * \brief Addition compound operator.
+       *
+       * \param other value to be added.
+       * \return      reference to self.
+       */
+      cyclic& operator+=(const cyclic& other)
+      {
+        val = wrap(val + other.val);
+        return *this;
+      };
+
+      /*!
+       * \brief Addition operator.
+       *
+       * \param lhs left-hand-side.
+       * \param rhs right-hand-side.
+       * \return    reference to the result.
+       */
+      friend cyclic operator+(cyclic lhs, const cyclic& rhs)
+      {
+        lhs += rhs;
+        return lhs;
       }
 
     protected:
