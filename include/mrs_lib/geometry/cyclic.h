@@ -67,13 +67,6 @@ namespace mrs_lib
       cyclic(const cyclic& other) : val(other.val){};
 
       /*!
-       * \brief Cast operator.
-       *
-       * Necessary for correct functioning of the addition operator and similar.
-       */
-      operator spec() {return spec(*this);};
-
-      /*!
        * \brief Getter for \p val.
        *
        * \return the value.
@@ -433,10 +426,9 @@ namespace mrs_lib
        * \param rhs right-hand-side.
        * \return    reference to the result.
        */
-      friend cyclic operator+(cyclic lhs, const cyclic& rhs)
+      friend spec operator+(const cyclic& lhs, const cyclic& rhs)
       {
-        lhs += rhs;
-        return lhs;
+        return wrap(lhs.val + rhs.val);
       }
 
       /*!

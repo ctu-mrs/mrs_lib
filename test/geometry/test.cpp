@@ -287,6 +287,8 @@ TEST(TESTSuite, diffAngle) {
     double output   = radians::diff(angle, prev_angle);
     double expected = diffAngleTest(angle, prev_angle);
 
+    EXPECT_EQ(output, radians(angle) - radians(prev_angle));
+
     if (fabs(output - expected) > 1e-6) {
       printf("diffAngle() #%d failed for radians, input %.2f, output %.2f, expected %.2f\n", i, angle, output, expected);
       result = 0;
