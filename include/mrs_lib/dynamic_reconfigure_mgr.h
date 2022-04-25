@@ -39,21 +39,23 @@ namespace mrs_lib
 template <typename ConfigType>
 class DynamicReconfigureMgr
 {
+  private:
+    using callback_t = typename dynamic_reconfigure::Server<ConfigType>::CallbackType;
 public:
   // this variable holds the latest received configuration
   ConfigType config;
   // initialize some stuff in the constructor
-  DynamicReconfigureMgr(const ros::NodeHandle& nh = ros::NodeHandle("~"), bool print_values = true, std::string node_name = std::string())
+  DynamicReconfigureMgr(const ros::NodeHandle& nh = ros::NodeHandle("~"), bool print_values = true, std::string node_name = std::string(), const callback_t& user_callback = {})
       : m_not_initialized(true),
         m_loaded_invalid_default(false),
         m_print_values(print_values),
         m_node_name(node_name),
         m_server(m_server_mtx, nh),
+        m_usr_cbf(user_callback),
         m_pl(nh, print_values, node_name)
   {
     // initialize the dynamic reconfigure callback
-    m_cbf = boost::bind(&DynamicReconfigureMgr<ConfigType>::dynamic_reconfigure_callback, this, _1, _2);
-    m_server.setCallback(m_cbf);
+    m_server.setCallback(boost::bind(&DynamicReconfigureMgr<ConfigType>::dynamic_reconfigure_callback, this, _1, _2));
   };
 
   /* Constructor overloads //{ */
@@ -88,13 +90,13 @@ private:
   // dynamic_reconfigure server variables
   boost::recursive_mutex m_server_mtx;
   typename dynamic_reconfigure::Server<ConfigType> m_server;
-  typename dynamic_reconfigure::Server<ConfigType>::CallbackType m_cbf;
+  callback_t m_usr_cbf;
 
   ParamLoader m_pl;
   std::unordered_set<std::string> m_to_init;
 
   // the callback itself
-  void dynamic_reconfigure_callback(ConfigType& new_config, [[maybe_unused]] uint32_t level)
+  void dynamic_reconfigure_callback(ConfigType& new_config, uint32_t level)
   {
     if (m_print_values)
     {
@@ -115,6 +117,8 @@ private:
     }
     m_not_initialized = false;
     config = new_config;
+    if (m_usr_cbf)
+      m_usr_cbf(new_config, level);
   }
 
   template <typename T>

@@ -24,6 +24,14 @@ double randd(double from, double to) {
 
 //}
 
+/* addAngleTest() //{ */
+
+double addAngleTest(const double a, const double b) {
+  return std::arg(std::polar<double>(1, a + b));
+}
+
+//}
+
 /* diffAngleTest() //{ */
 
 double diffAngleTest(const double a, const double b) {
@@ -233,6 +241,38 @@ TEST(TESTSuite, rotationBetween6) {
 
 //}
 
+/* TEST(TESTSuite, addAngle) //{ */
+
+TEST(TESTSuite, addAngle)
+{
+
+  for (int i = 0; i < 10000; i++)
+  {
+    double prev_angle = randd(-10000, 10000);
+    double angle      = randd(-10000, 10000);
+
+    double output   = (radians(prev_angle) + radians(angle)).value();
+    double expected = wrapAngleTest(addAngleTest(angle, prev_angle), 0.0, 2*M_PI);
+
+    EXPECT_LT(fabs(output - expected), 1e-6);
+
+    output   = (sradians(angle) + sradians(prev_angle)).value();
+    expected = wrapAngleTest(addAngleTest(angle, prev_angle), -M_PI, M_PI);
+
+    EXPECT_LT(fabs(output - expected), 1e-6);
+
+    sradians a = prev_angle;
+    sradians b(angle);
+    sradians c = a+b;
+
+    EXPECT_EQ(c.value(), output);
+    EXPECT_EQ((a+angle).value(), output);
+    EXPECT_EQ((prev_angle+b).value(), output);
+  }
+}
+
+//}
+
 /* TEST(TESTSuite, diffAngle) //{ */
 
 TEST(TESTSuite, diffAngle) {
@@ -246,6 +286,8 @@ TEST(TESTSuite, diffAngle) {
 
     double output   = radians::diff(angle, prev_angle);
     double expected = diffAngleTest(angle, prev_angle);
+
+    EXPECT_EQ(output, radians(angle) - radians(prev_angle));
 
     if (fabs(output - expected) > 1e-6) {
       printf("diffAngle() #%d failed for radians, input %.2f, output %.2f, expected %.2f\n", i, angle, output, expected);

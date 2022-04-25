@@ -1,9 +1,15 @@
 <launch>
 
+  <include file="$(find mrs_lib)/test/math/math.test">
+  </include>
+
   <include file="$(find mrs_lib)/test/geometry/geometry.test">
   </include>
 
   <include file="$(find mrs_lib)/test/attitude_converter/attitude_converter.test">
+  </include>
+
+  <include file="$(find mrs_lib)/test/median_filter/median_filter.test">
   </include>
 
   <include file="$(find mrs_lib)/test/utils/utils.test">

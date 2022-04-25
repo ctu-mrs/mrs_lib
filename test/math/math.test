@@ -1,0 +1,6 @@
+<launch>
+
+  <test pkg="mrs_lib" type="MathTest" test-name="math_test" time-limit="10.0">
+  </test>
+
+</launch>

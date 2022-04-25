@@ -55,7 +55,7 @@ find_package(PCL REQUIRED)
 ###################################
 
 set(LIBRARIES
-  MrsLibSafetyZone MrsLibProfiler MrsLibScopeTimer MrsLibIirFilter MrsLibNotchFilter MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibOdomLKF MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibTimer MrsLibTransformBroadcaster
+  MrsLibSafetyZone MrsLibProfiler MrsLibScopeTimer MrsLibIirFilter MrsLibNotchFilter MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibOdomLKF MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibTimer MrsLibTransformBroadcaster MrsLibMath
   )
 
 catkin_package(
@@ -160,6 +160,12 @@ target_link_libraries(MrsLibScopeTimer
   ${Eigen_LIBRARIES}
   )
 
+add_library(MrsLibMedianFilter src/median_filter/median_filter.cpp)
+target_link_libraries(MrsLibMedianFilter
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
 add_library(MrsLibIirFilter src/iir_filter/iir_filter.cpp)
 target_link_libraries(MrsLibIirFilter
   ${catkin_LIBRARIES}
@@ -247,12 +253,6 @@ target_link_libraries(rheiv_example
   ${Eigen_LIBRARIES}
   )
 
-add_library(MrsLibMedianFilter src/median_filter/median_filter.cpp)
-target_link_libraries(MrsLibMedianFilter
-  ${catkin_LIBRARIES}
-  ${Eigen_LIBRARIES}
-  )
-
 add_library(MrsLibBatchVisualizer src/batch_visualizer/batch_visualizer.cpp)
 target_link_libraries(MrsLibBatchVisualizer
   MrsLibGeometry
@@ -276,6 +276,11 @@ target_link_libraries(batch_visualizer_demo
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   ${GAZEBO_INCLUDE_DIRS}
+  )
+
+add_library(MrsLibMath src/math/math.cpp)
+target_link_libraries(MrsLibMath
+  ${catkin_LIBRARIES}
   )
 
 add_library(MrsLibGeometry src/geometry/misc.cpp src/geometry/cyclic.cpp src/geometry/shapes.cpp)
@@ -330,6 +335,21 @@ install(DIRECTORY ./
 if(CATKIN_ENABLE_TESTING)
 
   find_package(rostest REQUIRED)
+
+  add_rostest_gtest(MathTest
+    test/math/math.test
+    test/math/test.cpp
+    )
+
+  target_link_libraries(MathTest
+    MrsLibMath
+    ${catkin_LIBRARIES}
+    )
+
+  add_dependencies(MathTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+    )
 
   add_rostest_gtest(
     GeometryTest
@@ -481,6 +501,22 @@ if(CATKIN_ENABLE_TESTING)
     )
   add_dependencies(
     TimerTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+    )
+
+  add_rostest_gtest(
+    MedianFilterTest
+    test/median_filter/median_filter.test
+    test/median_filter/test.cpp
+    )
+  target_link_libraries(
+    MedianFilterTest
+    MrsLibMedianFilter
+    ${catkin_LIBRARIES}
+    )
+  add_dependencies(
+    MedianFilterTest
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
     )
