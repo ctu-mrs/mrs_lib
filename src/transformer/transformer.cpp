@@ -2,7 +2,6 @@
 
 #include <mrs_lib/transformer.h>
 #include <mrs_lib/gps_conversions.h>
-#include <mrs_lib/geometry/conversions.h>
 #include <mutex>
 
 using test_t = mrs_msgs::ReferenceStamped;
