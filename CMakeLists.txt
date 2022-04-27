@@ -283,10 +283,11 @@ target_link_libraries(MrsLibMath
   ${catkin_LIBRARIES}
   )
 
-add_library(MrsLibGeometry src/geometry/misc.cpp src/geometry/cyclic.cpp src/geometry/shapes.cpp)
+add_library(MrsLibGeometry src/geometry/misc.cpp src/geometry/cyclic.cpp src/geometry/shapes.cpp src/geometry/conversions.cpp)
 target_link_libraries(MrsLibGeometry
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
+  ${OpenCV_LIBRARIES}
   ${GAZEBO_INCLUDE_DIRS}
   )
 

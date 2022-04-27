@@ -29,13 +29,10 @@
 #include <std_msgs/Header.h>
 
 #include <mrs_lib/geometry/misc.h>
-#include <mrs_lib/geometry/conversions.h>
 
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
 #include <pcl_conversions/pcl_conversions.h>
-
-#include <opencv2/core/types.hpp>
 
 #include <mutex>
 #include <experimental/type_traits>
@@ -51,15 +48,6 @@ namespace tf2
     pcl_ros::transformPointCloud(cloud_in, cloud_out, transform.transform);
     pcl_conversions::toPCL(transform.header.stamp, cloud_out.header.stamp);
     cloud_out.header.frame_id = transform.header.frame_id;
-  }
-
-  template <typename pt_t>
-  void doTransform(const cv::Point3_<pt_t>& point_in, cv::Point3_<pt_t>& point_out, const geometry_msgs::TransformStamped& transform)
-  {
-    const geometry_msgs::Point pt = mrs_lib::geometry::fromCV(point_in);
-    geometry_msgs::Point pt_tfd;
-    tf2::doTransform(pt, pt_tfd, transform);
-    point_out = mrs_lib::geometry::toCV<pt_t>(pt_tfd);
   }
 
 }  // namespace tf2
