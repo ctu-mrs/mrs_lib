@@ -15,7 +15,7 @@ namespace mrs_lib
 
     /* conversions from/to Eigen //{ */
     
-    geometry_msgs::Point fromEigen(const Eigen::Vector3d& what);
+    geometry_msgs::Vector3 fromEigen(const Eigen::Vector3d& what);
     
     
     Eigen::Vector3d toEigen(const geometry_msgs::Point& what);

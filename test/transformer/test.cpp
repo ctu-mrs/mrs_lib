@@ -134,15 +134,6 @@ TEST(TESTSuite, main_test)
 
 /* TEST(TESTSuite, tf_times_test) //{ */
 
-geometry_msgs::Vector3 e2tf(const vec3_t& e)
-{
-  geometry_msgs::Vector3 ret;
-  ret.x = e.x();
-  ret.y = e.y();
-  ret.z = e.z();
-  return ret;
-}
-
 TEST(TESTSuite, tf_times_test)
 {
   std::cout << "Running tf_times_test\n";
@@ -167,7 +158,7 @@ TEST(TESTSuite, tf_times_test)
   tf.header.stamp = t1;
   tf.child_frame_id = from;
   common2uav1.translation() = vec3_t(-1, 0, 2);
-  tf.transform.translation = e2tf(common2uav1.translation());
+  tf.transform.translation = mrs_lib::geometry::fromEigen(common2uav1.translation());
   bc->sendTransform(tf);
   ros::spinOnce();
 
@@ -175,7 +166,7 @@ TEST(TESTSuite, tf_times_test)
   tf.header.stamp = t1;
   tf.child_frame_id = to;
   common2uav2.translation() = vec3_t(-10, 0, 3);
-  tf.transform.translation = e2tf(common2uav2.translation());
+  tf.transform.translation = mrs_lib::geometry::fromEigen(common2uav2.translation());
   bc->sendTransform(tf);
   ros::spinOnce();
 
@@ -183,7 +174,7 @@ TEST(TESTSuite, tf_times_test)
   tf.header.stamp = t2;
   tf.child_frame_id = from;
   common2uav1.translation() = vec3_t(3, 0, 2);
-  tf.transform.translation = e2tf(common2uav1.translation());
+  tf.transform.translation = mrs_lib::geometry::fromEigen(common2uav1.translation());
   bc->sendTransform(tf);
   ros::spinOnce();
 
@@ -191,7 +182,7 @@ TEST(TESTSuite, tf_times_test)
   tf.header.stamp = t2;
   tf.child_frame_id = to;
   common2uav2.translation() = vec3_t(60, 0, 3);
-  tf.transform.translation = e2tf(common2uav2.translation());
+  tf.transform.translation = mrs_lib::geometry::fromEigen(common2uav2.translation());
   bc->sendTransform(tf);
   ros::spinOnce();
 
@@ -271,7 +262,8 @@ TEST(TESTSuite, eigen_vector3d_test)
       }
       else
       {
-        const vec3_t gt = fcu2cam.inverse()*tv;
+        // transform it as a *vector*, not as a point!
+        const vec3_t gt = fcu2cam.inverse().rotation()*tv;
         const vec3_t vect_diff = rv.value() - gt;
         if (vect_diff.norm() > 1e-6)
         {
@@ -401,20 +393,21 @@ TEST(TESTSuite, mrs_reference_test)
     std::cout << "from: " << Transformer::frame_from(tf) << ", to: " << Transformer::frame_to(tf) << ", stamp: " << tf.header.stamp << std::endl;
     std::cout << tf << std::endl;
 
-    const std::vector<Eigen::Vector3d> test_vectors = {{1, 0, 0}, {0, -1, 666}, {0, 0, 0}, {0, 1.1, -1}, {0, 0, 18}, {3, 0, 0}};
+    const std::vector<Eigen::Vector3d> test_points = {{1, 0, 0}, {0, -1, 666}, {0, 0, 0}, {0, 1.1, -1}, {0, 0, 18}, {3, 0, 0}};
     std::vector<std::pair<mrs_msgs::ReferenceStamped, mrs_msgs::ReferenceStamped>> test_refs;
     mrs_msgs::ReferenceStamped orig, tfd;
     orig.header.frame_id = "camera";
     orig.header.stamp = ros::Time::now();
     tfd.header.frame_id = "fcu";
     tfd.header.stamp = orig.header.stamp;
-    for (const auto& vec : test_vectors)
+    for (const auto& vec : test_points)
     {
       orig.reference.position.x = vec.x();
       orig.reference.position.y = vec.y();
       orig.reference.position.z = vec.z();
       orig.reference.heading = std::atan2(vec.y(), vec.z());
 
+      // transform it as a *point*, not as a vector!
       const vec3_t gt = fcu2cam*vec;
       tfd.reference.position.x = gt.x();
       tfd.reference.position.y = gt.y();
@@ -570,33 +563,33 @@ TEST(TESTSuite, opencv_test)
 
 /* TEST(TESTSuite, latlon_test) //{ */
 
-bool compare_gt_latlon(const vec3_t& tv, const vec3_t& rv, const char utm_zone[10], const bool ll2local)
+bool compare_gt_latlon(const geometry_msgs::Point& tv, const geometry_msgs::Point& rv, const char utm_zone[10], const bool ll2local)
 {
   vec3_t gt;
   if (ll2local)
   {
     // convert LAT-LON to UTM
     Eigen::Vector3d utm;
-    mrs_lib::UTM(tv.x(), tv.y(), &(utm.x()), &(utm.y()));
+    mrs_lib::UTM(tv.x, tv.y, &(utm.x()), &(utm.y()));
     // copy the height from the input
-    utm.z() = tv.z();
+    utm.z() = tv.z;
     const vec3_t local = local2utm.inverse()*utm;
     gt = local;
   }
   else
   {
-    const vec3_t utm = local2utm*tv;
+    const vec3_t utm = local2utm*mrs_lib::geometry::toEigen(tv);
     Eigen::Vector3d latlon;
     mrs_lib::UTMtoLL(utm.y(), utm.x(), utm_zone, latlon.x(), latlon.y());
     latlon.z() = utm.z();
     gt = latlon;
   }
 
-  const Eigen::Vector3d vect_diff = rv - gt;
+  const Eigen::Vector3d vect_diff = mrs_lib::geometry::toEigen(rv) - gt;
   if (vect_diff.norm() > 1e-6)
   {
-    ROS_ERROR_STREAM("<< Transformed [" << tv.transpose() << "] with value of ["
-                                       << rv.transpose() << "] does not match the expected value of [" << gt.transpose() << "]");
+    ROS_ERROR_STREAM("<< Transformed [" << tv << "] with value of ["
+                                       << rv << "] does not match the expected value of [" << gt.transpose() << "]");
     return false;
   }
 
@@ -670,7 +663,10 @@ TEST(TESTSuite, latlon_test)
   char utm_zone_[10];
   mrs_lib::LLtoUTM(lat, lon, utm_y, utm_x, utm_zone_);
 
-  const vec3_t tv(5, 6, 7);
+  geometry_msgs::Point tv;
+  tv.x = 5;
+  tv.y = 6;
+  tv.z = 7;
   const quat_t tq(1, 0, 0, 0);
   // try transforming a vector from latlon to local frame and expect a failure
   ROS_INFO("[%s]: Testing transformation of vector from local to latlon, expecting failure >>", ros::this_node::getName().c_str());

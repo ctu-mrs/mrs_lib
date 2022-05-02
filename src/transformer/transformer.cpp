@@ -167,8 +167,8 @@ namespace mrs_lib
   std::optional<Eigen::Vector3d> Transformer::transformImpl(const geometry_msgs::TransformStamped& tf, const Eigen::Vector3d& what)
   {
     // just transform it as you would a geometry_msgs::Point
-    const geometry_msgs::Point as_pt = geometry::fromEigen(what);
-    const auto opt = transformImpl(tf, as_pt);
+    const geometry_msgs::Vector3 as_vec = geometry::fromEigen(what);
+    const auto opt = transformImpl(tf, as_vec);
     if (opt.has_value())
       return geometry::toEigen(opt.value());
     else
