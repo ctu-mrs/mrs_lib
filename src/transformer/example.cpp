@@ -7,9 +7,9 @@ int main(int argc, char* argv[])
   ros::NodeHandle nh("~");
   mrs_lib::Transformer tfr(nh);
 
-  const std::string from = mrs_lib::UTM_ORIGIN;
+  const std::string from = mrs_lib::LATLON_ORIGIN;
   const std::string to = mrs_lib::UTM_ORIGIN;
-  Eigen::Vector3d pt;
+  geometry_msgs::Point pt;
 
   ros::Rate r(10); // 10 hz
   while (ros::ok())

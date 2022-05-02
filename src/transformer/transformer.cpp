@@ -125,6 +125,61 @@ namespace mrs_lib
 
   //}
 
+  /* transformAsVector() //{ */
+
+  [[nodiscard]] std::optional<Eigen::Vector3d> Transformer::transformAsVector(const Eigen::Vector3d& what, const geometry_msgs::TransformStamped& tf)
+  {
+    std::scoped_lock lck(mutex_);
+
+    if (!initialized_)
+    {
+      ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform, not initialized", node_name_.c_str());
+      return std::nullopt;
+    }
+
+    const std::string from_frame = resolveFrameImpl(frame_from(tf));
+    const std::string to_frame = resolveFrameImpl(frame_to(tf));
+    const geometry_msgs::TransformStamped tf_resolved = create_transform(from_frame, to_frame, tf.header.stamp, tf.transform);
+
+    const geometry_msgs::Vector3 vec = mrs_lib::geometry::fromEigen(what);
+    const auto tfd_vec = transformImpl(tf_resolved, vec);
+    if (tfd_vec.has_value())
+      return mrs_lib::geometry::toEigen(tfd_vec.value());
+    else
+      return std::nullopt;
+  }
+
+  /* //} */
+
+  /* transformAsPoint() //{ */
+
+  [[nodiscard]] std::optional<Eigen::Vector3d> Transformer::transformAsPoint(const Eigen::Vector3d& what, const geometry_msgs::TransformStamped& tf)
+  {
+    std::scoped_lock lck(mutex_);
+
+    if (!initialized_)
+    {
+      ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform, not initialized", node_name_.c_str());
+      return std::nullopt;
+    }
+
+    const std::string from_frame = resolveFrameImpl(frame_from(tf));
+    const std::string to_frame = resolveFrameImpl(frame_to(tf));
+    const geometry_msgs::TransformStamped tf_resolved = create_transform(from_frame, to_frame, tf.header.stamp, tf.transform);
+
+    geometry_msgs::Point pt;
+    pt.x = what.x();
+    pt.y = what.y();
+    pt.z = what.z();
+    const auto tfd_pt = transformImpl(tf_resolved, pt);
+    if (tfd_pt.has_value())
+      return mrs_lib::geometry::toEigen(tfd_pt.value());
+    else
+      return std::nullopt;
+  }
+
+  /* //} */
+
   // | ------------- helper implementation methods -------------- |
 
   /* transformImpl() //{ */

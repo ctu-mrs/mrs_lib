@@ -409,6 +409,26 @@ namespace mrs_lib
 
     //}
 
+    /**
+     * \brief Transform a variable to new frame using a particular transformation.
+     *
+     * \param tf The transformation to be used.
+     * \param what The object to be transformed.
+     *
+     * \return \p std::nullopt if failed, optional containing the transformed object otherwise.
+     */
+    [[nodiscard]] std::optional<Eigen::Vector3d> transformAsVector(const Eigen::Vector3d& what, const geometry_msgs::TransformStamped& tf);
+
+    /**
+     * \brief Transform a variable to new frame using a particular transformation.
+     *
+     * \param tf The transformation to be used.
+     * \param what The object to be transformed.
+     *
+     * \return \p std::nullopt if failed, optional containing the transformed object otherwise.
+     */
+    [[nodiscard]] std::optional<Eigen::Vector3d> transformAsPoint(const Eigen::Vector3d& what, const geometry_msgs::TransformStamped& tf);
+
     /* getTransform() //{ */
 
     /**
