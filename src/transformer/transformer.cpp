@@ -149,6 +149,36 @@ namespace mrs_lib
       return std::nullopt;
   }
 
+  [[nodiscard]] std::optional<Eigen::Vector3d> Transformer::transformAsVector(const std::string& from_frame_raw, const Eigen::Vector3d& what, const std::string& to_frame_raw, const ros::Time& time_stamp)
+  {
+    std::scoped_lock lck(mutex_);
+
+    if (!initialized_)
+    {
+      ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform, not initialized", node_name_.c_str());
+      return std::nullopt;
+    }
+
+    const std::string from_frame = resolveFrameImpl(from_frame_raw);
+    const std::string to_frame = resolveFrameImpl(to_frame_raw);
+    const std::string latlon_frame = resolveFrameImpl(LATLON_ORIGIN);
+
+    // get the transform
+    const auto tf_opt = getTransformImpl(from_frame, to_frame, time_stamp, latlon_frame);
+    if (!tf_opt.has_value())
+      return std::nullopt;
+    const geometry_msgs::TransformStamped& tf = tf_opt.value();
+
+    // do the transformation
+    const geometry_msgs::TransformStamped tf_resolved = create_transform(from_frame, to_frame, tf.header.stamp, tf.transform);
+    const geometry_msgs::Vector3 vec = mrs_lib::geometry::fromEigen(what);
+    const auto tfd_vec = transformImpl(tf_resolved, vec);
+    if (tfd_vec.has_value())
+      return mrs_lib::geometry::toEigen(tfd_vec.value());
+    else
+      return std::nullopt;
+  }
+
   /* //} */
 
   /* transformAsPoint() //{ */
@@ -167,6 +197,39 @@ namespace mrs_lib
     const std::string to_frame = resolveFrameImpl(frame_to(tf));
     const geometry_msgs::TransformStamped tf_resolved = create_transform(from_frame, to_frame, tf.header.stamp, tf.transform);
 
+    geometry_msgs::Point pt;
+    pt.x = what.x();
+    pt.y = what.y();
+    pt.z = what.z();
+    const auto tfd_pt = transformImpl(tf_resolved, pt);
+    if (tfd_pt.has_value())
+      return mrs_lib::geometry::toEigen(tfd_pt.value());
+    else
+      return std::nullopt;
+  }
+
+  [[nodiscard]] std::optional<Eigen::Vector3d> Transformer::transformAsPoint(const std::string& from_frame_raw, const Eigen::Vector3d& what, const std::string& to_frame_raw, const ros::Time& time_stamp)
+  {
+    std::scoped_lock lck(mutex_);
+
+    if (!initialized_)
+    {
+      ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform, not initialized", node_name_.c_str());
+      return std::nullopt;
+    }
+
+    const std::string from_frame = resolveFrameImpl(from_frame_raw);
+    const std::string to_frame = resolveFrameImpl(to_frame_raw);
+    const std::string latlon_frame = resolveFrameImpl(LATLON_ORIGIN);
+
+    // get the transform
+    const auto tf_opt = getTransformImpl(from_frame, to_frame, time_stamp, latlon_frame);
+    if (!tf_opt.has_value())
+      return std::nullopt;
+    const geometry_msgs::TransformStamped& tf = tf_opt.value();
+
+    // do the transformation
+    const geometry_msgs::TransformStamped tf_resolved = create_transform(from_frame, to_frame, tf.header.stamp, tf.transform);
     geometry_msgs::Point pt;
     pt.x = what.x();
     pt.y = what.y();

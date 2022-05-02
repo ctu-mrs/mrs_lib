@@ -409,18 +409,39 @@ namespace mrs_lib
 
     //}
 
+    /* transformAsVector() method //{ */
     /**
-     * \brief Transform a variable to new frame using a particular transformation.
+     * \brief Transform an Eigen::Vector3d (interpreting it as a vector).
+     *
+     * Only the rotation will be applied to the variable.
      *
      * \param tf The transformation to be used.
-     * \param what The object to be transformed.
+     * \param what The vector to be transformed.
      *
      * \return \p std::nullopt if failed, optional containing the transformed object otherwise.
      */
     [[nodiscard]] std::optional<Eigen::Vector3d> transformAsVector(const Eigen::Vector3d& what, const geometry_msgs::TransformStamped& tf);
 
     /**
-     * \brief Transform a variable to new frame using a particular transformation.
+     * \brief Transform an Eigen::Vector3d (interpreting it as a vector).
+     *
+     * Only the rotation will be applied to the variable.
+     *
+     * \param from_frame  The current frame of \p what.
+     * \param what        The vector to be transformed.
+     * \param to_frame    The desired frame of \p what.
+     * \param time_stamp  From which time to take the transformation (use \p ros::Time(0) for the latest time).
+     *
+     * \return \p std::nullopt if failed, optional containing the transformed object otherwise.
+     */
+    [[nodiscard]] std::optional<Eigen::Vector3d> transformAsVector(const std::string& from_frame, const Eigen::Vector3d& what, const std::string& to_frame, const ros::Time& time_stamp = ros::Time(0));
+    //}
+
+    /* transformAsPoint() method //{ */
+    /**
+     * \brief Transform an Eigen::Vector3d (interpreting it as a point).
+     *
+     * Both the rotation and translation will be applied to the variable.
      *
      * \param tf The transformation to be used.
      * \param what The object to be transformed.
@@ -428,6 +449,21 @@ namespace mrs_lib
      * \return \p std::nullopt if failed, optional containing the transformed object otherwise.
      */
     [[nodiscard]] std::optional<Eigen::Vector3d> transformAsPoint(const Eigen::Vector3d& what, const geometry_msgs::TransformStamped& tf);
+
+    /**
+     * \brief Transform an Eigen::Vector3d (interpreting it as a point).
+     *
+     * Both the rotation and translation will be applied to the variable.
+     *
+     * \param from_frame  The current frame of \p what.
+     * \param what The object to be transformed.
+     * \param to_frame    The desired frame of \p what.
+     * \param time_stamp  From which time to take the transformation (use \p ros::Time(0) for the latest time).
+     *
+     * \return \p std::nullopt if failed, optional containing the transformed object otherwise.
+     */
+    [[nodiscard]] std::optional<Eigen::Vector3d> transformAsPoint(const std::string& from_frame, const Eigen::Vector3d& what, const std::string& to_frame, const ros::Time& time_stamp = ros::Time(0));
+    //}
 
     /* getTransform() //{ */
 

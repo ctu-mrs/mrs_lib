@@ -254,22 +254,113 @@ TEST(TESTSuite, eigen_vector3d_test)
     std::vector<Eigen::Vector3d> test_vectors = {{1, 0, 0}, {0, -1, 666}, {0, 0, 0}, {0, 1.1, -1}, {0, 0, 18}, {3, 0, 0}};
 
     for (const auto& tv : test_vectors) {
-      const auto rv = tfr.transform(tv, tf);
-      if (!rv)
+      // | ------------- normal transform (as a vector) ------------- |
       {
-        ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: Failed to transform vector [" << tv.transpose() << "]");
-        result *= 0;
-      }
-      else
-      {
-        // transform it as a *vector*, not as a point!
-        const vec3_t gt = fcu2cam.inverse().rotation()*tv;
-        const vec3_t vect_diff = rv.value() - gt;
-        if (vect_diff.norm() > 1e-6)
+        const auto rv = tfr.transform(tv, tf);
+        if (!rv)
         {
-          ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: transformed vector [" << gt.transpose() << "] with value of ["
-                                             << rv.value().transpose() << "] does not match the expected value of [" << gt.transpose() << "]");
+          ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: Failed to transform vector [" << tv.transpose() << "]");
           result *= 0;
+        }
+        else
+        {
+          // transform it as a *vector*, not as a point!
+          const vec3_t gt = fcu2cam.inverse().rotation()*tv;
+          const vec3_t vect_diff = rv.value() - gt;
+          if (vect_diff.norm() > 1e-6)
+          {
+            ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: transformed vector [" << gt.transpose() << "] with value of ["
+                                               << rv.value().transpose() << "] does not match the expected value of [" << gt.transpose() << "]");
+            result *= 0;
+          }
+        }
+      }
+
+      // | ----------------------- as a vector ---------------------- |
+      {
+        const auto rv = tfr.transformAsVector(tv, tf);
+        if (!rv)
+        {
+          ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: Failed to transform vector [" << tv.transpose() << "]");
+          result *= 0;
+        }
+        else
+        {
+          // transform it as a *vector*, not as a point!
+          const vec3_t gt = fcu2cam.inverse().rotation()*tv;
+          const vec3_t vect_diff = rv.value() - gt;
+          if (vect_diff.norm() > 1e-6)
+          {
+            ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: transformed vector [" << gt.transpose() << "] with value of ["
+                                               << rv.value().transpose() << "] does not match the expected value of [" << gt.transpose() << "]");
+            result *= 0;
+          }
+        }
+      }
+
+      // | ----------------------- as a point ----------------------- |
+      {
+        const auto rv = tfr.transformAsPoint(tv, tf);
+        if (!rv)
+        {
+          ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: Failed to transform vector [" << tv.transpose() << "]");
+          result *= 0;
+        }
+        else
+        {
+          // transform it as a *vector*, not as a point!
+          const vec3_t gt = fcu2cam.inverse()*tv;
+          const vec3_t vect_diff = rv.value() - gt;
+          if (vect_diff.norm() > 1e-6)
+          {
+            ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: transformed vector [" << gt.transpose() << "] with value of ["
+                                               << rv.value().transpose() << "] does not match the expected value of [" << gt.transpose() << "]");
+            result *= 0;
+          }
+        }
+      }
+
+      // | ----------------------- as a vector ---------------------- |
+      {
+        const auto rv = tfr.transformAsVector(mrs_lib::Transformer::frame_from(tf), tv, mrs_lib::Transformer::frame_to(tf), tf.header.stamp);
+        if (!rv)
+        {
+          ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: Failed to transform vector [" << tv.transpose() << "]");
+          result *= 0;
+        }
+        else
+        {
+          // transform it as a *vector*, not as a point!
+          const vec3_t gt = fcu2cam.inverse().rotation()*tv;
+          const vec3_t vect_diff = rv.value() - gt;
+          if (vect_diff.norm() > 1e-6)
+          {
+            ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: transformed vector [" << gt.transpose() << "] with value of ["
+                                               << rv.value().transpose() << "] does not match the expected value of [" << gt.transpose() << "]");
+            result *= 0;
+          }
+        }
+      }
+
+      // | ----------------------- as a point ----------------------- |
+      {
+        const auto rv = tfr.transformAsPoint(mrs_lib::Transformer::frame_from(tf), tv, mrs_lib::Transformer::frame_to(tf), tf.header.stamp);
+        if (!rv)
+        {
+          ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: Failed to transform vector [" << tv.transpose() << "]");
+          result *= 0;
+        }
+        else
+        {
+          // transform it as a *vector*, not as a point!
+          const vec3_t gt = fcu2cam.inverse()*tv;
+          const vec3_t vect_diff = rv.value() - gt;
+          if (vect_diff.norm() > 1e-6)
+          {
+            ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: transformed vector [" << gt.transpose() << "] with value of ["
+                                               << rv.value().transpose() << "] does not match the expected value of [" << gt.transpose() << "]");
+            result *= 0;
+          }
         }
       }
     }
