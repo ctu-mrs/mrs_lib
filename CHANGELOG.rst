@@ -2,6 +2,62 @@
 Changelog for package mrs_lib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [Transformer]: fixed some dependencies
+* [Transformer]: now with cv::Point3\_<T> support!
+* [cyclic]: hotfix
+* [cyclic]: added the subtraction operator
+* [cyclic]: added the addition operator to cyclic
+* [MedianFilter]: minor refactor to be consistent with previous implementation
+* [MedianFilter]: added missing header, added the initialized() method
+* [MedianFilter]: fix for Melodic
+* [MedianFilter]: rewrote the implementation to be clearer and consistent with the rest of mrs_lib, added documentation and tests
+* [dynrec]: added possibility of using a user callback
+* [Transformer]: hotfix for thread-safe copy operator
+* [Math]: minor cleanup
+* [Math]: added the math library, so far containing the implementation of the inverse CDF for a standard normal distribution
+* [Transformer]: can now set buffer time, [ParamLoader]: added loadParam2 for raw XmlRpcValue
+* added the rotateCovariance function to geometry/misc, minor cleanup of Transformer
+* [Transformer]: added move assignment operator, fixed some documentation. [Geometry]: added the toEigenMatrix conversion function
+* added missing test files
+* updated publisher handler, added pub handler test
+* updated publisher handler
+* fixing overloads in publisher handler
+* [transformer]: fixed some minor issues and some refactoring
+* [transformer]: reintroduced a mutex for thread-safety
+* [transformer]: prints throttled error when frame id is empty, other minor fixes
+* added publisher handler
+* [transformer]: fixed YCM warning about incomplete type
+* [transformer]: final fixes after fixes
+* [transformer]: fixed prefix behaviour with empty prefixes
+* [transformer]: fixing switched from and to frames convention
+* adding transformer example
+* added publisher handler
+* AttitudeConverter: test, fixed chrono
+* uncommented commented tests
+* improved the setHeading() test
+* fixed attitude converter and transformer tests
+* fixed tests
+* AttitudeConverter: fixed setHeading(), removed setHeadingByYaw()
+* fixed intrinsic eulers in attitude converter
+* + install in cakelists
+* [transformer]: updated documentation
+* fixes, cleanup, added tests and documentation
+* [transformer]: SFINAE magic fixed
+* [transformer]: SFINAE magic not working
+* [transformer]: refactoring wip
+* small speedup in scope timer
+* removed catkin profile from CI install.sh
+  Transform component extraction
+  adding transformer for Eigen::Vector3d
+* Addin convenience functions to extract translation and rotation from the obtained transform in the Eigen lib format
+* formatting (needed to trigger CI)
+* adding transformer for Eigen::Vector3d
+* removed custom build flags with libasan
+* scope_timer: add ScopeTimerLogger; use chrono::steady_clock insteady of chrono::system_clock (`#34 <https://github.com/ctu-mrs/mrs_lib/issues/34>`_)
+* Contributors: Matouš Vrba, Pavel Petracek, Pavel Petráček, Tomas Baca, Tomáš Báča, Viktor Walter
+
 1.0.2 (2021-10-03)
 ------------------
 * [shandler]: minor update (will no longer print error if getMsg before callback is called, will just quietly return nullptr!
