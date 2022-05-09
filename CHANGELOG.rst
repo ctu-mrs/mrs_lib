@@ -2,8 +2,8 @@
 Changelog for package mrs_lib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.3 (2022-05-09)
+------------------
 * [Transformer]: fixed some dependencies
 * [Transformer]: now with cv::Point3\_<T> support!
 * [cyclic]: hotfix
