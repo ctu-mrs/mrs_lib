@@ -79,6 +79,13 @@ public:
     m_server.updateConfig(config);
   }
 
+  void publish_descriptions()
+  {
+    ConfigType dflt;
+    m_server.getConfigDefault(dflt);
+    m_server.setConfigDefault(dflt);
+  }
+
   bool loaded_successfully()
   {
     return !m_not_initialized && !m_loaded_invalid_default && m_pl.loadedSuccessfully();
