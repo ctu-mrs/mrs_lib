@@ -6,7 +6,7 @@ namespace mrs_lib
 {
 
 /* conversion utils //{ */
-geometry_msgs::Point eigenToMsg(const Eigen::Vector3d v) {
+geometry_msgs::Point eigenToMsg(const Eigen::Vector3d &v) {
   geometry_msgs::Point p;
   p.x = v.x();
   p.y = v.y();
@@ -23,12 +23,11 @@ std_msgs::ColorRGBA generateColor(const double r, const double g, const double b
   return c;
 }
 
-Eigen::Vector3d msgToEigen(const geometry_msgs::Point p) {
+Eigen::Vector3d msgToEigen(const geometry_msgs::Point &p) {
   return Eigen::Vector3d(p.x, p.y, p.z);
 }
 //}
 
-bool   reconfigured     = false;
 double tmp_points_scale = 0.02;
 double tmp_lines_scale  = 0.04;
 
@@ -39,17 +38,17 @@ BatchVisualizer::BatchVisualizer() {
 BatchVisualizer::~BatchVisualizer() {
 }
 
-BatchVisualizer::BatchVisualizer(ros::NodeHandle& nh, std::string marker_topic_name, std::string parent_frame) {
+BatchVisualizer::BatchVisualizer(ros::NodeHandle& nh, const std::string marker_topic_name, const std::string parent_frame) {
   this->parent_frame      = parent_frame;
   this->marker_topic_name = marker_topic_name;
-  initialize(nh);
+  initialize();
 
   this->visual_pub = nh.advertise<visualization_msgs::MarkerArray>(marker_topic_name.c_str(), 1);
   publish();
 }
 //}
 
-/* setParentFrame() //{ */
+/* setParentFrame //{ */
 
 void BatchVisualizer::setParentFrame(const std::string parent_frame) {
   this->parent_frame               = parent_frame;
@@ -60,19 +59,8 @@ void BatchVisualizer::setParentFrame(const std::string parent_frame) {
 
 //}
 
-/* dynamicReconfigureCallback //{ */
-/* void BatchVisualizer::dynamicReconfigureCallback(mrs_lib::batch_visualizerConfig& config, [[maybe_unused]] uint32_t level) { */
-/*   reconfigured = true; */
-/*   ROS_INFO("[%s]: Dynamic reconfigure request recieved!", ros::this_node::getName().c_str()); */
-/*   tmp_points_scale = config.points_scale; */
-/*   tmp_lines_scale  = config.lines_scale; */
-/*   ROS_INFO("[%s]: Points scale: %.3f", ros::this_node::getName().c_str(), tmp_points_scale); */
-/*   ROS_INFO("[%s]: Lines scale: %.3f", ros::this_node::getName().c_str(), tmp_lines_scale); */
-/* } */
-//}
-
 /* initialize //{ */
-void BatchVisualizer::initialize([[maybe_unused]]ros::NodeHandle& nh) {
+void BatchVisualizer::initialize() {
   if (initialized) {
     return;
   }
@@ -119,18 +107,13 @@ void BatchVisualizer::initialize([[maybe_unused]]ros::NodeHandle& nh) {
   triangles_marker.scale.y = 1;
   triangles_marker.scale.z = 1;
 
-  /* reconfigure_server_.reset(new ReconfigureServer()); */
-  /* reconfigure_server_.reset(new ReconfigureServer(nh)); */
-  /* ReconfigureServer::CallbackType f = boost::bind(&BatchVisualizer::dynamicReconfigureCallback, this, _1, _2); */
-  /* reconfigure_server_->setCallback(f); */
-
   ROS_INFO("[%s]: Batch visualizer loaded with default values", ros::this_node::getName().c_str());
   initialized = true;
 }
 //}
 
 /* addPoint //{ */
-void BatchVisualizer::addPoint(Eigen::Vector3d p, double r, double g, double b, double a) {
+void BatchVisualizer::addPoint(const Eigen::Vector3d &p, const double r, const double g, const double b, const double a) {
   std_msgs::ColorRGBA color = generateColor(r, g, b, a);
   points_marker.colors.push_back(color);
 
@@ -140,7 +123,7 @@ void BatchVisualizer::addPoint(Eigen::Vector3d p, double r, double g, double b, 
 //}
 
 /* addRay */  //{
-void BatchVisualizer::addRay(mrs_lib::geometry::Ray ray, double r, double g, double b, double a) {
+void BatchVisualizer::addRay(const mrs_lib::geometry::Ray &ray, const double r, const double g, const double b, const double a) {
 
   std_msgs::ColorRGBA color = generateColor(r, g, b, a);
 
@@ -157,7 +140,7 @@ void BatchVisualizer::addRay(mrs_lib::geometry::Ray ray, double r, double g, dou
 //}
 
 /* addTriangle //{ */
-void BatchVisualizer::addTriangle(mrs_lib::geometry::Triangle tri, double r, double g, double b, double a, bool filled) {
+void BatchVisualizer::addTriangle(const mrs_lib::geometry::Triangle &tri, const double r, const double g, const double b, const double a, const bool filled) {
 
   std_msgs::ColorRGBA color = generateColor(r, g, b, a);
   if (filled) {
@@ -200,7 +183,7 @@ void BatchVisualizer::addTriangle(mrs_lib::geometry::Triangle tri, double r, dou
 //}
 
 /* addRectangle //{ */
-void BatchVisualizer::addRectangle(mrs_lib::geometry::Rectangle rect, double r, double g, double b, double a, bool filled) {
+void BatchVisualizer::addRectangle(const mrs_lib::geometry::Rectangle &rect, const double r, const double g, const double b, const double a, const bool filled) {
   std::vector<mrs_lib::geometry::Triangle> triangles = rect.triangles();
   addTriangle(triangles[0], r, g, b, a, filled);
   addTriangle(triangles[1], r, g, b, a, filled);
@@ -208,7 +191,7 @@ void BatchVisualizer::addRectangle(mrs_lib::geometry::Rectangle rect, double r, 
 //}
 
 /* addCuboid //{ */
-void BatchVisualizer::addCuboid(mrs_lib::geometry::Cuboid cuboid, double r, double g, double b, double a, bool filled) {
+void BatchVisualizer::addCuboid(const mrs_lib::geometry::Cuboid &cuboid, const double r, const double g, const double b, const double a, const bool filled) {
 
   for (int i = 0; i < 6; i++) {
     mrs_lib::geometry::Rectangle             rect      = cuboid.getRectangle(i);
@@ -220,7 +203,7 @@ void BatchVisualizer::addCuboid(mrs_lib::geometry::Cuboid cuboid, double r, doub
 //}
 
 /* addEllipse //{ */
-void BatchVisualizer::addEllipse(mrs_lib::geometry::Ellipse ellipse, double r, double g, double b, double a, bool filled, int num_points) {
+void BatchVisualizer::addEllipse(const mrs_lib::geometry::Ellipse &ellipse, const double r, const double g, const double b, const double a, const bool filled, const int num_points) {
   std::vector<Eigen::Vector3d> points = buildEllipse(ellipse, num_points);
 
   if (filled) {
@@ -243,7 +226,7 @@ void BatchVisualizer::addEllipse(mrs_lib::geometry::Ellipse ellipse, double r, d
 //}
 
 /* addCylinder //{ */
-void BatchVisualizer::addCylinder(mrs_lib::geometry::Cylinder cylinder, double r, double g, double b, double a, bool filled, bool capped, int sides) {
+void BatchVisualizer::addCylinder(const mrs_lib::geometry::Cylinder &cylinder, const double r, const double g, const double b, const double a, const bool filled, const bool capped, const int sides) {
   if (capped) {
     mrs_lib::geometry::Ellipse top    = cylinder.getCap(mrs_lib::geometry::Cylinder::TOP);
     mrs_lib::geometry::Ellipse bottom = cylinder.getCap(mrs_lib::geometry::Cylinder::BOTTOM);
@@ -262,7 +245,7 @@ void BatchVisualizer::addCylinder(mrs_lib::geometry::Cylinder cylinder, double r
 //}
 
 /* addCone //{ */
-void BatchVisualizer::addCone(mrs_lib::geometry::Cone cone, double r, double g, double b, double a, bool filled, bool capped, int sides) {
+void BatchVisualizer::addCone(const mrs_lib::geometry::Cone &cone, const double r, const double g, const double b, const double a, const bool filled, const bool capped, const int sides) {
   if (capped) {
     mrs_lib::geometry::Ellipse cap = cone.getCap();
     addEllipse(cap, r, g, b, a, filled, sides);
@@ -278,7 +261,7 @@ void BatchVisualizer::addCone(mrs_lib::geometry::Cone cone, double r, double g, 
 //}
 
 /* addTrajectory //{ */
-void BatchVisualizer::addTrajectory(mrs_msgs::TrajectoryReference traj, double r, double g, double b, double a, bool filled) {
+void BatchVisualizer::addTrajectory(const mrs_msgs::TrajectoryReference &traj, const double r, const double g, const double b, const double a, const bool filled) {
   if (traj.points.size() < 2) {
     ROS_WARN("[%s]: Trajectory too short to visualize!", ros::this_node::getName().c_str());
     return;
@@ -305,7 +288,7 @@ void BatchVisualizer::addTrajectory(mrs_msgs::TrajectoryReference traj, double r
 //}
 
 /* buildEllipse //{ */
-std::vector<Eigen::Vector3d> BatchVisualizer::buildEllipse(mrs_lib::geometry::Ellipse ellipse, int num_points) {
+std::vector<Eigen::Vector3d> BatchVisualizer::buildEllipse(const mrs_lib::geometry::Ellipse &ellipse, const int num_points) {
   std::vector<Eigen::Vector3d> points;
   double                       theta = 0;
   for (int i = 0; i < num_points; i++) {
@@ -322,15 +305,13 @@ std::vector<Eigen::Vector3d> BatchVisualizer::buildEllipse(mrs_lib::geometry::El
 //}
 
 /* setPointsScale //{ */
-void BatchVisualizer::setPointsScale(double scale) {
-  reconfigured = false;
+void BatchVisualizer::setPointsScale(const double scale) {
   points_scale = scale;
 }
 //}
 
 /* setLinesScale //{ */
-void BatchVisualizer::setLinesScale(double scale) {
-  reconfigured = false;
+void BatchVisualizer::setLinesScale(const double scale) {
   lines_scale  = scale;
 }
 //}
@@ -441,11 +422,6 @@ void BatchVisualizer::clearVisuals() {
 
 /* publish //{ */
 void BatchVisualizer::publish() {
-
-  if (reconfigured) {
-    setPointsScale(tmp_points_scale);
-    setLinesScale(tmp_lines_scale);
-  }
 
   msg.markers.clear();
 

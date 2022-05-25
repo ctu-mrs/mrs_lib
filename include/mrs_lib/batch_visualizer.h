@@ -11,8 +11,6 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <mrs_lib/geometry/shapes.h>
 #include <mrs_msgs/TrajectoryReference.h>
-/* #include <dynamic_reconfigure/server.h> */
-/* #include <mrs_lib/batch_visualizerConfig.h> */
 
 #define DEFAULT_ELLIPSE_POINTS 64
 
@@ -51,7 +49,7 @@ public:
    * @param b blue color in range <0,1>
    * @param a alpha in range <0,1> (0 is fully transparent)
    */
-  void addPoint(Eigen::Vector3d point, double r = 0.0, double g = 1.0, double b = 0.3, double a = 1.0);
+  void addPoint(const Eigen::Vector3d &point, const double r = 0.0, const double g = 1.0, const double b = 0.3, const double a = 1.0);
 
   /**
    * @brief add a ray to the buffer
@@ -62,7 +60,7 @@ public:
    * @param b blue color in range <0,1>
    * @param a alpha in range <0,1> (0 is fully transparent)
    */
-  void addRay(mrs_lib::geometry::Ray ray, double r = 1.0, double g = 0.0, double b = 0.0, double a = 1.0);
+  void addRay(const mrs_lib::geometry::Ray &ray, const double r = 1.0, const double g = 0.0, const double b = 0.0, const double a = 1.0);
 
   /**
    * @brief add a triangle to the buffer
@@ -74,7 +72,8 @@ public:
    * @param a alpha in range <0,1> (0 is fully transparent)
    * @param filled bool to set fill. True = face visible, False = outline visible
    */
-  void addTriangle(mrs_lib::geometry::Triangle tri, double r = 0.5, double g = 0.5, double b = 0.0, double a = 1.0, bool filled = true);
+  void addTriangle(const mrs_lib::geometry::Triangle &tri, const double r = 0.5, const double g = 0.5, const double b = 0.0, const double a = 1.0,
+                   const bool filled = true);
 
   /**
    * @brief add a rectangle to the buffer
@@ -86,7 +85,8 @@ public:
    * @param a alpha in range <0,1> (0 is fully transparent)
    * @param filled bool to set fill. True = face visible, False = outline visible
    */
-  void addRectangle(mrs_lib::geometry::Rectangle rect, double r = 0.5, double g = 0.5, double b = 0.0, double a = 1.0, bool filled = true);
+  void addRectangle(const mrs_lib::geometry::Rectangle &rect, const double r = 0.5, const double g = 0.5, const double b = 0.0, const double a = 1.0,
+                    const bool filled = true);
 
   /**
    * @brief add a cuboid to the buffer
@@ -98,7 +98,8 @@ public:
    * @param a alpha in range <0,1> (0 is fully transparent)
    * @param filled bool to set fill. True = face visible, False = outline visible
    */
-  void addCuboid(mrs_lib::geometry::Cuboid cuboid, double r = 0.5, double g = 0.5, double b = 0.0, double a = 1.0, bool filled = true);
+  void addCuboid(const mrs_lib::geometry::Cuboid &cuboid, const double r = 0.5, const double g = 0.5, const double b = 0.0, const double a = 1.0,
+                 const bool filled = true);
 
   /**
    * @brief add an ellipse to the buffer
@@ -111,8 +112,8 @@ public:
    * @param filled bool to set fill. True = face visible, False = outline visible
    * @param num_points number of points to approximate the round shape
    */
-  void addEllipse(mrs_lib::geometry::Ellipse ellipse, double r = 0.0, double g = 1.0, double b = 1.0, double a = 1.0, bool filled = true,
-                  int num_points = DEFAULT_ELLIPSE_POINTS);
+  void addEllipse(const mrs_lib::geometry::Ellipse &ellipse, const double r = 0.0, const double g = 1.0, const double b = 1.0, const double a = 1.0,
+                  const bool filled = true, const int num_points = DEFAULT_ELLIPSE_POINTS);
 
   /**
    * @brief add a cylinder to the buffer
@@ -126,8 +127,8 @@ public:
    * @param capped bool to set caps on/off. True = caps drawn, False = hollow cylinder
    * @param sides number of points to approximate the round shape
    */
-  void addCylinder(mrs_lib::geometry::Cylinder cylinder, double r = 0.7, double g = 0.8, double b = 0.3, double a = 1.0, bool filled = true, bool capped = true,
-                   int sides = DEFAULT_ELLIPSE_POINTS);
+  void addCylinder(const mrs_lib::geometry::Cylinder &cylinder, const double r = 0.7, const double g = 0.8, const double b = 0.3, const double a = 1.0,
+                   const bool filled = true, const bool capped = true, const int sides = DEFAULT_ELLIPSE_POINTS);
   /**
    * @brief add a cone to the buffer
    *
@@ -140,8 +141,8 @@ public:
    * @param capped bool to set caps on/off. True = cap drawn, False = base cap missing
    * @param sides number of points to approximate the round shape
    */
-  void addCone(mrs_lib::geometry::Cone cone, double r = 0.7, double g = 0.8, double b = 0.3, double a = 1.0, bool filled = true, bool capped = true,
-               int sides = DEFAULT_ELLIPSE_POINTS);
+  void addCone(const mrs_lib::geometry::Cone &cone, const double r = 0.7, const double g = 0.8, const double b = 0.3, const double a = 1.0,
+               const bool filled = true, const bool capped = true, const int sides = DEFAULT_ELLIPSE_POINTS);
 
   /**
    * @brief add a trajectory to the buffer
@@ -153,14 +154,15 @@ public:
    * @param a alpha in range <0,1> (0 is fully transparent)
    * @param filled bool to set fill. True = continuous line, False = only visualize points
    */
-  void addTrajectory(mrs_msgs::TrajectoryReference traj, double r = 0.3, double g = 1.0, double b = 0.3, double a = 1.0, bool filled = true);
+  void addTrajectory(const mrs_msgs::TrajectoryReference &traj, const double r = 0.3, const double g = 1.0, const double b = 0.3, const double a = 1.0,
+                     const bool filled = true);
 
   /**
    * @brief set the scale of all points
    *
    * @param scale
    */
-  void setPointsScale(double scale);
+  void setPointsScale(const double scale);
 
   /**
    * @brief set the parent frame_id
@@ -174,7 +176,7 @@ public:
    *
    * @param scale
    */
-  void setLinesScale(double scale);
+  void setLinesScale(const double scale);
 
   /**
    * @brief remove all objects from the buffer
@@ -203,7 +205,7 @@ private:
   visualization_msgs::Marker triangles_marker;
 
   bool initialized = false;
-  void initialize(ros::NodeHandle &nh);
+  void initialize();
 
   double points_scale = 0.02;
   double lines_scale  = 0.04;
@@ -212,15 +214,7 @@ private:
   void addNullLine();
   void addNullTriangle();
 
-  std::vector<Eigen::Vector3d> buildEllipse(mrs_lib::geometry::Ellipse ellispe, int num_points = DEFAULT_ELLIPSE_POINTS);
-
-  // dynamic reconfigure
-  /* typedef mrs_lib::batch_visualizerConfig Config; */
-
-  /* typedef dynamic_reconfigure::Server<Config> ReconfigureServer; */
-  /* boost::shared_ptr<ReconfigureServer>        reconfigure_server_; */
-
-  /* void dynamicReconfigureCallback(Config &config, uint32_t level); */
+  std::vector<Eigen::Vector3d> buildEllipse(const mrs_lib::geometry::Ellipse &ellispe, const int num_points = DEFAULT_ELLIPSE_POINTS);
 };
 
 }  // namespace mrs_lib
