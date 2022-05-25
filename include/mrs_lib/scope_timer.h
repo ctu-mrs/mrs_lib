@@ -137,6 +137,13 @@ public:
   void checkpoint(const std::string& label);
 
   /**
+   * @brief Getter for scope timer lifetime
+   *
+   * @return lifetime as floating point milliseconds
+   */
+  float getLifetime();
+
+  /**
    * @brief The basic destructor which prints out or logs the scope times, if enabled.
    */
   ~ScopeTimer();
