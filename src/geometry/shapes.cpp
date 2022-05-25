@@ -28,17 +28,17 @@ namespace mrs_lib
     //}
 
     /* getters //{ */
-    const Eigen::Vector3d Ray::p1()
+    const Eigen::Vector3d Ray::p1() const
     {
       return point1;
     }
 
-    const Eigen::Vector3d Ray::p2()
+    const Eigen::Vector3d Ray::p2() const
     {
       return point2;
     }
 
-    const Eigen::Vector3d Ray::direction()
+    const Eigen::Vector3d Ray::direction() const
     {
       return (point2 - point1);
     }
@@ -81,34 +81,34 @@ namespace mrs_lib
     //}
 
     /* getters //{ */
-    const Eigen::Vector3d Triangle::a()
+    const Eigen::Vector3d Triangle::a() const
     {
       return point1;
     }
 
-    const Eigen::Vector3d Triangle::b()
+    const Eigen::Vector3d Triangle::b() const
     {
       return point2;
     }
 
-    const Eigen::Vector3d Triangle::c()
+    const Eigen::Vector3d Triangle::c() const
     {
       return point3;
     }
 
-    const Eigen::Vector3d Triangle::normal()
+    const Eigen::Vector3d Triangle::normal() const
     {
       Eigen::Vector3d n;
       n = (point2 - point1).cross(point3 - point1);
       return n.normalized();
     }
 
-    const Eigen::Vector3d Triangle::center()
+    const Eigen::Vector3d Triangle::center() const
     {
       return (point1 + point2 + point3) / 3.0;
     }
 
-    const std::vector<Eigen::Vector3d> Triangle::vertices()
+    const std::vector<Eigen::Vector3d> Triangle::vertices() const
     {
       std::vector<Eigen::Vector3d> vertices;
       vertices.push_back(point1);
@@ -119,7 +119,7 @@ namespace mrs_lib
     //}
 
     /* intersectionRay //{ */
-    const boost::optional<Eigen::Vector3d> Triangle::intersectionRay(Ray r, double epsilon)
+    const boost::optional<Eigen::Vector3d> Triangle::intersectionRay(Ray r, double epsilon) const
     {
       // The Möller–Trumbore algorithm
       // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
@@ -189,39 +189,39 @@ namespace mrs_lib
     //}
 
     /* getters //{ */
-    const Eigen::Vector3d Rectangle::a()
+    const Eigen::Vector3d Rectangle::a() const
     {
       return point1;
     }
 
-    const Eigen::Vector3d Rectangle::b()
+    const Eigen::Vector3d Rectangle::b() const
     {
       return point2;
     }
 
-    const Eigen::Vector3d Rectangle::c()
+    const Eigen::Vector3d Rectangle::c() const
     {
       return point3;
     }
 
-    const Eigen::Vector3d Rectangle::d()
+    const Eigen::Vector3d Rectangle::d() const
     {
       return point4;
     }
 
-    const Eigen::Vector3d Rectangle::center()
+    const Eigen::Vector3d Rectangle::center() const
     {
       return (point1 + point2 + point3 + point4) / 4.0;
     }
 
-    const Eigen::Vector3d Rectangle::normal()
+    const Eigen::Vector3d Rectangle::normal() const
     {
       Eigen::Vector3d n;
       n = (point2 - point1).cross(point4 - point1);
       return n.normalized();
     }
 
-    const std::vector<Eigen::Vector3d> Rectangle::vertices()
+    const std::vector<Eigen::Vector3d> Rectangle::vertices() const
     {
       std::vector<Eigen::Vector3d> vertices;
       vertices.push_back(point1);
@@ -231,7 +231,7 @@ namespace mrs_lib
       return vertices;
     }
 
-    const std::vector<Triangle> Rectangle::triangles()
+    const std::vector<Triangle> Rectangle::triangles() const
     {
       Triangle t1(point1, point2, point3);
       Triangle t2(point1, point3, point4);
@@ -244,7 +244,7 @@ namespace mrs_lib
     //}
 
     /* intersectionRay //{ */
-    const boost::optional<Eigen::Vector3d> Rectangle::intersectionRay(Ray r, double epsilon)
+    const boost::optional<Eigen::Vector3d> Rectangle::intersectionRay(Ray r, double epsilon) const
     {
       Triangle t1 = triangles()[0];
       Triangle t2 = triangles()[1];
@@ -258,7 +258,7 @@ namespace mrs_lib
     //}
 
     /* isFacing //{ */
-    bool Rectangle::isFacing(Eigen::Vector3d point)
+    bool Rectangle::isFacing(Eigen::Vector3d point) const
     {
       Eigen::Vector3d towards_point = point - center();
       double dot_product = towards_point.dot(normal());
@@ -268,7 +268,7 @@ namespace mrs_lib
     //}
 
     /* solidAngleRelativeTo //{ */
-    double Rectangle::solidAngleRelativeTo(Eigen::Vector3d point)
+    double Rectangle::solidAngleRelativeTo(Eigen::Vector3d point) const
     {
       Eigen::Vector3d a = point1 - point;
       Eigen::Vector3d b = point2 - point;
@@ -356,7 +356,7 @@ namespace mrs_lib
     //}
 
     /* lookupPoints //{ */
-    std::vector<Eigen::Vector3d> Cuboid::lookupPoints(int face_idx)
+    std::vector<Eigen::Vector3d> Cuboid::lookupPoints(int face_idx) const
     {
       std::vector<Eigen::Vector3d> lookup;
       switch (face_idx)
@@ -403,17 +403,17 @@ namespace mrs_lib
     //}
 
     /* getters //{ */
-    const std::vector<Eigen::Vector3d> Cuboid::vertices()
+    const std::vector<Eigen::Vector3d> Cuboid::vertices() const
     {
       return points;
     }
 
-    const Rectangle Cuboid::getRectangle(int face_idx)
+    const Rectangle Cuboid::getRectangle(int face_idx) const
     {
       return Rectangle(lookupPoints(face_idx));
     }
 
-    const Eigen::Vector3d Cuboid::center()
+    const Eigen::Vector3d Cuboid::center() const
     {
       Eigen::Vector3d point_sum = points[0];
       for (int i = 1; i < 8; i++)
@@ -425,7 +425,7 @@ namespace mrs_lib
     //}
 
     /* intersectionRay //{ */
-    const std::vector<Eigen::Vector3d> Cuboid::intersectionRay(Ray r, double epsilon)
+    const std::vector<Eigen::Vector3d> Cuboid::intersectionRay(Ray r, double epsilon) const
     {
       std::vector<Eigen::Vector3d> ret;
       for (int i = 0; i < 6; i++)
@@ -464,22 +464,22 @@ namespace mrs_lib
     //}
 
     /* getters //{ */
-    double Ellipse::a()
+    double Ellipse::a() const
     {
       return major_semi;
     }
 
-    double Ellipse::b()
+    double Ellipse::b() const
     {
       return minor_semi;
     }
 
-    const Eigen::Vector3d Ellipse::center()
+    const Eigen::Vector3d Ellipse::center() const
     {
       return center_point;
     }
 
-    const Eigen::Quaterniond Ellipse::orientation()
+    const Eigen::Quaterniond Ellipse::orientation() const
     {
       return absolute_orientation;
     }
@@ -509,27 +509,27 @@ namespace mrs_lib
     //}
 
     /* getters //{ */
-    const Eigen::Vector3d Cylinder::center()
+    const Eigen::Vector3d Cylinder::center() const
     {
       return center_point;
     }
 
-    const Eigen::Quaterniond Cylinder::orientation()
+    const Eigen::Quaterniond Cylinder::orientation() const
     {
       return absolute_orientation;
     }
 
-    double Cylinder::r()
+    double Cylinder::r() const
     {
       return radius;
     }
 
-    double Cylinder::h()
+    double Cylinder::h() const
     {
       return height;
     }
 
-    const Ellipse Cylinder::getCap(int index)
+    const Ellipse Cylinder::getCap(int index) const
     {
       Ellipse e;
       Eigen::Vector3d ellipse_center;
@@ -572,32 +572,32 @@ namespace mrs_lib
     //}
 
     /* getters //{ */
-    const Eigen::Vector3d Cone::origin()
+    const Eigen::Vector3d Cone::origin() const
     {
       return origin_point;
     }
 
-    const Eigen::Vector3d Cone::direction()
+    const Eigen::Vector3d Cone::direction() const
     {
       return absolute_direction;
     }
 
-    const Eigen::Vector3d Cone::center()
+    const Eigen::Vector3d Cone::center() const
     {
       return origin() + (0.5 * h()) * direction();
     }
 
-    double Cone::theta()
+    double Cone::theta() const
     {
       return angle;
     }
 
-    double Cone::h()
+    double Cone::h() const
     {
       return height;
     }
 
-    const Ellipse Cone::getCap()
+    const Ellipse Cone::getCap() const
     {
       Eigen::Vector3d ellipse_center = origin() + direction() * h();
       Eigen::Quaterniond ellipse_orientation = Eigen::Quaterniond::FromTwoVectors(Eigen::Vector3d::UnitZ(), direction());
@@ -606,7 +606,7 @@ namespace mrs_lib
       return e;
     }
 
-    const std::optional<Eigen::Vector3d> Cone::projectPoint(const Eigen::Vector3d& point)
+    const std::optional<Eigen::Vector3d> Cone::projectPoint(const Eigen::Vector3d& point) const
     {
 
       Eigen::Vector3d point_vec = point - origin();
