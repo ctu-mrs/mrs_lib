@@ -522,6 +522,52 @@ TEST(TESTSuite, quaternion_test)
 
 //}
 
+/* TEST(TESTSuite, opencv_test) //{ */
+
+TEST(TESTSuite, opencv_test)
+{
+
+  ROS_INFO("[%s]: Testing the cv::Point3<T> transformation", ros::this_node::getName().c_str());
+
+  int result = 1;
+
+  auto tfr = mrs_lib::Transformer("Transformer_opencv_test");
+  tfr.setDefaultPrefix("uav66");
+
+  publish_transforms();
+
+  const std::string from = "local_origin";
+  const std::string to = "fcu";
+  const auto tf_opt = wait_for_tf(from, to, tfr);
+
+  if (tf_opt.has_value())
+  {
+    ROS_INFO("[%s]: got the transform", ros::this_node::getName().c_str());
+
+    const auto tf = tf_opt.value();
+    std::cout << "from: " << Transformer::frame_from(tf) << ", to: " << Transformer::frame_to(tf) << ", stamp: " << tf.header.stamp << std::endl;
+    std::cout << tf << std::endl;
+
+    const cv::Point3d tv(1,2,3);
+    const auto rv = tfr.transform(tv, tf);
+    if (!rv)
+    {
+      ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: Failed to transform point [" << tv.x << ", " << tv.y << ", " << tv.z << "]");
+      result *= 0;
+    }
+
+  }
+  else
+  {
+    ROS_ERROR_THROTTLE(1.0, "[%s]: missing tf", ros::this_node::getName().c_str());
+    result *= 0;
+  }
+
+  EXPECT_TRUE(result);
+}
+
+//}
+
 /* TEST(TESTSuite, latlon_test) //{ */
 
 bool compare_gt_latlon(const vec3_t& tv, const vec3_t& rv, const char utm_zone[10], const bool ll2local)

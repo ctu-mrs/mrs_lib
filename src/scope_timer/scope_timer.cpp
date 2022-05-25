@@ -121,6 +121,15 @@ void ScopeTimer::checkpoint(const std::string& label) {
 
 //}
 
+/* ScopeTimer::getLifetime() //{ */
+
+float ScopeTimer::getLifetime() {
+  const auto lifetime_us = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - checkpoints.at(0).chrono_time).count();
+  return lifetime_us / 1000.0f;
+}
+
+//}
+
 /* ScopeTimer destructor //{ */
 
 ScopeTimer::~ScopeTimer() {

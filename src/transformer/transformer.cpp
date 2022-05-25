@@ -2,6 +2,7 @@
 
 #include <mrs_lib/transformer.h>
 #include <mrs_lib/gps_conversions.h>
+#include <opencv2/core/types.hpp>
 #include <mrs_lib/geometry/conversions.h>
 #include <mutex>
 
@@ -13,6 +14,18 @@ template std::optional<test_t::Ptr> mrs_lib::Transformer::transform<test_t>(cons
 template std::optional<test_t> mrs_lib::Transformer::transformSingle<test_t>(const test_t& what, const std::string& to_frame);
 template std::optional<test_t::Ptr> mrs_lib::Transformer::transformSingle<test_t>(const test_t::Ptr& what, const std::string& to_frame);
 template std::optional<test_t::Ptr> mrs_lib::Transformer::transformSingle<test_t>(const test_t::ConstPtr& what, const std::string& to_frame);
+
+namespace tf2
+{
+  template <>
+  void doTransform(const cv::Point3d& point_in, cv::Point3d& point_out, const geometry_msgs::TransformStamped& transform)
+  {
+    const geometry_msgs::Point pt = mrs_lib::geometry::fromCV(point_in);
+    geometry_msgs::Point pt_tfd;
+    tf2::doTransform(pt, pt_tfd, transform);
+    point_out = mrs_lib::geometry::toCV(pt_tfd);
+  }
+}
 
 namespace mrs_lib
 {
