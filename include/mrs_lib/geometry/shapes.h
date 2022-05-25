@@ -52,20 +52,20 @@ namespace mrs_lib
        *
        * @return ray origin point
        */
-      const Eigen::Vector3d p1();
+      const Eigen::Vector3d p1() const;
       /**
        * @brief get the end point
        *
        * @return ray end point
        */
-      const Eigen::Vector3d p2();
+      const Eigen::Vector3d p2() const;
 
       /**
        * @brief get the direction of ray (normalized)
        *
        * @return direction (normalized)
        */
-      const Eigen::Vector3d direction();
+      const Eigen::Vector3d direction() const;
 
     public:
       /**
@@ -123,16 +123,33 @@ namespace mrs_lib
       Eigen::Vector3d point3;
 
     public:
-      const Eigen::Vector3d a();
-      const Eigen::Vector3d b();
-      const Eigen::Vector3d c();
+      /**
+       * @brief getter for first point
+       *
+       * @return 1st point (vector3)
+       */
+      const Eigen::Vector3d a() const;
+
+      /**
+       * @brief getter for second point
+       *
+       * @return 2nd point (vector3)
+       */
+      const Eigen::Vector3d b() const;
+
+      /**
+       * @brief getter for third point
+       *
+       * @return 3rd point (vector3)
+       */
+      const Eigen::Vector3d c() const;
 
       /**
        * @brief get position on the triangle center
        *
        * @return vector3
        */
-      const Eigen::Vector3d center();
+      const Eigen::Vector3d center() const;
 
       /**
        * @brief get normal vector of this triangle. The vector origin is placed at triangle center, length is normalized and direction follows the right-hand
@@ -140,14 +157,14 @@ namespace mrs_lib
        *
        * @return vector3
        */
-      const Eigen::Vector3d normal();
+      const Eigen::Vector3d normal() const;
 
       /**
        * @brief get a vector of all vertices
        *
        * @return std::vector<vector3>
        */
-      const std::vector<Eigen::Vector3d> vertices();
+      const std::vector<Eigen::Vector3d> vertices() const;
 
     public:
       /**
@@ -158,7 +175,7 @@ namespace mrs_lib
        *
        * @return vector3 intersection if exists, boost::none if no intersection is found
        */
-      const boost::optional<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-4);
+      const boost::optional<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-4) const;
     };
     //}
 
@@ -209,35 +226,35 @@ namespace mrs_lib
        *
        * @return 1st point (vector3)
        */
-      const Eigen::Vector3d a();
+      const Eigen::Vector3d a() const;
 
       /**
        * @brief getter for the second point
        *
        * @return 2nd point (vector3)
        */
-      const Eigen::Vector3d b();
+      const Eigen::Vector3d b() const;
 
       /**
        * @brief getter for the third point
        *
        * @return 3rd point (vector3)
        */
-      const Eigen::Vector3d c();
+      const Eigen::Vector3d c() const;
 
       /**
        * @brief getter for the fourth point
        *
        * @return 4th point (vector3)
        */
-      const Eigen::Vector3d d();
+      const Eigen::Vector3d d() const;
 
       /**
        * @brief getter for center point
        *
        * @return center point (vector3)
        */
-      const Eigen::Vector3d center();
+      const Eigen::Vector3d center() const;
 
       /**
        * @brief getter for the normal vector. It originates in the center of the Rectangle, length is normalized, orientation follows the right-hand rule,
@@ -245,21 +262,21 @@ namespace mrs_lib
        *
        * @return normal vector3
        */
-      const Eigen::Vector3d normal();
+      const Eigen::Vector3d normal() const;
 
       /**
        * @brief getter for all the points of this rectangle provided as std::vector
        *
        * @return std::vector of points (vector3)
        */
-      const std::vector<Eigen::Vector3d> vertices();
+      const std::vector<Eigen::Vector3d> vertices() const;
 
       /**
        * @brief getter for the triangles forming this rectangle
        *
        * @return std::vector of triangles
        */
-      const std::vector<Triangle> triangles();
+      const std::vector<Triangle> triangles() const;
 
       /**
        * @brief calculate an intersection of this rectangle with a given ray with given tolerance
@@ -269,7 +286,7 @@ namespace mrs_lib
        *
        * @return vector3 intersection if exists, boost::none if no intersection is found
        */
-      const boost::optional<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-4);
+      const boost::optional<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-4) const;
 
       /**
        * @brief check if the normal is facing a given point, i.e. if the point lies in the same half-space as the rectangle normal
@@ -278,7 +295,7 @@ namespace mrs_lib
        *
        * @return true if the normal is facing given point. Returns false for angle >= 90 degrees
        */
-      bool isFacing(Eigen::Vector3d point);
+      bool isFacing(Eigen::Vector3d point) const;
 
 
       /**
@@ -288,7 +305,7 @@ namespace mrs_lib
        *
        * @return solid angle in steradians
        */
-      double solidAngleRelativeTo(Eigen::Vector3d point);
+      double solidAngleRelativeTo(Eigen::Vector3d point) const;
     };
 
     //}
@@ -356,7 +373,15 @@ namespace mrs_lib
 
     private:
       std::vector<Eigen::Vector3d> points;
-      std::vector<Eigen::Vector3d> lookupPoints(int face_idx);
+
+      /**
+       * @brief return points in a side of given index
+       *
+       * @param face_idx index of the cuboid side
+       *
+       * @return std::vector<vector3>
+       */
+      std::vector<Eigen::Vector3d> lookupPoints(int face_idx) const;
 
     public:
       /**
@@ -364,14 +389,14 @@ namespace mrs_lib
        *
        * @return std::vector<vector3>
        */
-      const std::vector<Eigen::Vector3d> vertices();
+      const std::vector<Eigen::Vector3d> vertices() const;
 
       /**
        * @brief getter for the center point
        *
        * @return vector3
        */
-      const Eigen::Vector3d center();
+      const Eigen::Vector3d center() const;
 
       /**
        * @brief getter for one side corresponding to a provided index
@@ -380,7 +405,7 @@ namespace mrs_lib
        *
        * @return rectangle representing the cuboid side
        */
-      const Rectangle getRectangle(int face_idx);
+      const Rectangle getRectangle(int face_idx) const;
 
       /**
        * @brief calculate the intersection between this cuboid and a provided ray within a given tolerance. Can result in 0, 1 or 2 intersection points
@@ -390,7 +415,7 @@ namespace mrs_lib
        *
        * @return std::vector<vector3> list of intersection points (depending on the geometry, can yield 0, 1 or 2 points)
        */
-      const std::vector<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-4);
+      const std::vector<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-4) const;
     };
     //}
 
@@ -433,28 +458,28 @@ namespace mrs_lib
        *
        * @return length of major semi-axis
        */
-      double a();
+      double a() const;
 
       /**
        * @brief getter for minor semi-axis
        *
        * @return length of minor semi-axis
        */
-      double b();
+      double b() const;
 
       /**
        * @brief getter for the center point
        *
        * @return vector3
        */
-      const Eigen::Vector3d center();
+      const Eigen::Vector3d center() const;
 
       /**
        * @brief getter for the orientation
        *
        * @return quaternion
        */
-      const Eigen::Quaterniond orientation();
+      const Eigen::Quaterniond orientation() const;
     };
     //}
 
@@ -507,28 +532,28 @@ namespace mrs_lib
        *
        * @return vector3
        */
-      const Eigen::Vector3d center();
+      const Eigen::Vector3d center() const;
 
       /**
        * @brief getter for the orientation
        *
        * @return quaternion
        */
-      const Eigen::Quaterniond orientation();
+      const Eigen::Quaterniond orientation() const;
 
       /**
        * @brief getter for cap radius
        *
        * @return radius of the cap
        */
-      double r();
+      double r() const;
 
       /**
        * @brief getter for the body height
        *
        * @return body height
        */
-      double h();
+      double h() const;
 
       /**
        * @brief getter for a cap corresponding to a provided index
@@ -537,7 +562,7 @@ namespace mrs_lib
        *
        * @return ellipse representing the cap
        */
-      const Ellipse getCap(int index);
+      const Ellipse getCap(int index) const;
     };
     //}
 
@@ -580,42 +605,42 @@ namespace mrs_lib
        *
        * @return vector3
        */
-      const Eigen::Vector3d origin();
+      const Eigen::Vector3d origin() const;
 
       /**
        * @brief getter for the direction. Normalized direction from origin towards base
        *
        * @return vector3, normalized
        */
-      const Eigen::Vector3d direction();
+      const Eigen::Vector3d direction() const;
 
       /**
        * @brief getter for the center point. Center point lies in half of the body height
        *
        * @return vector3
        */
-      const Eigen::Vector3d center();
+      const Eigen::Vector3d center() const;
 
       /**
        * @brief getter for angle between body height and body side
        *
        * @return angle in radians
        */
-      double theta();
+      double theta() const;
 
       /**
        * @brief getter for body height
        *
        * @return
        */
-      double h();
+      double h() const;
 
       /**
        * @brief getter for the cap of the cone
        *
        * @return ellipse representing the cap of the cone
        */
-      const Ellipse getCap();
+      const Ellipse getCap() const;
 
       /**
        * @brief Project a 3D point orthogonally onto the Cone surface
@@ -624,7 +649,7 @@ namespace mrs_lib
        *
        * @return projected point
        */
-      const std::optional<Eigen::Vector3d> projectPoint(const Eigen::Vector3d& point);
+      const std::optional<Eigen::Vector3d> projectPoint(const Eigen::Vector3d& point) const;
     };
     //}
   }  // namespace geometry
