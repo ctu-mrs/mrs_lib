@@ -48,7 +48,7 @@ namespace mrs_lib
       {
         x_t x;  /*!< \brief State vector. */
         P_t P;  /*!< \brief State covariance matrix. */
-        ros::Time stamp = ros::Time(0);
+        ros::Time stamp = ros::Time(0); /*!< \brief ROS time stamp */
       };
       //}
 
