@@ -201,7 +201,6 @@ public:
     const info_t info(stamp, z, R, model, *prev_it, meas_id);
     // add the point to the history buffer
     addInfo(info, next_it);
-
   }
   //}
 
@@ -228,25 +227,10 @@ public:
   };
 
   /*!
-   * \brief Variation of the constructor for kalman filter using nis_buffer (ALOAMGARM)
+   * \brief Empty constructor.
    *
-   * Initializes the Repredictor with the necessary initial and default values.
-   *
-   * \param x0             Initial state.
-   * \param P0             Covariance matrix of the initial state uncertainty.
-   * \param u0             Initial system input.
-   * \param Q0             Default covariance matrix of the process noise.
-   * \param t0             Time stamp of the initial state.
-   * \param model          Default prediction and correction model.
-   * \param hist_len       Length of the history buffer for system inputs and measurements.
-   * \param nis_buffer     Circular buffer for NIS values.
    */
-  Repredictor(const x_t& x0, const P_t& P0, const u_t& u0, const Q_t& Q0, const ros::Time& t0, const ModelPtr& model, const unsigned hist_len,
-              const std::shared_ptr<boost::circular_buffer<double>>& nis_buffer)
-      : m_sc{x0, P0, nis_buffer}, m_default_model(model), m_history(history_t(hist_len)) {
-    assert(hist_len > 0);
-    addInputChangeWithNoise(u0, Q0, t0, model);
-  };
+  Repredictor(){};
 
   /*!
    * \brief Variation of the constructor for cases without a system input.
@@ -269,7 +253,7 @@ public:
   };
   //}
 
-private:
+protected:
   // state and covariance corresponding to the oldest element in the history buffer
   statecov_t m_sc;
   // default model to use for updates
@@ -314,11 +298,11 @@ private:
     };
   };
 
-  using history_t = boost::circular_buffer<info_t>;
 
   //}
 
-private:
+protected:
+  using history_t = boost::circular_buffer<info_t>;
   // the history buffer
   history_t m_history;
 
@@ -355,7 +339,9 @@ private:
   typename history_t::iterator addInfo(const info_t& info, const typename history_t::iterator& next_it) {
     // check if the new element would be added before the first element of the history buffer and ignore it if so
     if (next_it == std::begin(m_history) && !m_history.empty()) {
-      ROS_WARN_STREAM_THROTTLE(1.0, "[Repredictor]: Added history point is older than the oldest by " << (next_it->stamp - info.stamp).toSec() << "s. Ignoring it! Consider increasing the history buffer size (currently: " << m_history.size() << ")");
+      ROS_WARN_STREAM_THROTTLE(1.0, "[Repredictor]: Added history point is older than the oldest by "
+                                        << (next_it->stamp - info.stamp).toSec()
+                                        << "s. Ignoring it! Consider increasing the history buffer size (currently: " << m_history.size() << ")");
       return std::end(m_history);
     }
 
@@ -406,8 +392,8 @@ private:
   /* correctFrom() method //{ */
   statecov_t correctFrom(const statecov_t& sc, const info_t& meas) {
     assert(meas.is_measurement);
-    const auto model          = meas.correct_model == nullptr ? m_default_model : meas.correct_model;
-    auto       sc_tmp         = sc;
+    const auto model  = meas.correct_model == nullptr ? m_default_model : meas.correct_model;
+    auto       sc_tmp = sc;
     return model->correct(sc_tmp, meas.z, meas.R);
   }
   //}
