@@ -109,7 +109,7 @@ namespace mrs_lib
       *
       * \return the last received message.
       */
-      virtual typename MessageType::ConstPtr peekMsg() {assert(m_pimpl); return m_pimpl->peekMsg();};
+      virtual typename MessageType::ConstPtr peekMsg() const {assert(m_pimpl); return m_pimpl->peekMsg();};
 
     /*!
       * \brief Used to check whether at least one message has been received on the handled topic.
