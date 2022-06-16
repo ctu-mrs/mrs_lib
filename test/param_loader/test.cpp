@@ -71,6 +71,33 @@ TEST(TESTSuite, main_test) {
     result *= 0;
   }
 
+  // these are to check that the code compiles, it doesn't check anything during runtime
+  std::cout << "Testing different matrix loading" << std::endl;
+
+  Eigen::Matrix3f mat3f;
+  pl.loadMatrixStatic("test_param_matrix", mat3f);
+  pl.loadMatrixStatic("test_param_matrix", mat3f, Eigen::Matrix3f::Identity());
+  mat3f = pl.loadMatrixStatic2<3, 3, float>("test_param_matrix");
+  mat3f = pl.loadMatrixStatic2<3, 3, float>("test_param_matrix", Eigen::Matrix3f::Identity()*Eigen::Matrix3f::Ones());
+
+  Eigen::MatrixXf matxf;
+  pl.loadMatrixStatic("test_param_matrix", matxf, 15, 16);
+  pl.loadMatrixStatic("test_param_matrix", matxf, Eigen::MatrixXf::Identity(15, 16), 15, 16);
+  matxf = pl.loadMatrixStatic2<float>("test_param_matrix", 15, 16);
+  matxf = pl.loadMatrixStatic2<float>("test_param_matrix", Eigen::MatrixXf::Identity(15, 16), 15, 16);
+
+  Eigen::MatrixXd matxd;
+  pl.loadMatrixDynamic("test_param_matrix", matxd, 1, 2);
+  pl.loadMatrixDynamic("test_param_matrix", matxd, Eigen::MatrixXd::Zero(1, 2), 1, 2);
+  matxd = pl.loadMatrixDynamic2("test_param_matrix", 5, 6);
+  matxd = pl.loadMatrixDynamic2<double>("test_param_matrix", 16*Eigen::MatrixXd::Ones(5, 5), 5, 5);
+
+  std::vector<Eigen::MatrixXd> vec;
+  pl.loadMatrixArray("test_param_matrix", vec);
+  pl.loadMatrixArray("test_param_matrix", vec, vec);
+  vec = pl.loadMatrixArray2("test_param_matrix");
+  vec = pl.loadMatrixArray2("test_param_matrix", vec);
+
   EXPECT_TRUE(result);
 }
 
