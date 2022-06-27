@@ -16,6 +16,15 @@ namespace mrs_lib
       return pt;
     }
     
+    geometry_msgs::Vector3 fromEigenVec(const Eigen::Vector3d& what)
+    {
+      geometry_msgs::Vector3 pt;
+      pt.x = what.x();
+      pt.y = what.y();
+      pt.z = what.z();
+      return pt;
+    }
+    
     Eigen::Vector3d toEigen(const geometry_msgs::Point& what)
     {
       return {what.x, what.y, what.z};
@@ -80,7 +89,6 @@ namespace mrs_lib
     }
     
     //}
-
 
   }
 }
