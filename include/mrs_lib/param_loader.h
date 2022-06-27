@@ -59,6 +59,9 @@ private:
     NO_SWAP = false
   };
 
+  template <typename T>
+  using MatrixX = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+
 private:
   bool m_load_successful, m_print_values;
   std::string m_node_name;
@@ -137,7 +140,8 @@ private:
       ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << strstr.str());
   }
 
-  void printValue(const std::string& name, const Eigen::MatrixXd& value)
+  template <typename T>
+  void printValue(const std::string& name, const MatrixX<T>& value)
   {
     std::stringstream strstr;
     /* const Eigen::IOFormat fmt(4, 0, ", ", "\n", "\t\t[", "]"); */
@@ -221,10 +225,10 @@ private:
   //}
 
   /* loadMatrixStatic_internal helper function for loading static Eigen matrices //{ */
-  template <int rows, int cols>
-  Eigen::Matrix<double, rows, cols> loadMatrixStatic_internal(const std::string& name, const Eigen::Matrix<double, rows, cols>& default_value, optional_t optional, unique_t unique)
+  template <int rows, int cols, typename T>
+  Eigen::Matrix<T, rows, cols> loadMatrixStatic_internal(const std::string& name, const Eigen::Matrix<T, rows, cols>& default_value, optional_t optional, unique_t unique)
   {
-    Eigen::MatrixXd dynamic = loadMatrixXd(name, default_value, rows, cols, optional, unique, NO_SWAP);
+    MatrixX<T> dynamic = loadMatrixX(name, MatrixX<T>(default_value), rows, cols, optional, unique, NO_SWAP);
     if (dynamic.rows() == rows || dynamic.cols() == cols)
       return dynamic;
     else
@@ -232,12 +236,13 @@ private:
   }
   //}
 
-  /* helper functions for loading Eigen::MatrixXd matrices //{ */
-  // loadMatrixXd helper function for loading Eigen::MatrixXd matrices //{
-  Eigen::MatrixXd loadMatrixXd(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols = -1, optional_t optional = OPTIONAL, unique_t unique = UNIQUE, swap_t swap = NO_SWAP, bool printValues = true)
+  /* helper functions for loading dynamic Eigen matrices //{ */
+  // loadMatrixX helper function for loading dynamic Eigen matrices //{
+  template <typename T>
+  MatrixX<T> loadMatrixX(const std::string& name, const MatrixX<T>& default_value, int rows, int cols = Eigen::Dynamic, optional_t optional = OPTIONAL, unique_t unique = UNIQUE, swap_t swap = NO_SWAP, bool printValues = true)
   {
     const std::string name_prefixed = m_prefix + name;
-    Eigen::MatrixXd loaded = default_value;
+    MatrixX<T> loaded = default_value;
     // first, check if the user already tried to load this parameter
     if (unique && check_duplicit_loading(name_prefixed))
       return loaded;
@@ -267,7 +272,7 @@ private:
     if (cols <= 0)  // this means that the cols dimension is dynamic or a zero matrix is expected
       check_size_exact = false;
 
-    std::vector<double> tmp_vec;
+    std::vector<T> tmp_vec;
     // try to load the parameter
     bool success = m_nh.getParam(name_prefixed, tmp_vec);
     // check if the loaded vector has correct length
@@ -287,7 +292,7 @@ private:
         cols = rows;
         rows = tmp;
       }
-      loaded = Eigen::Map<Eigen::Matrix<double, -1, -1, Eigen::RowMajor>, Eigen::Unaligned>(tmp_vec.data(), rows, cols);
+      loaded = Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Unaligned>(tmp_vec.data(), rows, cols);
     } else
     {
       if (success && !correct_size)
@@ -329,7 +334,8 @@ private:
   //}
 
   /* loadMatrixArray_internal helper function for loading an array of EigenXd matrices with known dimensions //{ */
-  std::vector<Eigen::MatrixXd> loadMatrixArray_internal(const std::string& name, const std::vector<Eigen::MatrixXd>& default_value, optional_t optional, unique_t unique)
+  template <typename T>
+  std::vector<MatrixX<T>> loadMatrixArray_internal(const std::string& name, const std::vector<MatrixX<T>>& default_value, optional_t optional, unique_t unique)
   {
     const std::string name_prefixed = m_prefix + name;
     int rows;
@@ -338,7 +344,7 @@ private:
     success = success && m_nh.getParam(name_prefixed + "/rows", rows);
     success = success && m_nh.getParam(name_prefixed + "/cols", cols);
 
-    std::vector<Eigen::MatrixXd> loaded;
+    std::vector<MatrixX<T>> loaded;
     loaded.reserve(cols.size());
 
     int total_cols = 0;
@@ -369,7 +375,7 @@ private:
     
     //}
 
-    const Eigen::MatrixXd loaded_matrix = loadMatrixXd(name + "/data", Eigen::MatrixXd(), rows, total_cols, optional, unique, NO_SWAP, false);
+    const MatrixX<T> loaded_matrix = loadMatrixX(name + "/data", MatrixX<T>(), rows, total_cols, optional, unique, NO_SWAP, false);
     /* std::cout << "loaded_matrix: " << loaded_matrix << std::endl; */
     /* std::cout << "loaded_matrix: " << loaded_matrix.rows() << "x" << loaded_matrix.cols() << std::endl; */
     /* std::cout << "expected dims: " << rows << "x" << total_cols << std::endl; */
@@ -383,7 +389,7 @@ private:
     for (unsigned it = 0; it < cols.size(); it++)
     {
       const int cur_cols = cols.at(it);
-      const Eigen::MatrixXd cur_mat = loaded_matrix.block(0, cols_loaded, rows, cur_cols);
+      const MatrixX<T> cur_mat = loaded_matrix.block(0, cols_loaded, rows, cur_cols);
       /* std::cout << "cur_mat: " << cur_mat << std::endl; */
       loaded.push_back(cur_mat);
       cols_loaded += cur_cols;
@@ -394,9 +400,10 @@ private:
   //}
 
   /* loadMatrixStatic_internal helper function for loading EigenXd matrices with known dimensions //{ */
-  Eigen::MatrixXd loadMatrixStatic_internal(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols, optional_t optional, unique_t unique)
+  template <typename T>
+  MatrixX<T> loadMatrixStatic_internal(const std::string& name, const MatrixX<T>& default_value, int rows, int cols, optional_t optional, unique_t unique)
   {
-    Eigen::MatrixXd loaded = default_value;
+    MatrixX<T> loaded = default_value;
     // first, check that at least one dimension is set
     if (rows <= 0 || cols <= 0)
     {
@@ -405,14 +412,15 @@ private:
       return loaded;
     }
 
-    return loadMatrixXd(name, default_value, rows, cols, optional, unique, NO_SWAP);
+    return loadMatrixX(name, default_value, rows, cols, optional, unique, NO_SWAP);
   }
   //}
 
   /* loadMatrixDynamic_internal helper function for loading Eigen matrices with one dynamic (unspecified) dimension //{ */
-  Eigen::MatrixXd loadMatrixDynamic_internal(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols, optional_t optional, unique_t unique)
+  template <typename T>
+  MatrixX<T> loadMatrixDynamic_internal(const std::string& name, const MatrixX<T>& default_value, int rows, int cols, optional_t optional, unique_t unique)
   {
-    Eigen::MatrixXd loaded = default_value;
+    MatrixX<T> loaded = default_value;
 
     // next, check that at least one dimension is set
     if (rows <= 0 && cols <= 0)
@@ -430,7 +438,7 @@ private:
       cols = tmp;
       swap = SWAP;
     }
-    return loadMatrixXd(name, default_value, rows, cols, optional, unique, swap);
+    return loadMatrixX(name, default_value, rows, cols, optional, unique, swap);
   }
   //}
   //}
@@ -790,7 +798,7 @@ public:
   
   //}
 
-  /* loadParam specializations and convenience functions for Eigen::MatrixXd type //{ */
+  /* loadParam specializations and convenience functions for Eigen dynamic matrix type //{ */
 
   /*!
     * \brief An overload for loading Eigen matrices.
@@ -805,7 +813,8 @@ public:
     * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
     */
-  void loadParam(const std::string& name, Eigen::MatrixXd& mat, const Eigen::MatrixXd& default_value)
+  template <typename T>
+  void loadParam(const std::string& name, MatrixX<T>& mat, const MatrixX<T>& default_value)
   {
     mat = loadParam2(name, default_value);
   }
@@ -823,11 +832,12 @@ public:
     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
     * \return              The loaded parameter value.
     */
-  Eigen::MatrixXd loadParam2(const std::string& name, const Eigen::MatrixXd& default_value)
+  template <typename T>
+  MatrixX<T> loadParam2(const std::string& name, const MatrixX<T>& default_value)
   {
     int rows = default_value.rows();
     int cols = default_value.cols();
-    Eigen::MatrixXd loaded;
+    MatrixX<T> loaded;
     loadMatrixDynamic(name, loaded, default_value, rows, cols);
     return loaded;
   }
@@ -851,10 +861,10 @@ public:
     * \param mat   Reference to the variable to which the parameter value will be stored (such as a class member variable).
     *
     */
-  template <int rows, int cols>
-  void loadMatrixStatic(const std::string& name, Eigen::Matrix<double, rows, cols>& mat)
+  template <int rows, int cols, typename T>
+  void loadMatrixStatic(const std::string& name, Eigen::Matrix<T, rows, cols>& mat)
   {
-    mat = loadMatrixStatic2<rows, cols>(name);
+    mat = loadMatrixStatic2<rows, cols, T>(name);
   }
 
   /*!
@@ -873,10 +883,10 @@ public:
     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
     *
     */
-  template <int rows, int cols>
-  void loadMatrixStatic(const std::string& name, Eigen::Matrix<double, rows, cols> mat, const Eigen::Matrix<double, rows, cols>& default_value)
+  template <int rows, int cols, typename T, typename Derived>
+  void loadMatrixStatic(const std::string& name, Eigen::Matrix<T, rows, cols>& mat, const Eigen::MatrixBase<Derived>& default_value)
   {
-    mat = loadMatrixStatic2(name, default_value);
+    mat = loadMatrixStatic2<rows, cols, T>(name, default_value);
   }
 
   /*!
@@ -894,10 +904,10 @@ public:
     * \return      The loaded parameter value.
     *
     */
-  template <int rows, int cols>
-  Eigen::Matrix<double, rows, cols> loadMatrixStatic2(const std::string& name)
+  template <int rows, int cols, typename T = double>
+  Eigen::Matrix<T, rows, cols> loadMatrixStatic2(const std::string& name)
   {
-    return loadMatrixStatic_internal<rows, cols>(name, Eigen::Matrix<double, rows, cols>::Zero(), COMPULSORY, UNIQUE);
+    return loadMatrixStatic_internal<rows, cols, T>(name, Eigen::Matrix<T, rows, cols>::Zero(), COMPULSORY, UNIQUE);
   }
 
   /*!
@@ -916,14 +926,14 @@ public:
     * \return              The loaded parameter value.
     *
     */
-  template <int rows, int cols>
-  Eigen::MatrixXd loadMatrixStatic2(const std::string& name, const Eigen::Matrix<double, rows, cols>& default_value)
+  template <int rows, int cols, typename T, typename Derived>
+  Eigen::Matrix<T, rows, cols> loadMatrixStatic2(const std::string& name, const Eigen::MatrixBase<Derived>& default_value)
   {
-    return loadMatrixStatic_internal<rows, cols>(name, default_value, OPTIONAL, UNIQUE);
+    return loadMatrixStatic_internal<rows, cols, T>(name, Eigen::Matrix<T, rows, cols>(default_value), OPTIONAL, UNIQUE);
   }
   //}
 
-  // loadMatrixStatic function for loading of Eigen::MatrixXd with known dimensions //{
+  // loadMatrixStatic function for loading of Eigen matrices with known dimensions //{
 
   /*!
     * \brief Specialized method for loading compulsory Eigen matrix parameters.
@@ -938,9 +948,10 @@ public:
     * \param rows  Expected number of rows of the matrix.
     * \param cols  Expected number of columns of the matrix.
     */
-  void loadMatrixStatic(const std::string& name, Eigen::MatrixXd& mat, int rows, int cols)
+  template <typename T>
+  void loadMatrixStatic(const std::string& name, MatrixX<T>& mat, int rows, int cols)
   {
-    mat = loadMatrixStatic2(name, rows, cols);
+    mat = loadMatrixStatic2<T>(name, rows, cols);
   }
 
   /*!
@@ -957,9 +968,10 @@ public:
     * \param rows          Expected number of rows of the matrix.
     * \param cols          Expected number of columns of the matrix.
     */
-  void loadMatrixStatic(const std::string& name, Eigen::MatrixXd& mat, const Eigen::MatrixXd& default_value, int rows, int cols)
+  template <typename T, typename Derived>
+  void loadMatrixStatic(const std::string& name, MatrixX<T>& mat, const Eigen::MatrixBase<Derived>& default_value, int rows, int cols)
   {
-    mat = loadMatrixStatic2(name, default_value, rows, cols);
+    mat = loadMatrixStatic2<T>(name, default_value, rows, cols);
   }
 
   /*!
@@ -975,9 +987,10 @@ public:
     * \param cols  Expected number of columns of the matrix.
     * \return      The loaded parameter value.
     */
-  Eigen::MatrixXd loadMatrixStatic2(const std::string& name, int rows, int cols)
+  template <typename T = double>
+  MatrixX<T> loadMatrixStatic2(const std::string& name, int rows, int cols)
   {
-    return loadMatrixStatic_internal(name, Eigen::MatrixXd(), rows, cols, COMPULSORY, UNIQUE);
+    return loadMatrixStatic_internal(name, MatrixX<T>(), rows, cols, COMPULSORY, UNIQUE);
   }
 
   /*!
@@ -994,13 +1007,14 @@ public:
     * \param cols          Expected number of columns of the matrix.
     * \return              The loaded parameter value.
     */
-  Eigen::MatrixXd loadMatrixStatic2(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols)
+  template <typename T, typename Derived>
+  MatrixX<T> loadMatrixStatic2(const std::string& name, const Eigen::MatrixBase<Derived>& default_value, int rows, int cols)
   {
-    return loadMatrixStatic_internal(name, default_value, rows, cols, OPTIONAL, UNIQUE);
+    return loadMatrixStatic_internal(name, MatrixX<T>(default_value), rows, cols, OPTIONAL, UNIQUE);
   }
   //}
 
-  // loadMatrixDynamic function for half-dynamic loading of Eigen::MatrixXd //{
+  // loadMatrixDynamic function for half-dynamic loading of MatrixX<T> //{
 
   /*!
     * \brief Specialized method for loading compulsory dynamic Eigen matrix parameters.
@@ -1015,9 +1029,10 @@ public:
     * \param rows  Expected number of rows of the matrix (negative value indicates that the number of rows is to be deduced from the specified number of columns and the size of the loaded array).
     * \param cols  Expected number of columns of the matrix (negative value indicates that the number of columns is to be deduced from the specified number of rows and the size of the loaded array).
     */
-  void loadMatrixDynamic(const std::string& name, Eigen::MatrixXd& mat, int rows, int cols)
+  template <typename T>
+  void loadMatrixDynamic(const std::string& name, MatrixX<T>& mat, int rows, int cols)
   {
-    mat = loadMatrixDynamic2(name, rows, cols);
+    mat = loadMatrixDynamic2<T>(name, rows, cols);
   }
 
   /*!
@@ -1034,9 +1049,10 @@ public:
     * \param rows          Expected number of rows of the matrix (negative value indicates that the number of rows is to be deduced from the specified number of columns and the size of the loaded array).
     * \param cols          Expected number of columns of the matrix (negative value indicates that the number of columns is to be deduced from the specified number of rows and the size of the loaded array).
     */
-  void loadMatrixDynamic(const std::string& name, Eigen::MatrixXd& mat, const Eigen::MatrixXd& default_value, int rows, int cols)
+  template <typename T, typename Derived>
+  void loadMatrixDynamic(const std::string& name, MatrixX<T>& mat, const Eigen::MatrixBase<Derived>& default_value, int rows, int cols)
   {
-    mat = loadMatrixDynamic2(name, default_value, rows, cols);
+    mat = loadMatrixDynamic2<T>(name, default_value, rows, cols);
   }
 
   /*!
@@ -1052,9 +1068,10 @@ public:
     * \param cols  Expected number of columns of the matrix (negative value indicates that the number of columns is to be deduced from the specified number of rows and the size of the loaded array).
     * \return      The loaded parameter value.
     */
-  Eigen::MatrixXd loadMatrixDynamic2(const std::string& name, int rows, int cols)
+  template <typename T = double>
+  MatrixX<T> loadMatrixDynamic2(const std::string& name, int rows, int cols)
   {
-    return loadMatrixDynamic_internal(name, Eigen::MatrixXd(), rows, cols, COMPULSORY, UNIQUE);
+    return loadMatrixDynamic_internal(name, MatrixX<T>(), rows, cols, COMPULSORY, UNIQUE);
   }
 
   /*!
@@ -1071,14 +1088,15 @@ public:
     * \param cols          Expected number of columns of the matrix (negative value indicates that the number of columns is to be deduced from the specified number of rows and the size of the loaded array).
     * \return              The loaded parameter value.
     */
-  Eigen::MatrixXd loadMatrixDynamic2(const std::string& name, const Eigen::MatrixXd& default_value, int rows, int cols)
+  template <typename T, typename Derived>
+  MatrixX<T> loadMatrixDynamic2(const std::string& name, const Eigen::MatrixBase<Derived>& default_value, int rows, int cols)
   {
-    return loadMatrixDynamic_internal(name, default_value, rows, cols, OPTIONAL, UNIQUE);
+    return loadMatrixDynamic_internal(name, MatrixX<T>(default_value), rows, cols, OPTIONAL, UNIQUE);
   }
 
   //}
 
-  // loadMatrixArray function for loading of an array of Eigen::MatrixXd with known dimensions //{
+  // loadMatrixArray function for loading of an array of MatrixX<T> with known dimensions //{
   /*!
     * \brief Specialized method for loading compulsory parameters, interpreted as an array of dynamic Eigen matrices.
     *
@@ -1094,8 +1112,8 @@ public:
     * matrix_array:
     *   rows: 3
     *   cols: [1, 2]
-    *   data: [-5.0, -10.0, 23.0,
-    *          -5.0, -10.0, 12.0,
+    *   data: [-5.0, Eigen::Dynamic0.0, 23.0,
+    *          -5.0, Eigen::Dynamic0.0, 12.0,
     *           2.0,   4.0,  7.0]
     *
     * \endcode
@@ -1111,9 +1129,10 @@ public:
     * \param mat   Reference to the variable to which the parameter value will be stored (such as a class member variable).
     *
     */
-  void loadMatrixArray(const std::string& name, std::vector<Eigen::MatrixXd>& mat)
+  template <typename T>
+  void loadMatrixArray(const std::string& name, std::vector<MatrixX<T>>& mat)
   {
-    mat = loadMatrixArray2(name);
+    mat = loadMatrixArray2<double>(name);
   }
 
   /*!
@@ -1127,9 +1146,26 @@ public:
     * \param default_value  The default value to be used in case the parameter is not found on the \c rosparam server.
     *
     */
-  void loadMatrixArray(const std::string& name, std::vector<Eigen::MatrixXd>& mat, const std::vector<Eigen::MatrixXd>& default_value)
+  template <typename T>
+  void loadMatrixArray(const std::string& name, std::vector<MatrixX<T>>& mat, const std::vector<MatrixX<T>>& default_value)
   {
     mat = loadMatrixArray2(name, default_value);
+  }
+
+  /*!
+    * \brief Specialized method for loading compulsory parameters, interpreted as an array of dynamic Eigen matrices.
+    *
+    * This method works in the same way as the loadMatrixArray() method for compulsory parameters, except that the loaded
+    * parameter is returned and not stored in the reference parameter.
+    *
+    * \param name           Name of the parameter in the rosparam server.
+    * \returns              The loaded parameter or a default constructed object of the respective type.
+    *
+    */
+  template <typename T = double>
+  std::vector<MatrixX<T>> loadMatrixArray2(const std::string& name)
+  {
+    return loadMatrixArray_internal(name, std::vector<MatrixX<T>>(), COMPULSORY, UNIQUE);
   }
 
   /*!
@@ -1143,24 +1179,10 @@ public:
     * \returns              The loaded parameter or the default value.
     *
     */
-  std::vector<Eigen::MatrixXd> loadMatrixArray2(const std::string& name, const std::vector<Eigen::MatrixXd>& default_value)
+  template <typename T>
+  std::vector<MatrixX<T>> loadMatrixArray2(const std::string& name, const std::vector<MatrixX<T>>& default_value)
   {
     return loadMatrixArray_internal(name, default_value, OPTIONAL, UNIQUE);
-  }
-
-  /*!
-    * \brief Specialized method for loading compulsory parameters, interpreted as an array of dynamic Eigen matrices.
-    *
-    * This method works in the same way as the loadMatrixArray() method for compulsory parameters, except that the loaded
-    * parameter is returned and not stored in the reference parameter.
-    *
-    * \param name           Name of the parameter in the rosparam server.
-    * \returns              The loaded parameter or a default constructed object of the respective type.
-    *
-    */
-  std::vector<Eigen::MatrixXd> loadMatrixArray2(const std::string& name)
-  {
-    return loadMatrixArray_internal(name, std::vector<Eigen::MatrixXd>(), COMPULSORY, UNIQUE);
   }
   //}
 
