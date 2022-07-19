@@ -141,7 +141,7 @@ namespace mrs_lib
     const std::string to_frame = resolveFrameImpl(frame_to(tf));
     const geometry_msgs::TransformStamped tf_resolved = create_transform(from_frame, to_frame, tf.header.stamp, tf.transform);
 
-    const geometry_msgs::Vector3 vec = mrs_lib::geometry::fromEigen(what);
+    const geometry_msgs::Vector3 vec = mrs_lib::geometry::fromEigenVec(what);
     const auto tfd_vec = transformImpl(tf_resolved, vec);
     if (tfd_vec.has_value())
       return mrs_lib::geometry::toEigen(tfd_vec.value());
@@ -171,7 +171,7 @@ namespace mrs_lib
 
     // do the transformation
     const geometry_msgs::TransformStamped tf_resolved = create_transform(from_frame, to_frame, tf.header.stamp, tf.transform);
-    const geometry_msgs::Vector3 vec = mrs_lib::geometry::fromEigen(what);
+    const geometry_msgs::Vector3 vec = mrs_lib::geometry::fromEigenVec(what);
     const auto tfd_vec = transformImpl(tf_resolved, vec);
     if (tfd_vec.has_value())
       return mrs_lib::geometry::toEigen(tfd_vec.value());
@@ -284,8 +284,8 @@ namespace mrs_lib
   
   std::optional<Eigen::Vector3d> Transformer::transformImpl(const geometry_msgs::TransformStamped& tf, const Eigen::Vector3d& what)
   {
-    // just transform it as you would a geometry_msgs::Point
-    const geometry_msgs::Vector3 as_vec = geometry::fromEigen(what);
+    // just transform it as you would a geometry_msgs::Vector3
+    const geometry_msgs::Vector3 as_vec = mrs_lib::geometry::fromEigenVec(what);
     const auto opt = transformImpl(tf, as_vec);
     if (opt.has_value())
       return geometry::toEigen(opt.value());

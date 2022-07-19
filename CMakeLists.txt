@@ -17,12 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
   pcl_ros
   pcl_conversions
-  # dynamic_reconfigure
   )
-
-# generate_dynamic_reconfigure_options(
-#   cfg/batch_visualizer.cfg
-# )
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -75,7 +70,6 @@ include_directories(
   ${Eigen_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
-  # ${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake
   )
 
 add_executable(repredictor_example src/repredictor/example.cpp)

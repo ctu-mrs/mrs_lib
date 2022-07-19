@@ -158,7 +158,7 @@ TEST(TESTSuite, tf_times_test)
   tf.header.stamp = t1;
   tf.child_frame_id = from;
   common2uav1.translation() = vec3_t(-1, 0, 2);
-  tf.transform.translation = mrs_lib::geometry::fromEigen(common2uav1.translation());
+  tf.transform.translation = mrs_lib::geometry::fromEigenVec(common2uav1.translation());
   bc->sendTransform(tf);
   ros::spinOnce();
 
@@ -166,7 +166,7 @@ TEST(TESTSuite, tf_times_test)
   tf.header.stamp = t1;
   tf.child_frame_id = to;
   common2uav2.translation() = vec3_t(-10, 0, 3);
-  tf.transform.translation = mrs_lib::geometry::fromEigen(common2uav2.translation());
+  tf.transform.translation = mrs_lib::geometry::fromEigenVec(common2uav2.translation());
   bc->sendTransform(tf);
   ros::spinOnce();
 
@@ -174,7 +174,7 @@ TEST(TESTSuite, tf_times_test)
   tf.header.stamp = t2;
   tf.child_frame_id = from;
   common2uav1.translation() = vec3_t(3, 0, 2);
-  tf.transform.translation = mrs_lib::geometry::fromEigen(common2uav1.translation());
+  tf.transform.translation = mrs_lib::geometry::fromEigenVec(common2uav1.translation());
   bc->sendTransform(tf);
   ros::spinOnce();
 
@@ -182,7 +182,7 @@ TEST(TESTSuite, tf_times_test)
   tf.header.stamp = t2;
   tf.child_frame_id = to;
   common2uav2.translation() = vec3_t(60, 0, 3);
-  tf.transform.translation = mrs_lib::geometry::fromEigen(common2uav2.translation());
+  tf.transform.translation = mrs_lib::geometry::fromEigenVec(common2uav2.translation());
   bc->sendTransform(tf);
   ros::spinOnce();
 

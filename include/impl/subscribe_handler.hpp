@@ -74,7 +74,7 @@ namespace mrs_lib
     //}
 
     /* peekMsg() method //{ */
-    virtual typename MessageType::ConstPtr peekMsg()
+    virtual typename MessageType::ConstPtr peekMsg() const
     {
       /* assert(m_got_data); */
       /* if (!m_got_data) */
@@ -298,7 +298,7 @@ namespace mrs_lib
       std::lock_guard<std::recursive_mutex> lck(m_mtx);
       return impl_class_t::getMsg();
     }
-    virtual typename MessageType::ConstPtr peekMsg() override
+    virtual typename MessageType::ConstPtr peekMsg() const override
     {
       std::lock_guard<std::recursive_mutex> lck(m_mtx);
       return impl_class_t::peekMsg();

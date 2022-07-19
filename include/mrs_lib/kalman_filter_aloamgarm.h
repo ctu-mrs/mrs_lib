@@ -4,11 +4,12 @@
      \author Matouš Vrba - vrbamato@fel.cvut.cz
  */
 
-#ifndef SYSTEMMODEL_H
-#define SYSTEMMODEL_H
+#ifndef SYSTEMMODELALOAMGARM_H
+#define SYSTEMMODELALOAMGARM_H
 
 #include <Eigen/Dense>
 
+#include <boost/circular_buffer.hpp>
 #include <ros/ros.h>
 
 namespace mrs_lib
@@ -23,7 +24,7 @@ namespace mrs_lib
   *
   */
   template <int n_states, int n_inputs, int n_measurements>
-  class KalmanFilter
+  class KalmanFilterAloamGarm
   {
     public:
       /* states, inputs etc. definitions (typedefs, constants etc) //{ */
@@ -48,7 +49,25 @@ namespace mrs_lib
       {
         x_t x;  /*!< \brief State vector. */
         P_t P;  /*!< \brief State covariance matrix. */
-        ros::Time stamp = ros::Time(0); /*!< \brief ROS time stamp */
+        std::shared_ptr<boost::circular_buffer<double>> nis_buffer = nullptr;
+        ros::Time stamp = ros::Time(0);
+        bool measurement_jumped = false;
+
+        statecov_t& operator=(statecov_t other)
+        {
+          if (this != &other) // not a self-assignment
+          {
+            x = other.x;
+            P = other.P;
+            stamp = other.stamp;
+            if (other.nis_buffer != nullptr){
+              nis_buffer = std::make_shared<boost::circular_buffer<double>>(*other.nis_buffer);
+            }
+            measurement_jumped = other.measurement_jumped;
+          }
+          return *this;
+        }
+
       };
       //}
 
@@ -86,4 +105,4 @@ namespace mrs_lib
   //}
 }
 
-#endif // SYSTEMMODEL_H
+#endif // SYSTEMMODELALOAMGARM_H
