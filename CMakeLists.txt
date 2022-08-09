@@ -45,7 +45,6 @@ set(Eigen_LIBRARIES ${EIGEN3_LIBRARIES})
 # include OpenCV
 find_package(OpenCV REQUIRED HINTS /usr/local/lib)
 
-
 ###################################
 ## catkin specific configuration ##
 ###################################
@@ -70,7 +69,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${Eigen_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
-  ${PCL_INCLUDE_DIRS}
+  ${pcl_ros_INCLUDE_DIRS}
   )
 
 add_executable(repredictor_example src/repredictor/example.cpp)
@@ -103,10 +102,10 @@ target_link_libraries(lkf_example
 # target_link_libraries(MrsLibVectorConverter
 #   ${catkin_LIBRARIES}
 #   ${Eigen_LIBRARIES}
-#   ${PCL_LIBRARIES}
+#   ${pcl_ros_LIBRARIES}
 #   )
 # target_include_directories(MrsLibVectorConverter PRIVATE
-#   ${PCL_INCLUDE_DIRS}
+#   ${pcl_ros_INCLUDE_DIRS}
 #   )
 
 add_executable(vector_converter_example src/vector_converter/example.cpp)
@@ -114,10 +113,10 @@ target_link_libraries(vector_converter_example
   # MrsLibVectorConverter
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
-  ${PCL_LIBRARIES}
+  ${pcl_ros_LIBRARIES}
   )
 target_include_directories(vector_converter_example PRIVATE
-  ${PCL_INCLUDE_DIRS}
+  ${pcl_ros_INCLUDE_DIRS}
   )
 
 add_executable(ukf_example src/ukf/example.cpp)
@@ -194,7 +193,7 @@ target_link_libraries(MrsLibTransformer
   ${Eigen_LIBRARIES}
   )
 target_include_directories(MrsLibTransformer PRIVATE
-  ${PCL_INCLUDE_DIRS}
+  ${pcl_ros_INCLUDE_DIRS}
   )
 
 add_executable(transformer_example src/transformer/example.cpp)
@@ -557,7 +556,7 @@ if(CATKIN_ENABLE_TESTING)
     ${catkin_LIBRARIES}
     )
   target_include_directories(VectorConverterTest PRIVATE
-    ${PCL_INCLUDE_DIRS}
+    ${pcl_ros_INCLUDE_DIRS}
     )
   add_dependencies(
     VectorConverterTest
