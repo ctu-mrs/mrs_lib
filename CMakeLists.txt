@@ -72,6 +72,12 @@ include_directories(
   ${PCL_INCLUDE_DIRS}
   )
 
+add_executable(dynamic_publisher_example src/dynamic_publisher/example.cpp)
+target_link_libraries(dynamic_publisher_example
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
 add_executable(repredictor_example src/repredictor/example.cpp)
 target_link_libraries(repredictor_example
   ${catkin_LIBRARIES}
