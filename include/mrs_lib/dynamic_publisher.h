@@ -1,40 +1,64 @@
+// clang: MatousFormat
+/**  \file
+     \brief Defines DynamicPublisher for easy debug publishing of ROS messages.
+     \author Matouš Vrba - vrbamato@fel.cvut.cz
+     \author Tomáš Báča  - bacatoma@fel.cvut.cz
+ */
+
 #ifndef DYNAMIC_PUBLISHER_H
 #define DYNAMIC_PUBLISHER_H
 
+#include <mutex>
 #include <ros/ros.h>
 #include <mrs_lib/publisher_handler.h>
 
 namespace mrs_lib
 {
 
+  /**
+  * \brief A helper class for easy publishing of ROS messages for debugging purposes.
+  *
+  * This class enables you to just call the publish() method with a topic name and a message without the need to advertise the topic.
+  * 
+  * \note This class should only be used for debugging and not for regular publishing as it introduces some overhead.
+  *
+  * \warning Type checking of the published message is done by the publisher, so take care not to publish different message types to the same topic!
+  *
+  */
   class DynamicPublisher
   {
   public:
-    DynamicPublisher() = default;
+    /*!
+      * \brief A no-parameter constructor.
+      *
+      * This overload will use a ros::NodeHandle with default arguments for advertising new topics, so remappings, namespaces etc. will be ignored.
+      */
+    DynamicPublisher();
+
+    /*!
+      * \brief The main constructor.
+      *
+      * This overload uses the ros::NodeHandle that you provided for advertising new topics.
+      * The recommended way of constructing a DynamicPublisher.
+      */
     DynamicPublisher(const ros::NodeHandle& nh);
 
+    /*!
+      * \brief Publishes a message to a topic, advertising the topic if necessary.
+      *
+      * The topic is advertised with the type of the first message published to it.
+      *
+      * \warning Take care to always publish the same message type to the topic to avoid runtime problems.
+      */
     template <class T>
     void publish(const std::string name, const T& value);
 
   private:
-    ros::NodeHandle m_nh;
-
-    std::unordered_map<std::string, ros::Publisher> m_publishers;
+    class impl;
+    std::unique_ptr<impl> m_impl;
   };
 
-  DynamicPublisher::DynamicPublisher(const ros::NodeHandle& nh)
-    : m_nh(nh)
-  {
-  }
-
-  template <class T>
-  void DynamicPublisher::publish(const std::string name, const T& value)
-  {
-    if (m_publishers.count(name) == 0)
-      m_publishers.emplace(name, m_nh.advertise<T>(name, 10));
-
-    m_publishers.at(name).publish(value);
-  }
+#include <impl/dynamic_publisher.hpp>
 
 }  // namespace mrs_lib
 
