@@ -45,8 +45,8 @@ int main(int argc, char **argv)
     pt_msg.y = float_msg.data/2;
     pt_msg.z = float_msg.data/3;
     dynpub.publish("point_topic", pt_msg);
-    /* Avoid publishing a message of different type on the same topic! */
-    /* dynpub.publish("point_topic", float_msg); */
+    /* Avoid publishing a message of different type on the same topic! They will be ignored and will spam you with errors. */
+    dynpub.publish("point_topic", float_msg);
 
     ros::spinOnce();
     slp.sleep();

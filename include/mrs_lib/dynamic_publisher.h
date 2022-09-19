@@ -22,8 +22,6 @@ namespace mrs_lib
   * 
   * \note This class should only be used for debugging and not for regular publishing as it introduces some overhead.
   *
-  * \warning Type checking of the published message is done by the publisher, so take care not to publish different message types to the same topic!
-  *
   */
   class DynamicPublisher
   {
@@ -47,11 +45,12 @@ namespace mrs_lib
       * \brief Publishes a message to a topic, advertising the topic if necessary.
       *
       * The topic is advertised with the type of the first message published to it.
+      * If you try to publish a different type of message on the topic, it will be ignored.
       *
-      * \warning Take care to always publish the same message type to the topic to avoid runtime problems.
+      * \warning Take care to always publish the same message type to the topic to avoid being spammed with errors.
       */
     template <class T>
-    void publish(const std::string name, const T& value);
+    void publish(const std::string name, const T& msg);
 
   private:
     class impl;
