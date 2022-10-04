@@ -22,6 +22,7 @@ namespace mrs_lib
 
   using lkf_t = varstepLKF<n_states, n_inputs, n_measurements>;
   using rep_t = Repredictor<lkf_t>;
+  using dumbrep_t = Repredictor<lkf_t, true>;
 }
 
 // Some helpful aliases to make writing of types shorter
@@ -67,6 +68,8 @@ B_t generateB([[maybe_unused]] const double dt)
   return B;
 }
 
+/* TEST(TESTSuite, lkf_comparison) //{ */
+
 TEST(TESTSuite, lkf_comparison)
 /* int main() */
 {
@@ -81,7 +84,7 @@ TEST(TESTSuite, lkf_comparison)
   const Q_t Q = 0.1*Q_t::Identity();
   // measurement noise is just identity
   const R_t R = 0.1*R_t::Identity();
-  
+
   const int n_gts = 2e2;
   const int n_meass = 1e2;
 
@@ -89,15 +92,15 @@ TEST(TESTSuite, lkf_comparison)
   auto lkf = std::make_shared<lkf_t>(generateA, generateB, H);
 
   /* Prepare the ground-truth states //{ */
-  
+
   std::vector<x_t> gts(n_gts);
   std::vector<u_t> inputs(n_gts);
   std::vector<ros::Time> stamps(n_gts);
-  
+
   gts.front() = x0;
   inputs.front() = u0;
   stamps.front() = t0;
-  
+
   for (int it = 1; it < n_gts; it++)
   {
     // Generate a random dt
@@ -111,11 +114,11 @@ TEST(TESTSuite, lkf_comparison)
     // Generate a new input vector
     inputs.at(it) = u_t::Random();
   }
-  
+
   //}
 
   /* Generate measurements //{ */
-  
+
   ros::Time prev_stamp = t0;
   int prev_gt_it = 0;
   std::vector<std::tuple<ros::Time, z_t, x_t, u_t>> measurements(n_meass);
@@ -186,7 +189,7 @@ TEST(TESTSuite, lkf_comparison)
   last_lkf_stamp = tend;
 
   //}
-  
+
   // Instantiate the Repredictor itself
   rep_t rep(x0, P0, u0, Q, t0, lkf, n_gts+n_meass);
 
@@ -214,7 +217,7 @@ TEST(TESTSuite, lkf_comparison)
       u_it++;
     }
   }
-  
+
   {
     /* std::ofstream ofs("inpt.csv"); */
     /* ofs << "t,xgt,dxgt,xes,dxes,xkf,dxkf,err,diffx,diffP" << std::endl; */
@@ -254,6 +257,131 @@ TEST(TESTSuite, lkf_comparison)
   /* } */
   /* return 0; */
 }
+
+//}
+
+/* TEST(TESTSuite, dumblkf_comparison) //{ */
+
+TEST(TESTSuite, dumblkf_comparison)
+/* int main() */
+{
+  // Generate initial state, input and time
+  const x_t x0 = x_t::Zero();
+  const P_t P0 = 10.0*P_t::Identity();
+  const u_t u0 = u_t::Random();
+  const ros::Time t0 = ros::Time(0);
+  // H will observe the position
+  const H_t H( (H_t() << 1, 0).finished() );
+  // process noise is just identity
+  const Q_t Q = 0.1*Q_t::Identity();
+  // measurement noise is just identity
+  const R_t R = 0.1*R_t::Identity();
+
+  const int n_gts = 2e2;
+
+  // Instantiate the LKF model
+  auto lkf = std::make_shared<lkf_t>(generateA, generateB, H);
+
+  /* Prepare the ground-truth states and measurements //{ */
+
+  std::vector<x_t> gts(n_gts);
+  std::vector<u_t> inputs(n_gts);
+  std::vector<ros::Time> stamps(n_gts);
+  std::vector<z_t> measurements(n_gts);
+
+  gts.front() = x0;
+  inputs.front() = u0;
+  stamps.front() = t0;
+  measurements.front() = H*x0  + normal_randmat(R);
+
+  for (int it = 1; it < n_gts; it++)
+  {
+    // Generate a random dt
+    const double dt = std::abs(d(gen));
+    // Scale Q accordingly
+    const Q_t cur_Q = dt*Q;
+    // Generate a new state according to the model and noise parameters
+    gts.at(it) = generateA(dt)*gts.at(it-1) + generateB(dt)*inputs.at(it-1) + normal_randmat(cur_Q);
+    // Add the corresponding stamp
+    stamps.at(it) = stamps.at(it-1) + ros::Duration(dt);
+    // Generate a new input vector
+    inputs.at(it) = u_t::Random();
+    // Generate a corresponding measurement
+    measurements.at(it) = H*gts.at(it)  + normal_randmat(R);
+  }
+
+  //}
+
+  std::vector<statecov_t> lkf_scs(n_gts);
+  std::vector<statecov_t> rep_scs(n_gts);
+  statecov_t lkf_sc = {x0, P0, t0};
+  u_t u = u0;
+
+  // Instantiate the Repredictor itself
+  dumbrep_t rep(x0, P0, u0, Q, t0, lkf, 1);
+
+  // Run the LKF and dumb repredictor
+  auto meas_remaining = measurements;
+  int u_it = 1; // the first input is already used for initialization, skip it
+  for (int it = 1; it < n_gts; it++)
+  {
+    const bool use_meas = (d(gen) > 0.0 || u_it == n_gts) && !meas_remaining.empty();
+    if (use_meas)
+    {
+      // add the measurements randomly
+      std::uniform_int_distribution<> ud(0, meas_remaining.size()-1);
+      const int meas_idx = ud(gen);
+      const ros::Time stamp = stamps.at(meas_idx);
+      const double dt = (stamp - lkf_sc.stamp).toSec();
+      const z_t z = meas_remaining.at(meas_idx);
+      meas_remaining.erase(std::begin(meas_remaining) + meas_idx);
+
+      lkf_sc = lkf->predict(lkf_sc, u, Q, dt);
+      lkf_sc = lkf->correct(lkf_sc, z, R);
+      lkf_sc.stamp = stamp;
+      lkf_scs.at(it) = lkf_sc;
+
+      rep.addMeasurement(z, R, stamp);
+      const auto rep_sc = rep.predictTo(stamp);
+      rep_scs.at(it) = rep_sc;
+    }
+    else
+    {
+      u = inputs.at(u_it);
+      const ros::Time stamp = stamps.at(u_it);
+      rep.addInputChangeWithNoise(u, Q, stamp);
+      u_it++;
+    }
+  }
+
+  {
+    for (int it = 0; it < n_gts; it++)
+    {
+      /* const auto x_gt = gts.at(it); */
+      const auto rep_sc = rep_scs.at(it);
+      const auto lkf_sc = lkf_scs.at(it);
+      /* const auto err = (x_gt-rep_sc.x).norm(); */
+      const auto diff = (lkf_sc.x-rep_sc.x).norm();
+      const auto diffP = (lkf_sc.P-rep_sc.P).norm();
+      EXPECT_DOUBLE_EQ(diff, 0.0);
+      EXPECT_DOUBLE_EQ(diffP, 0.0);
+      /* std::cout << "xgt[" << it << "]: [" << x_gt.transpose() << "]^T\txes[" << it << "]: [" << rep_sc.x.transpose() << "]^T" << "\terr[" << it << "]:  " << err << std::endl; */
+      /* ofs << stamp.toSec() << "," << x_gt.x() << "," << x_gt.y() << "," << rep_sc.x.x() << "," << rep_sc.x.y() << "," << lkf_sc.x.x() << "," << lkf_sc.x.y() << "," << err << "," << diff << "," << diffP << std::endl; */
+    }
+  }
+
+  /* { */
+  /*   std::ofstream ofs("meas.csv"); */
+  /*   ofs << "t,xmeas,xgt,dxgt" << std::endl; */
+  /*   for (const auto& el : measurements) */
+  /*   { */
+  /*     ofs << std::get<0>(el).toSec() << "," << std::get<1>(el) << "," << std::get<2>(el).x() << "," << std::get<2>(el).y() << std::endl; */
+  /*   } */
+  /* } */
+  /* return 0; */
+}
+
+//}
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
