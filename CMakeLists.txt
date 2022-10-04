@@ -50,7 +50,7 @@ find_package(PCL REQUIRED)
 ###################################
 
 set(LIBRARIES
-  MrsLibSafetyZone MrsLibProfiler MrsLibScopeTimer MrsLibIirFilter MrsLibNotchFilter MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibOdomLKF MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibTimer MrsLibTransformBroadcaster MrsLibMath
+  MrsLibSafetyZone MrsLibProfiler MrsLibScopeTimer MrsLibIirFilter MrsLibNotchFilter MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibOdomLKF MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibTimer MrsLibTransformBroadcaster MrsLibMath MrsLibDynamicPublisher
   )
 
 catkin_package(
@@ -70,6 +70,18 @@ include_directories(
   ${Eigen_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
+  )
+
+add_library(MrsLibDynamicPublisher src/dynamic_publisher/dynamic_publisher.cpp)
+target_link_libraries(MrsLibDynamicPublisher
+  ${catkin_LIBRARIES}
+  )
+
+add_executable(dynamic_publisher_example src/dynamic_publisher/example.cpp)
+target_link_libraries(dynamic_publisher_example
+  MrsLibDynamicPublisher
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
   )
 
 add_executable(repredictor_example src/repredictor/example.cpp)
