@@ -282,6 +282,7 @@ TEST(TESTSuite, dumblkf_comparison)
   // Instantiate the LKF model
   auto lkf = std::make_shared<lkf_t>(generateA, generateB, H);
 
+  std::cout << "Preparing measurements." << std::endl;
   /* Prepare the ground-truth states and measurements //{ */
 
   std::vector<x_t> gts(n_gts);
@@ -320,6 +321,7 @@ TEST(TESTSuite, dumblkf_comparison)
   // Instantiate the Repredictor itself
   dumbrep_t rep(x0, P0, u0, Q, t0, lkf, 1);
 
+  std::cout << "Running LKF and dumb Repredictor." << std::endl;
   // Run the LKF and dumb repredictor
   auto meas_remaining = measurements;
   int u_it = 1; // the first input is already used for initialization, skip it
@@ -342,32 +344,31 @@ TEST(TESTSuite, dumblkf_comparison)
       lkf_scs.at(it) = lkf_sc;
 
       rep.addMeasurement(z, R, stamp);
-      const auto rep_sc = rep.predictTo(stamp);
+      auto rep_sc = rep.predictTo(stamp);
+      rep_sc.stamp = stamp;
       rep_scs.at(it) = rep_sc;
     }
     else
     {
       u = inputs.at(u_it);
-      const ros::Time stamp = stamps.at(u_it);
-      rep.addInputChangeWithNoise(u, Q, stamp);
+      rep.addInputChangeWithNoise(u, Q, lkf_sc.stamp);
       u_it++;
     }
   }
 
+  std::cout << "Evaluating results." << std::endl;
+  for (int it = 0; it < n_gts; it++)
   {
-    for (int it = 0; it < n_gts; it++)
-    {
-      /* const auto x_gt = gts.at(it); */
-      const auto rep_sc = rep_scs.at(it);
-      const auto lkf_sc = lkf_scs.at(it);
-      /* const auto err = (x_gt-rep_sc.x).norm(); */
-      const auto diff = (lkf_sc.x-rep_sc.x).norm();
-      const auto diffP = (lkf_sc.P-rep_sc.P).norm();
-      EXPECT_DOUBLE_EQ(diff, 0.0);
-      EXPECT_DOUBLE_EQ(diffP, 0.0);
-      /* std::cout << "xgt[" << it << "]: [" << x_gt.transpose() << "]^T\txes[" << it << "]: [" << rep_sc.x.transpose() << "]^T" << "\terr[" << it << "]:  " << err << std::endl; */
-      /* ofs << stamp.toSec() << "," << x_gt.x() << "," << x_gt.y() << "," << rep_sc.x.x() << "," << rep_sc.x.y() << "," << lkf_sc.x.x() << "," << lkf_sc.x.y() << "," << err << "," << diff << "," << diffP << std::endl; */
-    }
+    /* const auto x_gt = gts.at(it); */
+    const auto rep_sc = rep_scs.at(it);
+    const auto lkf_sc = lkf_scs.at(it);
+    /* const auto err = (x_gt-rep_sc.x).norm(); */
+    const auto diff = (lkf_sc.x-rep_sc.x).norm();
+    const auto diffP = (lkf_sc.P-rep_sc.P).norm();
+    EXPECT_DOUBLE_EQ(diff, 0.0);
+    EXPECT_DOUBLE_EQ(diffP, 0.0);
+    /* std::cout << "xgt[" << it << "]: [" << x_gt.transpose() << "]^T\txes[" << it << "]: [" << rep_sc.x.transpose() << "]^T" << "\terr[" << it << "]:  " << err << std::endl; */
+    /* ofs << stamp.toSec() << "," << x_gt.x() << "," << x_gt.y() << "," << rep_sc.x.x() << "," << rep_sc.x.y() << "," << lkf_sc.x.x() << "," << lkf_sc.x.y() << "," << err << "," << diff << "," << diffP << std::endl; */
   }
 
   /* { */

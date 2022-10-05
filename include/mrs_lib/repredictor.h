@@ -166,12 +166,12 @@ namespace mrs_lib
     template<bool check=disable_reprediction>
     std::enable_if_t<check> addInputChangeWithNoise(const u_t& u, const Q_t& Q, [[maybe_unused]] const ros::Time& stamp, const ModelPtr& model = nullptr)
     {
-      assert(!m_history.empty());
+      if (m_history.empty())
+        m_history.push_back({stamp});
       m_history.front().u = u;
       m_history.front().Q = Q;
       m_history.front().stamp = stamp;
-      if (model != nullptr)
-        m_history.front().predict_model = model;
+      m_history.front().predict_model = model;
     }
     //}
 
@@ -217,13 +217,13 @@ namespace mrs_lib
      *
      */
     template<bool check=disable_reprediction>
-    std::enable_if_t<check> addInputChange2(const u_t& u, [[maybe_unused]] const ros::Time& stamp, const ModelPtr& model = nullptr)
+    std::enable_if_t<check> addInputChange(const u_t& u, [[maybe_unused]] const ros::Time& stamp, const ModelPtr& model = nullptr)
     {
-      assert(!m_history.empty());
+      if (m_history.empty())
+        m_history.push_back({stamp});
       m_history.front().u = u;
       m_history.front().stamp = stamp;
-      if (model != nullptr)
-        m_history.front().predict_model = model;
+      m_history.front().predict_model = model;
     }
     //}
 
@@ -271,11 +271,11 @@ namespace mrs_lib
     template<bool check=disable_reprediction>
     std::enable_if_t<check> addProcessNoiseChange(const Q_t& Q, [[maybe_unused]] const ros::Time& stamp, const ModelPtr& model = nullptr)
     {
-      assert(!m_history.empty());
+      if (m_history.empty())
+        m_history.push_back({stamp});
       m_history.front().Q = Q;
       m_history.front().stamp = stamp;
-      if (model != nullptr)
-        m_history.front().predict_model = model;
+      m_history.front().predict_model = model;
     }
     //}
 
@@ -321,17 +321,17 @@ namespace mrs_lib
     template<bool check=disable_reprediction>
     std::enable_if_t<check> addMeasurement(const z_t& z, const R_t& R, const ros::Time& stamp, const ModelPtr& model = nullptr, const double& meas_id = -1)
     {
-      assert(!m_history.empty());
+      if (m_history.empty())
+        m_history.push_back({stamp});
       const auto sc = predictTo(stamp);
       auto& info = m_history.front();
-      info .z = z;
+      info.z = z;
       info.R = R;
       info.stamp = stamp;
       info.is_measurement = true;
       info.meas_id = meas_id;
-      if (model != nullptr)
-        info.predict_model = model;
-      m_sc = correctFrom(m_sc, info);
+      info.correct_model = model;
+      m_sc = correctFrom(sc, info);
     }
     //}
 

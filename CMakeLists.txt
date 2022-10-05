@@ -33,6 +33,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_definitions(-Wall)
 add_definitions(-Wextra)
 add_definitions(-Wpedantic)
+add_definitions(-Og)
 
 # include Eigen3
 find_package(Eigen3 REQUIRED)
