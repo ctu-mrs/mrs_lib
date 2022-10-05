@@ -323,11 +323,12 @@ namespace mrs_lib
     {
       if (m_history.empty())
         m_history.push_back({stamp});
-      const auto sc = predictTo(stamp);
       auto& info = m_history.front();
+      const ros::Time to_stamp = stamp > info.stamp ? stamp : info.stamp;
+      const auto sc = predictTo(to_stamp);
       info.z = z;
       info.R = R;
-      info.stamp = stamp;
+      info.stamp = to_stamp;
       info.is_measurement = true;
       info.meas_id = meas_id;
       info.correct_model = model;

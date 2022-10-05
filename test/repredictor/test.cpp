@@ -338,14 +338,18 @@ TEST(TESTSuite, dumblkf_comparison)
       const z_t z = meas_remaining.at(meas_idx);
       meas_remaining.erase(std::begin(meas_remaining) + meas_idx);
 
-      lkf_sc = lkf->predict(lkf_sc, u, Q, dt);
+      const auto old_stamp = lkf_sc.stamp;
+      if (dt > 0)
+        lkf_sc = lkf->predict(lkf_sc, u, Q, dt);
       lkf_sc = lkf->correct(lkf_sc, z, R);
-      lkf_sc.stamp = stamp;
+      if (dt > 0)
+        lkf_sc.stamp = stamp;
+      else
+        lkf_sc.stamp = old_stamp;
       lkf_scs.at(it) = lkf_sc;
 
       rep.addMeasurement(z, R, stamp);
-      auto rep_sc = rep.predictTo(stamp);
-      rep_sc.stamp = stamp;
+      const auto rep_sc = rep.predictTo(lkf_sc.stamp);
       rep_scs.at(it) = rep_sc;
     }
     else
@@ -354,6 +358,120 @@ TEST(TESTSuite, dumblkf_comparison)
       rep.addInputChangeWithNoise(u, Q, lkf_sc.stamp);
       u_it++;
     }
+  }
+
+  std::cout << "Evaluating results." << std::endl;
+  for (int it = 0; it < n_gts; it++)
+  {
+    /* const auto x_gt = gts.at(it); */
+    const auto rep_sc = rep_scs.at(it);
+    const auto lkf_sc = lkf_scs.at(it);
+    /* const auto err = (x_gt-rep_sc.x).norm(); */
+    const auto diff = (lkf_sc.x-rep_sc.x).norm();
+    const auto diffP = (lkf_sc.P-rep_sc.P).norm();
+    EXPECT_DOUBLE_EQ(diff, 0.0);
+    EXPECT_DOUBLE_EQ(diffP, 0.0);
+    /* std::cout << "xgt[" << it << "]: [" << x_gt.transpose() << "]^T\txes[" << it << "]: [" << rep_sc.x.transpose() << "]^T" << "\terr[" << it << "]:  " << err << std::endl; */
+    /* ofs << stamp.toSec() << "," << x_gt.x() << "," << x_gt.y() << "," << rep_sc.x.x() << "," << rep_sc.x.y() << "," << lkf_sc.x.x() << "," << lkf_sc.x.y() << "," << err << "," << diff << "," << diffP << std::endl; */
+  }
+
+  /* { */
+  /*   std::ofstream ofs("meas.csv"); */
+  /*   ofs << "t,xmeas,xgt,dxgt" << std::endl; */
+  /*   for (const auto& el : measurements) */
+  /*   { */
+  /*     ofs << std::get<0>(el).toSec() << "," << std::get<1>(el) << "," << std::get<2>(el).x() << "," << std::get<2>(el).y() << std::endl; */
+  /*   } */
+  /* } */
+  /* return 0; */
+}
+
+//}
+
+/* TEST(TESTSuite, dumblkf_comparison2) //{ */
+
+TEST(TESTSuite, dumblkf_comparison2)
+/* int main() */
+{
+  // Generate initial state, input and time
+  const x_t x0 = x_t::Zero();
+  const P_t P0 = 10.0*P_t::Identity();
+  const u_t u0 = u_t::Random();
+  const ros::Time t0 = ros::Time(0);
+  // H will observe the position
+  const H_t H( (H_t() << 1, 0).finished() );
+  // process noise is just identity
+  const Q_t Q = 0.1*Q_t::Identity();
+  // measurement noise is just identity
+  const R_t R = 0.1*R_t::Identity();
+
+  const int n_gts = 2e2;
+
+  // Instantiate the LKF model
+  auto lkf = std::make_shared<lkf_t>(generateA, generateB, H);
+
+  std::cout << "Preparing measurements." << std::endl;
+  /* Prepare the ground-truth states and measurements //{ */
+
+  std::vector<x_t> gts(n_gts);
+  std::vector<u_t> inputs(n_gts);
+  std::vector<ros::Time> stamps(n_gts);
+  std::vector<z_t> measurements(n_gts);
+
+  gts.front() = x0;
+  inputs.front() = u0;
+  stamps.front() = t0;
+  measurements.front() = H*x0  + normal_randmat(R);
+
+  for (int it = 1; it < n_gts; it++)
+  {
+    // Generate a random dt
+    const double dt = std::abs(d(gen));
+    // Scale Q accordingly
+    const Q_t cur_Q = dt*Q;
+    // Generate a new state according to the model and noise parameters
+    gts.at(it) = generateA(dt)*gts.at(it-1) + generateB(dt)*inputs.at(it-1) + normal_randmat(cur_Q);
+    // Add the corresponding stamp
+    stamps.at(it) = stamps.at(it-1) + ros::Duration(dt);
+    // Generate a new input vector
+    inputs.at(it) = u_t::Random();
+    // Generate a corresponding measurement
+    measurements.at(it) = H*gts.at(it)  + normal_randmat(R);
+  }
+
+  //}
+
+  std::vector<statecov_t> lkf_scs(n_gts);
+  std::vector<statecov_t> rep_scs(n_gts);
+  statecov_t lkf_sc = {x0, P0, t0};
+
+  // Instantiate the Repredictor itself
+  dumbrep_t rep(x0, P0, u0, Q, t0, lkf, 1);
+
+  std::cout << "Running LKF and dumb Repredictor." << std::endl;
+  // Run the LKF and dumb repredictor
+  for (int it = 1; it < n_gts; it++)
+  {
+    const bool use_process_noise = d(gen) > 0.0;
+    // add the measurements randomly
+    const ros::Time stamp = stamps.at(it);
+    const double dt = (stamp - lkf_sc.stamp).toSec();
+    const z_t& z = measurements.at(it);
+    const u_t& u = inputs.at(it);
+
+    if (use_process_noise)
+      rep.addInputChangeWithNoise(u, Q, lkf_sc.stamp);
+    else
+      rep.addInputChange(u, lkf_sc.stamp);
+    rep.addMeasurement(z, R, stamp);
+    auto rep_sc = rep.predictTo(stamp);
+    rep_sc.stamp = stamp;
+    rep_scs.at(it) = rep_sc;
+
+    lkf_sc = lkf->predict(lkf_sc, u, Q, dt);
+    lkf_sc = lkf->correct(lkf_sc, z, R);
+    lkf_sc.stamp = stamp;
+    lkf_scs.at(it) = lkf_sc;
   }
 
   std::cout << "Evaluating results." << std::endl;
