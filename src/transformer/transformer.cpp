@@ -490,6 +490,15 @@ namespace mrs_lib
     return utm;
   }
 
+  geometry_msgs::PointStamped Transformer::LLtoUTM(const geometry_msgs::PointStamped& what, [[maybe_unused]] const std::string& prefix)
+  {
+    geometry_msgs::PointStamped ret;
+    ret.header.frame_id = prefix + "utm_origin";
+    ret.header.stamp = what.header.stamp;
+    ret.point = LLtoUTM(what.point, prefix);
+    return ret;
+  }
+
   geometry_msgs::Pose Transformer::LLtoUTM(const geometry_msgs::Pose& what, const std::string& prefix)
   {
     geometry_msgs::Pose ret;
@@ -523,6 +532,19 @@ namespace mrs_lib
     mrs_lib::UTMtoLL(what.y, what.x, utm_zone_.data(), latlon.x, latlon.y);
     latlon.z = what.z;
     return latlon;
+  }
+
+  std::optional<geometry_msgs::PointStamped> Transformer::UTMtoLL(const geometry_msgs::PointStamped& what, [[maybe_unused]] const std::string& prefix)
+  {
+    const auto opt = UTMtoLL(what.point, prefix);
+    if (!opt.has_value())
+      return std::nullopt;
+
+    geometry_msgs::PointStamped ret;
+    ret.header.frame_id = prefix + "utm_origin";
+    ret.header.stamp = what.header.stamp;
+    ret.point = opt.value();
+    return ret;
   }
 
   std::optional<geometry_msgs::Pose> Transformer::UTMtoLL(const geometry_msgs::Pose& what, const std::string& prefix)

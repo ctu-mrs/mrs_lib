@@ -651,10 +651,12 @@ namespace mrs_lib
 
     /* methods for converting between lattitude/longitude and UTM coordinates //{ */
     geometry_msgs::Point LLtoUTM(const geometry_msgs::Point& what, const std::string& prefix);
+    geometry_msgs::PointStamped LLtoUTM(const geometry_msgs::PointStamped& what, const std::string& prefix);
     geometry_msgs::Pose LLtoUTM(const geometry_msgs::Pose& what, const std::string& prefix);
     geometry_msgs::PoseStamped LLtoUTM(const geometry_msgs::PoseStamped& what, const std::string& prefix);
     
     std::optional<geometry_msgs::Point> UTMtoLL(const geometry_msgs::Point& what, const std::string& prefix);
+    std::optional<geometry_msgs::PointStamped> UTMtoLL(const geometry_msgs::PointStamped& what, const std::string& prefix);
     std::optional<geometry_msgs::Pose> UTMtoLL(const geometry_msgs::Pose& what, const std::string& prefix);
     std::optional<geometry_msgs::PoseStamped> UTMtoLL(const geometry_msgs::PoseStamped& what, const std::string& prefix);
     
