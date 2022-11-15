@@ -259,7 +259,7 @@ target_link_libraries(rheiv_example
   ${Eigen_LIBRARIES}
   )
 
-add_library(MrsLibBatchVisualizer src/batch_visualizer/batch_visualizer.cpp)
+add_library(MrsLibBatchVisualizer src/batch_visualizer/batch_visualizer.cpp src/batch_visualizer/visual_object.cpp)
 target_link_libraries(MrsLibBatchVisualizer
   MrsLibGeometry
   ${catkin_LIBRARIES}
