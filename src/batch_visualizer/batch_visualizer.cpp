@@ -5,32 +5,6 @@
 namespace mrs_lib
 {
 
-/* conversion utils //{ */
-geometry_msgs::Point eigenToMsg(const Eigen::Vector3d &v) {
-  geometry_msgs::Point p;
-  p.x = v.x();
-  p.y = v.y();
-  p.z = v.z();
-  return p;
-}
-
-std_msgs::ColorRGBA generateColor(const double r, const double g, const double b, const double a) {
-  std_msgs::ColorRGBA c;
-  c.r = r;
-  c.g = g;
-  c.b = b;
-  c.a = a;
-  return c;
-}
-
-Eigen::Vector3d msgToEigen(const geometry_msgs::Point &p) {
-  return Eigen::Vector3d(p.x, p.y, p.z);
-}
-//}
-
-double tmp_points_scale = 0.02;
-double tmp_lines_scale  = 0.04;
-
 /* constructors */  //{
 BatchVisualizer::BatchVisualizer() {
 }
@@ -38,7 +12,7 @@ BatchVisualizer::BatchVisualizer() {
 BatchVisualizer::~BatchVisualizer() {
 }
 
-BatchVisualizer::BatchVisualizer(ros::NodeHandle& nh, const std::string marker_topic_name, const std::string parent_frame) {
+BatchVisualizer::BatchVisualizer(ros::NodeHandle &nh, const std::string marker_topic_name, const std::string parent_frame) {
   this->parent_frame      = parent_frame;
   this->marker_topic_name = marker_topic_name;
   initialize();
@@ -113,219 +87,78 @@ void BatchVisualizer::initialize() {
 //}
 
 /* addPoint //{ */
-void BatchVisualizer::addPoint(const Eigen::Vector3d &p, const double r, const double g, const double b, const double a) {
-  std_msgs::ColorRGBA color = generateColor(r, g, b, a);
-  points_marker.colors.push_back(color);
+void BatchVisualizer::addPoint(const Eigen::Vector3d &p, const double r, const double g, const double b, const double a, const ros::Duration &timeout) {
 
-  geometry_msgs::Point gp = eigenToMsg(p);
-  points_marker.points.push_back(gp);
+  VisualObject obj = VisualObject(p, r, g, b, a, timeout, uuid++);
+  visual_objects.insert(obj);
 }
 //}
 
 /* addRay */  //{
-void BatchVisualizer::addRay(const mrs_lib::geometry::Ray &ray, const double r, const double g, const double b, const double a) {
+void BatchVisualizer::addRay(const mrs_lib::geometry::Ray &ray, const double r, const double g, const double b, const double a, const ros::Duration &timeout) {
 
-  std_msgs::ColorRGBA color = generateColor(r, g, b, a);
-
-  // color goes in twice, one color for each vertex
-  lines_marker.colors.push_back(color);
-  lines_marker.colors.push_back(color);
-
-  geometry_msgs::Point p1 = eigenToMsg(ray.p1());
-  geometry_msgs::Point p2 = eigenToMsg(ray.p2());
-
-  lines_marker.points.push_back(p1);
-  lines_marker.points.push_back(p2);
+  VisualObject obj = VisualObject(ray, r, g, b, a, timeout, uuid++);
+  visual_objects.insert(obj);
 }
 //}
 
 /* addTriangle //{ */
-void BatchVisualizer::addTriangle(const mrs_lib::geometry::Triangle &tri, const double r, const double g, const double b, const double a, const bool filled) {
+void BatchVisualizer::addTriangle(const mrs_lib::geometry::Triangle &tri, const double r, const double g, const double b, const double a, const bool filled,
+                                  const ros::Duration &timeout) {
 
-  std_msgs::ColorRGBA color = generateColor(r, g, b, a);
-  if (filled) {
-    // render the triangle face
-    // color goes in thrice, one color for each vertex
-    triangles_marker.colors.push_back(color);
-    triangles_marker.colors.push_back(color);
-    triangles_marker.colors.push_back(color);
-    triangles_marker.color = color;
-
-    geometry_msgs::Point point1 = eigenToMsg(tri.a());
-    geometry_msgs::Point point2 = eigenToMsg(tri.b());
-    geometry_msgs::Point point3 = eigenToMsg(tri.c());
-
-    triangles_marker.points.push_back(point1);
-    triangles_marker.points.push_back(point2);
-    triangles_marker.points.push_back(point3);
-  } else {
-    // build outline from 3 lines
-    geometry_msgs::Point p1 = eigenToMsg(tri.a());
-    geometry_msgs::Point p2 = eigenToMsg(tri.b());
-    geometry_msgs::Point p3 = eigenToMsg(tri.c());
-
-    lines_marker.colors.push_back(color);
-    lines_marker.colors.push_back(color);
-    lines_marker.points.push_back(p1);
-    lines_marker.points.push_back(p2);
-
-    lines_marker.colors.push_back(color);
-    lines_marker.colors.push_back(color);
-    lines_marker.points.push_back(p2);
-    lines_marker.points.push_back(p3);
-
-    lines_marker.colors.push_back(color);
-    lines_marker.colors.push_back(color);
-    lines_marker.points.push_back(p3);
-    lines_marker.points.push_back(p1);
-  }
+  VisualObject obj = VisualObject(tri, r, g, b, a, timeout, filled, uuid++);
+  visual_objects.insert(obj);
 }
 //}
 
 /* addRectangle //{ */
-void BatchVisualizer::addRectangle(const mrs_lib::geometry::Rectangle &rect, const double r, const double g, const double b, const double a, const bool filled) {
-  std::vector<mrs_lib::geometry::Triangle> triangles = rect.triangles();
-  addTriangle(triangles[0], r, g, b, a, filled);
-  addTriangle(triangles[1], r, g, b, a, filled);
+void BatchVisualizer::addRectangle(const mrs_lib::geometry::Rectangle &rect, const double r, const double g, const double b, const double a, const bool filled,
+                                   const ros::Duration &timeout) {
+
+  VisualObject obj = VisualObject(rect, r, g, b, a, timeout, filled, uuid++);
+  visual_objects.insert(obj);
 }
 //}
 
 /* addCuboid //{ */
-void BatchVisualizer::addCuboid(const mrs_lib::geometry::Cuboid &cuboid, const double r, const double g, const double b, const double a, const bool filled) {
+void BatchVisualizer::addCuboid(const mrs_lib::geometry::Cuboid &cuboid, const double r, const double g, const double b, const double a, const bool filled,
+                                const ros::Duration &timeout) {
 
-  for (int i = 0; i < 6; i++) {
-    mrs_lib::geometry::Rectangle             rect      = cuboid.getRectangle(i);
-    std::vector<mrs_lib::geometry::Triangle> triangles = rect.triangles();
-    addTriangle(triangles[0], r, g, b, a, filled);
-    addTriangle(triangles[1], r, g, b, a, filled);
-  }
+  VisualObject obj = VisualObject(cuboid, r, g, b, a, timeout, filled, uuid++);
+  visual_objects.insert(obj);
 }
 //}
 
 /* addEllipse //{ */
-void BatchVisualizer::addEllipse(const mrs_lib::geometry::Ellipse &ellipse, const double r, const double g, const double b, const double a, const bool filled, const int num_points) {
-  std::vector<Eigen::Vector3d> points = buildEllipse(ellipse, num_points);
+void BatchVisualizer::addEllipse(const mrs_lib::geometry::Ellipse &ellipse, const double r, const double g, const double b, const double a, const bool filled,
+                                 const int num_points, const ros::Duration &timeout) {
 
-  if (filled) {
-    for (int i = 0; i < num_points - 1; i++) {
-      mrs_lib::geometry::Triangle tri(ellipse.center(), points[i], points[i + 1]);
-      addTriangle(tri, r, g, b, a, true);
-    }
-    mrs_lib::geometry::Triangle tri(ellipse.center(), points[num_points - 1], points[0]);
-    addTriangle(tri, r, g, b, a, true);
-
-  } else {
-    for (int i = 0; i < num_points - 1; i++) {
-      mrs_lib::geometry::Ray ray = mrs_lib::geometry::Ray::twopointCast(points[i], points[i + 1]);
-      addRay(ray, r, g, b, a);
-    }
-    mrs_lib::geometry::Ray ray = mrs_lib::geometry::Ray::twopointCast(points[num_points - 1], points[0]);
-    addRay(ray, r, g, b, a);
-  }
+  VisualObject obj = VisualObject(ellipse, r, g, b, a, timeout, filled, uuid++, num_points);
+  visual_objects.insert(obj);
 }
 //}
 
 /* addCylinder //{ */
-void BatchVisualizer::addCylinder(const mrs_lib::geometry::Cylinder &cylinder, const double r, const double g, const double b, const double a, const bool filled, const bool capped, const int sides) {
-  if (capped) {
-    mrs_lib::geometry::Ellipse top    = cylinder.getCap(mrs_lib::geometry::Cylinder::TOP);
-    mrs_lib::geometry::Ellipse bottom = cylinder.getCap(mrs_lib::geometry::Cylinder::BOTTOM);
-    addEllipse(top, r, g, b, a, filled, sides);
-    addEllipse(bottom, r, g, b, a, filled, sides);
-  }
-  std::vector<Eigen::Vector3d> top_points    = buildEllipse(cylinder.getCap(mrs_lib::geometry::Cylinder::TOP), sides);
-  std::vector<Eigen::Vector3d> bottom_points = buildEllipse(cylinder.getCap(mrs_lib::geometry::Cylinder::BOTTOM), sides);
-  for (unsigned int i = 0; i < top_points.size() - 1; i++) {
-    mrs_lib::geometry::Rectangle rect(bottom_points[i], bottom_points[i + 1], top_points[i + 1], top_points[i]);
-    addRectangle(rect, r, g, b, a, filled);
-  }
-  mrs_lib::geometry::Rectangle rect(bottom_points[bottom_points.size() - 1], bottom_points[0], top_points[0], top_points[top_points.size() - 1]);
-  addRectangle(rect, r, g, b, a, filled);
+void BatchVisualizer::addCylinder(const mrs_lib::geometry::Cylinder &cylinder, const double r, const double g, const double b, const double a,
+                                  const bool filled, const bool capped, const int sides, const ros::Duration &timeout) {
+  VisualObject obj = VisualObject(cylinder, r, g, b, a, timeout, filled, capped, uuid++, sides);
+  visual_objects.insert(obj);
 }
 //}
 
 /* addCone //{ */
-void BatchVisualizer::addCone(const mrs_lib::geometry::Cone &cone, const double r, const double g, const double b, const double a, const bool filled, const bool capped, const int sides) {
-  if (capped) {
-    mrs_lib::geometry::Ellipse cap = cone.getCap();
-    addEllipse(cap, r, g, b, a, filled, sides);
-  }
-  std::vector<Eigen::Vector3d> cap_points = buildEllipse(cone.getCap(), sides);
-  for (unsigned int i = 0; i < cap_points.size() - 1; i++) {
-    mrs_lib::geometry::Triangle tri(cap_points[i], cap_points[i + 1], cone.origin());
-    addTriangle(tri, r, g, b, a, filled);
-  }
-  mrs_lib::geometry::Triangle tri(cap_points[cap_points.size() - 1], cap_points[0], cone.origin());
-  addTriangle(tri, r, g, b, a, filled);
+void BatchVisualizer::addCone(const mrs_lib::geometry::Cone &cone, const double r, const double g, const double b, const double a, const bool filled,
+                              const bool capped, const int sides, const ros::Duration &timeout) {
+  VisualObject obj = VisualObject(cone, r, g, b, a, timeout, filled, capped, uuid++, sides);
+  visual_objects.insert(obj);
 }
 //}
 
 /* addTrajectory //{ */
-void BatchVisualizer::addTrajectory(const mrs_msgs::TrajectoryReference &traj, const double r, const double g, const double b, const double a, const bool filled) {
-  if (traj.points.size() < 2) {
-    ROS_WARN("[%s]: Trajectory too short to visualize!", ros::this_node::getName().c_str());
-    return;
-  }
-  if (filled) {
-    for (size_t i = 0; i < traj.points.size() - 1; i++) {
-      Eigen::Vector3d p1, p2;
-      p1.x()   = traj.points[i].position.x;
-      p1.y()   = traj.points[i].position.y;
-      p1.z()   = traj.points[i].position.z;
-      p2.x()   = traj.points[i + 1].position.x;
-      p2.y()   = traj.points[i + 1].position.y;
-      p2.z()   = traj.points[i + 1].position.z;
-      auto ray = mrs_lib::geometry::Ray::twopointCast(p1, p2);
-      addRay(ray, r, g, b, a);
-    }
-  } else {
-    for (size_t i = 0; i < traj.points.size(); i++) {
-      Eigen::Vector3d p(traj.points[i].position.x, traj.points[i].position.y, traj.points[i].position.z);
-      addPoint(p);
-    }
-  }
-}
-//}
-
-/* buildEllipse //{ */
-std::vector<Eigen::Vector3d> BatchVisualizer::buildEllipse(const mrs_lib::geometry::Ellipse &ellipse, const int num_points) {
-  std::vector<Eigen::Vector3d> points;
-  double                       theta = 0;
-  for (int i = 0; i < num_points; i++) {
-    double          nom = (ellipse.a() * ellipse.b());
-    double          den = sqrt(((ellipse.b() * cos(theta)) * (ellipse.b() * cos(theta))) + ((ellipse.a() * sin(theta)) * (ellipse.a() * sin(theta))));
-    double          rho = nom / den;
-    Eigen::Vector3d point(rho * cos(theta), rho * sin(theta), 0);
-    point = ellipse.center() + ellipse.orientation() * point;
-    points.push_back(point);
-    theta += 2.0 * M_PI / num_points;
-  }
-  return points;
-}
-//}
-
-/* setPointsScale //{ */
-void BatchVisualizer::setPointsScale(const double scale) {
-  points_scale = scale;
-}
-//}
-
-/* setLinesScale //{ */
-void BatchVisualizer::setLinesScale(const double scale) {
-  lines_scale  = scale;
-}
-//}
-
-/* clearBuffers //{ */
-void BatchVisualizer::clearBuffers() {
-  points_marker.points.clear();
-  points_marker.colors.clear();
-
-  lines_marker.points.clear();
-  lines_marker.colors.clear();
-
-  triangles_marker.points.clear();
-  triangles_marker.colors.clear();
+void BatchVisualizer::addTrajectory(const mrs_msgs::TrajectoryReference &traj, const double r, const double g, const double b, const double a,
+                                    const bool filled, const ros::Duration &timeout) {
+  VisualObject obj = VisualObject(traj, r, g, b, a, timeout, filled, uuid++);
+  visual_objects.insert(obj);
 }
 //}
 
@@ -400,23 +233,33 @@ void BatchVisualizer::addNullTriangle() {
 }
 //}
 
+/* setPointsScale //{ */
+void BatchVisualizer::setPointsScale(const double scale) {
+  points_scale = scale;
+}
+//}
+
+/* setLinesScale //{ */
+void BatchVisualizer::setLinesScale(const double scale) {
+  lines_scale = scale;
+}
+//}
+
+/* clearBuffers //{ */
+void BatchVisualizer::clearBuffers() {
+  visual_objects.clear();
+}
+//}
+
 /* clearVisuals //{ */
 void BatchVisualizer::clearVisuals() {
+  std::set<VisualObject> visual_objects_tmp;
+  visual_objects_tmp.insert(visual_objects.begin(), visual_objects.end());
 
-  visualization_msgs::Marker points_tmp    = points_marker;
-  visualization_msgs::Marker lines_tmp     = lines_marker;
-  visualization_msgs::Marker triangles_tmp = triangles_marker;
-
-  clearBuffers();
-  addNullPoint();
-  addNullLine();
-  addNullTriangle();
-
+  visual_objects.clear();
   publish();
 
-  points_marker    = points_tmp;
-  lines_marker     = lines_tmp;
-  triangles_marker = triangles_tmp;
+  visual_objects.insert(visual_objects_tmp.begin(), visual_objects_tmp.end());
 }
 //}
 
@@ -424,46 +267,78 @@ void BatchVisualizer::clearVisuals() {
 void BatchVisualizer::publish() {
 
   msg.markers.clear();
+  points_marker.points.clear();
+  points_marker.colors.clear();
 
-  bool resolve_empty_points    = points_marker.points.empty();
-  bool resolve_empty_lines     = lines_marker.points.empty();
-  bool resolve_empty_triangles = triangles_marker.points.empty();
+  lines_marker.points.clear();
+  lines_marker.colors.clear();
 
-  if (resolve_empty_points) {
+  triangles_marker.points.clear();
+  triangles_marker.colors.clear();
+
+  // fill marker messages and remove objects that have timed out
+  for (auto it = visual_objects.begin(); it != visual_objects.end();) {
+    if (it->isTimedOut()) {
+      it = visual_objects.erase(it);
+    } else {
+      auto points = it->getPoints();
+      auto colors = it->getColors();
+      switch (it->getType()) {
+        case 0: {
+          points_marker.points.insert(points_marker.points.end(), points.begin(), points.end());
+          points_marker.colors.insert(points_marker.colors.end(), colors.begin(), colors.end());
+          break;
+        }
+        case 1: {
+          lines_marker.points.insert(lines_marker.points.end(), points.begin(), points.end());
+          lines_marker.colors.insert(lines_marker.colors.end(), colors.begin(), colors.end());
+          break;
+        }
+        case 2: {
+          triangles_marker.points.insert(triangles_marker.points.end(), points.begin(), points.end());
+          triangles_marker.colors.insert(triangles_marker.colors.end(), colors.begin(), colors.end());
+          break;
+        }
+      }
+      it++;
+    }
+  }
+
+  auto now = ros::Time::now();
+
+  if (!points_marker.points.empty()) {
+    points_marker.scale.x = points_scale;
+    points_marker.scale.y = points_scale;
+  } else {
     addNullPoint();
   }
-  if (resolve_empty_lines) {
-    addNullLine();
-  }
-  if (resolve_empty_triangles) {
-    addNullTriangle();
-  }
-
-  points_marker.header.stamp = ros::Time::now();
-  points_marker.scale.x      = points_scale;
-  points_marker.scale.y      = points_scale;
+  points_marker.header.stamp = now;
   msg.markers.push_back(points_marker);
 
-  lines_marker.header.stamp = ros::Time::now();
-  lines_marker.scale.x      = lines_scale;
+  if (!lines_marker.points.empty()) {
+    lines_marker.scale.x = lines_scale;
+  } else {
+    addNullLine();
+  }
+  lines_marker.header.stamp = now;
   msg.markers.push_back(lines_marker);
 
-  triangles_marker.header.stamp = ros::Time::now();
+  if (!triangles_marker.points.empty()) {
+    triangles_marker.header.stamp = now;
+  } else {
+    addNullTriangle();
+  }
+  triangles_marker.header.stamp = now;
   msg.markers.push_back(triangles_marker);
-  visual_pub.publish(msg);
 
-  if (resolve_empty_points) {
-    points_marker.points.clear();
-    points_marker.colors.clear();
+  if (msg.markers.empty()) {
+    addNullPoint();
+    points_marker.scale.x = 0.1;
+    points_marker.scale.y = 0.1;
+    msg.markers.push_back(points_marker);
   }
-  if (resolve_empty_lines) {
-    lines_marker.points.clear();
-    lines_marker.colors.clear();
-  }
-  if (resolve_empty_triangles) {
-    triangles_marker.points.clear();
-    triangles_marker.colors.clear();
-  }
+
+  visual_pub.publish(msg);
 }
 //}
 
