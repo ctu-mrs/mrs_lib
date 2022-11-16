@@ -11,7 +11,7 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <mrs_lib/geometry/shapes.h>
 #include <mrs_msgs/TrajectoryReference.h>
-#include <mrs_lib/batch_visualizer/visual_object.h>
+#include <mrs_lib/visual_object.h>
 #include <set>
 
 #define DEFAULT_ELLIPSE_POINTS 64
@@ -171,8 +171,19 @@ public:
   void addTrajectory(const mrs_msgs::TrajectoryReference &traj, const double r = 0.3, const double g = 1.0, const double b = 0.3, const double a = 1.0,
                      const bool filled = true, const ros::Duration &timeout = ros::Duration(0));
 
+  /**
+   * @brief helper function for adding an invisible point to the object buffer
+   */
   void addNullPoint();
+
+  /**
+   * @brief helper function for adding an invisible line to the object buffer
+   */
   void addNullLine();
+
+  /**
+   * @brief helper function for adding an invisible triangle to the buffer
+   */
   void addNullTriangle();
 
   /**
@@ -215,10 +226,10 @@ private:
   ros::Publisher                  visual_pub;
   visualization_msgs::MarkerArray msg;
 
-  std::string parent_frame;
+  std::string parent_frame; // coordinate frame id
   std::string marker_topic_name;
 
-  std::set<VisualObject> visual_objects;
+  std::set<VisualObject> visual_objects; // buffer for objects to be visualized
 
   visualization_msgs::Marker points_marker;
   visualization_msgs::Marker lines_marker;
@@ -230,8 +241,7 @@ private:
   double points_scale = 0.02;
   double lines_scale  = 0.04;
 
-  unsigned long uuid = 0;
-
+  unsigned long uuid = 0; // create unique ID for items in object buffer
 };
 
 }  // namespace mrs_lib

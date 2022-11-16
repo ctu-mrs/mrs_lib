@@ -1,4 +1,4 @@
-#include <mrs_lib/batch_visualizer/visual_object.h>
+#include <mrs_lib/visual_object.h>
 
 namespace mrs_lib
 {

@@ -53,8 +53,8 @@ public:
   VisualObject(const mrs_lib::geometry::Cone& cone, const double r, const double g, const double b, const double a, const ros::Duration& timeout,
                const bool filled, const bool capped, const unsigned long& id, const int num_sides = DEFAULT_ELLIPSE_POINTS);
 
-  VisualObject(const mrs_msgs::TrajectoryReference& traj, const double r, const double g, const double b, const double a, const ros::Duration& timeout, const bool filled,
-               const unsigned long& id);
+  VisualObject(const mrs_msgs::TrajectoryReference& traj, const double r, const double g, const double b, const double a, const ros::Duration& timeout,
+               const bool filled, const unsigned long& id);
 
 
 public:
@@ -90,7 +90,6 @@ private:
 
   void addEllipse(const mrs_lib::geometry::Ellipse& ellipse, const double r, const double g, const double b, const double a, const bool filled,
                   const int num_points);
-
 
 };  // namespace batch_visualizer
 

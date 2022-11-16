@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
     double          g = y1 * y2 * y3;
     double          b = z1 * z2 * z3;
     Triangle        tri(point1, point2, point3);
-    bv.addTriangle(tri, r, g, b, 1, true);
+    bv.addTriangle(tri, r, g, b, 1, true, ros::Duration(0.5));
     bv.publish();
     ros::spinOnce();
     ros::Duration(0.01).sleep();
@@ -135,7 +135,7 @@ int main(int argc, char** argv) {
     double          g = y1 * y2 * y3;
     double          b = z1 * z2 * z3;
     Triangle        tri(point1, point2, point3);
-    bv.addTriangle(tri, r, g, b, 1, false);
+    bv.addTriangle(tri, r, g, b, 1, false, ros::Duration(0.5));
     bv.publish();
     ros::spinOnce();
     ros::Duration(0.01).sleep();
@@ -167,8 +167,8 @@ int main(int argc, char** argv) {
     double    g = y1 * y2;
     double    b = z1 * z2;
     Rectangle rect(point1, point2, point3, point4);
-    bv.addRectangle(rect, r, g, b, 1, true);   // draw colored faces
-    bv.addRectangle(rect, 0, 0, 0, 1, false);  // draw outlines
+    bv.addRectangle(rect, r, g, b, 1, true, ros::Duration(0.5));   // draw colored faces
+    bv.addRectangle(rect, 0, 0, 0, 1, false, ros::Duration(0.7));  // draw outlines
     bv.publish();
     ros::spinOnce();
     ros::Duration(0.01).sleep();
@@ -196,8 +196,8 @@ int main(int argc, char** argv) {
     double b = (z1 - range_min) / (range_max - range_min);
     Cuboid cub(center, scale, orientation);
 
-    bv.addCuboid(cub, r, g, b, 1, true);   // draw colored faces
-    bv.addCuboid(cub, 0, 0, 0, 1, false);  // draw outlines
+    bv.addCuboid(cub, r, g, b, 1, true, ros::Duration(0.3));   // draw colored faces
+    bv.addCuboid(cub, 0, 0, 0, 1, false, ros::Duration(0.3));  // draw outlines
     bv.publish();
     ros::spinOnce();
     ros::Duration(0.01).sleep();
@@ -225,8 +225,8 @@ int main(int argc, char** argv) {
     double  b = (z1 - range_min) / (range_max - range_min);
     Ellipse el(center, orientation, major, minor);
 
-    bv.addEllipse(el, r, g, b, 1.0, true);         // colored face
-    bv.addEllipse(el, 0.0, 0.0, 0.0, 1.0, false);  // black outline
+    bv.addEllipse(el, r, g, b, 1.0, true, 64, ros::Duration(0.5));         // colored face
+    bv.addEllipse(el, 0.0, 0.0, 0.0, 1.0, false, 64, ros::Duration(0.5));  // black outline
     bv.publish();
     ros::spinOnce();
     ros::Duration(0.01).sleep();
@@ -255,8 +255,8 @@ int main(int argc, char** argv) {
     double b = (z1 - range_min) / (range_max - range_min);
 
     Cylinder cyl(center, radius, height, orientation);
-    bv.addCylinder(cyl, r, g, b, 1.0, true, true, 12);
-    bv.addCylinder(cyl, 0, 0, 0, 1, false, false, 12);
+    bv.addCylinder(cyl, r, g, b, 1.0, true, true, 12, ros::Duration(0.5));
+    bv.addCylinder(cyl, 0, 0, 0, 1, false, false, 12, ros::Duration(0.5));
     bv.publish();
     ros::spinOnce();
     ros::Duration(0.01).sleep();
@@ -285,8 +285,8 @@ int main(int argc, char** argv) {
     double b = (z1 - range_min) / (range_max - range_min);
 
     Cone cone(origin, angle, height, direction);
-    bv.addCone(cone, r, g, b, 1.0, true, true, 12);
-    bv.addCone(cone, 0, 0, 0, 1, false, false, 12);
+    bv.addCone(cone, r, g, b, 1.0, true, true, 12, ros::Duration(0.5));
+    bv.addCone(cone, 0, 0, 0, 1, false, false, 12, ros::Duration(0.5));
     bv.publish();
     ros::spinOnce();
     ros::Duration(0.01).sleep();
@@ -299,7 +299,7 @@ int main(int argc, char** argv) {
   ROS_INFO("[%s]: Generating random trajectories...", ros::this_node::getName().c_str());
   for (int i = 0; (i < 200 && ros::ok()); i++) {
     mrs_msgs::TrajectoryReference traj;
-    for (int n = 0; n < 20; n++) {
+    for (int n = 0; n < 10; n++) {
       double              x = rand_dbl(generator);
       double              y = rand_dbl(generator);
       double              z = rand_dbl(generator);
@@ -310,7 +310,7 @@ int main(int argc, char** argv) {
       traj.points.push_back(ref);
     }
 
-    bv.addTrajectory(traj, 0, 1, 1, 1.0, true, ros::Duration(0.05));
+    bv.addTrajectory(traj, 0, 1, 1, 1.0, true, ros::Duration(0.08));
     bv.publish();
     ros::spinOnce();
     ros::Duration(0.01).sleep();
@@ -320,6 +320,8 @@ int main(int argc, char** argv) {
   //}
 
   /* RAYTRACING TEST //{ */
+  bv.setLinesScale(0.3);
+  bv.setPointsScale(1.0);
   ROS_INFO("[%s]: Generating random rays and triangles...", ros::this_node::getName().c_str());
   for (int i = 0; (i < 20 && ros::ok()); i++) {
     double          x1 = rand_dbl(generator);
@@ -333,17 +335,17 @@ int main(int argc, char** argv) {
     double          x3 = rand_dbl(generator);
     double          y3 = rand_dbl(generator);
     double          z3 = rand_dbl(generator);
-    Eigen::Vector3d point3(x3, y3, z3);
+    Eigen::Vector3d point3(3 * x3, 3 * y3, 3 * z3);
     Triangle        tri(point1, point2, point3);
 
     double          rx1 = rand_dbl(generator);
     double          ry1 = rand_dbl(generator);
     double          rz1 = rand_dbl(generator);
-    Eigen::Vector3d ray_point1(rx1, ry1, rz1);
+    Eigen::Vector3d ray_point1(4 * rx1, 4 * ry1, 4 * rz1);
     double          rx2 = rand_dbl(generator);
     double          ry2 = rand_dbl(generator);
     double          rz2 = rand_dbl(generator);
-    Eigen::Vector3d ray_point2(rx2, ry2, rz2);
+    Eigen::Vector3d ray_point2(4 * rx2, 4 * ry2, 4 * rz2);
     Ray             ray = Ray::twopointCast(ray_point1, ray_point2);
     bv.addRay(ray, 1.0, 0.5, 0.0, 1.0, ros::Duration(0.3));
 
@@ -358,6 +360,72 @@ int main(int argc, char** argv) {
     ros::Duration(0.6).sleep();
   }
   bv.clearBuffers();
+  ROS_INFO("[%s]: Done", ros::this_node::getName().c_str());
+  //}
+
+  /* RANDOM CHAOS //{ */
+  bv.setLinesScale(0.08);
+  bv.setPointsScale(0.6);
+  ROS_INFO("[%s]: Generating random chaos...", ros::this_node::getName().c_str());
+  for (int n = 0; n < 100; n++) {
+    for (int i = 0; (i < 300 && ros::ok()); i++) {
+      double          x = rand_dbl(generator);
+      double          y = rand_dbl(generator);
+      double          z = rand_dbl(generator);
+      Eigen::Vector3d point(x, y, z);
+      double          r           = (x - range_min) / (range_max - range_min);
+      double          g           = (y - range_min) / (range_max - range_min);
+      double          b           = (z - range_min) / (range_max - range_min);
+      double          timeout_sec = 0.2 * rand_percent(generator);
+      bv.addPoint(point, r, g, b, 1, ros::Duration(timeout_sec));
+    }
+    for (int i = 0; (i < 100 && ros::ok()); i++) {
+      double             x1 = rand_dbl(generator);
+      double             y1 = rand_dbl(generator);
+      double             z1 = rand_dbl(generator);
+      Eigen::Vector3d    center(x1, y1, z1);
+      double             s = 0.4 * rand_dbl(generator);
+      Eigen::Vector3d    scale(s, s, s);
+      double             x2          = rand_dbl(generator);
+      double             y2          = rand_dbl(generator);
+      double             z2          = rand_dbl(generator);
+      Eigen::Quaterniond orientation = mrs_lib::geometry::quaternionFromEuler(x2, y2, z2);
+
+      double r = (x1 - range_min) / (range_max - range_min);
+      double g = (y1 - range_min) / (range_max - range_min);
+      double b = (z1 - range_min) / (range_max - range_min);
+      Cuboid cub(center, scale, orientation);
+      double timeout_sec = 0.2 * rand_percent(generator);
+
+      bv.addCuboid(cub, r, g, b, 1, true, ros::Duration(timeout_sec));   // draw colored faces
+      bv.addCuboid(cub, 0, 0, 0, 1, false, ros::Duration(timeout_sec));  // draw outlines
+    }
+    for (int i = 0; (i < 100 && ros::ok()); i++) {
+      double             x1 = rand_dbl(generator);
+      double             y1 = rand_dbl(generator);
+      double             z1 = rand_dbl(generator);
+      Eigen::Vector3d    center(x1, y1, z1);
+      double             x2          = rand_dbl(generator);
+      double             y2          = rand_dbl(generator);
+      double             z2          = rand_dbl(generator);
+      Eigen::Quaterniond orientation = mrs_lib::geometry::quaternionFromEuler(x2, y2, z2);
+
+      double radius = 0.3 * rand_dbl(generator);
+      double height = rand_dbl(generator);
+
+      double r = (x1 - range_min) / (range_max - range_min);
+      double g = (y1 - range_min) / (range_max - range_min);
+      double b = (z1 - range_min) / (range_max - range_min);
+
+      Cylinder cyl(center, radius, height, orientation);
+      double   timeout_sec = 0.2 * rand_percent(generator);
+      bv.addCylinder(cyl, r, g, b, 1.0, true, true, 12, ros::Duration(timeout_sec));
+      bv.addCylinder(cyl, 0, 0, 0, 1, false, false, 12, ros::Duration(timeout_sec));
+    }
+    bv.publish();
+    ros::spinOnce();
+    ros::Duration(0.05).sleep();
+  }
   ROS_INFO("[%s]: Done", ros::this_node::getName().c_str());
   //}
 
