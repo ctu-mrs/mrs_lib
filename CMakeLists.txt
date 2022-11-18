@@ -1,6 +1,24 @@
 cmake_minimum_required(VERSION 3.1.2)
 project(mrs_lib)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# please, NEVER commit those alternative flags with specific overrides of optimization
+#  add the address sanitizer compiler flags to debug build type
+# set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address,undefined -fno-omit-frame-pointer") # because normal release is just -O2
+#  add the address sanitizer linker flags to debug build type
+# set(CMAKE_LD_FLAGS_DEBUG  "${CMAKE_LD_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address,undefined") # because normal release is just -O2
+# set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3") # because normal release is just -O2
+# please, really do not commit your temporary custom flags :-)
+
+add_definitions(-Wall)
+add_definitions(-Wextra)
+add_definitions(-Wpedantic)
+
+# remove warning info from PCL
+set(PCL_FIND_QUIETLY INTERNAL)
+
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   cmake_modules
@@ -19,21 +37,6 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_conversions
   )
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# please, NEVER commit those alternative flags with specific overrides of optimization
-#  add the address sanitizer compiler flags to debug build type
-# set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address,undefined -fno-omit-frame-pointer") # because normal release is just -O2
-#  add the address sanitizer linker flags to debug build type
-# set(CMAKE_LD_FLAGS_DEBUG  "${CMAKE_LD_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address,undefined") # because normal release is just -O2
-# set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3") # because normal release is just -O2
-# please, really do not commit your temporary custom flags :-)
-
-add_definitions(-Wall)
-add_definitions(-Wextra)
-add_definitions(-Wpedantic)
-
 # include Eigen3
 find_package(Eigen3 REQUIRED)
 set(Eigen_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIRS})
@@ -41,9 +44,6 @@ set(Eigen_LIBRARIES ${EIGEN3_LIBRARIES})
 
 # include OpenCV
 find_package(OpenCV REQUIRED HINTS /usr/local/lib)
-
-# include PCL
-find_package(PCL REQUIRED)
 
 ###################################
 ## catkin specific configuration ##
@@ -69,7 +69,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${Eigen_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
-  ${PCL_INCLUDE_DIRS}
+  ${pcl_ros_INCLUDE_DIRS}
   )
 
 add_library(MrsLibDynamicPublisher src/dynamic_publisher/dynamic_publisher.cpp)
@@ -114,10 +114,10 @@ target_link_libraries(lkf_example
 # target_link_libraries(MrsLibVectorConverter
 #   ${catkin_LIBRARIES}
 #   ${Eigen_LIBRARIES}
-#   ${PCL_LIBRARIES}
+#   ${pcl_ros_LIBRARIES}
 #   )
 # target_include_directories(MrsLibVectorConverter PRIVATE
-#   ${PCL_INCLUDE_DIRS}
+#   ${pcl_ros_INCLUDE_DIRS}
 #   )
 
 add_executable(vector_converter_example src/vector_converter/example.cpp)
@@ -125,10 +125,10 @@ target_link_libraries(vector_converter_example
   # MrsLibVectorConverter
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
-  ${PCL_LIBRARIES}
+  ${pcl_ros_LIBRARIES}
   )
 target_include_directories(vector_converter_example PRIVATE
-  ${PCL_INCLUDE_DIRS}
+  ${pcl_ros_INCLUDE_DIRS}
   )
 
 add_executable(ukf_example src/ukf/example.cpp)
@@ -205,7 +205,7 @@ target_link_libraries(MrsLibTransformer
   ${Eigen_LIBRARIES}
   )
 target_include_directories(MrsLibTransformer PRIVATE
-  ${PCL_INCLUDE_DIRS}
+  ${pcl_ros_INCLUDE_DIRS}
   )
 
 add_executable(transformer_example src/transformer/example.cpp)
@@ -568,7 +568,7 @@ if(CATKIN_ENABLE_TESTING)
     ${catkin_LIBRARIES}
     )
   target_include_directories(VectorConverterTest PRIVATE
-    ${PCL_INCLUDE_DIRS}
+    ${pcl_ros_INCLUDE_DIRS}
     )
   add_dependencies(
     VectorConverterTest
