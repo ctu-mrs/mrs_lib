@@ -11,6 +11,8 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <mrs_lib/geometry/shapes.h>
 #include <mrs_msgs/TrajectoryReference.h>
+#include <mrs_lib/visual_object.h>
+#include <set>
 
 #define DEFAULT_ELLIPSE_POINTS 64
 
@@ -48,8 +50,10 @@ public:
    * @param g green color in range <0,1>
    * @param b blue color in range <0,1>
    * @param a alpha in range <0,1> (0 is fully transparent)
+   * @param timeout time in seconds after which the object should be removed from buffer
    */
-  void addPoint(const Eigen::Vector3d &point, const double r = 0.0, const double g = 1.0, const double b = 0.3, const double a = 1.0);
+  void addPoint(const Eigen::Vector3d &point, const double r = 0.0, const double g = 1.0, const double b = 0.3, const double a = 1.0,
+                const ros::Duration &timeout = ros::Duration(0));
 
   /**
    * @brief add a ray to the buffer
@@ -59,8 +63,10 @@ public:
    * @param g green color in range <0,1>
    * @param b blue color in range <0,1>
    * @param a alpha in range <0,1> (0 is fully transparent)
+   * @param timeout time in seconds after which the object should be removed from buffer
    */
-  void addRay(const mrs_lib::geometry::Ray &ray, const double r = 1.0, const double g = 0.0, const double b = 0.0, const double a = 1.0);
+  void addRay(const mrs_lib::geometry::Ray &ray, const double r = 1.0, const double g = 0.0, const double b = 0.0, const double a = 1.0,
+              const ros::Duration &timeout = ros::Duration(0));
 
   /**
    * @brief add a triangle to the buffer
@@ -71,9 +77,10 @@ public:
    * @param b blue color in range <0,1>
    * @param a alpha in range <0,1> (0 is fully transparent)
    * @param filled bool to set fill. True = face visible, False = outline visible
+   * @param timeout time in seconds after which the object should be removed from buffer
    */
   void addTriangle(const mrs_lib::geometry::Triangle &tri, const double r = 0.5, const double g = 0.5, const double b = 0.0, const double a = 1.0,
-                   const bool filled = true);
+                   const bool filled = true, const ros::Duration &timeout = ros::Duration(0));
 
   /**
    * @brief add a rectangle to the buffer
@@ -84,9 +91,10 @@ public:
    * @param b blue color in range <0,1>
    * @param a alpha in range <0,1> (0 is fully transparent)
    * @param filled bool to set fill. True = face visible, False = outline visible
+   * @param timeout time in seconds after which the object should be removed from buffer
    */
   void addRectangle(const mrs_lib::geometry::Rectangle &rect, const double r = 0.5, const double g = 0.5, const double b = 0.0, const double a = 1.0,
-                    const bool filled = true);
+                    const bool filled = true, const ros::Duration &timeout = ros::Duration(0));
 
   /**
    * @brief add a cuboid to the buffer
@@ -97,9 +105,10 @@ public:
    * @param b blue color in range <0,1>
    * @param a alpha in range <0,1> (0 is fully transparent)
    * @param filled bool to set fill. True = face visible, False = outline visible
+   * @param timeout time in seconds after which the object should be removed from buffer
    */
   void addCuboid(const mrs_lib::geometry::Cuboid &cuboid, const double r = 0.5, const double g = 0.5, const double b = 0.0, const double a = 1.0,
-                 const bool filled = true);
+                 const bool filled = true, const ros::Duration &timeout = ros::Duration(0));
 
   /**
    * @brief add an ellipse to the buffer
@@ -111,9 +120,10 @@ public:
    * @param a alpha in range <0,1> (0 is fully transparent)
    * @param filled bool to set fill. True = face visible, False = outline visible
    * @param num_points number of points to approximate the round shape
+   * @param timeout time in seconds after which the object should be removed from buffer
    */
   void addEllipse(const mrs_lib::geometry::Ellipse &ellipse, const double r = 0.0, const double g = 1.0, const double b = 1.0, const double a = 1.0,
-                  const bool filled = true, const int num_points = DEFAULT_ELLIPSE_POINTS);
+                  const bool filled = true, const int num_points = DEFAULT_ELLIPSE_POINTS, const ros::Duration &timeout = ros::Duration(0));
 
   /**
    * @brief add a cylinder to the buffer
@@ -126,9 +136,11 @@ public:
    * @param filled bool to set fill. True = face visible, False = outline visible
    * @param capped bool to set caps on/off. True = caps drawn, False = hollow cylinder
    * @param sides number of points to approximate the round shape
+   * @param timeout time in seconds after which the object should be removed from buffer
    */
   void addCylinder(const mrs_lib::geometry::Cylinder &cylinder, const double r = 0.7, const double g = 0.8, const double b = 0.3, const double a = 1.0,
-                   const bool filled = true, const bool capped = true, const int sides = DEFAULT_ELLIPSE_POINTS);
+                   const bool filled = true, const bool capped = true, const int sides = DEFAULT_ELLIPSE_POINTS,
+                   const ros::Duration &timeout = ros::Duration(0));
   /**
    * @brief add a cone to the buffer
    *
@@ -140,9 +152,10 @@ public:
    * @param filled bool to set fill. True = face visible, False = outline visible
    * @param capped bool to set caps on/off. True = cap drawn, False = base cap missing
    * @param sides number of points to approximate the round shape
+   * @param timeout time in seconds after which the object should be removed from buffer
    */
   void addCone(const mrs_lib::geometry::Cone &cone, const double r = 0.7, const double g = 0.8, const double b = 0.3, const double a = 1.0,
-               const bool filled = true, const bool capped = true, const int sides = DEFAULT_ELLIPSE_POINTS);
+               const bool filled = true, const bool capped = true, const int sides = DEFAULT_ELLIPSE_POINTS, const ros::Duration &timeout = ros::Duration(0));
 
   /**
    * @brief add a trajectory to the buffer
@@ -153,9 +166,25 @@ public:
    * @param b blue color in range <0,1>
    * @param a alpha in range <0,1> (0 is fully transparent)
    * @param filled bool to set fill. True = continuous line, False = only visualize points
+   * @param timeout time in seconds after which the object should be removed from buffer
    */
   void addTrajectory(const mrs_msgs::TrajectoryReference &traj, const double r = 0.3, const double g = 1.0, const double b = 0.3, const double a = 1.0,
-                     const bool filled = true);
+                     const bool filled = true, const ros::Duration &timeout = ros::Duration(0));
+
+  /**
+   * @brief helper function for adding an invisible point to the object buffer
+   */
+  void addNullPoint();
+
+  /**
+   * @brief helper function for adding an invisible line to the object buffer
+   */
+  void addNullLine();
+
+  /**
+   * @brief helper function for adding an invisible triangle to the buffer
+   */
+  void addNullTriangle();
 
   /**
    * @brief set the scale of all points
@@ -197,8 +226,10 @@ private:
   ros::Publisher                  visual_pub;
   visualization_msgs::MarkerArray msg;
 
-  std::string parent_frame;
+  std::string parent_frame; // coordinate frame id
   std::string marker_topic_name;
+
+  std::set<VisualObject> visual_objects; // buffer for objects to be visualized
 
   visualization_msgs::Marker points_marker;
   visualization_msgs::Marker lines_marker;
@@ -210,11 +241,7 @@ private:
   double points_scale = 0.02;
   double lines_scale  = 0.04;
 
-  void addNullPoint();
-  void addNullLine();
-  void addNullTriangle();
-
-  std::vector<Eigen::Vector3d> buildEllipse(const mrs_lib::geometry::Ellipse &ellispe, const int num_points = DEFAULT_ELLIPSE_POINTS);
+  unsigned long uuid = 0; // create unique ID for items in object buffer
 };
 
 }  // namespace mrs_lib
