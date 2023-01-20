@@ -2,6 +2,48 @@
 Changelog for package mrs_lib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Remove all warnings (Eigen and pcl) (`#40 <https://github.com/ctu-mrs/mrs_lib/issues/40>`_)
+  * Remove all warnings (Eigen and pcl)
+  * changed pcl_include_dirs to pcl_ros_include_dir
+  Co-authored-by: Matouš Vrba <vrbamato@fel.cvut.cz>
+  BatchVisualizer - add automated timeout
+* batch visualizer timeout update
+* add timeout option to all batch visualizer objects
+* [transformer]: added transformation of PointStamped
+  Add missing tf_conversions dependency
+* Add missing tf_conversions dependency
+* [repredictor]: dumb repredictor hotfixes
+* [repredictor]: dumb repredictor hotfixes
+* [repredictor]: added the possibility to act as a dumb LKF for evaluation purposes
+* [DynamicPublisher]: added message type checking to avoid silent fails
+* [DynamicPublisher]: added documentation and example
+* first version of DynamicPublisher
+* minor refactor of gemoetry conversions
+* [paramloader]: refactored Eigen matrix loading to enable loading of different matrix types and easier default value specification
+* [subscribe handler]: peekMsg is now const
+  Aloamgarm and repredictor merge
+* [dynrec]: added the publish_descriptions method
+* geometry updates (`#38 <https://github.com/ctu-mrs/mrs_lib/issues/38>`_)
+  * geometry: make all getters const
+  * BatchVisualizer: const geometry, cleanup
+* added comment
+* created separate class for RepredictorAloamgarm inheriting from Repredictor
+* scope timer: getLifetime() now returns floating point type
+* scope timer: add getLifetime() which returns object lifetime in milliseconds
+* [Transformer]: finishing touches for the Eigen::Vector3d-specific methods
+* [Transformer]: added the transformAsVector and transformAsPoint methods for Eigen::Vector3
+* [Transformer]: solving the ambiguity of Eigen::Vector3d (point or a vector?)
+* polishing aloamgarm code
+* aloamgarm - polishing code
+* aloamgarm - reverted filtering of all altitude measurements, removed redundant code
+* aloamgarm - filtering jumps from all height measurements
+* aloamgarm update - changing nis threshold
+* disabled publishers in aloamgarm jlkf
+* testing some lkf modifications for aloamgarm
+* Contributors: Martin Pecka, Matouš Vrba, Pavel Petracek, Tomas Baca, Tomáš Báča, Vaclav Pritzl, Vojtech Spurny, Václav Pritzl, stibipet
+
 1.0.3 (2022-05-09)
 ------------------
 * [Transformer]: fixed some dependencies
