@@ -2,8 +2,8 @@
 Changelog for package mrs_lib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.4 (2023-01-20)
+------------------
 * Remove all warnings (Eigen and pcl) (`#40 <https://github.com/ctu-mrs/mrs_lib/issues/40>`_)
   * Remove all warnings (Eigen and pcl)
   * changed pcl_include_dirs to pcl_ros_include_dir
