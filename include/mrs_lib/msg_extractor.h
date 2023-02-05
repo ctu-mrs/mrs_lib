@@ -6,7 +6,7 @@
 #ifndef MRS_LIB_MSG_EXTRACTOR_H
 #define MRS_LIB_MSG_EXTRACTOR_H
 
-#include <mrs_msgs/PositionCommand.h>
+#include <mrs_msgs/TrackerCommand.h>
 #include <mrs_msgs/Reference.h>
 #include <mrs_msgs/ReferenceStamped.h>
 
@@ -465,30 +465,30 @@ geometry_msgs::Pose getPose(const nav_msgs::OdometryConstPtr& data) {
 
 //}
 
-/* mrs_msgs::PositionCommand //{ */
+/* mrs_msgs::TrackerCommand //{ */
 
 /* getPosition() //{ */
 
 /**
- * @brief get position data from mrs_msgs::PositionCommand
+ * @brief get position data from mrs_msgs::TrackerCommand
  *
  * @param data position command
  *
  * @return x, y, z
  */
-std::tuple<double, double, double> getPosition(const mrs_msgs::PositionCommand& data) {
+std::tuple<double, double, double> getPosition(const mrs_msgs::TrackerCommand& data) {
 
   return getXYZ(data.position);
 }
 
 /**
- * @brief get position data from mrs_msgs::PositionCommandConstPtr
+ * @brief get position data from mrs_msgs::TrackerCommandConstPtr
  *
  * @param data position command (ConstPtr)
  *
  * @return x, y, z
  */
-std::tuple<double, double, double> getPosition(const mrs_msgs::PositionCommandConstPtr& data) {
+std::tuple<double, double, double> getPosition(const mrs_msgs::TrackerCommandConstPtr& data) {
 
   return getPosition(*data);
 }
@@ -498,25 +498,25 @@ std::tuple<double, double, double> getPosition(const mrs_msgs::PositionCommandCo
 /* getVelocity() //{ */
 
 /**
- * @brief get velocity data from mrs_msgs::PositionCommand
+ * @brief get velocity data from mrs_msgs::TrackerCommand
  *
  * @param data position command
  *
  * @return x, y, z
  */
-std::tuple<double, double, double> getVelocity(const mrs_msgs::PositionCommand& data) {
+std::tuple<double, double, double> getVelocity(const mrs_msgs::TrackerCommand& data) {
 
   return getXYZ(data.velocity);
 }
 
 /**
- * @brief get velocity data from mrs_msgs::PositionCommandConstPtr
+ * @brief get velocity data from mrs_msgs::TrackerCommandConstPtr
  *
  * @param data position command (ConstPtr)
  *
  * @return x, y, z
  */
-std::tuple<double, double, double> getVelocity(const mrs_msgs::PositionCommandConstPtr& data) {
+std::tuple<double, double, double> getVelocity(const mrs_msgs::TrackerCommandConstPtr& data) {
 
   return getVelocity(*data);
 }
@@ -526,13 +526,13 @@ std::tuple<double, double, double> getVelocity(const mrs_msgs::PositionCommandCo
 /* getHeading() //{ */
 
 /**
- * @brief get heading from mrs_msgs::PositionCommand
+ * @brief get heading from mrs_msgs::TrackerCommand
  *
  * @param data position command
  *
  * @return heading
  */
-double getHeading(const mrs_msgs::PositionCommand& data) {
+double getHeading(const mrs_msgs::TrackerCommand& data) {
 
   double heading = 0;
 
@@ -549,13 +549,13 @@ double getHeading(const mrs_msgs::PositionCommand& data) {
 }
 
 /**
- * @brief get heading from mrs_msgs::PositionCommandConstPtr
+ * @brief get heading from mrs_msgs::TrackerCommandConstPtr
  *
  * @param data position command (ConstPtr)
  *
  * @return heading
  */
-double getHeading(const mrs_msgs::PositionCommandConstPtr& data) {
+double getHeading(const mrs_msgs::TrackerCommandConstPtr& data) {
 
   return getHeading(*data);
 }
