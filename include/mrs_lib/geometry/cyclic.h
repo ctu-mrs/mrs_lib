@@ -221,7 +221,7 @@ namespace mrs_lib
       }
 
       /*!
-       * \brief Returns the distane between the two circular values.
+       * \brief Returns the distance between the two circular values.
        *
        * The distance may also be interpreted as length of the shortest walk between the two values.
        *
@@ -237,6 +237,11 @@ namespace mrs_lib
       }
 
       static flt dist(const spec from, const spec to)
+      {
+        return std::abs(diff(from, to));
+      }
+
+      static flt dist(const cyclic from, const cyclic to)
       {
         return std::abs(diff(from, to));
       }
@@ -419,46 +424,82 @@ namespace mrs_lib
         return *this;
       };
 
-      /*!
-       * \brief Addition operator.
-       *
-       * \param lhs left-hand-side.
-       * \param rhs right-hand-side.
-       * \return    reference to the result.
-       */
-      friend spec operator+(const cyclic& lhs, const cyclic& rhs)
-      {
-        return wrap(lhs.val + rhs.val);
-      }
-
-      /*!
-       * \brief Subtraction operator (uses the diff() method).
-       *
-       * \param lhs left-hand-side.
-       * \param rhs right-hand-side.
-       * \return    reference to the result.
-       */
-      friend double operator-(cyclic lhs, const cyclic& rhs)
-      {
-        return diff(lhs, rhs);
-      }
-
     protected:
       flt val;
     };
 
+    /*!
+     * \brief Addition operator.
+     *
+     * \param lhs left-hand-side.
+     * \param rhs right-hand-side.
+     * \return    the result of adding the two angles.
+     */
     template <typename flt, class spec>
-    bool operator<(const cyclic<flt, spec>& a, const cyclic<flt, spec>& b)
+    cyclic<flt, spec> operator+(const cyclic<flt, spec>& lhs, const cyclic<flt, spec>& rhs)
     {
-      return cyclic<flt, spec>::diff(a, b) < flt(0);
+      return cyclic<flt, spec>::wrap(lhs.val + rhs.val);
     }
 
+    /*!
+     * \brief Subtraction operator (uses the diff() method).
+     *
+     * \param lhs left-hand-side.
+     * \param rhs right-hand-side.
+     * \return    the result of subtracting rhs from lhs.
+     */
     template <typename flt, class spec>
-    std::ostream& operator<<(std::ostream &out, const cyclic<flt, spec>& a)
+    cyclic<flt, spec> operator-(cyclic<flt, spec>& lhs, const cyclic<flt, spec>& rhs)
     {
-      return (out << a.value());
+      return cyclic<flt, spec>::diff(lhs, rhs);
     }
 
+    /*!
+     * \brief Implementation of the comparison operation between two angles.
+     *
+     * An angle is considered to be smaller than another angle if it is shorter - closer to zero.
+     *
+     * \param lhs left-hand-side.
+     * \param rhs right-hand-side.
+     * \return    true iff the shortest unsigned walk from lhs to 0 is less than from rhs to 0.
+     */
+    template <typename flt, class spec>
+    bool operator<(const cyclic<flt, spec>& lhs, const cyclic<flt, spec>& rhs)
+    {
+      return cyclic<flt, spec>::dist(lhs, 0) < cyclic<flt, spec>::dist(rhs, 0);
+    }
+
+    /*!
+     * \brief Implementation of the comparison operation between two angles.
+     *
+     * An angle is considered to be larger than another angle if it is longer - further from zero.
+     *
+     * \param lhs left-hand-side.
+     * \param rhs right-hand-side.
+     * \return    true iff the shortest unsigned walk from lhs to 0 is more than from rhs to 0.
+     */
+    template <typename flt, class spec>
+    bool operator>(const cyclic<flt, spec>& lhs, const cyclic<flt, spec>& rhs)
+    {
+      return cyclic<flt, spec>::dist(lhs, 0) > cyclic<flt, spec>::dist(rhs, 0);
+    }
+
+    /*!
+     * \brief Implementation of the stream output operator.
+     *
+     * \param out the stream to write the angle to.
+     * \param ang the angle to be written.
+     * \return    a reference to the stream.
+     */
+    template <typename flt, class spec>
+    std::ostream& operator<<(std::ostream &out, const cyclic<flt, spec>& ang)
+    {
+      return (out << ang.value());
+    }
+
+    /*!
+     * \brief Convenience specialization of the cyclic class for unsigned radians (from $0$ to $2\pi$).
+     */
     struct radians : public cyclic<double, radians>
     {
       using cyclic<double, radians>::cyclic;  // necessary to inherit constructors
@@ -466,6 +507,9 @@ namespace mrs_lib
       static constexpr double supremum = 2 * M_PI;
     };
 
+    /*!
+     * \brief Convenience specialization of the cyclic class for signed radians (from $-\pi$ to $\pi$).
+     */
     struct sradians : public cyclic<double, sradians>
     {
       using cyclic<double, sradians>::cyclic;  // necessary to inherit constructors
@@ -473,6 +517,9 @@ namespace mrs_lib
       static constexpr double supremum = M_PI;
     };
 
+    /*!
+     * \brief Convenience specialization of the cyclic class for unsigned degrees (from $0$ to $360$).
+     */
     struct degrees : public cyclic<double, degrees>
     {
       using cyclic<double, degrees>::cyclic;  // necessary to inherit constructors
@@ -480,6 +527,9 @@ namespace mrs_lib
       static constexpr double supremum = 360;
     };
 
+    /*!
+     * \brief Convenience specialization of the cyclic class for signed degrees (from $-180$ to $180$).
+     */
     struct sdegrees : public cyclic<double, sdegrees>
     {
       using cyclic<double, sdegrees>::cyclic;  // necessary to inherit constructors
