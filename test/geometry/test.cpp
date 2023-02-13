@@ -313,6 +313,33 @@ TEST(TESTSuite, addAngle)
 
 //}
 
+/* TEST(TESTSuite, angleOps) //{ */
+
+TEST(TESTSuite, angleOps)
+{
+  radians var(1);
+  EXPECT_TRUE(approxEqual(var, 1));
+  var += 2;
+  EXPECT_TRUE(approxEqual(var, 3));
+  var -= 3;
+  EXPECT_TRUE(approxEqual(var, 0));
+  var = 4;
+  EXPECT_TRUE(approxEqual(var, 4));
+
+  var = var + 3;
+  EXPECT_TRUE(approxEqual(var, fmod(4+3, 2*M_PI)));
+  var = var + radians(3);
+  EXPECT_TRUE(approxEqual(var, fmod(4+3+3, 2*M_PI)));
+  var = var + sradians(3).convert<radians>();
+  EXPECT_TRUE(approxEqual(var, fmod(4+3+3+3, 2*M_PI)));
+  var = var + var;
+  EXPECT_TRUE(approxEqual(var, fmod(2*(4+3+3+3), 2*M_PI)));
+  var = degrees::convert<radians>(180);
+  EXPECT_TRUE(approxEqual(var, M_PI));
+}
+
+//}
+
 /* TEST(TESTSuite, diffAngle) //{ */
 
 TEST(TESTSuite, diffAngle) {

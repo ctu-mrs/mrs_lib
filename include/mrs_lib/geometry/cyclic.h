@@ -65,6 +65,12 @@ namespace mrs_lib
        * \param val initialization value.
        */
       cyclic(const cyclic& other) : val(other.val){};
+      /*!
+       * \brief Copy constructor.
+       *
+       * \param val initialization value.
+       */
+      cyclic(const spec& other) : val(other.val){};
 
       /*!
        * \brief Getter for \p val.
@@ -164,14 +170,10 @@ namespace mrs_lib
        */
       static flt pdist(const flt from, const flt to)
       {
-        const flt wfrom = wrap(from);
-        const flt wto = wrap(to);
-        const flt tmp = wto - wfrom;
-        const flt dist = tmp + std::signbit(tmp) * range;
-        return dist;
+        return pdist(cyclic(from), cyclic(to));
       }
 
-      static flt pdist(const spec from, const spec to)
+      static flt pdist(const cyclic from, const cyclic to)
       {
         const flt tmp = to.val - from.val;
         const flt dist = tmp + std::signbit(tmp) * range;
@@ -190,24 +192,7 @@ namespace mrs_lib
        */
       static flt diff(const flt minuend, const flt subtrahend)
       {
-        const flt wminuend = wrap(minuend);
-        const flt wsubtrahend = wrap(subtrahend);
-        const flt d = wminuend - wsubtrahend;
-        if (d < -half_range)
-          return d + range;
-        if (d >= half_range)
-          return d - range;
-        return d;
-      }
-
-      static flt diff(const spec minuend, const spec subtrahend)
-      {
-        const flt d = minuend.val - subtrahend.val;
-        if (d < -half_range)
-          return d + range;
-        if (d >= half_range)
-          return d - range;
-        return d;
+        return diff(cyclic(minuend), cyclic(subtrahend));
       }
 
       static flt diff(const cyclic minuend, const cyclic subtrahend)
@@ -233,12 +218,7 @@ namespace mrs_lib
        */
       static flt dist(const flt from, const flt to)
       {
-        return std::abs(diff(from, to));
-      }
-
-      static flt dist(const spec from, const spec to)
-      {
-        return std::abs(diff(from, to));
+        return dist(cyclic(from), cyclic(to));
       }
 
       static flt dist(const cyclic from, const cyclic to)
@@ -261,12 +241,10 @@ namespace mrs_lib
        */
       static flt interpUnwrapped(const flt from, const flt to, const flt coeff)
       {
-        const flt dang = diff(to, from);
-        const flt intp = from + coeff * dang;
-        return intp;
+        return interpUnwrapped(cyclic(from), cyclic(to), coeff);
       }
 
-      static flt interpUnwrapped(const spec from, const spec to, const flt coeff)
+      static flt interpUnwrapped(const cyclic from, const cyclic to, const flt coeff)
       {
         const flt dang = diff(to, from);
         const flt intp = from.val + coeff * dang;
@@ -288,7 +266,7 @@ namespace mrs_lib
         return wrap(interpUnwrapped(from, to, coeff));
       }
 
-      static flt interp(const spec from, const spec to, const flt coeff)
+      static flt interp(const cyclic from, const cyclic to, const flt coeff)
       {
         return wrap(interpUnwrapped(from, to, coeff));
       }
@@ -309,12 +287,10 @@ namespace mrs_lib
        */
       static flt pinterpUnwrapped(const flt from, const flt to, const flt coeff)
       {
-        const flt dang = pdist(to, from);
-        const flt intp = from + coeff * dang;
-        return intp;
+        return pinterpUnwrapped(cyclic(from), cyclic(to), coeff);
       }
 
-      static flt pinterpUnwrapped(const spec from, const spec to, const flt coeff)
+      static flt pinterpUnwrapped(const cyclic from, const cyclic to, const flt coeff)
       {
         const flt dang = pdist(to, from);
         const flt intp = from.val + coeff * dang;
@@ -334,10 +310,10 @@ namespace mrs_lib
        */
       static flt pinterp(const flt from, const flt to, const flt coeff)
       {
-        return wrap(pinterpUnwrapped(from, to, coeff));
+        return pinterpUnwrapped(cyclic(from), cyclic(to), coeff);
       }
 
-      static flt pinterp(const spec from, const spec to, const flt coeff)
+      static flt pinterp(const cyclic from, const cyclic to, const flt coeff)
       {
         return wrap(pinterpUnwrapped(from, to, coeff));
       }
@@ -355,7 +331,7 @@ namespace mrs_lib
        * types correspond to each other (such as when converting eg. degrees to radians).
        */
       template <class other_t>
-      static other_t convert(const spec& what)
+      static other_t convert(const cyclic& what)
       {
         return other_t(what.val / range * other_t::range);
       }
@@ -424,35 +400,45 @@ namespace mrs_lib
         return *this;
       };
 
-    protected:
-      flt val;
-    };
+      /*!
+       * \brief Subtraction compound operator.
+       *
+       * \param other value to be subtracted.
+       * \return      reference to self.
+       */
+      cyclic& operator-=(const cyclic& other)
+      {
+        val = diff(val, other.val);
+        return *this;
+      };
 
-    /*!
-     * \brief Addition operator.
-     *
-     * \param lhs left-hand-side.
-     * \param rhs right-hand-side.
-     * \return    the result of adding the two angles.
-     */
-    template <typename flt, class spec>
-    cyclic<flt, spec> operator+(const cyclic<flt, spec>& lhs, const cyclic<flt, spec>& rhs)
-    {
-      return cyclic<flt, spec>::wrap(lhs.val + rhs.val);
-    }
+      /*!
+       * \brief Addition operator.
+       *
+       * \param lhs left-hand-side.
+       * \param rhs right-hand-side.
+       * \return    the result of adding the two angles.
+       */
+      friend spec operator+(const cyclic& lhs, const cyclic& rhs)
+      {
+        return wrap(lhs.val + rhs.val);
+      }
 
-    /*!
-     * \brief Subtraction operator (uses the diff() method).
-     *
-     * \param lhs left-hand-side.
-     * \param rhs right-hand-side.
-     * \return    the result of subtracting rhs from lhs.
-     */
-    template <typename flt, class spec>
-    cyclic<flt, spec> operator-(cyclic<flt, spec>& lhs, const cyclic<flt, spec>& rhs)
-    {
-      return cyclic<flt, spec>::diff(lhs, rhs);
-    }
+      /*!
+       * \brief Subtraction operator (uses the diff() method).
+       *
+       * \param lhs left-hand-side.
+       * \param rhs right-hand-side.
+       * \return    the result of subtracting rhs from lhs.
+       */
+      friend flt operator-(const cyclic& lhs, const cyclic& rhs)
+      {
+        return diff(lhs, rhs);
+      }
+
+      protected:
+        flt val;
+      };
 
     /*!
      * \brief Implementation of the comparison operation between two angles.
