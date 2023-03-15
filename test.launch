@@ -4,7 +4,7 @@
   <arg unless="$(arg debug)" name="launch_prefix" value=""/>
   <arg     if="$(arg debug)" name="launch_prefix" value="debug_roslaunch"/>
 
-  <node pkg="mrs_lib" type="RepredictorTest" name="repredictor_test" output="screen" launch-prefix="$(arg launch_prefix)" />
+  <node pkg="mrs_lib" type="GeometryTest" name="geometry_test" output="screen" launch-prefix="$(arg launch_prefix)" />
 
 </launch>
 
