@@ -13,6 +13,12 @@ using namespace mrs_lib::geometry;
 using namespace std;
 using cx = std::complex<double>;
 
+template <typename T>
+int approxEqual(const T& what, const double& to, const double& tol = 1e-9)
+{
+  return std::abs(what - to) < tol;
+}
+
 /* randd() //{ */
 
 double randd(double from, double to) {
@@ -241,6 +247,40 @@ TEST(TESTSuite, rotationBetween6) {
 
 //}
 
+/* TEST(TESTSuite, wrapAngle2) //{ */
+
+TEST(TESTSuite, wrapAngle2)
+{
+  const float a = -1;
+  const float b = -4;
+
+  const auto ar = radians(a);
+  EXPECT_TRUE(approxEqual(ar.value(), 2*M_PI+a));
+  const auto br = radians(b);
+  EXPECT_TRUE(approxEqual(br.value(), 2*M_PI+b));
+
+  const auto asr = sradians(a);
+  EXPECT_EQ(asr.value(), a);
+  const auto bsr = sradians(b);
+  EXPECT_TRUE(approxEqual(bsr.value(), 2*M_PI+b));
+
+  const double c = -359;
+  const double d = -361;
+  const double e = 666;
+  const double f = 2;
+
+  const auto cd = degrees(c);
+  EXPECT_TRUE(approxEqual(cd.value(), 1));
+  const auto dd = degrees(d);
+  EXPECT_TRUE(approxEqual(dd.value(), 359));
+  const auto ed = degrees(e);
+  EXPECT_TRUE(approxEqual(ed.value(), 666-360));
+  const auto fd = degrees(f);
+  EXPECT_TRUE(approxEqual(fd.value(), 2));
+}
+
+//}
+
 /* TEST(TESTSuite, addAngle) //{ */
 
 TEST(TESTSuite, addAngle)
@@ -269,6 +309,33 @@ TEST(TESTSuite, addAngle)
     EXPECT_EQ((a+angle).value(), output);
     EXPECT_EQ((prev_angle+b).value(), output);
   }
+}
+
+//}
+
+/* TEST(TESTSuite, angleOps) //{ */
+
+TEST(TESTSuite, angleOps)
+{
+  radians var(1);
+  EXPECT_TRUE(approxEqual(var, 1));
+  var += 2;
+  EXPECT_TRUE(approxEqual(var, 3));
+  var -= 3;
+  EXPECT_TRUE(approxEqual(var, 0));
+  var = 4;
+  EXPECT_TRUE(approxEqual(var, 4));
+
+  var = var + 3;
+  EXPECT_TRUE(approxEqual(var, fmod(4+3, 2*M_PI)));
+  var = var + radians(3);
+  EXPECT_TRUE(approxEqual(var, fmod(4+3+3, 2*M_PI)));
+  var = var + sradians(3).convert<radians>();
+  EXPECT_TRUE(approxEqual(var, fmod(4+3+3+3, 2*M_PI)));
+  var = var + var;
+  EXPECT_TRUE(approxEqual(var, fmod(2*(4+3+3+3), 2*M_PI)));
+  var = degrees::convert<radians>(180);
+  EXPECT_TRUE(approxEqual(var, M_PI));
 }
 
 //}
@@ -304,6 +371,34 @@ TEST(TESTSuite, diffAngle) {
   }
 
   EXPECT_TRUE(result);
+}
+
+//}
+
+/* TEST(TESTSuite, angleCompare) //{ */
+
+TEST(TESTSuite, angleCompare) {
+
+  const float a = -1;
+  const float b = -4;
+
+  const auto ar = radians(a);
+  const auto br = radians(b);
+
+  const auto asr = sradians(a);
+  const auto bsr = sradians(b);
+
+  EXPECT_TRUE(ar < br);
+  EXPECT_FALSE(br < ar);
+
+  EXPECT_FALSE(ar > br);
+  EXPECT_TRUE(br > ar);
+
+  EXPECT_TRUE(asr < bsr);
+  EXPECT_FALSE(bsr < asr);
+
+  EXPECT_FALSE(asr > bsr);
+  EXPECT_TRUE(bsr > asr);
 }
 
 //}
