@@ -246,14 +246,14 @@ target_link_libraries(param_loader_example
 
 add_executable(subscribe_handler_example src/subscribe_handler/example.cpp)
 target_link_libraries(subscribe_handler_example
-  MrsLibTimer
+  MrsLibTimeoutManager
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
 
 add_executable(subscribe_handler_simple_example src/subscribe_handler/simple_example.cpp)
 target_link_libraries(subscribe_handler_simple_example
-  MrsLibTimer
+  MrsLibTimeoutManager
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )

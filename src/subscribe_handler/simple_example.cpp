@@ -28,7 +28,6 @@ int main(int argc, char **argv)
   /* Basic configuration of the SubscribeHandler. */
   mrs_lib::SubscribeHandlerOptions shopts(nh);
   shopts.node_name = node_name;                       //< used for the ROS logging from inside the SubscribeHandler (ROS_INFO, ROS_WARN etc.)
-  shopts.threadsafe = false;                          //< all methods will be mutexed if true (not needed in this simple case)
   shopts.no_message_timeout = ros::Duration(3.0);     //< SubscribeHandler warns if no messages arrive for this duration
 
   /* name of the topic to be handled */

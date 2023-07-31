@@ -41,11 +41,7 @@ namespace mrs_lib
   
     ros::Duration no_message_timeout = mrs_lib::no_timeout;  /*!< \brief If no new message is received for this duration, the \p timeout_callback function will be called. If \p timeout_callback is empty, an error message will be printed to the console. */
   
-    bool use_thread_timer = false;  /*!< \brief Selects whether to use an STL thread-based timer implementation instead of ROS' own. */
-  
     std::function<void(const std::string&, const ros::Time&, const int)> timeout_callback = {};  /*!< \brief This function will be called if no new message is received for the \p no_message_timeout duration. If this variable is empty, an error message will be printed to the console. */
-  
-    bool threadsafe = true;  /*!< \brief If true, all methods of the SubscribeHandler will be mutexed (using a recursive mutex) to avoid data races. */
   
     bool autostart = true;  /*!< \brief If true, the SubscribeHandler will be started after construction. Otherwise it has to be started using the start() method */
   
@@ -227,24 +223,11 @@ namespace mrs_lib
             const message_callback_t& message_callback = {}
           )
       {
-        if (options.threadsafe)
-        {
-          m_pimpl = std::make_unique<ImplThreadsafe>
-            (
-              this,
-              options,
-              message_callback
-            );
-        }
-        else
-        {
-          m_pimpl = std::make_unique<Impl>
-            (
-              this,
-              options,
-              message_callback
-            );
-        }
+        m_pimpl = std::make_unique<Impl>
+          (
+            options,
+            message_callback
+          );
         if (options.autostart)
           start();
       };
@@ -423,19 +406,16 @@ namespace mrs_lib
       {
         this->m_pimpl = std::move(other.m_pimpl);
         other.m_pimpl = nullptr;
-        this->m_pimpl->m_owner = this;
       }
       SubscribeHandler& operator=(SubscribeHandler&& other)
       {
         this->m_pimpl = std::move(other.m_pimpl);
         other.m_pimpl = nullptr;
-        this->m_pimpl->m_owner = this;
         return *this;
       }
 
     private:
       class Impl;
-      class ImplThreadsafe;
       std::unique_ptr<Impl> m_pimpl;
   };
   //}
