@@ -11,20 +11,19 @@ using namespace std;
 
 bool got_messages_ = false;
 
-void timeout_callback(const std::string& topic, const ros::Time& last_msg, const int n_pubs) {
-  ROS_ERROR_STREAM("Have not received message from topic '" << topic << "' for " << (ros::Time::now() - last_msg).toSec() << " seconds (" << n_pubs
-                                                            << " publishers on topic)");
+void timeout_callback(const ros::Time& last_msg) {
+  ROS_ERROR_STREAM("Have not received a message for " << (ros::Time::now() - last_msg).toSec() << " seconds");
 }
 
 bool started = true;
-void message_callback(mrs_lib::SubscribeHandler<geometry_msgs::PointStamped>& sh) {
+void message_callback(const geometry_msgs::PointStamped::ConstPtr msg) {
 
   if (!started) {
     ROS_ERROR("NOT STARTED, SHOULDN'T HAVE RECEIVED!");
     return;
   }
 
-  ROS_INFO_STREAM("RECEIVED '" << sh.getMsg() << "'");
+  ROS_INFO_STREAM("RECEIVED '" << msg << "'");
   got_messages_ = true;
 }
 
@@ -42,7 +41,6 @@ TEST(TESTSuite, main_test) {
   /* after this duration without receiving messages on the handled topic, the timeout_callback will be called */
   shopts.no_message_timeout = ros::Duration(2.0);
   /* whether mutexes should be used to prevent data races (set to true in a multithreaded scenario such as nodelets) */
-  shopts.threadsafe      = false;
   shopts.autostart       = false;
   shopts.queue_size      = 5;
   shopts.transport_hints = ros::TransportHints();

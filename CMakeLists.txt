@@ -476,7 +476,7 @@ if(CATKIN_ENABLE_TESTING)
     )
   target_link_libraries(
     SubscribeHandlerTest
-    MrsLibTimer
+    MrsLibTimeoutManager
     ${catkin_LIBRARIES}
     )
   add_dependencies(
