@@ -27,13 +27,12 @@ namespace mrs_lib
     /* constructor //{ */
     Impl(const SubscribeHandlerOptions& options, const message_callback_t& message_callback = message_callback_t())
         : m_nh(options.nh),
-          m_no_message_timeout(options.no_message_timeout),
           m_topic_name(options.topic_name),
           m_node_name(options.node_name),
           m_got_data(false),
           m_new_data(false),
           m_used_data(false),
-          m_last_msg_received(ros::Time::now()),
+          m_timeout_manager(options.timeout_manager),
           m_latest_message(nullptr),
           m_message_callback(message_callback),
           m_queue_size(options.queue_size),
@@ -41,12 +40,13 @@ namespace mrs_lib
     {
       timeout_callback_t timeout_callback = options.timeout_callback;
       if (!timeout_callback)
-        timeout_callback = std::bind(&Impl::default_timeout_callback, this, std::placeholders::_1, std::placeholders::_2,
-                                       std::placeholders::_3);
+        timeout_callback = std::bind(&Impl::default_timeout_callback, this, std::placeholders::_1);
 
       if (options.no_message_timeout != mrs_lib::no_timeout)
       {
-        /* if (options. */
+        if (!m_timeout_manager)
+          m_timeout_manager = std::make_shared<mrs_lib::TimeoutManager>(m_nh, ros::Rate(2.0/options.no_message_timeout.toSec()));
+        m_timeout_id = m_timeout_manager->registerNew(options.no_message_timeout, timeout_callback);
       }
 
       const std::string msg = "Subscribed to topic '" + m_topic_name + "' -> '" + topicName() + "'";
@@ -121,8 +121,7 @@ namespace mrs_lib
     /* lastMsgTime() method //{ */
     virtual ros::Time lastMsgTime() const
     {
-      std::lock_guard lck(m_last_msg_received_mtx);
-      return m_last_msg_received;
+      return m_timeout_manager->lastReset(m_timeout_id);
     };
     //}
 
@@ -139,8 +138,8 @@ namespace mrs_lib
     /* start() method //{ */
     virtual void start()
     {
-      /* if (m_timeout_check_timer) */
-      /*   m_timeout_check_timer->start(); */
+      if (m_timeout_manager)
+        m_timeout_manager->start(m_timeout_id);
       m_sub = m_nh.subscribe(m_topic_name, m_queue_size, &Impl::data_callback, this, m_transport_hints);
     }
     //}
@@ -148,17 +147,9 @@ namespace mrs_lib
     /* stop() method //{ */
     virtual void stop()
     {
-      /* if (m_timeout_check_timer) */
-      /*   m_timeout_check_timer->stop(); */
+      if (m_timeout_manager)
+        m_timeout_manager->pause(m_timeout_id);
       m_sub.shutdown();
-    }
-    //}
-
-  protected:
-    /* check_time_reset() method //{ */
-    bool check_time_reset(const ros::Time& now)
-    {
-      return now < m_last_msg_received;
     }
     //}
 
@@ -167,7 +158,6 @@ namespace mrs_lib
     ros::Subscriber m_sub;
 
   protected:
-    ros::Duration m_no_message_timeout;
     std::string m_topic_name;
     std::string m_node_name;
 
@@ -181,8 +171,6 @@ namespace mrs_lib
     bool m_used_data;  // whether get_data was successfully called at least once
 
   protected:
-    mutable std::mutex m_last_msg_received_mtx;
-    ros::Time m_last_msg_received;
     std::shared_ptr<mrs_lib::TimeoutManager> m_timeout_manager;
     mrs_lib::TimeoutManager::timeout_id_t m_timeout_id;
 
@@ -196,16 +184,16 @@ namespace mrs_lib
 
   protected:
     /* default_timeout_callback() method //{ */
-    void default_timeout_callback(const std::string& topic, const ros::Time& last_msg, const int n_pubs)
+    void default_timeout_callback(const ros::Time& last_msg)
     {
-      /* ROS_ERROR("Checking topic %s, delay: %.2f", m_sub.getTopic().c_str(), since_msg.toSec()); */
-      ros::Duration since_msg = (ros::Time::now() - last_msg);
-      const std::string msg = "Did not receive any message from topic '" + topic + "' for " + std::to_string(since_msg.toSec()) + "s ("
+      const ros::Duration since_msg = (ros::Time::now() - last_msg);
+      const auto n_pubs = m_sub.getNumPublishers();
+      const std::string txt = "Did not receive any message from topic '" + m_topic_name + "' for " + std::to_string(since_msg.toSec()) + "s ("
                               + std::to_string(n_pubs) + " publishers on this topic)";
       if (m_node_name.empty())
-        ROS_WARN_STREAM(msg);
+        ROS_WARN_STREAM(txt);
       else
-        ROS_WARN_STREAM("[" << m_node_name << "]: " << msg);
+        ROS_WARN_STREAM("[" << m_node_name << "]: " << txt);
     }
     //}
 
@@ -222,14 +210,12 @@ namespace mrs_lib
     /* data_callback() method //{ */
     virtual void data_callback(const typename MessageType::ConstPtr& msg)
     {
-      /* if (m_timeout_check_timer) */
-      /*   m_timeout_check_timer->stop(); */
+      if (m_timeout_manager)
+        m_timeout_manager->reset(m_timeout_id);
       std::lock_guard lck(m_new_data_mtx);
       process_new_message(msg);
       if (m_message_callback)
         m_message_callback(msg);
-      if (m_timeout_manager)
-        m_timeout_manager->reset(m_timeout_id);
     }
     //}
   };

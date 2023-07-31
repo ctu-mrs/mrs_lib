@@ -10,11 +10,11 @@ namespace mrs_lib
   }
 
 
-  TimeoutManager::timeout_id_t TimeoutManager::registerNew(const ros::Duration& timeout, const callback_t& callback, const ros::Time& last_update)
+  TimeoutManager::timeout_id_t TimeoutManager::registerNew(const ros::Duration& timeout, const callback_t& callback, const ros::Time& last_reset)
   {
     std::scoped_lock lck(m_mtx);
     const auto new_id = m_timeouts.size();
-    const timeout_info_t new_info = {false, callback, timeout, last_update};
+    const timeout_info_t new_info = {false, callback, timeout, last_reset, last_reset};
     m_timeouts.push_back(new_info);
     return new_id;
   }
@@ -22,7 +22,7 @@ namespace mrs_lib
   void TimeoutManager::reset(const timeout_id_t id, const ros::Time& time)
   {
     std::scoped_lock lck(m_mtx);
-    m_timeouts.at(id).last_update = time;
+    m_timeouts.at(id).last_reset = time;
   }
 
   void TimeoutManager::pause(const timeout_id_t id)
@@ -35,16 +35,22 @@ namespace mrs_lib
   {
     std::scoped_lock lck(m_mtx);
     m_timeouts.at(id).paused = false;
-    m_timeouts.at(id).last_update = time;
+    m_timeouts.at(id).last_reset = time;
   }
 
-  void TimeoutManager::change(const timeout_id_t id, const ros::Duration& timeout, const callback_t& callback, const ros::Time& last_update)
+  void TimeoutManager::change(const timeout_id_t id, const ros::Duration& timeout, const callback_t& callback, const ros::Time& last_reset)
   {
     std::scoped_lock lck(m_mtx);
     auto& timeout_info = m_timeouts.at(id);
     timeout_info.timeout = timeout;
     timeout_info.callback = callback;
-    timeout_info.last_update = last_update;
+    timeout_info.last_reset = last_reset;
+  }
+
+  ros::Time TimeoutManager::lastReset(const timeout_id_t id)
+  {
+    std::scoped_lock lck(m_mtx);
+    return m_timeouts.at(id).last_reset;
   }
 
   void TimeoutManager::main_timer_callback([[maybe_unused]] const ros::TimerEvent &evt)
@@ -54,13 +60,14 @@ namespace mrs_lib
     std::scoped_lock lck(m_mtx);
     for (auto& timeout_info : m_timeouts)
     {
-      if (timeout_info.paused)
-        continue;
-      const auto dur = now - timeout_info.last_update;
-      if (dur > timeout_info.timeout)
+      // don't worry, this'll get optimized
+      const bool paused = timeout_info.paused;
+      const bool last_reset_timeout = now - timeout_info.last_reset > timeout_info.timeout;
+      const bool last_callback_timeout = now - timeout_info.last_callback > timeout_info.timeout;
+      if (paused && last_reset_timeout && last_callback_timeout)
       {
-        timeout_info.callback();
-        timeout_info.last_update = now;
+        timeout_info.callback(timeout_info.last_reset);
+        timeout_info.last_callback = now;
       }
     }
   }

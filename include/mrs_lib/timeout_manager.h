@@ -21,7 +21,7 @@ namespace mrs_lib
     public:
       // | ---------------------- public types ---------------------- |
       using timeout_id_t = size_t;
-      using callback_t = std::function<void()>;
+      using callback_t = std::function<void(const ros::Time&)>;
 
     public:
       // | --------------------- public methods --------------------- |
@@ -42,7 +42,7 @@ namespace mrs_lib
 
       void change(const timeout_id_t id, const ros::Duration& timeout, const callback_t& callback, const ros::Time& last_update = ros::Time::now());
 
-      void registerMutex(const std::mutex& mtx);
+      ros::Time lastReset(const timeout_id_t id);
 
       /* implementation details //{ */
       
@@ -53,7 +53,8 @@ namespace mrs_lib
           bool paused;
           callback_t callback;
           ros::Duration timeout;
-          ros::Time last_update;
+          ros::Time last_reset;
+          ros::Time last_callback;
         };
       
       private:
