@@ -22,17 +22,17 @@ void timeout_callback(const std::string& topic, const ros::Time& last_msg, const
   ROS_ERROR_STREAM("Have not received message from topic '" << topic << "' for " << (ros::Time::now()-last_msg).toSec() << " seconds (" << n_pubs << " publishers on topic)");
 }
 
-void message_callback(mrs_lib::SubscribeHandler<std_msgs::String>& sh)
+void message_callback(const std_msgs::String::ConstPtr msg)
 {
-  ROS_INFO_STREAM("Received: '" << sh.getMsg()->data << "' from topic '" << sh.topicName() << "'");
+  ROS_INFO_STREAM("Received: '" << msg->data << "'.");
 }
 
 class SubObject
 {
   public:
-    void callback_method(mrs_lib::SubscribeHandler<std_msgs::String>& sh)
+    void callback_method(const std_msgs::String::ConstPtr msg)
     {
-      ROS_INFO_STREAM("Object received: '" << sh.getMsg()->data << "' from topic '" << sh.topicName() << "'");
+      ROS_INFO_STREAM("Object received: '" << msg->data << "'.");
     }
 
     void timeout_method(const std::string& topic, const ros::Time& last_msg, const int n_pubs)

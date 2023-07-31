@@ -8,6 +8,7 @@
 #define SUBRSCRIBE_HANDLER_H
 
 #include <ros/ros.h>
+#include <mrs_lib/timeout_manager.h>
 
 namespace mrs_lib
 {
@@ -35,6 +36,8 @@ namespace mrs_lib
     std::string node_name = {};  /*!< \brief Name of the ROS node, using this handle (used for messages printed to console). */
   
     std::string topic_name = {};  /*!< \brief Name of the ROS topic to be handled. */
+
+    std::shared_ptr<mrs_lib::TimeoutManager> timeout_manager = nullptr;  /*!< \brief Will be used for handling message timouts if necessary. If no manager is specified, it will be created with rate equal to half of \p no_message_timeout. */
   
     ros::Duration no_message_timeout = mrs_lib::no_timeout;  /*!< \brief If no new message is received for this duration, the \p timeout_callback function will be called. If \p timeout_callback is empty, an error message will be printed to the console. */
   
@@ -92,7 +95,7 @@ namespace mrs_lib
     /*!
       * \brief Convenience type for the message callback function.
       */
-      using message_callback_t = std::function<void(SubscribeHandler<MessageType>&)>;
+      using message_callback_t = std::function<void(typename MessageType::ConstPtr)>;
 
     public:
     /*!
@@ -314,7 +317,7 @@ namespace mrs_lib
       template <class ObjectType2, class ... Types>
       SubscribeHandler(
             const SubscribeHandlerOptions& options,
-            void (ObjectType2::*const message_callback) (SubscribeHandler<MessageType>&),
+            void (ObjectType2::*const message_callback) (typename MessageType::ConstPtr),
             ObjectType2* const obj2,
             Types ... args
           )
@@ -341,7 +344,7 @@ namespace mrs_lib
      template <class ObjectType1, class ObjectType2, class ... Types>
      SubscribeHandler(
            const SubscribeHandlerOptions& options,
-           void (ObjectType2::*const message_callback) (SubscribeHandler<MessageType>&),
+           void (ObjectType2::*const message_callback) (typename MessageType::ConstPtr),
            ObjectType2* const obj2,
            void (ObjectType1::*const timeout_callback) (const std::string&, const ros::Time&, const int),
            ObjectType1* const obj1,
@@ -383,6 +386,29 @@ namespace mrs_lib
               opts.no_message_timeout = no_message_timeout;
               return opts;
             }(),
+            args...
+            )
+      {
+      }
+
+    /*!
+      * \brief Convenience constructor overload.
+      *
+      * \param options          The common options struct (see documentation of SubscribeHandlerOptions).
+      * \param timeout_manager  The manager for timeout callbacks.
+      * \param args             Remaining arguments to be parsed (see other constructors).
+      *
+      */
+      template <class ... Types>
+      SubscribeHandler(
+            const SubscribeHandlerOptions& options,
+            mrs_lib::TimeoutManager& timeout_manager,
+            Types ... args
+          )
+      :
+        SubscribeHandler(
+            options,
+            timeout_manager = timeout_manager,
             args...
             )
       {

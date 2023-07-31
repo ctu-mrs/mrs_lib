@@ -50,7 +50,7 @@ find_package(OpenCV REQUIRED HINTS /usr/local/lib)
 ###################################
 
 set(LIBRARIES
-  MrsLibSafetyZone MrsLibProfiler MrsLibScopeTimer MrsLibIirFilter MrsLibNotchFilter MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibOdomLKF MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibTimer MrsLibTransformBroadcaster MrsLibMath MrsLibDynamicPublisher
+  MrsLibSafetyZone MrsLibProfiler MrsLibScopeTimer MrsLibIirFilter MrsLibNotchFilter MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibOdomLKF MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibTimer MrsLibTransformBroadcaster MrsLibMath MrsLibDynamicPublisher MrsLibTimeoutManager
   )
 
 catkin_package(
@@ -70,6 +70,11 @@ include_directories(
   ${Eigen_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
   ${pcl_ros_INCLUDE_DIRS}
+  )
+
+add_library(MrsLibTimeoutManager src/timeout_manager/timeout_manager.cpp)
+target_link_libraries(MrsLibTimeoutManager
+  ${catkin_LIBRARIES}
   )
 
 add_library(MrsLibDynamicPublisher src/dynamic_publisher/dynamic_publisher.cpp)

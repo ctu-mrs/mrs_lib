@@ -35,22 +35,19 @@ namespace mrs_lib
           m_new_data(false),
           m_used_data(false),
           m_last_msg_received(ros::Time::now()),
-          m_timeout_callback(options.timeout_callback),
           m_latest_message(nullptr),
           m_message_callback(message_callback),
           m_queue_size(options.queue_size),
           m_transport_hints(options.transport_hints)
     {
-      if (!m_timeout_callback)
-        m_timeout_callback = std::bind(&Impl::default_timeout_callback, this, std::placeholders::_1, std::placeholders::_2,
+      timeout_callback_t timeout_callback = options.timeout_callback;
+      if (!timeout_callback)
+        timeout_callback = std::bind(&Impl::default_timeout_callback, this, std::placeholders::_1, std::placeholders::_2,
                                        std::placeholders::_3);
 
       if (options.no_message_timeout != mrs_lib::no_timeout)
       {
-        if (options.use_thread_timer)
-          m_timeout_check_timer = std::make_unique<mrs_lib::ThreadTimer>(m_nh, options.no_message_timeout, &Impl::check_timeout, this, true /*oneshot*/, false /*autostart*/);
-        else
-          m_timeout_check_timer = std::make_unique<mrs_lib::ROSTimer>(m_nh, options.no_message_timeout, &Impl::check_timeout, this, true /*oneshot*/, false /*autostart*/);
+        /* if (options. */
       }
 
       const std::string msg = "Subscribed to topic '" + m_topic_name + "' -> '" + topicName() + "'";
@@ -189,7 +186,6 @@ namespace mrs_lib
     mutable std::mutex m_last_msg_received_mtx;
     ros::Time m_last_msg_received;
     std::unique_ptr<mrs_lib::MRSTimer> m_timeout_check_timer;
-    timeout_callback_t m_timeout_callback;
 
   protected:
     typename MessageType::ConstPtr m_latest_message;
@@ -250,7 +246,7 @@ namespace mrs_lib
       std::lock_guard lck(m_new_data_mtx);
       process_new_message(msg);
       if (m_message_callback)
-        m_message_callback(*m_owner);
+        m_message_callback(msg);
       if (m_timeout_check_timer)
         m_timeout_check_timer->start();
     }
@@ -337,7 +333,7 @@ namespace mrs_lib
       std::scoped_lock lck(m_mtx, this->m_new_data_mtx);
       this->process_new_message(msg);
       if (this->m_message_callback)
-        this->m_message_callback(*(this->m_owner));
+        this->m_message_callback(msg);
       if (this->m_timeout_check_timer)
         this->m_timeout_check_timer->start();
     }
