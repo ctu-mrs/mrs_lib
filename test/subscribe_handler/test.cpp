@@ -12,8 +12,8 @@ using namespace std;
 bool got_messages_ = false;
 bool stopped_correctly_ = true;
 
-void timeout_callback(const ros::Time& last_msg) {
-  ROS_ERROR_STREAM("Have not received a message for " << (ros::Time::now() - last_msg).toSec() << " seconds");
+void timeout_callback(const std::string& topic_name, const ros::Time& last_msg) {
+  ROS_ERROR_STREAM("Have not received a message on topic '" << topic_name << "' for " << (ros::Time::now() - last_msg).toSec() << " seconds");
 }
 
 bool started = true;

@@ -38,15 +38,21 @@ namespace mrs_lib
           m_queue_size(options.queue_size),
           m_transport_hints(options.transport_hints)
     {
-      timeout_callback_t timeout_callback = options.timeout_callback;
-      if (!timeout_callback)
-        timeout_callback = std::bind(&Impl::default_timeout_callback, this, std::placeholders::_1);
-
       if (options.no_message_timeout != mrs_lib::no_timeout)
       {
+        // initialize a new TimeoutManager if not provided by the user
         if (!m_timeout_manager)
           m_timeout_manager = std::make_shared<mrs_lib::TimeoutManager>(m_nh, ros::Rate(2.0/options.no_message_timeout.toSec()));
-        m_timeout_id = m_timeout_manager->registerNew(options.no_message_timeout, timeout_callback);
+
+        // initialize the callback for the TimeoutManager
+        std::function<void(const ros::Time&)> timeout_mgr_callback;
+        if (options.timeout_callback)
+          timeout_mgr_callback = std::bind(options.timeout_callback, topicName(), std::placeholders::_1);
+        else
+          timeout_mgr_callback = std::bind(&Impl::default_timeout_callback, this, topicName(), std::placeholders::_1);
+
+        // register the timeout callback with the TimeoutManager
+        m_timeout_id = m_timeout_manager->registerNew(options.no_message_timeout, timeout_mgr_callback);
       }
 
       const std::string msg = "Subscribed to topic '" + m_topic_name + "' -> '" + topicName() + "'";
@@ -184,11 +190,11 @@ namespace mrs_lib
 
   protected:
     /* default_timeout_callback() method //{ */
-    void default_timeout_callback(const ros::Time& last_msg)
+    void default_timeout_callback(const std::string& topic_name, const ros::Time& last_msg)
     {
       const ros::Duration since_msg = (ros::Time::now() - last_msg);
       const auto n_pubs = m_sub.getNumPublishers();
-      const std::string txt = "Did not receive any message from topic '" + m_topic_name + "' for " + std::to_string(since_msg.toSec()) + "s ("
+      const std::string txt = "Did not receive any message from topic '" + topic_name + "' for " + std::to_string(since_msg.toSec()) + "s ("
                               + std::to_string(n_pubs) + " publishers on this topic)";
       if (m_node_name.empty())
         ROS_WARN_STREAM(txt);
@@ -201,7 +207,9 @@ namespace mrs_lib
     void process_new_message(const typename MessageType::ConstPtr& msg)
     {
       m_latest_message = msg;
-      m_new_data = true;
+      // If the message callback is registered, the new data will immediately be processed,
+      // so reset the flag. Otherwise, set the flag.
+      m_new_data = !m_message_callback;
       m_got_data = true;
       m_new_data_cv.notify_one();
     }
@@ -216,6 +224,8 @@ namespace mrs_lib
           m_timeout_manager->reset(m_timeout_id);
         process_new_message(msg);
       }
+
+      // execute the callback after unlocking the mutex to enable multi-threaded callback execution
       if (m_message_callback)
         m_message_callback(msg);
     }
@@ -300,6 +310,8 @@ namespace mrs_lib
           this->m_timeout_manager->reset(this->m_timeout_id);
         impl_class_t::process_new_message(msg);
       }
+
+      // execute the callback after unlocking the mutex to enable multi-threaded callback execution
       if (this->m_message_callback)
         impl_class_t::m_message_callback(msg);
     }

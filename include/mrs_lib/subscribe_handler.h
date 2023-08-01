@@ -41,7 +41,7 @@ namespace mrs_lib
   
     ros::Duration no_message_timeout = mrs_lib::no_timeout;  /*!< \brief If no new message is received for this duration, the \p timeout_callback function will be called. If \p timeout_callback is empty, an error message will be printed to the console. */
   
-    std::function<void(const ros::Time&)> timeout_callback = {};  /*!< \brief This function will be called if no new message is received for the \p no_message_timeout duration. If this variable is empty, an error message will be printed to the console. */
+    std::function<void(const std::string& topic_name, const ros::Time& last_msg)> timeout_callback = {};  /*!< \brief This function will be called if no new message is received for the \p no_message_timeout duration. If this variable is empty, an error message will be printed to the console. */
   
     bool threadsafe = true;  /*!< \brief If true, all methods of the SubscribeHandler will be mutexed (using a recursive mutex) to avoid data races. */
   
@@ -88,7 +88,7 @@ namespace mrs_lib
     /*!
       * \brief Type for the timeout callback function.
       */
-      using timeout_callback_t = std::function<void(const ros::Time&)>;
+      using timeout_callback_t = std::function<void(const std::string& topic_name, const ros::Time& last_msg)>;
 
     /*!
       * \brief Convenience type for the message callback function.
@@ -284,7 +284,7 @@ namespace mrs_lib
       template <class ObjectType1, class ... Types>
       SubscribeHandler(
             const SubscribeHandlerOptions& options,
-            void (ObjectType1::*const timeout_callback) (const ros::Time&),
+            void (ObjectType1::*const timeout_callback) (const std::string& topic_name, const ros::Time& last_msg),
             ObjectType1* const obj1,
             Types ... args
           )
@@ -293,7 +293,7 @@ namespace mrs_lib
             [options, timeout_callback, obj1]()
             {
               SubscribeHandlerOptions opts = options;
-              opts.timeout_callback = timeout_callback == nullptr ? timeout_callback_t() : std::bind(timeout_callback, obj1, std::placeholders::_1);
+              opts.timeout_callback = timeout_callback == nullptr ? timeout_callback_t() : std::bind(timeout_callback, obj1, std::placeholders::_1, std::placeholders::_2);
               return opts;
             }(),
             args...
@@ -342,7 +342,7 @@ namespace mrs_lib
            const SubscribeHandlerOptions& options,
            void (ObjectType2::*const message_callback) (typename MessageType::ConstPtr),
            ObjectType2* const obj2,
-           void (ObjectType1::*const timeout_callback) (const ros::Time&),
+           void (ObjectType1::*const timeout_callback) (const std::string& topic_name, const ros::Time& last_msg),
            ObjectType1* const obj1,
            Types ... args
          )
@@ -351,7 +351,7 @@ namespace mrs_lib
             [options, timeout_callback, obj1]()
             {
               SubscribeHandlerOptions opts = options;
-              opts.timeout_callback = timeout_callback == nullptr ? timeout_callback_t() : std::bind(timeout_callback, obj1, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+              opts.timeout_callback = timeout_callback == nullptr ? timeout_callback_t() : std::bind(timeout_callback, obj1, std::placeholders::_1, std::placeholders::_2);
               return opts;
             }(),
             message_callback == nullptr ? message_callback_t() : std::bind(message_callback, obj2, std::placeholders::_1),

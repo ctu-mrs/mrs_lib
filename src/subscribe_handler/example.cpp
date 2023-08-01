@@ -18,9 +18,9 @@
 #include <impl/subscribe_handler.hpp>
 #include <std_msgs/String.h>
 
-void timeout_callback(const ros::Time& last_msg)
+void timeout_callback(const std::string& topic_name, const ros::Time& last_msg)
 {
-  ROS_ERROR_STREAM("Have not received a message for " << (ros::Time::now()-last_msg).toSec() << " seconds");
+  ROS_ERROR_STREAM("Have not received a message on topic '" << topic_name << "' for " << (ros::Time::now() - last_msg).toSec() << " seconds");
 }
 
 void message_callback(const std_msgs::String::ConstPtr msg)
@@ -36,9 +36,9 @@ class SubObject
       ROS_INFO_STREAM("Object received: '" << msg->data << "'.");
     }
 
-    void timeout_method(const ros::Time& last_msg)
+    void timeout_method(const std::string& topic_name, const ros::Time& last_msg)
     {
-      ROS_ERROR_STREAM("Object has not received a message for " << (ros::Time::now()-last_msg).toSec() << " seconds");
+      ROS_ERROR_STREAM("Object has not received a message on topic '" << topic_name << "' for " << (ros::Time::now()-last_msg).toSec() << " seconds");
     }
 } sub_obj;
 
