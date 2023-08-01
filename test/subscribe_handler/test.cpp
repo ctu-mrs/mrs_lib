@@ -10,6 +10,7 @@ using namespace mrs_lib;
 using namespace std;
 
 bool got_messages_ = false;
+bool stopped_correctly_ = true;
 
 void timeout_callback(const ros::Time& last_msg) {
   ROS_ERROR_STREAM("Have not received a message for " << (ros::Time::now() - last_msg).toSec() << " seconds");
@@ -20,6 +21,7 @@ void message_callback(const geometry_msgs::PointStamped::ConstPtr msg) {
 
   if (!started) {
     ROS_ERROR("NOT STARTED, SHOULDN'T HAVE RECEIVED!");
+    stopped_correctly_ = false;
     return;
   }
 
@@ -33,8 +35,6 @@ TEST(TESTSuite, main_test) {
 
   ros::NodeHandle nh("~");
   mrs_lib::SubscribeHandler<geometry_msgs::PointStamped> sh;
-
-  int result = 0;
 
   mrs_lib::SubscribeHandlerOptions shopts;
   shopts.autostart = false;
@@ -101,9 +101,8 @@ TEST(TESTSuite, main_test) {
     n++;
   }
 
-  result = got_messages_;
-
-  EXPECT_TRUE(result);
+  EXPECT_TRUE(got_messages_);
+  EXPECT_TRUE(stopped_correctly_);
 }
 
 //}

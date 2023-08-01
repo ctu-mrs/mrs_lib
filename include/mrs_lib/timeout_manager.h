@@ -32,7 +32,7 @@ namespace mrs_lib
       */
       TimeoutManager(const ros::NodeHandle& nh, const ros::Rate& update_rate);
 
-      timeout_id_t registerNew(const ros::Duration& timeout, const callback_t& callback, const ros::Time& last_update = ros::Time::now());
+      timeout_id_t registerNew(const ros::Duration& timeout, const callback_t& callback, const ros::Time& last_reset = ros::Time::now(), const bool oneshot = false, const bool autostart = true);
 
       void reset(const timeout_id_t id, const ros::Time& time = ros::Time::now());
 
@@ -40,9 +40,15 @@ namespace mrs_lib
 
       void start(const timeout_id_t id, const ros::Time& time = ros::Time::now());
 
-      void change(const timeout_id_t id, const ros::Duration& timeout, const callback_t& callback, const ros::Time& last_update = ros::Time::now());
+      void pauseAll();
+
+      void startAll(const ros::Time& time = ros::Time::now());
+
+      void change(const timeout_id_t id, const ros::Duration& timeout, const callback_t& callback, const ros::Time& last_reset = ros::Time::now(), const bool oneshot = false, const bool autostart = true);
 
       ros::Time lastReset(const timeout_id_t id);
+
+      bool started(const timeout_id_t id);
 
       /* implementation details //{ */
       
@@ -50,7 +56,8 @@ namespace mrs_lib
         // | ---------------------- private types --------------------- |
         struct timeout_info_t
         {
-          bool paused;
+          bool oneshot;
+          bool started;
           callback_t callback;
           ros::Duration timeout;
           ros::Time last_reset;
