@@ -33,6 +33,7 @@ namespace mrs_lib
           m_new_data(false),
           m_used_data(false),
           m_timeout_manager(options.timeout_manager),
+          m_latest_message_time(0),
           m_latest_message(nullptr),
           m_message_callback(message_callback),
           m_queue_size(options.queue_size),
@@ -127,7 +128,7 @@ namespace mrs_lib
     /* lastMsgTime() method //{ */
     virtual ros::Time lastMsgTime() const
     {
-      return m_timeout_manager->lastReset(m_timeout_id);
+      return m_latest_message_time;
     };
     //}
 
@@ -181,6 +182,7 @@ namespace mrs_lib
     mrs_lib::TimeoutManager::timeout_id_t m_timeout_id;
 
   protected:
+    ros::Time m_latest_message_time;
     typename MessageType::ConstPtr m_latest_message;
     message_callback_t m_message_callback;
 
@@ -206,6 +208,7 @@ namespace mrs_lib
     /* process_new_message() method //{ */
     void process_new_message(const typename MessageType::ConstPtr& msg)
     {
+      m_latest_message_time = ros::Time::now();
       m_latest_message = msg;
       // If the message callback is registered, the new data will immediately be processed,
       // so reset the flag. Otherwise, set the flag.
