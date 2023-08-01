@@ -43,6 +43,8 @@ namespace mrs_lib
   
     std::function<void(const ros::Time&)> timeout_callback = {};  /*!< \brief This function will be called if no new message is received for the \p no_message_timeout duration. If this variable is empty, an error message will be printed to the console. */
   
+    bool threadsafe = true;  /*!< \brief If true, all methods of the SubscribeHandler will be mutexed (using a recursive mutex) to avoid data races. */
+  
     bool autostart = true;  /*!< \brief If true, the SubscribeHandler will be started after construction. Otherwise it has to be started using the start() method */
   
     uint32_t queue_size = 3;  /*!< \brief This parameter is passed to the NodeHandle when subscribing to the topic */
@@ -223,11 +225,22 @@ namespace mrs_lib
             const message_callback_t& message_callback = {}
           )
       {
-        m_pimpl = std::make_unique<Impl>
-          (
-            options,
-            message_callback
-          );
+        if (options.threadsafe)
+        {
+          m_pimpl = std::make_unique<ImplThreadsafe>
+            (
+              options,
+              message_callback
+            );
+        }
+        else
+        {
+          m_pimpl = std::make_unique<Impl>
+            (
+              options,
+              message_callback
+            );
+        }
         if (options.autostart)
           start();
       };
@@ -416,6 +429,7 @@ namespace mrs_lib
 
     private:
       class Impl;
+      class ImplThreadsafe;
       std::unique_ptr<Impl> m_pimpl;
   };
   //}

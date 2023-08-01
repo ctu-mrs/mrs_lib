@@ -41,6 +41,7 @@ TEST(TESTSuite, main_test) {
   /* after this duration without receiving messages on the handled topic, the timeout_callback will be called */
   shopts.no_message_timeout = ros::Duration(2.0);
   /* whether mutexes should be used to prevent data races (set to true in a multithreaded scenario such as nodelets) */
+  shopts.threadsafe      = true;
   shopts.autostart       = false;
   shopts.queue_size      = 5;
   shopts.transport_hints = ros::TransportHints();

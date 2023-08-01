@@ -210,14 +210,102 @@ namespace mrs_lib
     /* data_callback() method //{ */
     virtual void data_callback(const typename MessageType::ConstPtr& msg)
     {
-      if (m_timeout_manager)
-        m_timeout_manager->reset(m_timeout_id);
-      std::lock_guard lck(m_new_data_mtx);
-      process_new_message(msg);
+      {
+        std::lock_guard lck(m_new_data_mtx);
+        if (m_timeout_manager)
+          m_timeout_manager->reset(m_timeout_id);
+        process_new_message(msg);
+      }
       if (m_message_callback)
         m_message_callback(msg);
     }
     //}
+  };
+  //}
+
+  /* SubscribeHandler_threadsafe class //{ */
+  template <typename MessageType>
+  class SubscribeHandler<MessageType>::ImplThreadsafe : public SubscribeHandler<MessageType>::Impl
+  {
+  private:
+    using impl_class_t = SubscribeHandler<MessageType>::Impl;
+
+  public:
+    using timeout_callback_t = typename impl_class_t::timeout_callback_t;
+    using message_callback_t = typename impl_class_t::message_callback_t;
+
+    friend class SubscribeHandler<MessageType>;
+
+  public:
+    ImplThreadsafe(const SubscribeHandlerOptions& options, const message_callback_t& message_callback = message_callback_t())
+        : impl_class_t::Impl(options, message_callback)
+    {
+    }
+
+  public:
+    virtual bool hasMsg() const override
+    {
+      std::lock_guard lck(m_mtx);
+      return impl_class_t::hasMsg();
+    }
+    virtual bool newMsg() const override
+    {
+      std::lock_guard lck(m_mtx);
+      return impl_class_t::newMsg();
+    }
+    virtual bool usedMsg() const override
+    {
+      std::lock_guard lck(m_mtx);
+      return impl_class_t::usedMsg();
+    }
+    virtual typename MessageType::ConstPtr getMsg() override
+    {
+      std::lock_guard lck(m_mtx);
+      return impl_class_t::getMsg();
+    }
+    virtual typename MessageType::ConstPtr peekMsg() const override
+    {
+      std::lock_guard lck(m_mtx);
+      return impl_class_t::peekMsg();
+    }
+    virtual ros::Time lastMsgTime() const override
+    {
+      std::lock_guard lck(m_mtx);
+      return impl_class_t::lastMsgTime();
+    };
+    virtual std::string topicName() const override
+    {
+      std::lock_guard lck(m_mtx);
+      return impl_class_t::topicName();
+    };
+    virtual void start() override
+    {
+      std::lock_guard lck(m_mtx);
+      return impl_class_t::start();
+    }
+    virtual void stop() override
+    {
+      std::lock_guard lck(m_mtx);
+      return impl_class_t::stop();
+    }
+
+    virtual ~ImplThreadsafe() override = default;
+
+  protected:
+    virtual void data_callback(const typename MessageType::ConstPtr& msg) override
+    {
+      {
+        std::scoped_lock lck(m_mtx, this->m_new_data_mtx);
+        if (this->m_timeout_manager)
+          this->m_timeout_manager->reset(this->m_timeout_id);
+        impl_class_t::process_new_message(msg);
+      }
+      if (this->m_message_callback)
+        impl_class_t::m_message_callback(msg);
+    }
+
+  private:
+    mutable std::recursive_mutex m_mtx;
   };
   //}
 
