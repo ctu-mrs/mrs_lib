@@ -57,7 +57,7 @@ namespace mrs_lib
     std::unique_ptr<impl> m_impl;
   };
 
-#include <impl/dynamic_publisher.hpp>
+#include <mrs_lib/impl/dynamic_publisher.hpp>
 
 }  // namespace mrs_lib
 

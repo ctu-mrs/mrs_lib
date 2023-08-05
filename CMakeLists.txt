@@ -19,7 +19,7 @@ add_definitions(-Wpedantic)
 # remove warning info from PCL
 set(PCL_FIND_QUIETLY INTERNAL)
 
-find_package(catkin REQUIRED COMPONENTS
+set(CATKIN_DEPENDENCIES
   roscpp
   cmake_modules
   sensor_msgs
@@ -27,14 +27,18 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   nav_msgs
   mrs_msgs
-  tf
   tf2
   tf2_geometry_msgs
-  tf2_sensor_msgs
+  tf_conversions
   cv_bridge
   image_transport
   pcl_ros
+  pcl_msgs
   pcl_conversions
+  )
+
+find_package(catkin REQUIRED COMPONENTS
+  ${CATKIN_DEPENDENCIES}
   )
 
 # include Eigen3
@@ -55,7 +59,7 @@ set(LIBRARIES
 
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS roscpp sensor_msgs std_msgs geometry_msgs pcl_ros mrs_msgs
+  CATKIN_DEPENDS ${CATKIN_DEPENDENCIES}
   DEPENDS Eigen
   LIBRARIES ${LIBRARIES}
   )
@@ -326,11 +330,11 @@ install(TARGETS ${LIBRARIES}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
   )
 
-install(DIRECTORY include/
-  DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
+install(DIRECTORY include/mrs_lib/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
   )
 
-install(DIRECTORY ./
+install(DIRECTORY
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
   FILES_MATCHING PATTERN "*.xml"
   )

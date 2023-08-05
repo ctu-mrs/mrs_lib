@@ -166,6 +166,6 @@ private:
 
 }  // namespace mrs_lib
 
-#include <impl/publisher_handler.hpp>
+#include <mrs_lib/impl/publisher_handler.hpp>
 
 #endif  // PUBLISHER_HANDLER_H

@@ -238,6 +238,6 @@ private:
 
 }  // namespace mrs_lib
 
-#include <impl/service_client_handler.hpp>
+#include <mrs_lib/impl/service_client_handler.hpp>
 
 #endif  // SERVICE_CLIENT_HANDLER_H
