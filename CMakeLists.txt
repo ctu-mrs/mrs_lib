@@ -20,21 +20,22 @@ add_definitions(-Wpedantic)
 set(PCL_FIND_QUIETLY INTERNAL)
 
 set(CATKIN_DEPENDENCIES
-  roscpp
   cmake_modules
-  sensor_msgs
+  cv_bridge
   geometry_msgs
-  std_msgs
-  nav_msgs
+  image_transport
   mrs_msgs
+  nav_msgs
+  pcl_conversions
+  pcl_msgs
+  pcl_ros
+  roscpp
+  sensor_msgs
+  std_msgs
   tf2
   tf2_geometry_msgs
   tf_conversions
-  cv_bridge
-  image_transport
-  pcl_ros
-  pcl_msgs
-  pcl_conversions
+  visualization_msgs
   )
 
 find_package(catkin REQUIRED COMPONENTS
