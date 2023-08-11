@@ -55,7 +55,24 @@ find_package(OpenCV REQUIRED HINTS /usr/local/lib)
 ###################################
 
 set(LIBRARIES
-  MrsLibSafetyZone MrsLibProfiler MrsLibScopeTimer MrsLibIirFilter MrsLibNotchFilter MrsLibUtils MrsLibParamLoader MrsLibMedianFilter MrsLibOdomLKF MrsLibGeometry MrsLibBatchVisualizer MrsLibAttitudeConverter MrsLibTransformer MrsLibImagePublisher MrsLibTimer MrsLibTransformBroadcaster MrsLibMath MrsLibDynamicPublisher
+  MrsLib_SafetyZone
+  MrsLib_Profiler
+  MrsLib_ScopeTimer
+  MrsLib_IirFilter
+  MrsLib_NotchFilter
+  MrsLib_Utils
+  MrsLib_ParamLoader
+  MrsLib_MedianFilter
+  MrsLib_OdomLKF
+  MrsLib_Geometry
+  MrsLib_BatchVisualizer
+  MrsLib_AttitudeConverter
+  MrsLib_Transformer
+  MrsLib_ImagePublisher
+  MrsLib_Timer
+  MrsLib_TransformBroadcaster
+  MrsLib_Math
+  MrsLib_DynamicPublisher
   )
 
 catkin_package(
@@ -77,14 +94,14 @@ include_directories(
   ${pcl_ros_INCLUDE_DIRS}
   )
 
-add_library(MrsLibDynamicPublisher src/dynamic_publisher/dynamic_publisher.cpp)
-target_link_libraries(MrsLibDynamicPublisher
+add_library(MrsLib_DynamicPublisher src/dynamic_publisher/dynamic_publisher.cpp)
+target_link_libraries(MrsLib_DynamicPublisher
   ${catkin_LIBRARIES}
   )
 
 add_executable(dynamic_publisher_example src/dynamic_publisher/example.cpp)
 target_link_libraries(dynamic_publisher_example
-  MrsLibDynamicPublisher
+  MrsLib_DynamicPublisher
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
@@ -101,8 +118,8 @@ target_link_libraries(service_client_handler_example
   ${Eigen_LIBRARIES}
   )
 
-add_library(MrsLibOdomLKF src/lkf/LKF_MRS_odom.cpp)
-target_link_libraries(MrsLibOdomLKF
+add_library(MrsLib_OdomLKF src/lkf/LKF_MRS_odom.cpp)
+target_link_libraries(MrsLib_OdomLKF
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
@@ -115,19 +132,19 @@ target_link_libraries(lkf_example
 
 # # Slows the compilation of the library waaaay too much - just generate the conversions on-demand
 # # instead of pre-generating all combinations.
-# add_library(MrsLibVectorConverter src/vector_converter/vector_converter.cpp)
-# target_link_libraries(MrsLibVectorConverter
+# add_library(MrsLib_VectorConverter src/vector_converter/vector_converter.cpp)
+# target_link_libraries(MrsLib_VectorConverter
 #   ${catkin_LIBRARIES}
 #   ${Eigen_LIBRARIES}
 #   ${pcl_ros_LIBRARIES}
 #   )
-# target_include_directories(MrsLibVectorConverter PRIVATE
+# target_include_directories(MrsLib_VectorConverter PRIVATE
 #   ${pcl_ros_INCLUDE_DIRS}
 #   )
 
 add_executable(vector_converter_example src/vector_converter/example.cpp)
 target_link_libraries(vector_converter_example
-  # MrsLibVectorConverter
+  # MrsLib_VectorConverter
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   ${pcl_ros_LIBRARIES}
@@ -148,44 +165,44 @@ target_link_libraries(nckf_tests
   ${Eigen_LIBRARIES}
   )
 
-add_library(MrsLibSafetyZone src/safety_zone/safety_zone.cpp
+add_library(MrsLib_SafetyZone src/safety_zone/safety_zone.cpp
   src/safety_zone/point_obstacle/point_obstacle.cpp
   src/safety_zone/line_operations.cpp
   src/safety_zone/polygon/polygon.cpp
   )
 
-target_link_libraries(MrsLibSafetyZone
+target_link_libraries(MrsLib_SafetyZone
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
 
-add_library(MrsLibProfiler src/profiler/profiler.cpp)
-target_link_libraries(MrsLibProfiler
+add_library(MrsLib_Profiler src/profiler/profiler.cpp)
+target_link_libraries(MrsLib_Profiler
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
 
-add_library(MrsLibScopeTimer src/scope_timer/scope_timer.cpp)
-target_link_libraries(MrsLibScopeTimer
+add_library(MrsLib_ScopeTimer src/scope_timer/scope_timer.cpp)
+target_link_libraries(MrsLib_ScopeTimer
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
 
-add_library(MrsLibMedianFilter src/median_filter/median_filter.cpp)
-target_link_libraries(MrsLibMedianFilter
+add_library(MrsLib_MedianFilter src/median_filter/median_filter.cpp)
+target_link_libraries(MrsLib_MedianFilter
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
 
-add_library(MrsLibIirFilter src/iir_filter/iir_filter.cpp)
-target_link_libraries(MrsLibIirFilter
+add_library(MrsLib_IirFilter src/iir_filter/iir_filter.cpp)
+target_link_libraries(MrsLib_IirFilter
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
 
-add_library(MrsLibNotchFilter src/notch_filter/notch_filter.cpp)
-target_link_libraries(MrsLibNotchFilter
-  MrsLibIirFilter
+add_library(MrsLib_NotchFilter src/notch_filter/notch_filter.cpp)
+target_link_libraries(MrsLib_NotchFilter
+  MrsLib_IirFilter
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
@@ -196,44 +213,44 @@ target_link_libraries(mutex_tests
   ${Eigen_LIBRARIES}
   )
 
-add_library(MrsLibAttitudeConverter src/attitude_converter/attitude_converter.cpp)
-target_link_libraries(MrsLibAttitudeConverter
-  MrsLibGeometry
+add_library(MrsLib_AttitudeConverter src/attitude_converter/attitude_converter.cpp)
+target_link_libraries(MrsLib_AttitudeConverter
+  MrsLib_Geometry
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
 
-add_library(MrsLibTransformer src/transformer/transformer.cpp)
-target_link_libraries(MrsLibTransformer
-  MrsLibGeometry
+add_library(MrsLib_Transformer src/transformer/transformer.cpp)
+target_link_libraries(MrsLib_Transformer
+  MrsLib_Geometry
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
-target_include_directories(MrsLibTransformer PRIVATE
+target_include_directories(MrsLib_Transformer PRIVATE
   ${pcl_ros_INCLUDE_DIRS}
   )
 
 add_executable(transformer_example src/transformer/example.cpp)
 target_link_libraries(transformer_example
-  MrsLibTransformer
+  MrsLib_Transformer
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
 
-add_library(MrsLibUtils src/utils/utils.cpp)
-target_link_libraries(MrsLibUtils
+add_library(MrsLib_Utils src/utils/utils.cpp)
+target_link_libraries(MrsLib_Utils
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
 
-add_library(MrsLibParamLoader src/param_loader/param_loader.cpp)
-target_link_libraries(MrsLibParamLoader
+add_library(MrsLib_ParamLoader src/param_loader/param_loader.cpp)
+target_link_libraries(MrsLib_ParamLoader
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
 
-add_library(MrsLibTransformBroadcaster src/transform_broadcaster/transform_broadcaster.cpp)
-target_link_libraries(MrsLibTransformBroadcaster
+add_library(MrsLib_TransformBroadcaster src/transform_broadcaster/transform_broadcaster.cpp)
+target_link_libraries(MrsLib_TransformBroadcaster
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
@@ -246,14 +263,14 @@ target_link_libraries(param_loader_example
 
 add_executable(subscribe_handler_example src/subscribe_handler/example.cpp)
 target_link_libraries(subscribe_handler_example
-  MrsLibTimer
+  MrsLib_Timer
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
 
 add_executable(subscribe_handler_simple_example src/subscribe_handler/simple_example.cpp)
 target_link_libraries(subscribe_handler_simple_example
-  MrsLibTimer
+  MrsLib_Timer
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
@@ -264,16 +281,16 @@ target_link_libraries(rheiv_example
   ${Eigen_LIBRARIES}
   )
 
-add_library(MrsLibBatchVisualizer src/batch_visualizer/batch_visualizer.cpp src/batch_visualizer/visual_object.cpp)
-target_link_libraries(MrsLibBatchVisualizer
-  MrsLibGeometry
+add_library(MrsLib_BatchVisualizer src/batch_visualizer/batch_visualizer.cpp src/batch_visualizer/visual_object.cpp)
+target_link_libraries(MrsLib_BatchVisualizer
+  MrsLib_Geometry
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   ${GAZEBO_INCLUDE_DIRS}
   )
 
-add_library(MrsLibImagePublisher src/image_publisher/image_publisher.cpp)
-target_link_libraries(MrsLibImagePublisher
+add_library(MrsLib_ImagePublisher src/image_publisher/image_publisher.cpp)
+target_link_libraries(MrsLib_ImagePublisher
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   ${OpenCV_LIBRARIES}
@@ -282,41 +299,41 @@ target_link_libraries(MrsLibImagePublisher
 
 add_executable(batch_visualizer_demo src/batch_visualizer/batch_visualizer_demo.cpp)
 target_link_libraries(batch_visualizer_demo
-  MrsLibGeometry
-  MrsLibBatchVisualizer
+  MrsLib_Geometry
+  MrsLib_BatchVisualizer
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   ${GAZEBO_INCLUDE_DIRS}
   )
 
-add_library(MrsLibMath src/math/math.cpp)
-target_link_libraries(MrsLibMath
+add_library(MrsLib_Math src/math/math.cpp)
+target_link_libraries(MrsLib_Math
   ${catkin_LIBRARIES}
   )
 
-add_library(MrsLibGeometry src/geometry/misc.cpp src/geometry/cyclic.cpp src/geometry/shapes.cpp src/geometry/conversions.cpp)
-target_link_libraries(MrsLibGeometry
+add_library(MrsLib_Geometry src/geometry/misc.cpp src/geometry/cyclic.cpp src/geometry/shapes.cpp src/geometry/conversions.cpp)
+target_link_libraries(MrsLib_Geometry
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   ${OpenCV_LIBRARIES}
   ${GAZEBO_INCLUDE_DIRS}
   )
 
-add_library(MrsLibTimer src/timer/timer.cpp)
-target_link_libraries(MrsLibTimer
+add_library(MrsLib_Timer src/timer/timer.cpp)
+target_link_libraries(MrsLib_Timer
   ${catkin_LIBRARIES}
   )
 
 add_executable(geometry_tests src/geometry/tests.cpp)
 target_link_libraries(geometry_tests
-  MrsLibGeometry
+  MrsLib_Geometry
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
 
 add_executable(cyclic_example src/geometry/cyclic_example.cpp)
 target_link_libraries(cyclic_example
-  MrsLibGeometry
+  MrsLib_Geometry
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
@@ -354,7 +371,7 @@ if(CATKIN_ENABLE_TESTING)
     )
 
   target_link_libraries(MathTest
-    MrsLibMath
+    MrsLib_Math
     ${catkin_LIBRARIES}
     )
 
@@ -371,7 +388,7 @@ if(CATKIN_ENABLE_TESTING)
 
   target_link_libraries(
     GeometryTest
-    MrsLibGeometry
+    MrsLib_Geometry
     ${catkin_LIBRARIES}
     )
 
@@ -389,7 +406,7 @@ if(CATKIN_ENABLE_TESTING)
 
   target_link_libraries(
     AttitudeConverterTest
-    MrsLibAttitudeConverter
+    MrsLib_AttitudeConverter
     ${catkin_LIBRARIES}
     )
 
@@ -407,7 +424,7 @@ if(CATKIN_ENABLE_TESTING)
 
   target_link_libraries(
     UtilsTest
-    MrsLibUtils
+    MrsLib_Utils
     ${catkin_LIBRARIES}
     )
 
@@ -442,8 +459,8 @@ if(CATKIN_ENABLE_TESTING)
 
   target_link_libraries(
     TransformerTest
-    MrsLibTransformer
-    MrsLibGeometry
+    MrsLib_Transformer
+    MrsLib_Geometry
     ${catkin_LIBRARIES}
     )
 
@@ -460,7 +477,7 @@ if(CATKIN_ENABLE_TESTING)
     )
   target_link_libraries(
     ParamLoaderTest
-    MrsLibParamLoader
+    MrsLib_ParamLoader
     ${catkin_LIBRARIES}
     )
   add_dependencies(
@@ -476,7 +493,7 @@ if(CATKIN_ENABLE_TESTING)
     )
   target_link_libraries(
     SubscribeHandlerTest
-    MrsLibTimer
+    MrsLib_Timer
     ${catkin_LIBRARIES}
     )
   add_dependencies(
@@ -507,8 +524,8 @@ if(CATKIN_ENABLE_TESTING)
     )
   target_link_libraries(
     TimerTest
-    MrsLibTimer
-    MrsLibUtils
+    MrsLib_Timer
+    MrsLib_Utils
     ${catkin_LIBRARIES}
     )
   add_dependencies(
@@ -524,7 +541,7 @@ if(CATKIN_ENABLE_TESTING)
     )
   target_link_libraries(
     MedianFilterTest
-    MrsLibMedianFilter
+    MrsLib_MedianFilter
     ${catkin_LIBRARIES}
     )
   add_dependencies(
