@@ -8,6 +8,7 @@
 #define SUBRSCRIBE_HANDLER_H
 
 #include <ros/ros.h>
+#include <mrs_lib/timeout_manager.h>
 
 namespace mrs_lib
 {
@@ -35,12 +36,12 @@ namespace mrs_lib
     std::string node_name = {};  /*!< \brief Name of the ROS node, using this handle (used for messages printed to console). */
   
     std::string topic_name = {};  /*!< \brief Name of the ROS topic to be handled. */
+
+    std::shared_ptr<mrs_lib::TimeoutManager> timeout_manager = nullptr;  /*!< \brief Will be used for handling message timouts if necessary. If no manager is specified, it will be created with rate equal to half of \p no_message_timeout. */
   
     ros::Duration no_message_timeout = mrs_lib::no_timeout;  /*!< \brief If no new message is received for this duration, the \p timeout_callback function will be called. If \p timeout_callback is empty, an error message will be printed to the console. */
   
-    bool use_thread_timer = false;  /*!< \brief Selects whether to use an STL thread-based timer implementation instead of ROS' own. */
-  
-    std::function<void(const std::string&, const ros::Time&, const int)> timeout_callback = {};  /*!< \brief This function will be called if no new message is received for the \p no_message_timeout duration. If this variable is empty, an error message will be printed to the console. */
+    std::function<void(const std::string& topic_name, const ros::Time& last_msg)> timeout_callback = {};  /*!< \brief This function will be called if no new message is received for the \p no_message_timeout duration. If this variable is empty, an error message will be printed to the console. */
   
     bool threadsafe = true;  /*!< \brief If true, all methods of the SubscribeHandler will be mutexed (using a recursive mutex) to avoid data races. */
   
@@ -87,12 +88,12 @@ namespace mrs_lib
     /*!
       * \brief Type for the timeout callback function.
       */
-      using timeout_callback_t = std::function<void(const std::string&, const ros::Time&, const int)>;
+      using timeout_callback_t = std::function<void(const std::string& topic_name, const ros::Time& last_msg)>;
 
     /*!
       * \brief Convenience type for the message callback function.
       */
-      using message_callback_t = std::function<void(SubscribeHandler<MessageType>&)>;
+      using message_callback_t = std::function<void(typename MessageType::ConstPtr)>;
 
     public:
     /*!
@@ -228,7 +229,6 @@ namespace mrs_lib
         {
           m_pimpl = std::make_unique<ImplThreadsafe>
             (
-              this,
               options,
               message_callback
             );
@@ -237,7 +237,6 @@ namespace mrs_lib
         {
           m_pimpl = std::make_unique<Impl>
             (
-              this,
               options,
               message_callback
             );
@@ -285,7 +284,7 @@ namespace mrs_lib
       template <class ObjectType1, class ... Types>
       SubscribeHandler(
             const SubscribeHandlerOptions& options,
-            void (ObjectType1::*const timeout_callback) (const std::string&, const ros::Time&, const int),
+            void (ObjectType1::*const timeout_callback) (const std::string& topic_name, const ros::Time& last_msg),
             ObjectType1* const obj1,
             Types ... args
           )
@@ -294,7 +293,7 @@ namespace mrs_lib
             [options, timeout_callback, obj1]()
             {
               SubscribeHandlerOptions opts = options;
-              opts.timeout_callback = timeout_callback == nullptr ? timeout_callback_t() : std::bind(timeout_callback, obj1, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+              opts.timeout_callback = timeout_callback == nullptr ? timeout_callback_t() : std::bind(timeout_callback, obj1, std::placeholders::_1, std::placeholders::_2);
               return opts;
             }(),
             args...
@@ -314,7 +313,7 @@ namespace mrs_lib
       template <class ObjectType2, class ... Types>
       SubscribeHandler(
             const SubscribeHandlerOptions& options,
-            void (ObjectType2::*const message_callback) (SubscribeHandler<MessageType>&),
+            void (ObjectType2::*const message_callback) (typename MessageType::ConstPtr),
             ObjectType2* const obj2,
             Types ... args
           )
@@ -341,9 +340,9 @@ namespace mrs_lib
      template <class ObjectType1, class ObjectType2, class ... Types>
      SubscribeHandler(
            const SubscribeHandlerOptions& options,
-           void (ObjectType2::*const message_callback) (SubscribeHandler<MessageType>&),
+           void (ObjectType2::*const message_callback) (typename MessageType::ConstPtr),
            ObjectType2* const obj2,
-           void (ObjectType1::*const timeout_callback) (const std::string&, const ros::Time&, const int),
+           void (ObjectType1::*const timeout_callback) (const std::string& topic_name, const ros::Time& last_msg),
            ObjectType1* const obj1,
            Types ... args
          )
@@ -352,7 +351,7 @@ namespace mrs_lib
             [options, timeout_callback, obj1]()
             {
               SubscribeHandlerOptions opts = options;
-              opts.timeout_callback = timeout_callback == nullptr ? timeout_callback_t() : std::bind(timeout_callback, obj1, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+              opts.timeout_callback = timeout_callback == nullptr ? timeout_callback_t() : std::bind(timeout_callback, obj1, std::placeholders::_1, std::placeholders::_2);
               return opts;
             }(),
             message_callback == nullptr ? message_callback_t() : std::bind(message_callback, obj2, std::placeholders::_1),
@@ -388,6 +387,29 @@ namespace mrs_lib
       {
       }
 
+    /*!
+      * \brief Convenience constructor overload.
+      *
+      * \param options          The common options struct (see documentation of SubscribeHandlerOptions).
+      * \param timeout_manager  The manager for timeout callbacks.
+      * \param args             Remaining arguments to be parsed (see other constructors).
+      *
+      */
+      template <class ... Types>
+      SubscribeHandler(
+            const SubscribeHandlerOptions& options,
+            mrs_lib::TimeoutManager& timeout_manager,
+            Types ... args
+          )
+      :
+        SubscribeHandler(
+            options,
+            timeout_manager = timeout_manager,
+            args...
+            )
+      {
+      }
+
       ~SubscribeHandler() = default;
       // delete copy constructor and assignment operator (forbid copying shandlers)
       SubscribeHandler(const SubscribeHandler&) = delete;
@@ -397,13 +419,11 @@ namespace mrs_lib
       {
         this->m_pimpl = std::move(other.m_pimpl);
         other.m_pimpl = nullptr;
-        this->m_pimpl->m_owner = this;
       }
       SubscribeHandler& operator=(SubscribeHandler&& other)
       {
         this->m_pimpl = std::move(other.m_pimpl);
         other.m_pimpl = nullptr;
-        this->m_pimpl->m_owner = this;
         return *this;
       }
 

@@ -15,29 +15,30 @@
 
 // Include the SubscribeHandler header
 #include <mrs_lib/subscribe_handler.h>
+#include <impl/subscribe_handler.hpp>
 #include <std_msgs/String.h>
 
-void timeout_callback(const std::string& topic, const ros::Time& last_msg, const int n_pubs)
+void timeout_callback(const std::string& topic_name, const ros::Time& last_msg)
 {
-  ROS_ERROR_STREAM("Have not received message from topic '" << topic << "' for " << (ros::Time::now()-last_msg).toSec() << " seconds (" << n_pubs << " publishers on topic)");
+  ROS_ERROR_STREAM("Have not received a message on topic '" << topic_name << "' for " << (ros::Time::now() - last_msg).toSec() << " seconds");
 }
 
-void message_callback(mrs_lib::SubscribeHandler<std_msgs::String>& sh)
+void message_callback(const std_msgs::String::ConstPtr msg)
 {
-  ROS_INFO_STREAM("Received: '" << sh.getMsg()->data << "' from topic '" << sh.topicName() << "'");
+  ROS_INFO_STREAM("Received: '" << msg->data << "'.");
 }
 
 class SubObject
 {
   public:
-    void callback_method(mrs_lib::SubscribeHandler<std_msgs::String>& sh)
+    void callback_method(const std_msgs::String::ConstPtr msg)
     {
-      ROS_INFO_STREAM("Object received: '" << sh.getMsg()->data << "' from topic '" << sh.topicName() << "'");
+      ROS_INFO_STREAM("Object received: '" << msg->data << "'.");
     }
 
-    void timeout_method(const std::string& topic, const ros::Time& last_msg, const int n_pubs)
+    void timeout_method(const std::string& topic_name, const ros::Time& last_msg)
     {
-      ROS_ERROR_STREAM("Object has not received message from topic '" << topic << "' for " << (ros::Time::now()-last_msg).toSec() << " seconds (" << n_pubs << " publishers on topic)");
+      ROS_ERROR_STREAM("Object has not received a message on topic '" << topic_name << "' for " << (ros::Time::now()-last_msg).toSec() << " seconds");
     }
 } sub_obj;
 
@@ -52,28 +53,12 @@ int main(int argc, char **argv)
   const std::string topic_name = "test_topic";
   /* after this duration without receiving messages on the handled topic, the timeout_callback will be called */
   const ros::Duration no_message_timeout = ros::Duration(1.0);
-  /* whether mutexes should be used to prevent data races (set to true in a multithreaded scenario such as nodelets) */
-  const bool threadsafe = false;
 
   ROS_INFO("[%s]: Creating SubscribeHandlers.", node_name.c_str());
 
   mrs_lib::SubscribeHandlerOptions shopts(nh);
   shopts.node_name = node_name;
-  shopts.threadsafe = threadsafe;
   shopts.no_message_timeout = no_message_timeout;
-  // This is an interesting switch. It selects whether the ROS-based timer implementation for timeout checks will be used
-  // (when it's false) or a STL thread-based custom implementation is used (whe it's true).
-  //
-  // * when it's false:
-  //   You'll see that the timeout callback is only called once per each spinOnce call even though the message
-  //   timeout is long overdue (it is set to 1s and spinOnce is called every 3s). This is because timer callbacks are processed
-  //   in the spinOnce call. This can cause problems in some cases (eg. when you run out of callback threads of a nodelet
-  //   manager), so watch out!
-  //
-  // * when it's true:
-  //   Our custom timer implementation will be used. The timeout callbacks will now be called every second without messages
-  //   irregardles of the spinOnce call. This is the prefferred behavior in many cases.
-  shopts.use_thread_timer = true;
 
   /* This is how a new SubscribeHandler object is initialized. */ 
   mrs_lib::SubscribeHandler<std_msgs::String> handler(

@@ -73,6 +73,7 @@ set(LIBRARIES
   MrsLib_TransformBroadcaster
   MrsLib_Math
   MrsLib_DynamicPublisher
+  MrsLib_TimeoutManager
   )
 
 catkin_package(
@@ -94,8 +95,13 @@ include_directories(
   ${pcl_ros_INCLUDE_DIRS}
   )
 
-add_library(MrsLib_DynamicPublisher src/dynamic_publisher/dynamic_publisher.cpp)
-target_link_libraries(MrsLib_DynamicPublisher
+add_library(MrsLib_TimeoutManager src/timeout_manager/timeout_manager.cpp)
+target_link_libraries(MrsLib_TimeoutManager
+  ${catkin_LIBRARIES}
+  )
+
+add_library(MrsLibDynamicPublisher src/dynamic_publisher/dynamic_publisher.cpp)
+target_link_libraries(MrsLibDynamicPublisher
   ${catkin_LIBRARIES}
   )
 
@@ -263,14 +269,14 @@ target_link_libraries(param_loader_example
 
 add_executable(subscribe_handler_example src/subscribe_handler/example.cpp)
 target_link_libraries(subscribe_handler_example
-  MrsLib_Timer
+  MrsLib_TimeoutManager
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
 
 add_executable(subscribe_handler_simple_example src/subscribe_handler/simple_example.cpp)
 target_link_libraries(subscribe_handler_simple_example
-  MrsLib_Timer
+  MrsLib_TimeoutManager
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
@@ -364,6 +370,23 @@ install(DIRECTORY
 if(CATKIN_ENABLE_TESTING)
 
   find_package(rostest REQUIRED)
+
+  add_rostest_gtest(
+    TimeoutManagerTest
+    test/timeout_manager/timeout_manager.test
+    test/timeout_manager/test.cpp
+    )
+  target_link_libraries(
+    TimeoutManagerTest
+    MrsLibTimeoutManager
+    MrsLibUtils
+    ${catkin_LIBRARIES}
+    )
+  add_dependencies(
+    TimeoutManagerTest
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+    )
 
   add_rostest_gtest(MathTest
     test/math/math.test
@@ -493,7 +516,7 @@ if(CATKIN_ENABLE_TESTING)
     )
   target_link_libraries(
     SubscribeHandlerTest
-    MrsLib_Timer
+    MrsLib_TimeoutManager
     ${catkin_LIBRARIES}
     )
   add_dependencies(

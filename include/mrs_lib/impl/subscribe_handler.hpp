@@ -25,32 +25,35 @@ namespace mrs_lib
 
   public:
     /* constructor //{ */
-    Impl(SubscribeHandler* owner, const SubscribeHandlerOptions& options, const message_callback_t& message_callback = message_callback_t())
-        : m_owner(owner),
-          m_nh(options.nh),
-          m_no_message_timeout(options.no_message_timeout),
+    Impl(const SubscribeHandlerOptions& options, const message_callback_t& message_callback = message_callback_t())
+        : m_nh(options.nh),
           m_topic_name(options.topic_name),
           m_node_name(options.node_name),
           m_got_data(false),
           m_new_data(false),
           m_used_data(false),
-          m_last_msg_received(ros::Time::now()),
-          m_timeout_callback(options.timeout_callback),
+          m_timeout_manager(options.timeout_manager),
+          m_latest_message_time(0),
           m_latest_message(nullptr),
           m_message_callback(message_callback),
           m_queue_size(options.queue_size),
           m_transport_hints(options.transport_hints)
     {
-      if (!m_timeout_callback)
-        m_timeout_callback = std::bind(&Impl::default_timeout_callback, this, std::placeholders::_1, std::placeholders::_2,
-                                       std::placeholders::_3);
-
       if (options.no_message_timeout != mrs_lib::no_timeout)
       {
-        if (options.use_thread_timer)
-          m_timeout_check_timer = std::make_unique<mrs_lib::ThreadTimer>(m_nh, options.no_message_timeout, &Impl::check_timeout, this, true /*oneshot*/, false /*autostart*/);
+        // initialize a new TimeoutManager if not provided by the user
+        if (!m_timeout_manager)
+          m_timeout_manager = std::make_shared<mrs_lib::TimeoutManager>(m_nh, ros::Rate(2.0/options.no_message_timeout.toSec()));
+
+        // initialize the callback for the TimeoutManager
+        std::function<void(const ros::Time&)> timeout_mgr_callback;
+        if (options.timeout_callback)
+          timeout_mgr_callback = std::bind(options.timeout_callback, topicName(), std::placeholders::_1);
         else
-          m_timeout_check_timer = std::make_unique<mrs_lib::ROSTimer>(m_nh, options.no_message_timeout, &Impl::check_timeout, this, true /*oneshot*/, false /*autostart*/);
+          timeout_mgr_callback = std::bind(&Impl::default_timeout_callback, this, topicName(), std::placeholders::_1);
+
+        // register the timeout callback with the TimeoutManager
+        m_timeout_id = m_timeout_manager->registerNew(options.no_message_timeout, timeout_mgr_callback);
       }
 
       const std::string msg = "Subscribed to topic '" + m_topic_name + "' -> '" + topicName() + "'";
@@ -125,8 +128,7 @@ namespace mrs_lib
     /* lastMsgTime() method //{ */
     virtual ros::Time lastMsgTime() const
     {
-      std::lock_guard lck(m_last_msg_received_mtx);
-      return m_last_msg_received;
+      return m_latest_message_time;
     };
     //}
 
@@ -143,8 +145,8 @@ namespace mrs_lib
     /* start() method //{ */
     virtual void start()
     {
-      if (m_timeout_check_timer)
-        m_timeout_check_timer->start();
+      if (m_timeout_manager)
+        m_timeout_manager->start(m_timeout_id);
       m_sub = m_nh.subscribe(m_topic_name, m_queue_size, &Impl::data_callback, this, m_transport_hints);
     }
     //}
@@ -152,27 +154,17 @@ namespace mrs_lib
     /* stop() method //{ */
     virtual void stop()
     {
-      if (m_timeout_check_timer)
-        m_timeout_check_timer->stop();
+      if (m_timeout_manager)
+        m_timeout_manager->pause(m_timeout_id);
       m_sub.shutdown();
     }
     //}
 
   protected:
-    /* check_time_reset() method //{ */
-    bool check_time_reset(const ros::Time& now)
-    {
-      return now < m_last_msg_received;
-    }
-    //}
-
-  protected:
-    SubscribeHandler* m_owner;
     ros::NodeHandle m_nh;
     ros::Subscriber m_sub;
 
   protected:
-    ros::Duration m_no_message_timeout;
     std::string m_topic_name;
     std::string m_node_name;
 
@@ -186,12 +178,11 @@ namespace mrs_lib
     bool m_used_data;  // whether get_data was successfully called at least once
 
   protected:
-    mutable std::mutex m_last_msg_received_mtx;
-    ros::Time m_last_msg_received;
-    std::unique_ptr<mrs_lib::MRSTimer> m_timeout_check_timer;
-    timeout_callback_t m_timeout_callback;
+    std::shared_ptr<mrs_lib::TimeoutManager> m_timeout_manager;
+    mrs_lib::TimeoutManager::timeout_id_t m_timeout_id;
 
   protected:
+    ros::Time m_latest_message_time;
     typename MessageType::ConstPtr m_latest_message;
     message_callback_t m_message_callback;
 
@@ -201,43 +192,28 @@ namespace mrs_lib
 
   protected:
     /* default_timeout_callback() method //{ */
-    void default_timeout_callback(const std::string& topic, const ros::Time& last_msg, const int n_pubs)
+    void default_timeout_callback(const std::string& topic_name, const ros::Time& last_msg)
     {
-      /* ROS_ERROR("Checking topic %s, delay: %.2f", m_sub.getTopic().c_str(), since_msg.toSec()); */
-      ros::Duration since_msg = (ros::Time::now() - last_msg);
-      const std::string msg = "Did not receive any message from topic '" + topic + "' for " + std::to_string(since_msg.toSec()) + "s ("
+      const ros::Duration since_msg = (ros::Time::now() - last_msg);
+      const auto n_pubs = m_sub.getNumPublishers();
+      const std::string txt = "Did not receive any message from topic '" + topic_name + "' for " + std::to_string(since_msg.toSec()) + "s ("
                               + std::to_string(n_pubs) + " publishers on this topic)";
       if (m_node_name.empty())
-        ROS_WARN_STREAM(msg);
+        ROS_WARN_STREAM(txt);
       else
-        ROS_WARN_STREAM("[" << m_node_name << "]: " << msg);
-    }
-    //}
-
-    /* check_timeout() method //{ */
-    void check_timeout([[maybe_unused]] const ros::TimerEvent& evt)
-    {
-      if (m_timeout_check_timer)
-        m_timeout_check_timer->stop();
-      ros::Time last_msg;
-      {
-        std::lock_guard lck(m_last_msg_received_mtx);
-        last_msg = m_last_msg_received;
-      }
-      const auto n_pubs = m_sub.getNumPublishers();
-      if (m_timeout_check_timer)
-        m_timeout_check_timer->start();
-      m_timeout_callback(topicName(), last_msg, n_pubs);
+        ROS_WARN_STREAM("[" << m_node_name << "]: " << txt);
     }
     //}
 
     /* process_new_message() method //{ */
     void process_new_message(const typename MessageType::ConstPtr& msg)
     {
+      m_latest_message_time = ros::Time::now();
       m_latest_message = msg;
-      m_new_data = true;
+      // If the message callback is registered, the new data will immediately be processed,
+      // so reset the flag. Otherwise, set the flag.
+      m_new_data = !m_message_callback;
       m_got_data = true;
-      m_last_msg_received = ros::Time::now();
       m_new_data_cv.notify_one();
     }
     //}
@@ -245,14 +221,16 @@ namespace mrs_lib
     /* data_callback() method //{ */
     virtual void data_callback(const typename MessageType::ConstPtr& msg)
     {
-      if (m_timeout_check_timer)
-        m_timeout_check_timer->stop();
-      std::lock_guard lck(m_new_data_mtx);
-      process_new_message(msg);
+      {
+        std::lock_guard lck(m_new_data_mtx);
+        if (m_timeout_manager)
+          m_timeout_manager->reset(m_timeout_id);
+        process_new_message(msg);
+      }
+
+      // execute the callback after unlocking the mutex to enable multi-threaded callback execution
       if (m_message_callback)
-        m_message_callback(*m_owner);
-      if (m_timeout_check_timer)
-        m_timeout_check_timer->start();
+        m_message_callback(msg);
     }
     //}
   };
@@ -272,55 +250,55 @@ namespace mrs_lib
     friend class SubscribeHandler<MessageType>;
 
   public:
-    ImplThreadsafe(SubscribeHandler* owner, const SubscribeHandlerOptions& options, const message_callback_t& message_callback = message_callback_t())
-        : impl_class_t::Impl(owner, options, message_callback)
+    ImplThreadsafe(const SubscribeHandlerOptions& options, const message_callback_t& message_callback = message_callback_t())
+        : impl_class_t::Impl(options, message_callback)
     {
     }
 
   public:
     virtual bool hasMsg() const override
     {
-      std::lock_guard<std::recursive_mutex> lck(m_mtx);
+      std::lock_guard lck(m_mtx);
       return impl_class_t::hasMsg();
     }
     virtual bool newMsg() const override
     {
-      std::lock_guard<std::recursive_mutex> lck(m_mtx);
+      std::lock_guard lck(m_mtx);
       return impl_class_t::newMsg();
     }
     virtual bool usedMsg() const override
     {
-      std::lock_guard<std::recursive_mutex> lck(m_mtx);
+      std::lock_guard lck(m_mtx);
       return impl_class_t::usedMsg();
     }
     virtual typename MessageType::ConstPtr getMsg() override
     {
-      std::lock_guard<std::recursive_mutex> lck(m_mtx);
+      std::lock_guard lck(m_mtx);
       return impl_class_t::getMsg();
     }
     virtual typename MessageType::ConstPtr peekMsg() const override
     {
-      std::lock_guard<std::recursive_mutex> lck(m_mtx);
+      std::lock_guard lck(m_mtx);
       return impl_class_t::peekMsg();
     }
     virtual ros::Time lastMsgTime() const override
     {
-      std::lock_guard<std::recursive_mutex> lck(m_mtx);
+      std::lock_guard lck(m_mtx);
       return impl_class_t::lastMsgTime();
     };
     virtual std::string topicName() const override
     {
-      std::lock_guard<std::recursive_mutex> lck(m_mtx);
+      std::lock_guard lck(m_mtx);
       return impl_class_t::topicName();
     };
     virtual void start() override
     {
-      std::lock_guard<std::recursive_mutex> lck(m_mtx);
+      std::lock_guard lck(m_mtx);
       return impl_class_t::start();
     }
     virtual void stop() override
     {
-      std::lock_guard<std::recursive_mutex> lck(m_mtx);
+      std::lock_guard lck(m_mtx);
       return impl_class_t::stop();
     }
 
@@ -329,17 +307,16 @@ namespace mrs_lib
   protected:
     virtual void data_callback(const typename MessageType::ConstPtr& msg) override
     {
-      // the stop has to come before the mutex lock to enable the timer callbacks currently
-      // in the queue to execute and prevent deadlock (.stop() waits for all currently
-      // queued callbacks to finish before returning...)
-      if (this->m_timeout_check_timer)
-        this->m_timeout_check_timer->stop();
-      std::scoped_lock lck(m_mtx, this->m_new_data_mtx);
-      this->process_new_message(msg);
+      {
+        std::scoped_lock lck(m_mtx, this->m_new_data_mtx);
+        if (this->m_timeout_manager)
+          this->m_timeout_manager->reset(this->m_timeout_id);
+        impl_class_t::process_new_message(msg);
+      }
+
+      // execute the callback after unlocking the mutex to enable multi-threaded callback execution
       if (this->m_message_callback)
-        this->m_message_callback(*(this->m_owner));
-      if (this->m_timeout_check_timer)
-        this->m_timeout_check_timer->start();
+        impl_class_t::m_message_callback(msg);
     }
 
   private:
