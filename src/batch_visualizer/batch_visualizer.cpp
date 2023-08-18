@@ -52,6 +52,7 @@ void BatchVisualizer::initialize() {
 
   points_marker.scale.x = points_scale;
   points_marker.scale.y = points_scale;
+  points_marker.color.a = 1.0;
 
   // setup lines marker
   ss.str(std::string());
@@ -65,6 +66,7 @@ void BatchVisualizer::initialize() {
   lines_marker.type               = visualization_msgs::Marker::LINE_LIST;
 
   lines_marker.scale.x = lines_scale;
+  lines_marker.color.a = 1.0;
 
   // setup triangles marker
   ss.str(std::string());
@@ -80,6 +82,7 @@ void BatchVisualizer::initialize() {
   triangles_marker.scale.x = 1;
   triangles_marker.scale.y = 1;
   triangles_marker.scale.z = 1;
+  triangles_marker.color.a = 1.0;
 
   ROS_INFO("[%s]: Batch visualizer loaded with default values", ros::this_node::getName().c_str());
   initialized = true;
@@ -284,17 +287,17 @@ void BatchVisualizer::publish() {
       auto points = it->getPoints();
       auto colors = it->getColors();
       switch (it->getType()) {
-        case 0: {
+        case MarkerType::POINT: {
           points_marker.points.insert(points_marker.points.end(), points.begin(), points.end());
           points_marker.colors.insert(points_marker.colors.end(), colors.begin(), colors.end());
           break;
         }
-        case 1: {
+        case MarkerType::LINE: {
           lines_marker.points.insert(lines_marker.points.end(), points.begin(), points.end());
           lines_marker.colors.insert(lines_marker.colors.end(), colors.begin(), colors.end());
           break;
         }
-        case 2: {
+        case MarkerType::TRIANGLE: {
           triangles_marker.points.insert(triangles_marker.points.end(), points.begin(), points.end());
           triangles_marker.colors.insert(triangles_marker.colors.end(), colors.begin(), colors.end());
           break;
