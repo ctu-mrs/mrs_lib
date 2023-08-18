@@ -100,8 +100,8 @@ target_link_libraries(MrsLib_TimeoutManager
   ${catkin_LIBRARIES}
   )
 
-add_library(MrsLibDynamicPublisher src/dynamic_publisher/dynamic_publisher.cpp)
-target_link_libraries(MrsLibDynamicPublisher
+add_library(MrsLib_DynamicPublisher src/dynamic_publisher/dynamic_publisher.cpp)
+target_link_libraries(MrsLib_DynamicPublisher
   ${catkin_LIBRARIES}
   )
 

@@ -15,7 +15,7 @@
 
 // Include the SubscribeHandler header
 #include <mrs_lib/subscribe_handler.h>
-#include <impl/subscribe_handler.hpp>
+#include <mrs_lib/impl/subscribe_handler.hpp>
 #include <std_msgs/String.h>
 
 void timeout_callback(const std::string& topic_name, const ros::Time& last_msg)
