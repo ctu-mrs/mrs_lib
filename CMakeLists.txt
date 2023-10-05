@@ -12,6 +12,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3") # because normal release is just -O2
 # please, really do not commit your temporary custom flags :-)
 
+add_definitions(-g)
+add_definitions(-O0)
 add_definitions(-Wall)
 add_definitions(-Wextra)
 add_definitions(-Wpedantic)
@@ -41,6 +43,8 @@ set(CATKIN_DEPENDENCIES
 find_package(catkin REQUIRED COMPONENTS
   ${CATKIN_DEPENDENCIES}
   )
+
+find_package(jsoncpp REQUIRED)
 
 # include Eigen3
 find_package(Eigen3 REQUIRED)
@@ -265,6 +269,13 @@ add_executable(param_loader_example src/param_loader/example.cpp)
 target_link_libraries(param_loader_example
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
+  )
+
+add_executable(param_provider_example src/param_loader/param_provider_example.cpp)
+target_link_libraries(param_provider_example
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  jsoncpp
   )
 
 add_executable(subscribe_handler_example src/subscribe_handler/example.cpp)

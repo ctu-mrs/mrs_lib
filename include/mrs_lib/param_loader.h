@@ -14,6 +14,7 @@
 #include <iostream>
 #include <Eigen/Dense>
 #include <std_msgs/ColorRGBA.h>
+#include <yaml-cpp/yaml.h>
 
 namespace mrs_lib
 {
@@ -523,6 +524,7 @@ public:
   {
     /* std::cout << "Initialized2 ParamLoader for node " << node_name << std::endl; */
   }
+
   /*!
     * \brief Convenience overload to enable writing ParamLoader pl(nh, "node_name");
     *
@@ -533,6 +535,18 @@ public:
       : ParamLoader(nh, std::string(node_name))
   {
     /* std::cout << "Initialized3 ParamLoader for node " << node_name << std::endl; */
+  }
+
+  /*!
+    * \brief Convenience overload to enable writing ParamLoader pl(nh, "node_name");
+    *
+    * \param nh            The parameters will be loaded from rosparam using this node handle.
+    * \param node_name     Optional node name used when printing the loaded values or loading errors.
+    */
+  ParamLoader(const std::string& filepath, const ros::NodeHandle& nh)
+    : ParamLoader(nh, "none")
+  {
+    YAML::Node node = YAML::Load(filepath);
   }
   //}
 
