@@ -1,20 +1,28 @@
 #include <mrs_lib/param_provider.h>
 
+template <typename T>
+void test_load_param(const std::string& param_name, const mrs_lib::ParamProvider pp)
+{
+  T param;
+  const bool success = pp.getParam(param_name, param);
+  if (success)
+    std::cout << "loading of parameter \"" << param_name << "\" was successful: " << param << std::endl;
+  else
+    std::cout << "loading of parameter \"" << param_name << "\" was NOT successful!" << std::endl;
+}
 
 int main(int argc, char **argv)
 {
   const std::string node_name("param_provider_example");
   ros::init(argc, argv, node_name);
   ros::NodeHandle nh("~");
-  mrs_lib::ParamProvider pp(nh);
+  mrs_lib::ParamProvider pp(nh, "ParamProviderExample");
 
   pp.addYamlFile("/tmp/test.yaml");
-  double param;
-  std::cout << "loading was success: " << pp.getParam("test/a", param) << std::endl;
-  std::cout << "loaded value: " << param << std::endl;
 
-  std::cout << "loading was success: " << pp.getParam("test/b", param) << std::endl;
-  std::cout << "loaded value: " << param << std::endl;
+  test_load_param<double>("test/a", pp);
+  test_load_param<double>("test/b", pp);
+  test_load_param<std::string>("c", pp);
 
   return 0;
 }

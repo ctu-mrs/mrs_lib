@@ -44,7 +44,7 @@ find_package(catkin REQUIRED COMPONENTS
   ${CATKIN_DEPENDENCIES}
   )
 
-find_package(jsoncpp REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 # include Eigen3
 find_package(Eigen3 REQUIRED)
@@ -275,7 +275,7 @@ add_executable(param_provider_example src/param_loader/param_provider_example.cp
 target_link_libraries(param_provider_example
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
-  jsoncpp
+  yaml-cpp
   )
 
 add_executable(subscribe_handler_example src/subscribe_handler/example.cpp)

@@ -1,6 +1,8 @@
 #include <string>
 #include <fstream>
-#include <jsoncpp/json/json.h>
+#include <sstream>
+#include <algorithm>
+#include <yaml-cpp/yaml.h>
 #include <ros/node_handle.h>
 
 namespace mrs_lib
@@ -10,55 +12,59 @@ namespace mrs_lib
     public:
 
       template <typename T>
-      bool getParam(const std::string& param_name, T& value_out)
+      bool getParam(const std::string& param_name, T& value_out) const
       {
-        for (const auto& json : m_jsons)
+        for (const auto& yaml : m_yamls)
         {
-          Json::Value cur_node = json[param_name];
+          // Try to load the parameter sequentially as a map.
+          auto cur_node_it = std::cbegin(yaml);
+          // The root should always be a pam
+          if (!cur_node_it->second.IsMap())
+            continue;
 
-          /* // If that fails, try to load it sequentially as a map. */
-          /* // (this is for the second case) */
-          /* if (!loaded) */
-          /* { */
-          /*   loaded = true; */
-          /*   cur_node.reset(yaml); */
-          /*   constexpr char delimiter = '/'; */
-          /*   auto substr_start = std::begin(param_name); */
-          /*   auto substr_end = substr_start; */
-          /*   do */
-          /*   { */
-          /*     substr_end = std::find(substr_start, std::end(param_name), delimiter);; */
-          /*     const auto param_substr = param_name.substr(substr_start - std::begin(param_name), substr_end - std::begin(param_name)); */
-          /*     substr_start = substr_end+1; */
+          bool loaded = true;
+          {
+            constexpr char delimiter = '/';
+            auto substr_start = std::cbegin(param_name);
+            auto substr_end = substr_start;
+            do
+            {
+              substr_end = std::find(substr_start, std::cend(param_name), delimiter);;
+              const auto param_substr = param_name.substr(substr_start - std::begin(param_name), substr_end - std::begin(param_name));
+              substr_start = substr_end+1;
 
-          /*     try */
-          /*     { */
-          /*       cur_node = cur_node[param_substr]; */
-          /*     } */
-          /*     catch (const YAML::BadSubscript& e) */
-          /*     { */
-          /*       break; */
-          /*       loaded = false; */
-          /*     } */
-          /*   } */
-          /*   while (substr_end != std::end(param_name)); */
-          /* } */
+              bool found = false;
+              for (auto node_it = std::cbegin(cur_node_it->second); node_it != std::cend(cur_node_it->second); ++node_it)
+              {
+                if (node_it->first.as<std::string>() == param_substr)
+                {
+                  cur_node_it = node_it;
+                  found = true;
+                  break;
+                }
+              }
 
-          /* if (loaded) */
-          /* { */
-          /*   try */
-          /*   { */
-          /*     // similar problem as with checking for a value */
-          /*     // try catch is the only option... */
-          /*     value_out = cur_node.as<T>(); */
-          /*     return true; */
-          /*   } */
-          /*   catch (const YAML::BadConversion& e) */
-          /*   {} */
-          /* } */
+              if (!found)
+              {
+                loaded = false;
+                break;
+              }
+            }
+            while (substr_end != std::end(param_name) && cur_node_it->second.IsMap());
+          }
 
-          value_out = cur_node.as<T>();
-          return true;
+          if (loaded)
+          {
+            try
+            {
+              // try catch is the only option...
+              value_out = cur_node_it->second.as<T>();
+              return true;
+            }
+            catch (const YAML::BadConversion& e)
+            {}
+          }
+
         }
 
         if (m_use_rosparam)
@@ -67,22 +73,33 @@ namespace mrs_lib
         return false;
       }
 
-      ParamProvider(const ros::NodeHandle& nh, const bool use_rosparam = true)
-        : m_nh(nh), m_use_rosparam(use_rosparam)
+      ParamProvider(const ros::NodeHandle& nh, const std::string& node_name, const bool use_rosparam = true)
+        : m_nh(nh), m_node_name(node_name), m_use_rosparam(use_rosparam)
       {
       }
 
-      void addYamlFile(const std::string& filepath)
+      bool addYamlFile(const std::string& filepath)
       {
-        std::ifstream ifstr(filepath);
-        m_jsons.emplace_back();
-        ifstr >> m_jsons.back();
+        try
+        {
+          const auto loaded_yaml = YAML::LoadFile(filepath);
+          YAML::Node root;
+          root["root"] = loaded_yaml;
+          m_yamls.emplace_back(root);
+          return true;
+        }
+        catch (const YAML::ParserException& e)
+        {
+          ROS_ERROR_STREAM("[" << m_node_name << "]: Failed to parse file \"" << filepath << "\"! Parameters will not be loaded.");
+          return false;
+        }
       }
 
     private:
 
-      std::vector<Json::Value> m_jsons;
+      std::vector<YAML::Node> m_yamls;
       ros::NodeHandle m_nh;
+      std::string m_node_name;
       bool m_use_rosparam;
   };
 }
