@@ -2,9 +2,6 @@
 
 ![](.fig/thumbnail.jpg)
 
-| Build status | [![Build Status](https://github.com/ctu-mrs/mrs_lib/workflows/Noetic/badge.svg)](https://github.com/ctu-mrs/mrs_lib/actions) | [![Build Status](https://github.com/ctu-mrs/mrs_lib/workflows/Docs/badge.svg)](https://github.com/ctu-mrs/mrs_lib/actions) |
-|--------------|------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
-
 ## Overview
 
 This ROS package contains various useful libraries (mostly C++) for the [MRS UAV system](https://github.com/ctu-mrs/mrs_uav_system).
