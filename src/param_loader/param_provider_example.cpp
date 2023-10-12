@@ -33,7 +33,7 @@ int main(int argc, char **argv)
 
   pp.addYamlFile("/tmp/test.yaml");
 
-  test_load_param<double>("test/a", pp);
+  test_load_param<double>("test/namespace/a", pp);
   test_load_param<double>("test/b", pp);
   test_load_param<std::string>("c", pp);
   test_load_param<std::vector<std::string>>("text_array", pp);

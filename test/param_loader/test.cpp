@@ -122,6 +122,10 @@ TEST(TESTSuite, static_params_test) {
   EXPECT_TRUE(pl.loadParam("static_param", static_param));
   EXPECT_TRUE(pl.loadedSuccessfully());
 
+  double static_param2;
+  EXPECT_TRUE(pl.loadParam("ns1/ns2/a", static_param2));
+  EXPECT_TRUE(pl.loadedSuccessfully());
+
   EXPECT_FALSE(pl.loadParam("static_param_asdf", static_param));
   EXPECT_FALSE(pl.loadedSuccessfully());
 }
