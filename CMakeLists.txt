@@ -82,7 +82,7 @@ set(LIBRARIES
 catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS ${CATKIN_DEPENDENCIES}
-  DEPENDS Eigen
+  DEPENDS Eigen YAML_CPP
   LIBRARIES ${LIBRARIES}
   )
 
@@ -96,6 +96,7 @@ include_directories(
   ${Eigen_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
   ${pcl_ros_INCLUDE_DIRS}
+  ${YAML_CPP_INCLUDE_DIRS}
   )
 
 add_library(MrsLib_TimeoutManager src/timeout_manager/timeout_manager.cpp)
@@ -256,7 +257,7 @@ add_library(MrsLib_ParamProvider src/param_loader/param_provider.cpp)
 target_link_libraries(MrsLib_ParamProvider
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
-  yaml-cpp
+  ${YAML_CPP_LIBRARIES}
   )
 
 add_library(MrsLib_ParamLoader src/param_loader/param_loader.cpp)
