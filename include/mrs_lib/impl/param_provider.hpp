@@ -33,23 +33,21 @@ namespace mrs_lib
       bool loaded = true;
       {
         constexpr char delimiter = '/';
-        const std::string_view param_name_sw(param_name);
-        auto substr_start = std::cbegin(param_name_sw);
+        auto substr_start = std::cbegin(param_name);
         auto substr_end = substr_start;
         do
         {
-          substr_end = std::find(substr_start, std::cend(param_name_sw), delimiter);
+          substr_end = std::find(substr_start, std::cend(param_name), delimiter);
           // why can't substr or string_view take iterators? :'(
-          const auto start_pos = std::distance(std::cbegin(param_name_sw), substr_start);
+          const auto start_pos = std::distance(std::cbegin(param_name), substr_start);
           const auto count = std::distance(substr_start, substr_end);
-          const std::string_view param_substr = param_name_sw.substr(start_pos, count);
+          const std::string param_substr = param_name.substr(start_pos, count);
           substr_start = substr_end+1;
 
           bool found = false;
           for (auto node_it = std::cbegin(cur_node_it->second); node_it != std::cend(cur_node_it->second); ++node_it)
           {
-            const std::string_view node_name_sw(node_it->first.as<std::string>());
-            if (node_name_sw == param_substr)
+            if (node_it->first.as<std::string>() == param_substr)
             {
               cur_node_it = node_it;
               found = true;
@@ -63,7 +61,7 @@ namespace mrs_lib
             break;
           }
         }
-        while (substr_end != std::end(param_name_sw) && cur_node_it->second.IsMap());
+        while (substr_end != std::end(param_name) && cur_node_it->second.IsMap());
       }
 
       if (loaded)
