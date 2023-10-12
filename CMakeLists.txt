@@ -12,8 +12,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3") # because normal release is just -O2
 # please, really do not commit your temporary custom flags :-)
 
-add_definitions(-g)
-add_definitions(-O0)
 add_definitions(-Wall)
 add_definitions(-Wextra)
 add_definitions(-Wpedantic)
