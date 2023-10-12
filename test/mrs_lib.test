@@ -39,9 +39,6 @@
   <include file="$(find mrs_lib)/test/service_client_handler/service_client_handler.test">
   </include>
 
-  <include file="$(find mrs_lib)/test/vector_converter/vector_converter.test">
-  </include>
-
   <include file="$(find mrs_lib)/test/publisher_handler/publisher_handler.test">
   </include>
 

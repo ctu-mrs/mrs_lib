@@ -3,6 +3,7 @@
   <test pkg="mrs_lib" type="ParamLoaderTest" test-name="param_loader" time-limit="10.0">
 
     <rosparam file="$(find mrs_lib)/test/param_loader/test.yaml" />
+    <param name="static_params_file" value="$(find mrs_lib)/test/param_loader/test_static.yaml" />
 
   </test>
 

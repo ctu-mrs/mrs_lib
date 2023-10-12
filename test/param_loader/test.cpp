@@ -36,9 +36,6 @@ TEST(TESTSuite, main_test) {
   ROS_INFO("[%s]: initializing ParamLoader", ros::this_node::getName().c_str());
   mrs_lib::ParamLoader pl(nh);
 
-  XmlRpc::XmlRpcValue list;
-  pl.loadParam("services", list, XmlRpc::XmlRpcValue());
-
   ROS_INFO("[%s]: testing ParamLoader", ros::this_node::getName().c_str());
   std::vector<Eigen::MatrixXd> loaded_nd_matrix = pl.loadMatrixArray2("test_param_nd_matrix");
   if (pl.loadedSuccessfully())
@@ -99,6 +96,34 @@ TEST(TESTSuite, main_test) {
   vec = pl.loadMatrixArray2("test_param_matrix", vec);
 
   EXPECT_TRUE(result);
+}
+
+//}
+
+/* TEST(TESTSuite, static_params_test) //{ */
+
+TEST(TESTSuite, static_params_test) {
+
+  // Set up ROS.
+  ros::NodeHandle nh = ros::NodeHandle("~");
+
+  ros::Time::waitForValid();
+
+  ROS_INFO("[%s]: initializing ParamLoader", ros::this_node::getName().c_str());
+  mrs_lib::ParamLoader pl(nh);
+  EXPECT_TRUE(pl.addYamlFileFromParam("static_params_file"));
+  std::string static_params_file;
+  EXPECT_TRUE(pl.loadParamReusable("static_params_file", static_params_file));
+  EXPECT_TRUE(pl.addYamlFile(static_params_file));
+
+  ROS_INFO("[%s]: testing ParamLoader", ros::this_node::getName().c_str());
+
+  std::vector<std::string> static_param;
+  EXPECT_TRUE(pl.loadParam("static_param", static_param));
+  EXPECT_TRUE(pl.loadedSuccessfully());
+
+  EXPECT_FALSE(pl.loadParam("static_param_asdf", static_param));
+  EXPECT_FALSE(pl.loadedSuccessfully());
 }
 
 //}

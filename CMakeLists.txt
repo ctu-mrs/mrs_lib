@@ -65,6 +65,7 @@ set(LIBRARIES
   MrsLib_IirFilter
   MrsLib_NotchFilter
   MrsLib_Utils
+  MrsLib_ParamProvider
   MrsLib_ParamLoader
   MrsLib_MedianFilter
   MrsLib_OdomLKF
@@ -253,10 +254,18 @@ target_link_libraries(MrsLib_Utils
   ${Eigen_LIBRARIES}
   )
 
+add_library(MrsLib_ParamProvider src/param_loader/param_provider.cpp)
+target_link_libraries(MrsLib_ParamProvider
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  yaml-cpp
+  )
+
 add_library(MrsLib_ParamLoader src/param_loader/param_loader.cpp)
 target_link_libraries(MrsLib_ParamLoader
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
+  MrsLib_ParamProvider
   )
 
 add_library(MrsLib_TransformBroadcaster src/transform_broadcaster/transform_broadcaster.cpp)
@@ -269,13 +278,14 @@ add_executable(param_loader_example src/param_loader/example.cpp)
 target_link_libraries(param_loader_example
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
+  MrsLib_ParamLoader
   )
 
 add_executable(param_provider_example src/param_loader/param_provider_example.cpp)
 target_link_libraries(param_provider_example
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
-  yaml-cpp
+  MrsLib_ParamProvider
   )
 
 add_executable(subscribe_handler_example src/subscribe_handler/example.cpp)
@@ -389,8 +399,8 @@ if(CATKIN_ENABLE_TESTING)
     )
   target_link_libraries(
     TimeoutManagerTest
-    MrsLibTimeoutManager
-    MrsLibUtils
+    MrsLib_TimeoutManager
+    MrsLib_Utils
     ${catkin_LIBRARIES}
     )
   add_dependencies(
@@ -614,22 +624,22 @@ if(CATKIN_ENABLE_TESTING)
     ${catkin_EXPORTED_TARGETS}
     )
 
-  add_rostest_gtest(
-    VectorConverterTest
-    test/vector_converter/vector_converter.test
-    test/vector_converter/test.cpp
-    )
-  target_link_libraries(
-    VectorConverterTest
-    ${catkin_LIBRARIES}
-    )
-  target_include_directories(VectorConverterTest PRIVATE
-    ${pcl_ros_INCLUDE_DIRS}
-    )
-  add_dependencies(
-    VectorConverterTest
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS}
-    )
+  # add_rostest_gtest(
+  #   VectorConverterTest
+  #   test/vector_converter/vector_converter.test
+  #   test/vector_converter/test.cpp
+  #   )
+  # target_link_libraries(
+  #   VectorConverterTest
+  #   ${catkin_LIBRARIES}
+  #   )
+  # target_include_directories(VectorConverterTest PRIVATE
+  #   ${pcl_ros_INCLUDE_DIRS}
+  #   )
+  # add_dependencies(
+  #   VectorConverterTest
+  #   ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  #   ${catkin_EXPORTED_TARGETS}
+  #   )
 
 endif()

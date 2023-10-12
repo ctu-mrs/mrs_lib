@@ -1,5 +1,18 @@
 #include <mrs_lib/param_provider.h>
 
+template<typename T>
+std::ostream& operator<< (std::ostream& out, const std::vector<T>& v) {
+    out << "{";
+    size_t last = v.size() - 1;
+    for(size_t i = 0; i < v.size(); ++i) {
+        out << v[i];
+        if (i != last) 
+            out << ", ";
+    }
+    out << "}";
+    return out;
+}
+
 template <typename T>
 void test_load_param(const std::string& param_name, const mrs_lib::ParamProvider pp)
 {
@@ -23,6 +36,7 @@ int main(int argc, char **argv)
   test_load_param<double>("test/a", pp);
   test_load_param<double>("test/b", pp);
   test_load_param<std::string>("c", pp);
+  test_load_param<std::vector<std::string>>("text_array", pp);
 
   return 0;
 }

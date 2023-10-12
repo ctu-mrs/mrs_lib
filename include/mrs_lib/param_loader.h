@@ -14,7 +14,7 @@
 #include <iostream>
 #include <Eigen/Dense>
 #include <std_msgs/ColorRGBA.h>
-#include <yaml-cpp/yaml.h>
+#include <mrs_lib/param_provider.h>
 
 namespace mrs_lib
 {
@@ -68,7 +68,8 @@ private:
   std::string m_node_name;
   std::string m_prefix;
   const ros::NodeHandle& m_nh;
-  std::unordered_set<std::string> loaded_params;
+  mrs_lib::ParamProvider m_pp;
+  std::unordered_set<std::string> m_loaded_params;
 
   /* printing helper functions //{ */
   /* printError and print_warning functions //{*/
@@ -213,7 +214,7 @@ private:
   /* check_duplicit_loading checks whether the parameter was already loaded - returns true if yes //{ */
   bool check_duplicit_loading(const std::string& name)
   {
-    if (loaded_params.count(name))
+    if (m_loaded_params.count(name))
     {
       printError(std::string("Tried to load parameter ") + name + std::string(" twice"));
       m_load_successful = false;
@@ -275,7 +276,7 @@ private:
 
     std::vector<T> tmp_vec;
     // try to load the parameter
-    bool success = m_nh.getParam(name_prefixed, tmp_vec);
+    bool success = m_pp.getParam(name_prefixed, tmp_vec);
     // check if the loaded vector has correct length
     bool correct_size = (int)tmp_vec.size() == rows * cols;
     if (!check_size_exact && !expect_zero_matrix)
@@ -324,7 +325,7 @@ private:
     {
       if (m_print_values && printValues)
         printValue(name_prefixed, loaded);
-      loaded_params.insert(name_prefixed);
+      m_loaded_params.insert(name_prefixed);
     } else
     {
       m_load_successful = false;
@@ -342,8 +343,8 @@ private:
     int rows;
     std::vector<int> cols;
     bool success = true;
-    success = success && m_nh.getParam(name_prefixed + "/rows", rows);
-    success = success && m_nh.getParam(name_prefixed + "/cols", cols);
+    success = success && m_pp.getParam(name_prefixed + "/rows", rows);
+    success = success && m_pp.getParam(name_prefixed + "/cols", cols);
 
     std::vector<MatrixX<T>> loaded;
     loaded.reserve(cols.size());
@@ -466,7 +467,7 @@ private:
 
     bool cur_load_successful = true;
     // try to load the parameter
-    const bool success = m_nh.getParam(name_prefixed, loaded);
+    const bool success = m_pp.getParam(name_prefixed, loaded);
     if (!success)
     {
       // if it was not loaded, set the default value
@@ -485,7 +486,7 @@ private:
       if (m_print_values)
         printValue(name_prefixed, loaded);
       // mark the param name_prefixed as successfully loaded
-      loaded_params.insert(name_prefixed);
+      m_loaded_params.insert(name_prefixed);
     } else
     {
       m_load_successful = false;
@@ -507,7 +508,8 @@ public:
       : m_load_successful(true),
         m_print_values(printValues),
         m_node_name(node_name),
-        m_nh(nh)
+        m_nh(nh),
+        m_pp(nh, m_node_name)
   {
     /* std::cout << "Initialized1 ParamLoader for node " << node_name << std::endl; */
   }
@@ -578,6 +580,37 @@ public:
   
   //}
 
+  /* addYamlFile() function //{ */
+  
+  /*!
+    * \brief Adds the specified file as a source of static parameters.
+    *
+    * \param filepath The full path to the yaml file to be loaded.
+    * \return true if loading and parsing the file was successful, false otherwise.
+    */
+  bool addYamlFile(const std::string& filepath)
+  {
+    return m_pp.addYamlFile(filepath);
+  }
+  //}
+
+  /* addYamlFileFromParam() function //{ */
+  
+  /*!
+    * \brief Adds the specified file as a source of static parameters.
+    *
+    * \param filepath The full path to the yaml file to be loaded.
+    * \return true if loading and parsing the file was successful, false otherwise.
+    */
+  bool addYamlFileFromParam(const std::string& param_name)
+  {
+    std::string filepath;
+    if (!loadParam(param_name, filepath))
+      return false;
+    return m_pp.addYamlFile(filepath);
+  }
+  //}
+
   /* loadedSuccessfully function //{ */
   /*!
     * \brief Indicates whether all compulsory parameters were successfully loaded.
@@ -635,14 +668,16 @@ public:
     * Using this method, the parameter can be loaded multiple times using the same ParamLoader instance without error.
     *
     * \param name          Name of the parameter in the rosparam server.
+    * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
-    * \return              The loaded parameter value.
+    * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
     */
   template <typename T>
-  T loadParamReusable(const std::string& name, const T& default_value)
+  bool loadParamReusable(const std::string& name, T& out_value, const T& default_value)
   {
-    const auto loaded = load<T>(name, default_value, OPTIONAL, REUSABLE);
-    return loaded.first;
+    const auto [ret, success] = load<T>(name, default_value, OPTIONAL, REUSABLE);
+    out_value = ret;
+    return success;
   }
   //}
 
@@ -690,14 +725,17 @@ public:
     * Using this method, the parameter can be loaded multiple times using the same ParamLoader instance without error.
     *
     * \param name          Name of the parameter in the rosparam server.
+    * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
     * \return              The loaded parameter value.
     */
   template <typename T>
-  T loadParamReusable(const std::string& name)
+  bool loadParamReusable(const std::string& name, T& out_value)
   {
-    const auto loaded = load<T>(name, T(), COMPULSORY, REUSABLE);
-    return loaded.first;
+    const auto [ret, success] = load<T>(name, T(), COMPULSORY, REUSABLE);
+    out_value = ret;
+    return success;
   }
+
   //}
 
   /* loadParam specializations for ros::Duration type //{ */
@@ -780,36 +818,6 @@ public:
     return ret;
   }
 
-  /*!
-    * \brief An overload for loading std_msgs::ColorRGBA.
-    *
-    * The color will be loaded as several \p double -typed variables, representing the R, G, B and A color elements.
-    *
-    * \param name          Name of the parameter in the rosparam server.
-    * \param default_value This value will be used if the parameter name is not found in the rosparam server.
-    * \return              The loaded parameter value.
-    */
-  XmlRpc::XmlRpcValue loadParam2(const std::string& name, const XmlRpc::XmlRpcValue& default_value)
-  {
-    const auto loaded = load<XmlRpc::XmlRpcValue>(name, default_value, OPTIONAL, UNIQUE);
-    return loaded.first;
-  }
-
-  /*!
-    * \brief An overload for loading std_msgs::ColorRGBA.
-    *
-    * The color will be loaded as several \p double -typed variables, representing the R, G, B and A color elements.
-    *
-    * \param name          Name of the parameter in the rosparam server.
-    * \param default_value This value will be used if the parameter name is not found in the rosparam server.
-    * \return              The loaded parameter value.
-    */
-  XmlRpc::XmlRpcValue loadParam2(const std::string& name)
-  {
-    const auto loaded = load<XmlRpc::XmlRpcValue>(name, {}, COMPULSORY, UNIQUE);
-    return loaded.first;
-  }
-  
   //}
 
   /* loadParam specializations and convenience functions for Eigen dynamic matrix type //{ */
