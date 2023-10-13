@@ -37,7 +37,7 @@ TEST(TESTSuite, main_test) {
   mrs_lib::ParamLoader pl(nh);
 
   XmlRpc::XmlRpcValue list;
-  pl.loadParam("services", list, XmlRpc::XmlRpcValue());
+  EXPECT_TRUE(pl.loadParam("services", list, XmlRpc::XmlRpcValue()));
 
   ROS_INFO("[%s]: testing ParamLoader", ros::this_node::getName().c_str());
   std::vector<Eigen::MatrixXd> loaded_nd_matrix = pl.loadMatrixArray2("test_param_nd_matrix");

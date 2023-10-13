@@ -9,3 +9,6 @@ test_param_nd_matrix:
           2.0,   4.0]
 
 test_param_matrix: []
+
+services:
+  complex_structure: ["asd"]
