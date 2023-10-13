@@ -17,6 +17,8 @@ namespace mrs_lib
       template <typename T>
       bool getParam(const std::string& param_name, T& value_out) const;
 
+      bool getParam(const std::string& param_name, XmlRpc::XmlRpcValue& value_out) const;
+
       ParamProvider(const ros::NodeHandle& nh, std::string node_name, const bool use_rosparam = true);
 
       bool addYamlFile(const std::string& filepath);
@@ -30,6 +32,8 @@ namespace mrs_lib
 
       template <typename T>
       bool getParamImpl(const std::string& param_name, T& value_out) const;
+
+      std::optional<YAML::Node> findYamlNode(const std::string& param_name) const;
   };
 
 }
