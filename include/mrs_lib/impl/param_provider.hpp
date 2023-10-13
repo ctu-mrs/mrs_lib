@@ -19,8 +19,50 @@ namespace mrs_lib
     }
   }
 
+  bool ParamProvider::getParam(const std::string& param_name, XmlRpc::XmlRpcValue& value_out) const
+  {
+    if (m_use_rosparam && m_nh.getParam(param_name, value_out))
+      return true;
+
+    try
+    {
+      const auto found_node = findYamlNode(param_name);
+      if (found_node.has_value())
+        ROS_WARN_STREAM("[" << m_node_name << "]: Parameter \"" << param_name << "\" of desired type XmlRpc::XmlRpcValue is only available as a static parameter, which doesn't support loading of this type.");
+    }
+    catch (const YAML::Exception& e)
+    {
+      ROS_ERROR_STREAM("[" << m_node_name << "]: YAML-CPP threw an unknown exception: " << e.what());
+    }
+    return false;
+  }
+
   template <typename T>
   bool ParamProvider::getParamImpl(const std::string& param_name, T& value_out) const
+  {
+    {
+      const auto found_node = findYamlNode(param_name);
+      if (found_node.has_value())
+      {
+        try
+        {
+          // try catch is the only type-generic option...
+          value_out = found_node.value().as<T>();
+          return true;
+        }
+        catch (const YAML::BadConversion& e)
+        {}
+      }
+
+    }
+
+    if (m_use_rosparam)
+      return m_nh.getParam(param_name, value_out);
+
+    return false;
+  }
+
+  std::optional<YAML::Node> ParamProvider::findYamlNode(const std::string& param_name) const
   {
     for (const auto& yaml : m_yamls)
     {
@@ -66,22 +108,11 @@ namespace mrs_lib
 
       if (loaded)
       {
-        try
-        {
-          // try catch is the only type-generic option...
-          value_out = cur_node_it->second.as<T>();
-          return true;
-        }
-        catch (const YAML::BadConversion& e)
-        {}
+        return cur_node_it->second;
       }
-
     }
 
-    if (m_use_rosparam)
-      return m_nh.getParam(param_name, value_out);
-
-    return false;
+    return std::nullopt;
   }
 }
 
