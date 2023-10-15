@@ -73,19 +73,19 @@ private:
 
   /* printing helper functions //{ */
   /* printError and print_warning functions //{*/
-  void printError(const std::string str)
+  void printError(const std::string& str)
   {
     if (m_node_name.empty())
-      ROS_ERROR("%s", str.c_str());
+      ROS_ERROR_STREAM(str);
     else
-      ROS_ERROR("[%s]: %s", m_node_name.c_str(), str.c_str());
+      ROS_ERROR_STREAM("[" << m_node_name << "]: " << str);
   }
-  void print_warning(const std::string str)
+  void print_warning(const std::string& str)
   {
     if (m_node_name.empty())
-      ROS_WARN("%s", str.c_str());
+      ROS_WARN_STREAM(str);
     else
-      ROS_WARN("[%s]: %s", m_node_name.c_str(), str.c_str());
+      ROS_WARN_STREAM("[" << m_node_name << "]: " << str);
   }
   //}
 
@@ -504,7 +504,7 @@ public:
     * \param printValues  If true, the loaded values will be printed to stdout using std::cout or ROS_INFO if node_name is not empty.
     * \param node_name     Optional node name used when printing the loaded values or loading errors.
     */
-  ParamLoader(const ros::NodeHandle& nh, bool printValues = true, std::string node_name = std::string())
+  ParamLoader(const ros::NodeHandle& nh, bool printValues = true, std::string_view node_name = std::string())
       : m_load_successful(true),
         m_print_values(printValues),
         m_node_name(node_name),
@@ -521,22 +521,10 @@ public:
     * \param nh            The parameters will be loaded from rosparam using this node handle.
     * \param node_name     Optional node name used when printing the loaded values or loading errors.
     */
-  ParamLoader(const ros::NodeHandle& nh, std::string node_name)
+  ParamLoader(const ros::NodeHandle& nh, std::string_view node_name)
       : ParamLoader(nh, true, node_name)
   {
     /* std::cout << "Initialized2 ParamLoader for node " << node_name << std::endl; */
-  }
-
-  /*!
-    * \brief Convenience overload to enable writing ParamLoader pl(nh, "node_name");
-    *
-    * \param nh            The parameters will be loaded from rosparam using this node handle.
-    * \param node_name     Optional node name used when printing the loaded values or loading errors.
-    */
-  ParamLoader(const ros::NodeHandle& nh, const char* node_name)
-      : ParamLoader(nh, std::string(node_name))
-  {
-    /* std::cout << "Initialized3 ParamLoader for node " << node_name << std::endl; */
   }
 
   /*!
@@ -679,6 +667,23 @@ public:
     out_value = ret;
     return success;
   }
+  /*!
+    * \brief Loads an optional reusable parameter from the rosparam server.
+    *
+    * If the parameter with the specified name is not found on the rosparam server (e.g. because it is not specified in the launchfile or yaml config file),
+    * the default value is used.
+    * Using this method, the parameter can be loaded multiple times using the same ParamLoader instance without error.
+    *
+    * \param name          Name of the parameter in the rosparam server.
+    * \param default_value This value will be used if the parameter name is not found in the rosparam server.
+    * \return              The loaded parameter value.
+    */
+  template <typename T>
+  T loadParamReusable2(const std::string& name, const T& default_value)
+  {
+    const auto [ret, success] = load<T>(name, default_value, OPTIONAL, REUSABLE);
+    return ret;
+  }
   //}
 
   /* loadParam function for compulsory parameters //{ */
@@ -713,10 +718,9 @@ public:
   template <typename T>
   T loadParam2(const std::string& name)
   {
-    const auto loaded = load<T>(name, T(), COMPULSORY, UNIQUE);
-    return loaded.first;
+    const auto [ret, success] = load<T>(name, T(), COMPULSORY, UNIQUE);
+    return ret;
   }
-
   /*!
     * \brief Loads a compulsory parameter from the rosparam server.
     *
@@ -726,7 +730,7 @@ public:
     *
     * \param name          Name of the parameter in the rosparam server.
     * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
-    * \return              The loaded parameter value.
+    * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
     */
   template <typename T>
   bool loadParamReusable(const std::string& name, T& out_value)
@@ -735,7 +739,22 @@ public:
     out_value = ret;
     return success;
   }
-
+  /*!
+    * \brief Loads a compulsory parameter from the rosparam server.
+    *
+    * If the parameter with the specified name is not found on the rosparam server (e.g. because it is not specified in the launchfile or yaml config file),
+    * the loading process is unsuccessful (loaded_successfully() will return false).
+    * Using this method, the parameter can be loaded multiple times using the same ParamLoader instance without error.
+    *
+    * \param name          Name of the parameter in the rosparam server.
+    * \return              The loaded parameter value.
+    */
+  template <typename T>
+  T loadParamReusable2(const std::string& name)
+  {
+    const auto [ret, success] = load<T>(name, T(), COMPULSORY, REUSABLE);
+    return ret;
+  }
   //}
 
   /* loadParam specializations for ros::Duration type //{ */
