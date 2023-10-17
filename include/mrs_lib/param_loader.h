@@ -1206,8 +1206,8 @@ public:
     * matrix_array:
     *   rows: 3
     *   cols: [1, 2]
-    *   data: [-5.0, Eigen::Dynamic0.0, 23.0,
-    *          -5.0, Eigen::Dynamic0.0, 12.0,
+    *   data: [-5.0, 0.0, 23.0,
+    *          -5.0, 0.0, 12.0,
     *           2.0,   4.0,  7.0]
     *
     * \endcode
