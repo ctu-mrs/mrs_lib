@@ -585,10 +585,10 @@ public:
   /* addYamlFileFromParam() function //{ */
   
   /*!
-    * \brief Adds the specified file as a source of static parameters.
+    * \brief Loads a filepath from a parameter loads that file as a YAML.
     *
-    * \param filepath The full path to the yaml file to be loaded.
-    * \return true if loading and parsing the file was successful, false otherwise.
+    * \param param_name Name of the parameter from which to load the YAML filename to be loaded.
+    * \return true      if loading and parsing the file was successful, false otherwise.
     */
   bool addYamlFileFromParam(const std::string& param_name)
   {
