@@ -176,7 +176,6 @@ target_link_libraries(nckf_tests
   )
 
 add_library(MrsLib_SafetyZone src/safety_zone/safety_zone.cpp
-  src/safety_zone/point_obstacle/point_obstacle.cpp
   src/safety_zone/line_operations.cpp
   src/safety_zone/polygon/polygon.cpp
   )
