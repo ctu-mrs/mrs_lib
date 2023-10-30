@@ -8,6 +8,7 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 
+#include <atomic>
 #include <string>
 #include <mutex>
 
