@@ -12,3 +12,5 @@ test_param_matrix: []
 
 services:
   complex_structure: ["asd"]
+
+rosparam_xmlrpc_value: "somestuff"

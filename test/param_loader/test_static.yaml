@@ -2,3 +2,4 @@ static_param: ["a", "b", "c", "d"]
 ns1:
   ns2:
     a: 5.0
+static_xmlrpc_value: "someotherstuff"
