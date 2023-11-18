@@ -50,9 +50,6 @@ TEST(TESTSuite, conversion_chain) {
   printf("final output:   roll=%1.2f, pitch=%1.2f, yaw=%1.2f, heading=%1.2f\n", roll3, pitch3, yaw3, heading1);
   printf("\n");
 
-  // breaking the test to test the tests
-  pitch3 = 10.2;
-
   if (fabs(roll3 - roll) > 1e-6 || fabs(pitch3 - pitch) > 1e-6 || fabs(yaw3 - yaw) > 1e-6) {
     result *= 0;
   }
