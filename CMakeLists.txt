@@ -153,6 +153,7 @@ target_link_libraries(lkf_example
 #   )
 
 add_executable(vector_converter_example src/vector_converter/example.cpp)
+
 target_link_libraries(vector_converter_example
   # MrsLib_VectorConverter
   ${catkin_LIBRARIES}
@@ -170,6 +171,7 @@ target_link_libraries(ukf_example
   )
 
 add_executable(nckf_tests src/nckf/nckf_tests.cpp)
+
 target_link_libraries(nckf_tests
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
@@ -364,6 +366,19 @@ target_link_libraries(cyclic_example
   )
 
 ## --------------------------------------------------------------
+## |                           Testing                          |
+## --------------------------------------------------------------
+
+if(CATKIN_ENABLE_TESTING)
+
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+
+  add_subdirectory(test)
+
+endif()
+
+## --------------------------------------------------------------
 ## |                           Install                          |
 ## --------------------------------------------------------------
 
@@ -381,263 +396,3 @@ install(DIRECTORY
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
   FILES_MATCHING PATTERN "*.xml"
   )
-
-## --------------------------------------------------------------
-## |                           Testing                          |
-## --------------------------------------------------------------
-
-if(CATKIN_ENABLE_TESTING)
-
-  find_package(rostest REQUIRED)
-
-  add_rostest_gtest(
-    TimeoutManagerTest
-    test/timeout_manager/timeout_manager.test
-    test/timeout_manager/test.cpp
-    )
-  target_link_libraries(
-    TimeoutManagerTest
-    MrsLib_TimeoutManager
-    MrsLib_Utils
-    ${catkin_LIBRARIES}
-    )
-  add_dependencies(
-    TimeoutManagerTest
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS}
-    )
-
-  add_rostest_gtest(MathTest
-    test/math/math.test
-    test/math/test.cpp
-    )
-
-  target_link_libraries(MathTest
-    MrsLib_Math
-    ${catkin_LIBRARIES}
-    )
-
-  add_dependencies(MathTest
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS}
-    )
-
-  add_rostest_gtest(
-    GeometryTest
-    test/geometry/geometry.test
-    test/geometry/test.cpp
-    )
-
-  target_link_libraries(
-    GeometryTest
-    MrsLib_Geometry
-    ${catkin_LIBRARIES}
-    )
-
-  add_dependencies(
-    GeometryTest
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS}
-    )
-
-  add_rostest_gtest(
-    AttitudeConverterTest
-    test/attitude_converter/attitude_converter.test
-    test/attitude_converter/test.cpp
-    )
-
-  target_link_libraries(
-    AttitudeConverterTest
-    MrsLib_AttitudeConverter
-    ${catkin_LIBRARIES}
-    )
-
-  add_dependencies(
-    AttitudeConverterTest
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS}
-    )
-
-  add_rostest_gtest(
-    UtilsTest
-    test/utils/utils.test
-    test/utils/test.cpp
-    )
-
-  target_link_libraries(
-    UtilsTest
-    MrsLib_Utils
-    ${catkin_LIBRARIES}
-    )
-
-  add_dependencies(
-    UtilsTest
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS}
-    )
-
-  add_rostest_gtest(
-    UkfTest
-    test/ukf/ukf.test
-    test/ukf/test.cpp
-    )
-
-  target_link_libraries(
-    UkfTest
-    ${catkin_LIBRARIES}
-    )
-
-  add_dependencies(
-    UkfTest
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS}
-    )
-
-  add_rostest_gtest(
-    TransformerTest
-    test/transformer/transformer.test
-    test/transformer/test.cpp
-    )
-
-  target_link_libraries(
-    TransformerTest
-    MrsLib_Transformer
-    MrsLib_Geometry
-    ${catkin_LIBRARIES}
-    )
-
-  add_dependencies(
-    TransformerTest
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS}
-    )
-
-  add_rostest_gtest(
-    ParamLoaderTest
-    test/param_loader/param_loader.test
-    test/param_loader/test.cpp
-    )
-  target_link_libraries(
-    ParamLoaderTest
-    MrsLib_ParamLoader
-    ${catkin_LIBRARIES}
-    )
-  add_dependencies(
-    ParamLoaderTest
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS}
-    )
-
-  add_rostest_gtest(
-    SubscribeHandlerTest
-    test/subscribe_handler/subscribe_handler.test
-    test/subscribe_handler/test.cpp
-    )
-  target_link_libraries(
-    SubscribeHandlerTest
-    MrsLib_TimeoutManager
-    ${catkin_LIBRARIES}
-    )
-  add_dependencies(
-    SubscribeHandlerTest
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS}
-    )
-
-  add_rostest_gtest(
-    RepredictorTest
-    test/repredictor/repredictor.test
-    test/repredictor/test.cpp
-    )
-  target_link_libraries(
-    RepredictorTest
-    ${catkin_LIBRARIES}
-    )
-  add_dependencies(
-    RepredictorTest
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS}
-    )
-
-  add_rostest_gtest(
-    TimerTest
-    test/timer/timer.test
-    test/timer/test.cpp
-    )
-  target_link_libraries(
-    TimerTest
-    MrsLib_Timer
-    MrsLib_Utils
-    ${catkin_LIBRARIES}
-    )
-  add_dependencies(
-    TimerTest
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS}
-    )
-
-  add_rostest_gtest(
-    MedianFilterTest
-    test/median_filter/median_filter.test
-    test/median_filter/test.cpp
-    )
-  target_link_libraries(
-    MedianFilterTest
-    MrsLib_MedianFilter
-    ${catkin_LIBRARIES}
-    )
-  add_dependencies(
-    MedianFilterTest
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS}
-    )
-
-  add_rostest_gtest(
-    ServiceClientHandlerTest
-    test/service_client_handler/service_client_handler.test
-    test/service_client_handler/test.cpp
-    )
-  target_link_libraries(
-    ServiceClientHandlerTest
-    ${catkin_LIBRARIES}
-    )
-  add_dependencies(
-    ServiceClientHandlerTest
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS}
-    )
-
-  add_rostest_gtest(
-    PublisherHandlerTest
-    test/publisher_handler/publisher_handler.test
-    test/publisher_handler/test.cpp
-    )
-  target_link_libraries(
-    PublisherHandlerTest
-    ${catkin_LIBRARIES}
-    )
-  add_dependencies(
-    PublisherHandlerTest
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS}
-    )
-
-  # add_rostest_gtest(
-  #   VectorConverterTest
-  #   test/vector_converter/vector_converter.test
-  #   test/vector_converter/test.cpp
-  #   )
-  # target_link_libraries(
-  #   VectorConverterTest
-  #   ${catkin_LIBRARIES}
-  #   )
-  # target_include_directories(VectorConverterTest PRIVATE
-  #   ${pcl_ros_INCLUDE_DIRS}
-  #   )
-  # add_dependencies(
-  #   VectorConverterTest
-  #   ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  #   ${catkin_EXPORTED_TARGETS}
-  #   )
-
-endif()
