@@ -3,6 +3,7 @@ find_package(rostest REQUIRED)
 # TimeoutManager
 
 add_rostest_gtest(TimeoutManagerTest
+  timeout_manager/timeout_manager.test
   timeout_manager/test.cpp
   )
 
@@ -20,6 +21,7 @@ add_dependencies(TimeoutManagerTest
 # MathTest
 
 add_rostest_gtest(MathTest
+  math/math.test
   math/test.cpp
   )
 
@@ -36,6 +38,7 @@ add_dependencies(MathTest
 # GeometryTest
 
 add_rostest_gtest(GeometryTest
+  geometry/geometry.test
   geometry/test.cpp
   )
 
@@ -52,6 +55,7 @@ add_dependencies(GeometryTest
 # AttitudeConverterTest
 
 add_rostest_gtest(AttitudeConverterTest
+  attitude_converter/attitude_converter.test
   attitude_converter/test.cpp
   )
 
@@ -68,6 +72,7 @@ add_dependencies(AttitudeConverterTest
 # UtilsTest
 
 add_rostest_gtest(UtilsTest
+  utils/utils.test
   utils/test.cpp
   )
 
@@ -84,6 +89,7 @@ add_dependencies(UtilsTest
 # UkfTest
 
 add_rostest_gtest(UkfTest
+  ukf/ukf.test
   ukf/test.cpp
   )
 
@@ -99,6 +105,7 @@ add_dependencies(UkfTest
 # TransformerTest
 
 add_rostest_gtest(TransformerTest
+  transformer/transformer.test
   transformer/test.cpp
   )
 
@@ -116,6 +123,7 @@ add_dependencies(TransformerTest
 # ParamLoaderTest
 
 add_rostest_gtest(ParamLoaderTest
+  param_loader/param_loader.test
   param_loader/test.cpp
   )
 
@@ -132,6 +140,7 @@ add_dependencies(ParamLoaderTest
 # SubscribeHandlerTest
 
 add_rostest_gtest(SubscribeHandlerTest
+  subscribe_handler/subscribe_handler.test
   subscribe_handler/test.cpp
   )
 
@@ -148,6 +157,7 @@ add_dependencies(SubscribeHandlerTest
 # RepredictorTest
 
 add_rostest_gtest(RepredictorTest
+  repredictor/repredictor.test
   repredictor/test.cpp
   )
 
@@ -163,6 +173,7 @@ add_dependencies(RepredictorTest
 # TimerTest
 
 add_rostest_gtest(TimerTest
+  timer/timer.test
   timer/test.cpp
   )
 
@@ -180,6 +191,7 @@ add_dependencies(TimerTest
 # MedianFilterTest
 
 add_rostest_gtest(MedianFilterTest
+  median_filter/median_filter.test
   median_filter/test.cpp
   )
 
@@ -196,6 +208,7 @@ add_dependencies(MedianFilterTest
 # ServiceClientHandlerTest
 
 add_rostest_gtest(ServiceClientHandlerTest
+  service_client_handler/service_client_handler.test
   service_client_handler/test.cpp
   )
 
@@ -211,6 +224,7 @@ add_dependencies(ServiceClientHandlerTest
 # PublisherHandlerTest
 
 add_rostest_gtest(PublisherHandlerTest
+  publisher_handler/publisher_handler.test
   publisher_handler/test.cpp
   )
 
@@ -224,6 +238,7 @@ add_dependencies(PublisherHandlerTest
   )
 
 # add_rostest_gtest(VectorConverterTest
+#   vector_converter/vector_converter.test
 #   vector_converter/test.cpp
 #   )
 #
