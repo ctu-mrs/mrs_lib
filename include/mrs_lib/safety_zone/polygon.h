@@ -1,52 +1,20 @@
-// clang: TomasFormat
-#ifndef MRS_LIB_POLYGON_H
-#define MRS_LIB_POLYGON_H
+#ifndef MRS_LIB_POLYGON_H_
+#define MRS_LIB_POLYGON_H_
 
-#include <ros/ros.h>
-#include <eigen3/Eigen/Eigen>
-#include <vector>
-#include <geometry_msgs/Point.h>
-#include <mrs_lib/safety_zone/line_operations.h>
+#include <boost/geometry.hpp>
+
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
 
 namespace mrs_lib
 {
-class Polygon {
-public:
-  Polygon(const Eigen::MatrixXd vertices);
+typedef boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian> Point2d;
 
-  bool isPointInside(const double px, const double py);
-  bool doesSectionIntersect(const double startX, const double startY, const double endX, const double endY);
-  bool isClockwise();
-  void inflateSelf(double amount);
+typedef boost::geometry::model::point<double, 3, boost::geometry::cs::cartesian> Point3d;
 
-  std::vector<geometry_msgs::Point> getPointMessageVector(const double z);
+typedef boost::geometry::model::polygon<Point2d> Polygon;
 
-private:
-  Eigen::MatrixXd vertices;
+} // namespace mrs_lib
 
-public:
-  // exceptions
-  struct WrongNumberOfVertices : public std::exception
-  {
-    const char* what() const throw() {
-      return "Polygon: wrong number of vertices was supplied!";
-    }
-  };
-
-  struct WrongNumberOfColumns : public std::exception
-  {
-    const char* what() const throw() {
-      return "Polygon: wrong number of colums, it should be =2!";
-    }
-  };
-
-  struct ExtraVertices : public std::exception
-  {
-    const char* what() const throw() {
-      return "Polygon: useless vertices detected, polygon methods may break!";
-    }
-  };
-};
-}  // namespace mrs_lib
 
 #endif  // MRS_LIB_POLYGON_H

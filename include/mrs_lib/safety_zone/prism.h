@@ -1,0 +1,76 @@
+#include "polygon.h"
+#include <boost/geometry/algorithms/centroid.hpp>
+
+namespace mrs_lib
+{
+class Prism{
+private:
+  Polygon polygon_;
+  double max_z_;
+  double min_z_;
+
+public:
+  Prism(Polygon& polygon, double max_z, double min_z);
+
+  // Prism(Prism& prism);
+
+  // Prism(Prism&& prism);
+
+  double getMaxZ(){
+    return max_z_;
+  }
+
+  double getMinZ(){
+    return min_z_;
+  }
+
+  Polygon getPolygon(){
+    return polygon_;
+  }
+
+  // Returns number of vertices in the polygon of the prism.
+  unsigned int getVerticesNum(){
+    return polygon_.outer().size() - 1;
+  }
+
+  // Returns the centroid of the polygon of the prism.
+  Point2d getCenter(){
+    Point2d res;
+    boost::geometry::centroid(polygon_, res);
+    return res;
+  }
+
+  void setMaxZ(double value){
+    max_z_ = value < min_z_ ? min_z_ : value;
+  }
+
+  void setMinZ(double value){
+    min_z_ = value > max_z_ ? max_z_: value;
+  }
+
+  // Tries to change the coordinates of given vertex. 
+  // returns true if succeeded
+  // returns false otherwise
+  bool setVertex(Point2d vertex, unsigned int index);
+
+  // Adds new vertex in the middle of the neighboring verge
+  void addVertexClockwise(unsigned int index);
+
+  // Adds new vertex in the middle of the neighboring verge
+  void addVertexCounterclockwise(unsigned int index);
+
+  // Controls, if 3d point lies within the prism
+  bool isPointIn(Point3d point);
+
+  // Convinient version of isPointIn(Point3d point)
+  bool isPointIn(double x, double y, double z);
+
+  // Controls, if 2d point lies within the polygon of prism
+  bool isPointIn(Point2d point);
+  
+  // Convinient version of isPointIn(Point2d point)
+  bool isPointIn(double x, double y);
+};
+
+} // namespace mrs_lib
+

@@ -176,14 +176,24 @@ target_link_libraries(nckf_tests
   )
 
 add_library(MrsLib_SafetyZone src/safety_zone/safety_zone.cpp
-  src/safety_zone/line_operations.cpp
-  src/safety_zone/polygon/polygon.cpp
+  src/safety_zone/prism.cpp
   )
 
 target_link_libraries(MrsLib_SafetyZone
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
+
+# Todo: delete the executable
+add_executable(safety_zone_test
+  src/safety_zone/test.cpp 
+)
+
+target_link_libraries(safety_zone_test
+  MrsLib_SafetyZone
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+)
 
 add_library(MrsLib_Profiler src/profiler/profiler.cpp)
 target_link_libraries(MrsLib_Profiler

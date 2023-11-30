@@ -1,76 +1,89 @@
-#include <mrs_lib/safety_zone/safety_zone.h>
-#include <mrs_lib/safety_zone/line_operations.h>
+#include "mrs_lib/safety_zone/safety_zone.h"
+#include "mrs_lib/safety_zone/polygon.h"
+#include "math.h"
+
+namespace bg = boost::geometry;
 
 namespace mrs_lib
 {
-/* SafetyZone() //{ */
 
-SafetyZone::SafetyZone(mrs_lib::Polygon border) {
-  outerBorder = new Polygon(border);
+SafetyZone::SafetyZone(Prism outer_boarder) : outer_border_(outer_boarder){
 }
 
-//}
-
-/* SafetyZone() //{ */
-
-SafetyZone::~SafetyZone() {
-  delete outerBorder;
+SafetyZone::SafetyZone(Prism outer_boarder, std::vector<Prism> obstacles) : outer_border_(outer_boarder){
+  obstacles_ = obstacles;
 }
 
-//}
+bool SafetyZone::isPointValid(const Point2d point) {
+  if(!outer_border_.isPointIn(point)){
+    return false;
+  }
 
-/* SafetyZone() //{ */
+  for (Prism& obstacle : obstacles_) {
+    if(obstacle.isPointIn(point)) {
+      return false;
+    }
+  }
 
-SafetyZone::SafetyZone(const Eigen::MatrixXd& outerBorderMatrix) {
-
-  try {
-    outerBorder = new Polygon(outerBorderMatrix);
-  }
-  catch (const Polygon::WrongNumberOfVertices&) {
-    throw BorderError();
-  }
-  catch (const Polygon::WrongNumberOfColumns&) {
-    throw BorderError();
-  }
-  catch (const Polygon::ExtraVertices&) {
-    throw BorderError();
-  }
+  return true;
 }
-
-//}
-
-/* isPointValid() //{ */
 
 bool SafetyZone::isPointValid(const double px, const double py) {
-
-  if (!outerBorder->isPointInside(px, py)) {
+  if(!outer_border_.isPointIn(px, py)){
     return false;
+  }
+
+  for (Prism& obstacle : obstacles_) {
+    if(obstacle.isPointIn(px, py)) {
+      return false;
+    }
   }
 
   return true;
 }
 
-//}
-
-/* isPathValid() //{ */
-
-bool SafetyZone::isPathValid(const double p1x, const double p1y, const double p2x, const double p2y) {
-
-  if (outerBorder->doesSectionIntersect(p1x, p1y, p2x, p2y)) {
+bool SafetyZone::isPointValid(const Point3d point) {
+  if(!outer_border_.isPointIn(point)){
     return false;
+  }
+
+  for (Prism& obstacle : obstacles_) {
+    if(obstacle.isPointIn(point)) {
+      return false;
+    }
   }
 
   return true;
 }
 
-//}
+bool SafetyZone::isPointValid(const double px, const double py, const double pz) {
+  if(!outer_border_.isPointIn(px, py, pz)){
+    return false;
+  }
 
-/* getBorder() //{ */
+  for (Prism& obstacle : obstacles_) {
+    if(obstacle.isPointIn(px, py, pz)) {
+      return false;
+    }
+  }
 
-Polygon SafetyZone::getBorder() {
-  return *outerBorder;
+  return true;
 }
 
-//}
+bool SafetyZone::isPathValid(const Point3d start, const Point3d end) {
+  int count = (int)ceil((bg::distance(start, end) * 20));
+
+  Point3d cur_point = start;
+  Point3d ds = end;
+  bg::subtract_point(ds, start);
+  bg::divide_value(ds, count);
+  for(int i=0; i<count; i++){
+    if(!isPointValid(cur_point)){
+      return false;
+    }
+    bg::add_point(cur_point, ds);
+  }
+  return true;
+}
 
 }  // namespace mrs_lib
