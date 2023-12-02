@@ -1,3 +1,6 @@
+#ifndef MRS_PRISM_H
+#define MRS_PRISM_H
+
 #include "polygon.h"
 #include <boost/geometry/algorithms/centroid.hpp>
 
@@ -11,10 +14,6 @@ private:
 
 public:
   Prism(Polygon& polygon, double max_z, double min_z);
-
-  // Prism(Prism& prism);
-
-  // Prism(Prism&& prism);
 
   double getMaxZ(){
     return max_z_;
@@ -59,7 +58,7 @@ public:
   // Adds new vertex in the middle of the neighboring verge
   void addVertexCounterclockwise(unsigned int index);
 
-  // Controls, if 3d point lies within the prism
+  // Controls, if 3d point lies within the prism 
   bool isPointIn(Point3d point);
 
   // Convinient version of isPointIn(Point3d point)
@@ -74,3 +73,4 @@ public:
 
 } // namespace mrs_lib
 
+#endif

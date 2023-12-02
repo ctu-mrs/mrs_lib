@@ -175,11 +175,14 @@ target_link_libraries(nckf_tests
   ${Eigen_LIBRARIES}
   )
 
-add_library(MrsLib_SafetyZone src/safety_zone/safety_zone.cpp
+add_library(MrsLib_SafetyZone 
+  src/safety_zone/safety_zone.cpp
   src/safety_zone/prism.cpp
+  src/safety_zone/prism_visualization.cpp
   )
 
 target_link_libraries(MrsLib_SafetyZone
+  MrsLib_AttitudeConverter
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )

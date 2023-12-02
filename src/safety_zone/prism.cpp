@@ -80,7 +80,7 @@ namespace mrs_lib
 
     Point2d new_point;
     bg::set<0>(new_point, (x1 + x2) / 2);
-    bg::set<1>(new_point, (y1 + y2) / 2);
+    bg::set<1>(new_point, (y1 + y2) / 2); 
 
     outer_ring.insert(outer_ring.begin() + index + 1, new_point);
   }

@@ -1,4 +1,5 @@
 #include "mrs_lib/safety_zone/safety_zone.h"
+#include "mrs_lib/safety_zone/prism_visualization.h"
 #include <ros/ros.h>
 
 #include <iostream>
@@ -257,6 +258,25 @@ void invalid_vertex_assignment(){
     }
 }
 
+void show_markers(ros::NodeHandle nh) {
+    Point2d point1 = Point2d{0, 0};
+    Point2d point2 = Point2d{0, 10};
+    Point2d point3 = Point2d{10, 10};
+    Point2d point4 = Point2d{10, 0};
+    Point2d point5 = Point2d{0, 0};
+    Polygon poly = mrs_lib::Polygon();
+    bg::append(poly, point1);
+    bg::append(poly, point2);
+    bg::append(poly, point3);
+    bg::append(poly, point4);
+    bg::append(poly, point5);
+
+    Prism outer_boarder = Prism(poly, 0.0, 15);
+
+    PrismVisualization prism_vis = PrismVisualization(&outer_boarder, "map", nh, 2);
+    ros::spin();
+}
+
 int main(int argc, char **argv) {
 
     ros::init(argc, argv, "Safety_zone_test");
@@ -268,5 +288,7 @@ int main(int argc, char **argv) {
     vertex_add_counter_clockwise_0();
     point_valid_after_vertex_change();
     invalid_vertex_assignment();
+
+    show_markers(nh);
     return 0;
 }
