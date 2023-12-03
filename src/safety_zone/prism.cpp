@@ -30,6 +30,30 @@ namespace mrs_lib
     }
   }
 
+  void Prism::subscribe(Subscriber* entity) {
+    subscribers.emplace(entity);
+  }
+
+  void Prism::unsubscribe(Subscriber* entity) {
+    subscribers.erase(entity);
+  }
+
+  void Prism::notifySubscribers() {
+    for(auto s : subscribers){
+      s->update();
+    }
+  }
+
+  void Prism::setMaxZ(double value){
+    max_z_ = value < min_z_ ? min_z_ : value;
+    notifySubscribers();
+  }
+
+  void Prism::setMinZ(double value){
+    min_z_ = value > max_z_ ? max_z_: value;
+    notifySubscribers();
+  }
+
   bool Prism::setVertex(Point2d vertex, unsigned int index) {
     auto &outer_ring = polygon_.outer();
     if(index >= outer_ring.size() - 1) { // -1 because the last is the same as the first
@@ -50,6 +74,7 @@ namespace mrs_lib
       return false;
     }
 
+    notifySubscribers();
     return true;
   }
 
@@ -70,6 +95,7 @@ namespace mrs_lib
     bg::set<1>(new_point, (y1 + y2) / 2);
 
     outer_ring.insert(outer_ring.begin() + prev_index + 1, new_point);
+    notifySubscribers();
   }
 
   void Prism::addVertexClockwise(unsigned int index) {
@@ -88,6 +114,7 @@ namespace mrs_lib
     bg::set<1>(new_point, (y1 + y2) / 2); 
 
     outer_ring.insert(outer_ring.begin() + index + 1, new_point);
+    notifySubscribers();
   }
 
   bool Prism::isPointIn(Point3d point) {

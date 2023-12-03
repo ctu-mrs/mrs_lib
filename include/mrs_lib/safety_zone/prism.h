@@ -6,15 +6,27 @@
 
 namespace mrs_lib
 {
+
+class Subscriber{
+public:
+  virtual void update() = 0;
+};
+
 class Prism{
 private:
   Polygon polygon_;
   double max_z_;
   double min_z_;
 
+  std::set<Subscriber*> subscribers;
+
 public:
   // If max_z < min_z, automatically swaps them
   Prism(Polygon& polygon, double max_z, double min_z);
+
+  void subscribe(Subscriber* entity);
+  void unsubscribe(Subscriber* entity);
+  void notifySubscribers();
 
   double getMaxZ(){
     return max_z_;
@@ -40,13 +52,9 @@ public:
     return res;
   }
 
-  void setMaxZ(double value){
-    max_z_ = value < min_z_ ? min_z_ : value;
-  }
+  void setMaxZ(double value);
 
-  void setMinZ(double value){
-    min_z_ = value > max_z_ ? max_z_: value;
-  }
+  void setMinZ(double value);
 
   // Tries to change the coordinates of given vertex. 
   // returns true if succeeded
@@ -71,6 +79,7 @@ public:
   // Convinient version of isPointIn(Point2d point)
   bool isPointIn(double x, double y);
 };
+
 
 } // namespace mrs_lib
 

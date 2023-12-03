@@ -1,5 +1,6 @@
 #include "mrs_lib/safety_zone/safety_zone.h"
-#include "mrs_lib/safety_zone/prism_visualization.h"
+#include "mrs_lib/safety_zone/vertex_control.h"
+#include "mrs_lib/safety_zone/edges_visualization.h"
 #include <ros/ros.h>
 
 #include <iostream>
@@ -273,7 +274,8 @@ void show_markers(ros::NodeHandle nh) {
 
     Prism outer_boarder = Prism(poly, 0.0, 15);
 
-    PrismVisualization prism_vis = PrismVisualization(&outer_boarder, "map", nh, 2);
+    EdgesVisualization edges_vis = EdgesVisualization(&outer_boarder, "map", nh, 2);
+    VertexControl vertex_control = VertexControl(&outer_boarder, "map", nh);
     ros::spin();
 }
 
