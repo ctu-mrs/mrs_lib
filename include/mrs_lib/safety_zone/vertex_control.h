@@ -18,6 +18,8 @@ class VertexControl : public Subscriber{
 public:
   VertexControl(Prism* prism, std::string frame_id, ros::NodeHandle nh);
 
+  ~VertexControl();
+
   void update();
 
 private:
@@ -25,7 +27,7 @@ private:
   visualization_msgs::Marker makeBox(visualization_msgs::InteractiveMarker &msg);
   void vertexMoveCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
 
-  // Is required for generating interactive marker names, 
+  // It is required for generating interactive marker names, 
   // because their names must be unique on topic 
   static int id_generator;
 

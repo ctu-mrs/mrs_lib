@@ -80,7 +80,6 @@ public:
   bool isPointIn(double x, double y);
 };
 
-
 } // namespace mrs_lib
 
 #endif

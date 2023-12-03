@@ -19,8 +19,6 @@ namespace mrs_lib {
     nh_ = nh;
     id_generator++;
 
-    // TODO: is it necessary to turn on separate thread? (the last argument in contructor)
-    // TODO: add destructor
     server = new interactive_markers::InteractiveMarkerServer(nh_.getNamespace() + "safety_area_vertices_out", std::to_string(id), false);
 
     auto polygon = prism_->getPolygon().outer();
@@ -31,8 +29,16 @@ namespace mrs_lib {
     prism_->subscribe(this);
   }
 
+  VertexControl::~VertexControl(){
+    if(server){
+      delete server;
+    }
+    if(menu_handler){
+      delete menu_handler;
+    }
+  }
+
   void VertexControl::update(){
-    std::cout << "vertex update called\n";
     auto polygon = prism_->getPolygon().outer();
 
     if(upper_names.size() != polygon.size() -1 || lower_names.size() != polygon.size() - 1){
@@ -146,22 +152,6 @@ namespace mrs_lib {
     server->applyChanges();
   }
 
-  // Extracts index from string of form "[^_]*_[^_]*_[0-9]*"
-  // Why: to get index from string "id_upper_index" or "id_lower_index" (those are the names of markers)
-  int getIndexFromStr(const std::string& inputStr) {
-    // Find the position of the first underscore
-    size_t firstUnderscorePos = inputStr.find('_');
-    size_t secondUnderscorePos = inputStr.find('_', firstUnderscorePos+1);
-    
-    // Extract the substring after the first underscore
-    std::string indexStr = inputStr.substr(secondUnderscorePos + 1);
-    
-    // Convert the extracted substring to an integer
-    int index = std::atoi(indexStr.c_str());
-
-    return index;
-  }
-
   // --------------------------------------------------------------
   // |                          Callbacks                         |
   // --------------------------------------------------------------
@@ -180,33 +170,7 @@ namespace mrs_lib {
       return;
     }
 
-    std::cout<<index << std::endl;
-
-    std::cout << prism_->setVertex(polygon_point, index) << std::endl;
-
-    // if(prism_->setVertex(polygon_point, index)){
-    //   // Current marker
-    //   server->setPose(feedback->marker_name, pose);
-
-      // // Corresponding marker
-      // std::string name = feedback->marker_name;
-      // if(feedback->marker_name.find("upper") != std::string::npos){
-      //   size_t index_to_replace = feedback->marker_name.find("upper");
-      //   name.replace(index_to_replace, 5, "lower");
-      //   pose.position.z = prism_->getMinZ();
-      // }
-      // else if(feedback->marker_name.find("lower") != std::string::npos){
-      //   size_t index_to_replace = feedback->marker_name.find("lower");
-      //   name.replace(index_to_replace, 5, "upper");
-      //   pose.position.z = prism_->getMaxZ();
-      // } else{
-      //   ROS_WARN("[VertexControl]: 'upper' or 'lower' is not present in the name of interactive marker. Current name = '%s'", feedback->marker_name.c_str());
-      //   server->applyChanges();
-      //   return;
-      // }
-      // server->setPose(name, pose);
-      // server->applyChanges();
-    // }
+    prism_->setVertex(polygon_point, index);
   }
 
 } // namespace mrs_lib
