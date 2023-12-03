@@ -40,6 +40,7 @@ set(CATKIN_DEPENDENCIES
 
 find_package(catkin REQUIRED COMPONENTS
   ${CATKIN_DEPENDENCIES}
+  interactive_markers
   )
 
 find_package(yaml-cpp REQUIRED)

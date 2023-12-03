@@ -29,6 +29,7 @@
   <depend>tf_conversions</depend>
   <depend>visualization_msgs</depend>
   <depend>yaml-cpp</depend>
+  <depend>interactive_markers</depend>
 
   <depend>libopencv-dev</depend>
 

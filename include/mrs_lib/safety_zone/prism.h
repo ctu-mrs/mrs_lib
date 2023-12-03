@@ -13,6 +13,7 @@ private:
   double min_z_;
 
 public:
+  // If max_z < min_z, automatically swaps them
   Prism(Polygon& polygon, double max_z, double min_z);
 
   double getMaxZ(){

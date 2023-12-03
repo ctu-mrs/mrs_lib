@@ -21,8 +21,13 @@ namespace mrs_lib
     }
 
     polygon_ = polygon;
-    max_z_ = max_z;
-    min_z_ = min_z;
+    if(max_z < min_z){
+      max_z_ = min_z;
+      min_z_ = max_z;
+    }else{
+      max_z_ = max_z;
+      min_z_ = min_z;
+    }
   }
 
   bool Prism::setVertex(Point2d vertex, unsigned int index) {
