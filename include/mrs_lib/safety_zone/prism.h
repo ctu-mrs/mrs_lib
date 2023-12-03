@@ -61,6 +61,12 @@ public:
   // returns false otherwise
   bool setVertex(Point2d vertex, unsigned int index);
 
+  // Tries to change the coordinates of given vertecies. 
+  // Only notifies subsribers once in case of success
+  // returns true if succeeded
+  // returns false otherwise
+  bool setVerticies(std::vector<Point2d>& vertices, std::vector<unsigned int> indices);
+
   // Adds new vertex in the middle of the neighboring verge
   void addVertexClockwise(unsigned int index);
 

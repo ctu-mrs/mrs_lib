@@ -78,6 +78,41 @@ namespace mrs_lib
     return true;
   }
 
+  // TODO: test this
+  bool Prism::setVerticies(std::vector<Point2d>& vertices, std::vector<unsigned int> indices){
+    if(vertices.size() != indices.size()){
+      throw std::invalid_argument("Number of vertices and indices must be equal");
+    }
+    
+    Polygon backup = polygon_;
+    auto &outer_ring = polygon_.outer();
+    bool success = true;
+    for(int i=0; i<vertices.size(); i++){
+      Point2d vertex = vertices[i];
+      unsigned int index = indices[i];
+      if(index >= outer_ring.size() - 1) { // -1 because the last is the same as the first
+        success = false;
+        break;
+      }
+
+      outer_ring[index] = vertex;
+      if(index == 0) {
+        outer_ring.back() = vertex;
+      }
+    }
+
+    if(!bg::is_valid(polygon_)){
+      success = false;
+    }
+
+    if(success){
+      notifySubscribers();
+    }else{
+      polygon_ = backup;
+    }
+    return success;
+  }
+
   void Prism::addVertexCounterclockwise(unsigned int index) {
     auto &outer_ring = polygon_.outer();
     if(index >= outer_ring.size() - 1) { // -1 because the last is the same as the first
