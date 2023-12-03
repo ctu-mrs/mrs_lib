@@ -23,7 +23,7 @@ public:
   void update();
 
 private:
-  void addVertexIntMarker(mrs_lib::Point2d position, const double upper, const double lower, const int index);
+  void addVertexIntMarker(Point2d position, const double upper, const double lower, const int index);
   visualization_msgs::Marker makeBox(visualization_msgs::InteractiveMarker &msg);
   void vertexMoveCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
 
