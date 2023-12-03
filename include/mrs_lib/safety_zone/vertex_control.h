@@ -31,15 +31,15 @@ private:
   // because their names must be unique on topic 
   static int id_generator;
 
-  const int id;
-  int vertex_id = 0;    // Each marker name must be unique
+  const int id_;
+  int vertex_id_ = 0;    // Each marker name must be unique
   Prism* prism_;
   std::string frame_id_;
   ros::NodeHandle nh_;
 
   // Interactive markers
-  interactive_markers::InteractiveMarkerServer* server = nullptr;
-  interactive_markers::MenuHandler*             menu_handler  = nullptr;
+  interactive_markers::InteractiveMarkerServer* server_ = nullptr;
+  interactive_markers::MenuHandler*             menu_handler_  = nullptr;
 
   // Note:
   // Since no method find_by_value() is present and markers may not be ordered,
@@ -47,10 +47,10 @@ private:
   // std::map takes O(n) amount of memory and CRUD operations have logarithmic complexity.
   // Because there will rarely more than 10 vertecies per prism and vertexMoveCallback may
   // be called more than 10 times per second, such containers fit perfectly 
-  std::map<std::string, int> upper_indecies;
-  std::map<std::string, int> lower_indecies;
-  std::map<int, std::string> upper_names;
-  std::map<int, std::string> lower_names;
+  std::map<std::string, int> upper_indecies_;
+  std::map<std::string, int> lower_indecies_;
+  std::map<int, std::string> upper_names_;
+  std::map<int, std::string> lower_names_;
 
 }; // class VertexControl
 } // namespace mrs_lib
