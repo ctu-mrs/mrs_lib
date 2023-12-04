@@ -233,7 +233,7 @@ private:
   inline bool try_cast(boost::any& val, T*& out)
   {
     return (out = boost::any_cast<T>(&val));
-  };
+  }
   template <typename T>
   inline bool try_compare(boost::any& val, T*& to_what)
   {
@@ -250,7 +250,7 @@ private:
         ROS_WARN_STREAM("[" << m_node_name << "]: DynamicReconfigure value type has changed - this should not happen!");
       return false;
     }
-  };
+  }
 };
 //}
 
