@@ -135,6 +135,34 @@ TEST(TESTSuite, static_params_test) {
 
 //}
 
+/* TEST(TESTSuite, weird_types_test) //{ */
+
+TEST(TESTSuite, weird_types_test) {
+
+  // Set up ROS.
+  ros::NodeHandle nh = ros::NodeHandle("~");
+
+  ros::Time::waitForValid();
+
+  ROS_INFO("[%s]: initializing ParamLoader", ros::this_node::getName().c_str());
+  mrs_lib::ParamLoader pl(nh);
+  XmlRpc::XmlRpcValue default_val;
+  XmlRpc::XmlRpcValue xml_val;
+  EXPECT_FALSE(pl.loadParam("XmlRpc_test", xml_val, default_val));
+  EXPECT_TRUE(pl.loadedSuccessfully());
+  EXPECT_FALSE(pl.loadParam("XmlRpc_test", xml_val));
+  EXPECT_FALSE(pl.loadedSuccessfully());
+  [[maybe_unused]] const auto ret = pl.loadParam2("XmlRpc_test", default_val);
+
+  EXPECT_TRUE(pl.loadParam("rosparam_xmlrpc_value", xml_val));
+  EXPECT_TRUE(pl.addYamlFileFromParam("static_params_file"));
+  EXPECT_FALSE(pl.loadParam("static_xmlrpc_value", xml_val));
+
+  EXPECT_FALSE(pl.loadedSuccessfully());
+}
+
+//}
+
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
 
   ros::init(argc, argv, "param_loader_tests");

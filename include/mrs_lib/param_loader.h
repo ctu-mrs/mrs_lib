@@ -585,10 +585,10 @@ public:
   /* addYamlFileFromParam() function //{ */
   
   /*!
-    * \brief Adds the specified file as a source of static parameters.
+    * \brief Loads a filepath from a parameter loads that file as a YAML.
     *
-    * \param filepath The full path to the yaml file to be loaded.
-    * \return true if loading and parsing the file was successful, false otherwise.
+    * \param param_name Name of the parameter from which to load the YAML filename to be loaded.
+    * \return true      if loading and parsing the file was successful, false otherwise.
     */
   bool addYamlFileFromParam(const std::string& param_name)
   {
@@ -835,6 +835,59 @@ public:
     std_msgs::ColorRGBA ret;
     loadParam(name, ret, default_value);
     return ret;
+  }
+
+  //}
+
+  /* loadParam specializations for XmlRpc::Value type //{ */
+
+  /*!
+    * \brief An overload for loading an optional XmlRpc::XmlRpcValue.
+    *
+    * This can be used if you want to manually parse some more complex parameter but still take advantage of ParamLoader.
+    * \warning  XmlRpc::XmlRpcValue must be loaded from a rosparam server and not directly from a YAML file
+    * (i.e. you cannot use it to load parameters from a file added using the addYamlFile() or addYamlFileFromParam() methods).
+    *
+    * \param name          Name of the parameter in the rosparam server.
+    * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
+    * \param default_value This value will be used if the parameter name is not found in the rosparam server.
+    * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
+    */
+  bool loadParam(const std::string& name, XmlRpc::XmlRpcValue& out, const XmlRpc::XmlRpcValue& default_value)
+  {
+    return loadParam<XmlRpc::XmlRpcValue>(name, out, default_value);
+  }
+
+  /*!
+    * \brief An overload for loading a compulsory XmlRpc::XmlRpcValue.
+    *
+    * This can be used if you want to manually parse some more complex parameter but still take advantage of ParamLoader.
+    * \warning  XmlRpc::XmlRpcValue must be loaded from a rosparam server and not directly from a YAML file
+    * (i.e. you cannot use it to load parameters from a file added using the addYamlFile() or addYamlFileFromParam() methods).
+    *
+    * \param name          Name of the parameter in the rosparam server.
+    * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
+    * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
+    */
+  bool loadParam(const std::string& name, XmlRpc::XmlRpcValue& out)
+  {
+    return loadParam<XmlRpc::XmlRpcValue>(name, out);
+  }
+
+  /*!
+    * \brief An overload for loading an optional XmlRpc::XmlRpcValue.
+    *
+    * This can be used if you want to manually parse some more complex parameter but still take advantage of ParamLoader.
+    * \warning  XmlRpc::XmlRpcValue must be loaded from a rosparam server and not directly from a YAML file
+    * (i.e. you cannot use it to load parameters from a file added using the addYamlFile() or addYamlFileFromParam() methods).
+    *
+    * \param name          Name of the parameter in the rosparam server.
+    * \param default_value This value will be used if the parameter name is not found in the rosparam server.
+    * \return              the loaded parameter.
+    */
+  XmlRpc::XmlRpcValue loadParam2(const std::string& name, const XmlRpc::XmlRpcValue& default_value)
+  {
+    return loadParam2<XmlRpc::XmlRpcValue>(name, default_value);
   }
 
   //}
@@ -1153,8 +1206,8 @@ public:
     * matrix_array:
     *   rows: 3
     *   cols: [1, 2]
-    *   data: [-5.0, Eigen::Dynamic0.0, 23.0,
-    *          -5.0, Eigen::Dynamic0.0, 12.0,
+    *   data: [-5.0, 0.0, 23.0,
+    *          -5.0, 0.0, 12.0,
     *           2.0,   4.0,  7.0]
     *
     * \endcode

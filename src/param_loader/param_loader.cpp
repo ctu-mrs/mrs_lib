@@ -15,7 +15,6 @@ template bool mrs_lib::ParamLoader::loadParamReusable<double>(const std::string&
 template bool mrs_lib::ParamLoader::loadParam<std::string>(const std::string& name, std::string& out_value, const std::string& default_value);
 template bool mrs_lib::ParamLoader::loadParamReusable<std::string>(const std::string& name, std::string& out_value, const std::string& default_value);
 
-
 template <>
 ros::Duration mrs_lib::ParamLoader::loadParam2<ros::Duration>(const std::string& name, const ros::Duration& default_value)
 {
