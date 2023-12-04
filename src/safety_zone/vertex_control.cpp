@@ -20,6 +20,11 @@ VertexControl::VertexControl(Prism* prism, std::string frame_id, ros::NodeHandle
   id_generator++;
 
   server_ = new interactive_markers::InteractiveMarkerServer(nh_.getNamespace() + "safety_area_vertices_out", std::to_string(id_), false);
+  // Menu
+  menu_handler_ = new interactive_markers::MenuHandler();
+  menu_handler_->insert("Add vertex clockwise", [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->vertexAddClockwiseCallback(feedback);});
+  menu_handler_->insert("Add vertex counter-clockwise", [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->vertexAddCounterclockwiseCallback(feedback);});
+  menu_handler_->insert("Delete the vertex", [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->vertexDeleteCallback(feedback);});
 
   auto polygon = prism_->getPolygon().outer();
   for(int i=0; i<polygon.size() - 1; i++){
@@ -147,9 +152,23 @@ void VertexControl::addVertexIntMarker(mrs_lib::Point2d position, const double u
   lower_indecies_[lower_int_marker.name] = index;
   lower_names_[index] = lower_int_marker.name;
 
+
   // | --------------------- Apply ----------------------- |
   vertex_id_ ++;
+  menu_handler_->apply(*server_, upper_int_marker.name);
+  menu_handler_->apply(*server_, lower_int_marker.name);
   server_->applyChanges();
+}
+
+int VertexControl::getIndexByName(std::string marker_name){
+  if(upper_indecies_.find(marker_name) != upper_indecies_.end() ){
+    return upper_indecies_[marker_name];
+  } else if(lower_indecies_.find(marker_name) != lower_indecies_.end()){
+    return lower_indecies_[marker_name];
+  } else{
+    ROS_WARN("[VertexControl]: unknown marker appeared %s", marker_name.c_str());
+    return -1;
+  }
 }
 
 // --------------------------------------------------------------
@@ -159,18 +178,51 @@ void VertexControl::addVertexIntMarker(mrs_lib::Point2d position, const double u
 void VertexControl::vertexMoveCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback){
   gm::Pose pose = feedback->pose;
   Point2d polygon_point = Point2d{pose.position.x, pose.position.y};
-  int index;
-
-  if(upper_indecies_.find(feedback->marker_name) != upper_indecies_.end()){
-    index = upper_indecies_[feedback->marker_name];
-  } else if (lower_indecies_.find(feedback->marker_name) != lower_indecies_.end()){
-    index = lower_indecies_[feedback->marker_name];
-  } else{
-    ROS_WARN("[VertexControl]: unknown marker appeared %s", feedback->marker_name.c_str());
+  int index = getIndexByName(feedback->marker_name);
+  if(index < 0){
     return;
   }
 
   prism_->setVertex(polygon_point, index);
+}
+
+
+void VertexControl::vertexAddClockwiseCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
+  int index = getIndexByName(feedback->marker_name);
+  if(index < 0){
+    return;
+  }
+
+  addVertexIntMarker(Point2d{0, 0}, prism_->getMaxZ(), prism_->getMinZ(), prism_->getVerticesNum());
+  prism_->addVertexClockwise(index);
+}
+
+void VertexControl::vertexAddCounterclockwiseCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
+  int index = getIndexByName(feedback->marker_name);
+  if(index < 0){
+    return;
+  }
+
+  addVertexIntMarker(Point2d{0, 0}, prism_->getMaxZ(), prism_->getMinZ(), prism_->getVerticesNum());
+  prism_->addVertexCounterclockwise(index);
+}
+
+void VertexControl::vertexDeleteCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
+  int index = getIndexByName(feedback->marker_name);
+  if(index < 0){
+    return;
+  }
+
+  std::string upper_name = upper_names_[prism_->getVerticesNum() - 1];
+  std::string lower_name = lower_names_[prism_->getVerticesNum() - 1];
+
+  server_->erase(upper_name);
+  server_->erase(lower_name);
+  upper_names_.erase(prism_->getVerticesNum() - 1);
+  lower_names_.erase(prism_->getVerticesNum() - 1);
+  upper_indecies_.erase(upper_name);
+  lower_indecies_.erase(lower_name);
+  prism_->deleteVertex(index);
 }
 
 } // namespace mrs_lib

@@ -23,9 +23,13 @@ public:
   void update();
 
 private:
+  int getIndexByName(std::string marker_name);
   void addVertexIntMarker(Point2d position, const double upper, const double lower, const int index);
   visualization_msgs::Marker makeBox(visualization_msgs::InteractiveMarker &msg);
   void vertexMoveCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
+  void vertexAddClockwiseCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
+  void vertexAddCounterclockwiseCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
+  void vertexDeleteCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
 
   // It is required for generating interactive marker names, 
   // because their names must be unique on topic 
@@ -45,7 +49,7 @@ private:
   // Since no method find_by_value() is present and markers may not be ordered,
   // it was decided to make several containers.
   // std::map takes O(n) amount of memory and CRUD operations have logarithmic complexity.
-  // Because there will rarely more than 10 vertecies per prism and vertexMoveCallback may
+  // Because there will rarely more than 10 vertecies per prism and vertexMoveCallback can
   // be called more than 10 times per second, such containers fit perfectly 
   std::map<std::string, int> upper_indecies_;
   std::map<std::string, int> lower_indecies_;

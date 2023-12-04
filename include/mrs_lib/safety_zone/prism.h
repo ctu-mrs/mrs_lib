@@ -73,6 +73,8 @@ public:
   // Adds new vertex in the middle of the neighboring verge
   void addVertexCounterclockwise(unsigned int index);
 
+  void deleteVertex(unsigned int index);
+
   // Controls, if 3d point lies within the prism 
   bool isPointIn(Point3d point);
 

@@ -152,6 +152,18 @@ namespace mrs_lib
     notifySubscribers();
   }
 
+  void Prism::deleteVertex(unsigned int index){
+    auto &outer_ring = polygon_.outer();
+    if(index >= outer_ring.size() - 1) { // -1 because the last is the same as the first
+      throw std::invalid_argument("Index is out of bounds");
+    }
+    outer_ring.erase(outer_ring.begin() + index);
+    if(index == 0){
+      outer_ring.back() = outer_ring[0];
+    }
+    notifySubscribers();
+  }
+
   bool Prism::isPointIn(Point3d point) {
     Point2d point2d;
     bg::set<0>(point2d, bg::get<0>(point));
