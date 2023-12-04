@@ -150,8 +150,8 @@ void CenterControl::moveCallback(const visualization_msgs::InteractiveMarkerFeed
       // points[i] = outer_ring[i];
       double x1 = outer_ring[i].get<0>();
       double y1 = outer_ring[i].get<1>();
-      double x2 = (x1-last_position_.x)*cos(d_alpha) - (y1-last_position_.y)*sin(d_alpha);
-      double y2 = (x1-last_position_.x)*sin(d_alpha) + (y1-last_position_.y)*cos(d_alpha);
+      double x2 = (x1-last_position_.x)*cos(d_alpha) - (y1-last_position_.y)*sin(d_alpha) + last_position_.x;
+      double y2 = (x1-last_position_.x)*sin(d_alpha) + (y1-last_position_.y)*cos(d_alpha) + last_position_.y;
       points[i].set<0>(x2);
       points[i].set<1>(y2);
     }
