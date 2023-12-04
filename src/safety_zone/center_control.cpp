@@ -1,9 +1,12 @@
 #include "mrs_lib/safety_zone/center_control.h"
 
 #include <tf/tf.h>
+#include <numeric>
+#include <math.h>
 
 namespace vm = visualization_msgs;
 namespace gm = geometry_msgs;
+namespace bg = boost::geometry;
 
 namespace mrs_lib
 {
@@ -65,7 +68,6 @@ void CenterControl::addIntMarker(){
   tf::Quaternion orien(0.0, 1.0, 0.0, 1.0);
   orien.normalize();
   tf::quaternionTFToMsg(orien, control.orientation);
-  std::cout<<control.orientation.w << ", " << control.orientation.x << ", "<<control.orientation.y << ", " << control.orientation.z << "\n";
 
   // Rotating around z-axes
   control.interaction_mode = vm::InteractiveMarkerControl::ROTATE_AXIS;
@@ -93,26 +95,81 @@ void CenterControl::addIntMarker(){
       [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->mouseUpCallback(feedback);}, 
       vm::InteractiveMarkerFeedback::MOUSE_UP);
   server_->applyChanges();
+  marker_name_ = int_marker.name;
 }
 
 void CenterControl::moveCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback){
-  std::cout<<"CenterControl move callback called\n";
+  // mouseDownCallback() does not necessarily come before maveCallback()
+  if(!is_last_valid){
+    return;
+  }
 
+  gm::Point current_position = feedback->pose.position;
+  gm::Quaternion current_orientation = feedback->pose.orientation;
 
+  // Adjust Z position
+  double dZ = current_position.z - last_position_.z;
+  if(dZ != 0.0){    // To make sure markers do not update unnecessarily
+    prism_->setMaxZ(last_max_z + dZ);
+    prism_->setMinZ(last_min_z + dZ);
+  }
 
+  // Move polygon
+  if(last_position_.x - current_position.x != 0.0 || last_position_.y - current_position.y != 0.0) {
+    Point2d delta = Point2d{current_position.x - last_position_.x, current_position.y - last_position_.y};
 
-  last_orientation_ = feedback->pose.orientation;
-  last_position_ = feedback->pose.position;
+    auto& outer_ring = last_polygon_.outer();
+    std::vector<unsigned int> indices(outer_ring.size() - 1);
+    std::vector<Point2d> points(outer_ring.size() - 1);
+    std::iota(indices.begin(), indices.end(), 0);
+    for(int i=0; i<outer_ring.size() - 1; i++){
+      points[i] = outer_ring[i];
+      bg::add_point(points[i], delta);
+    }
+    prism_->setVertices(points, indices);
+  }
+
+  // Rotate polygon
+  tf::Quaternion last;
+  tf::Quaternion cur;
+  tf::quaternionMsgToTF(last_orientation_, last);
+  tf::quaternionMsgToTF(current_orientation, cur);
+
+  tf::Quaternion qdiff = cur * last.inverse();
+  tfScalar diff = qdiff.getAngle();
+  tf::Vector3 axes = qdiff.getAxis();
+  double d_alpha = diff * axes.getZ();
+
+  if(d_alpha != 0.0){
+    auto& outer_ring = last_polygon_.outer();
+    std::vector<unsigned int> indices(outer_ring.size() - 1);
+    std::vector<Point2d> points(outer_ring.size() - 1);
+    std::iota(indices.begin(), indices.end(), 0);
+
+    for(int i=0; i<outer_ring.size() - 1; i++){
+      // points[i] = outer_ring[i];
+      double x1 = outer_ring[i].get<0>();
+      double y1 = outer_ring[i].get<1>();
+      double x2 = (x1-last_position_.x)*cos(d_alpha) - (y1-last_position_.y)*sin(d_alpha);
+      double y2 = (x1-last_position_.x)*sin(d_alpha) + (y1-last_position_.y)*cos(d_alpha);
+      points[i].set<0>(x2);
+      points[i].set<1>(y2);
+    }
+    prism_->setVertices(points, indices);
+  }
 }
 
 void CenterControl::mouseDownCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback){
   last_orientation_ = feedback->pose.orientation;
   last_position_ = feedback->pose.position;
-  std::cout<<"CenterControl down callback called\n";
+  last_polygon_ = prism_->getPolygon();
+  last_max_z = prism_->getMaxZ();
+  last_min_z = prism_->getMinZ();
+  is_last_valid = true;
 }
 
 void CenterControl::mouseUpCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback){
-  std::cout<<"CenterControl up callback called\n";
+  is_last_valid = false;
 }
 
 

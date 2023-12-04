@@ -65,7 +65,7 @@ public:
   // Only notifies subsribers once in case of success
   // returns true if succeeded
   // returns false otherwise
-  bool setVerticies(std::vector<Point2d>& vertices, std::vector<unsigned int> indices);
+  bool setVertices(std::vector<Point2d>& vertices, std::vector<unsigned int> indices);
 
   // Adds new vertex in the middle of the neighboring verge
   void addVertexClockwise(unsigned int index);

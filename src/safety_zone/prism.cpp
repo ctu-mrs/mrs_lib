@@ -79,7 +79,7 @@ namespace mrs_lib
   }
 
   // TODO: test this
-  bool Prism::setVerticies(std::vector<Point2d>& vertices, std::vector<unsigned int> indices){
+  bool Prism::setVertices(std::vector<Point2d>& vertices, std::vector<unsigned int> indices){
     if(vertices.size() != indices.size()){
       throw std::invalid_argument("Number of vertices and indices must be equal");
     }
