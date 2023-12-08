@@ -164,6 +164,51 @@ namespace mrs_lib
     notifySubscribers();
   }
 
+  void Prism::move(Point3d adjustment) {
+    bool do_notify = false;
+
+    double dz = adjustment.get<2>();
+    if(dz != 0){
+      do_notify = true;
+      max_z_ += dz;
+      min_z_ += dz;
+    }
+
+    double dx = adjustment.get<0>();
+    double dy = adjustment.get<1>();
+    Point2d adjustment2d = Point2d{dx, dy};
+    if(dx != 0 || dy != 0){
+      do_notify = true;
+      auto& outer_ring = polygon_.outer();
+      for(int i=0; i<outer_ring.size() - 1; i++){
+        bg::add_point(outer_ring[i], adjustment2d);
+      }
+    }  
+
+    if(do_notify){
+      notifySubscribers();
+    }
+  }
+
+  void Prism::rotate(double alpha){
+    if(alpha == 0.0){
+      return;
+    }
+
+    Point2d cur_center = getCenter();
+    auto& outer_ring = polygon_.outer();
+    for(int i=0; i<outer_ring.size() - 1; i++){
+      double x1 = outer_ring[i].get<0>();
+      double y1 = outer_ring[i].get<1>();
+      double x2 = (x1-cur_center.get<0>())*cos(alpha) - (y1-cur_center.get<1>())*sin(alpha) + cur_center.get<0>();
+      double y2 = (x1-cur_center.get<0>())*sin(alpha) + (y1-cur_center.get<1>())*cos(alpha) + cur_center.get<1>();
+      outer_ring[i].set<0>(x2);
+      outer_ring[i].set<1>(y2);
+    }
+
+    notifySubscribers();
+  }
+
   bool Prism::isPointIn(Point3d point) {
     Point2d point2d;
     bg::set<0>(point2d, bg::get<0>(point));

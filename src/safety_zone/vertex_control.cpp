@@ -43,6 +43,7 @@ VertexControl::~VertexControl(){
   }
 }
 
+// TODO: if a vertex has been added/deleted from out of this tool, the corresponding markers will not be added/deleted
 void VertexControl::update(){
   auto polygon = prism_->getPolygon().outer();
 

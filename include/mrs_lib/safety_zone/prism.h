@@ -73,6 +73,11 @@ public:
   // Adds new vertex in the middle of the neighboring verge
   void addVertexCounterclockwise(unsigned int index);
 
+  void move(Point3d adjustment);
+
+  // Takes angle in radians, rotates clockwise (counter-clockwise if alpha < 0)
+  void rotate(double alpha);
+
   void deleteVertex(unsigned int index);
 
   // Controls, if 3d point lies within the prism 
