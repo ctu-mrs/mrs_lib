@@ -180,7 +180,7 @@ namespace mrs_lib
     if(dx != 0 || dy != 0){
       do_notify = true;
       auto& outer_ring = polygon_.outer();
-      for(int i=0; i<outer_ring.size() - 1; i++){
+      for(int i=0; i<outer_ring.size(); i++){
         bg::add_point(outer_ring[i], adjustment2d);
       }
     }  
@@ -197,7 +197,7 @@ namespace mrs_lib
 
     Point2d cur_center = getCenter();
     auto& outer_ring = polygon_.outer();
-    for(int i=0; i<outer_ring.size() - 1; i++){
+    for(int i=0; i<outer_ring.size(); i++){
       double x1 = outer_ring[i].get<0>();
       double y1 = outer_ring[i].get<1>();
       double x2 = (x1-cur_center.get<0>())*cos(alpha) - (y1-cur_center.get<1>())*sin(alpha) + cur_center.get<0>();

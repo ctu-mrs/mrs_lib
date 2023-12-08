@@ -21,6 +21,8 @@ private:
   void addBoundIntMarker(bool is_upper);
   visualization_msgs::Marker makeBox(visualization_msgs::InteractiveMarker &msg);
   void boundMoveCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
+  void mouseDownCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
+  void mouseUpCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
 
   // It is required for generating interactive marker names, 
   // because their names must be unique on topic 
@@ -36,6 +38,8 @@ private:
   std::string upper_name_;
   std::string lower_name_;
   
+  geometry_msgs::Point      last_position_;
+  bool                      is_last_valid = false;
 }; // class BoundsControl
 } // namespace mrs_lib
 

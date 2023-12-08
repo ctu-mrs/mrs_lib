@@ -39,9 +39,9 @@ vm::Marker BoundsControl::makeBox(vm::InteractiveMarker &msg){
   vm::Marker marker;
 
   marker.type = vm::Marker::CUBE;
-  marker.scale.x = msg.scale * 0.45;
-  marker.scale.y = msg.scale * 0.45;
-  marker.scale.z = msg.scale * 0.45;
+  marker.scale.x = msg.scale * 0.65;
+  marker.scale.y = msg.scale * 0.65;
+  marker.scale.z = msg.scale * 0.65;
   marker.color.r = 0.5;
   marker.color.g = 0.5;
   marker.color.b = 0.5;
@@ -77,12 +77,13 @@ void BoundsControl::addBoundIntMarker(bool is_upper){
   tf::Quaternion orien(0.0, 1.0, 0.0, 1.0);
   orien.normalize();
   tf::quaternionTFToMsg(orien, control.orientation);
-  control.interaction_mode = vm::InteractiveMarkerControl::MOVE_AXIS;
 
-  // Moving element
+  // Z Moving element
+  control.interaction_mode = vm::InteractiveMarkerControl::MOVE_AXIS;
   int_marker.controls.push_back(control);
 
-  // Visible box
+  // XY Moving box
+  control.interaction_mode = vm::InteractiveMarkerControl::MOVE_PLANE;
   control.markers.push_back(makeBox(int_marker));
   control.always_visible = true;
   int_marker.controls.push_back(control);
@@ -92,6 +93,13 @@ void BoundsControl::addBoundIntMarker(bool is_upper){
   server_->setCallback(int_marker.name, 
       [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->boundMoveCallback(feedback);}, 
       vm::InteractiveMarkerFeedback::POSE_UPDATE);
+  server_->setCallback(int_marker.name, 
+      [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->mouseDownCallback(feedback);}, 
+      vm::InteractiveMarkerFeedback::MOUSE_DOWN);
+  server_->setCallback(int_marker.name, 
+      [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->mouseUpCallback(feedback);}, 
+      vm::InteractiveMarkerFeedback::MOUSE_UP);
+  server_->applyChanges();
   server_->applyChanges();
 }
 
@@ -104,5 +112,26 @@ void BoundsControl::boundMoveCallback(const visualization_msgs::InteractiveMarke
   }else{
     ROS_WARN("[BoundsControl]: unknown marker appeared %s", feedback->marker_name.c_str());
   }
+
+  if(!is_last_valid){
+    return;
+  }
+
+  gm::Point current_position = feedback->pose.position;
+  Point3d adjustment = Point3d{current_position.x - last_position_.x, 
+                               current_position.y - last_position_.y,
+                               0};
+  prism_->move(adjustment);
+  last_position_ = current_position;
 }
+
+void BoundsControl::mouseDownCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback){
+  last_position_ = feedback->pose.position;
+  is_last_valid = true;
+}
+
+void BoundsControl::mouseUpCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback){
+  is_last_valid = false;
+}
+
 }

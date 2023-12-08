@@ -41,9 +41,6 @@ private:
 
   geometry_msgs::Quaternion last_orientation_;
   geometry_msgs::Point      last_position_;
-  Polygon                   last_polygon_;
-  double                    last_max_z;
-  double                    last_min_z;
   bool                      is_last_valid = false;
   
 }; // class CenterControl
