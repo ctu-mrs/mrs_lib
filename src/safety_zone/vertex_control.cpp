@@ -43,15 +43,33 @@ VertexControl::~VertexControl(){
   }
 }
 
-// TODO: if a vertex has been added/deleted from out of this tool, the corresponding markers will not be added/deleted
 void VertexControl::update(){
   auto polygon = prism_->getPolygon().outer();
 
-  if(upper_names_.size() != polygon.size() -1 || lower_names_.size() != polygon.size() - 1){
-    ROS_WARN("[VertexControl]: Could not update markers, because number of markers and number of verticies are different");
-    return;
+  // Deleting extra vertices
+  if(polygon.size() - 1 < upper_names_.size()){
+    int initial_num = upper_names_.size();
+    for(int i=polygon.size()-1; i<initial_num; i++){
+      std::string upper_name = upper_names_[i];
+      std::string lower_name = lower_names_[i];
+
+      server_->erase(upper_name);
+      server_->erase(lower_name);
+      upper_names_.erase(i);
+      lower_names_.erase(i);
+      upper_indecies_.erase(upper_name);
+      lower_indecies_.erase(lower_name);
+    }
   }
 
+  // Adding not present vertices
+  if(polygon.size() - 1 > upper_names_.size()){
+    for(int i=upper_names_.size(); i<polygon.size() - 1; i++){
+      addVertexIntMarker(polygon[i], prism_->getMaxZ(), prism_->getMinZ(), i);
+    }
+  }
+  
+  // Updating the positions
   for(int i=0; i<polygon.size() - 1; i++){
     gm::Pose pose;
     pose.position.x = polygon[i].get<0>();
@@ -194,7 +212,6 @@ void VertexControl::vertexAddClockwiseCallback(const visualization_msgs::Interac
     return;
   }
 
-  addVertexIntMarker(Point2d{0, 0}, prism_->getMaxZ(), prism_->getMinZ(), prism_->getVerticesNum());
   prism_->addVertexClockwise(index);
 }
 
@@ -204,7 +221,6 @@ void VertexControl::vertexAddCounterclockwiseCallback(const visualization_msgs::
     return;
   }
 
-  addVertexIntMarker(Point2d{0, 0}, prism_->getMaxZ(), prism_->getMinZ(), prism_->getVerticesNum());
   prism_->addVertexCounterclockwise(index);
 }
 
@@ -214,15 +230,6 @@ void VertexControl::vertexDeleteCallback(const visualization_msgs::InteractiveMa
     return;
   }
 
-  std::string upper_name = upper_names_[prism_->getVerticesNum() - 1];
-  std::string lower_name = lower_names_[prism_->getVerticesNum() - 1];
-
-  server_->erase(upper_name);
-  server_->erase(lower_name);
-  upper_names_.erase(prism_->getVerticesNum() - 1);
-  lower_names_.erase(prism_->getVerticesNum() - 1);
-  upper_indecies_.erase(upper_name);
-  lower_indecies_.erase(lower_name);
   prism_->deleteVertex(index);
 }
 

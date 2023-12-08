@@ -157,6 +157,11 @@ namespace mrs_lib
     if(index >= outer_ring.size() - 1) { // -1 because the last is the same as the first
       throw std::invalid_argument("Index is out of bounds");
     }
+
+    if(outer_ring.size() <= 4){
+      return;
+    }
+
     outer_ring.erase(outer_ring.begin() + index);
     if(index == 0){
       outer_ring.back() = outer_ring[0];
