@@ -16,6 +16,12 @@ add_definitions(-Wall)
 add_definitions(-Wextra)
 add_definitions(-Wpedantic)
 
+if(COVERAGE)
+  message(WARNING "building with --coverage, the performance might be limited")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+endif()
+
 # remove warning info from PCL
 set(PCL_FIND_QUIETLY INTERNAL)
 
@@ -370,9 +376,6 @@ target_link_libraries(cyclic_example
 ## --------------------------------------------------------------
 
 if(CATKIN_ENABLE_TESTING)
-
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
 
   add_subdirectory(test)
 
