@@ -22,8 +22,6 @@ VertexControl::VertexControl(Prism* prism, std::string frame_id, ros::NodeHandle
   server_ = new interactive_markers::InteractiveMarkerServer(nh_.getNamespace() + "safety_area_vertices_out", std::to_string(id_), false);
   // Menu
   menu_handler_ = new interactive_markers::MenuHandler();
-  menu_handler_->insert("Add vertex clockwise", [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->vertexAddClockwiseCallback(feedback);});
-  menu_handler_->insert("Add vertex counter-clockwise", [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->vertexAddCounterclockwiseCallback(feedback);});
   menu_handler_->insert("Delete the vertex", [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->vertexDeleteCallback(feedback);});
 
   auto polygon = prism_->getPolygon().outer();
@@ -203,25 +201,6 @@ void VertexControl::vertexMoveCallback(const visualization_msgs::InteractiveMark
   }
 
   prism_->setVertex(polygon_point, index);
-}
-
-
-void VertexControl::vertexAddClockwiseCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
-  int index = getIndexByName(feedback->marker_name);
-  if(index < 0){
-    return;
-  }
-
-  prism_->addVertexClockwise(index);
-}
-
-void VertexControl::vertexAddCounterclockwiseCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
-  int index = getIndexByName(feedback->marker_name);
-  if(index < 0){
-    return;
-  }
-
-  prism_->addVertexCounterclockwise(index);
 }
 
 void VertexControl::vertexDeleteCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {

@@ -27,8 +27,6 @@ private:
   void addVertexIntMarker(Point2d position, const double upper, const double lower, const int index);
   visualization_msgs::Marker makeBox(visualization_msgs::InteractiveMarker &msg);
   void vertexMoveCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
-  void vertexAddClockwiseCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
-  void vertexAddCounterclockwiseCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
   void vertexDeleteCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
 
   // It is required for generating interactive marker names, 
