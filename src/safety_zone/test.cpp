@@ -1,7 +1,8 @@
 #include "mrs_lib/safety_zone/safety_zone.h"
 #include "mrs_lib/safety_zone/vertex_control.h"
 #include "mrs_lib/safety_zone/bounds_control.h"
-#include "mrs_lib/safety_zone/edges_visualization.h"
+#include "mrs_lib/safety_zone/int_edges_visualization.h"
+#include "mrs_lib/safety_zone/static_edges_visualization.h"
 #include "mrs_lib/safety_zone/center_control.h"
 #include <ros/ros.h>
 
@@ -276,7 +277,8 @@ void show_markers(ros::NodeHandle nh) {
 
     Prism outer_boarder = Prism(poly, 0.0, 15);
 
-    EdgesVisualization edges_vis = EdgesVisualization(&outer_boarder, "map", nh, 2);
+    StaticEdgesVisualization static_edges_vis = StaticEdgesVisualization(&outer_boarder, "map", nh, 2);
+    IntEdgesVisualization edges_vis = IntEdgesVisualization(&outer_boarder, "map", nh);
     VertexControl vertex_control = VertexControl(&outer_boarder, "map", nh);
     BoundsControl bounds_control = BoundsControl(&outer_boarder, "map", nh);
     CenterControl center_control = CenterControl(&outer_boarder, "map", nh);

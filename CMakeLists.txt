@@ -180,7 +180,8 @@ add_library(MrsLib_SafetyZone
   src/safety_zone/safety_zone.cpp
   src/safety_zone/prism.cpp
   src/safety_zone/vertex_control.cpp
-  src/safety_zone/edges_visualization.cpp
+  src/safety_zone/int_edges_visualization.cpp
+  src/safety_zone/static_edges_visualization.cpp
   src/safety_zone/bounds_control.cpp
   src/safety_zone/center_control.cpp
   )

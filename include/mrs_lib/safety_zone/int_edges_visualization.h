@@ -1,5 +1,5 @@
-#ifndef EDGES_VISUALIZATION_H
-#define EDGES_VISUALIZATION_H
+#ifndef INT_EDGES_VISUALIZATION_H
+#define INT_EDGES_VISUALIZATION_H
 
 #include "prism.h"
 
@@ -12,26 +12,21 @@
 
 namespace mrs_lib 
 {
-class EdgesVisualization : public Subscriber{
+class IntEdgesVisualization : public Subscriber{
 
 public:
 
 public:
-  EdgesVisualization(Prism* prism, std::string frame_id, ros::NodeHandle nh, double markers_update_rate);
+  IntEdgesVisualization(Prism* prism, std::string frame_id, ros::NodeHandle nh);
 
-  ~EdgesVisualization();
+  ~IntEdgesVisualization();
 
   void update();
 
 private:
-  void sendMarker(const ros::TimerEvent& event);
   int getIndexByName(std::string marker_name);
   void addEdgeIntMarker(Point2d start, Point2d end, const double upper, const double lower, const int index);
-  // visualization_msgs::Marker makeBox(visualization_msgs::InteractiveMarker &msg);
-  // void vertexMoveCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
   void vertexAddCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
-  // void vertexAddCounterclockwiseCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
-  // void vertexDeleteCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
 
   // It is required for generating interactive marker names, 
   // because their names must be unique on topic 
@@ -42,11 +37,6 @@ private:
   Prism* prism_;
   std::string frame_id_;
   ros::NodeHandle nh_;
-  ros::Timer timer_;
-
-  // // Static markers
-  // ros::Publisher publisher_;
-  // visualization_msgs::Marker last_marker_;
 
   // Interactive markers
   interactive_markers::InteractiveMarkerServer* server_ = nullptr;
@@ -65,7 +55,7 @@ private:
   std::map<int, std::string> lower_names_;
   std::map<int, std::string> vertical_names_;
 
-}; // class EdgesVisualization
+}; // class IntEdgesVisualization
 } // namespace mrs_lib
 
 

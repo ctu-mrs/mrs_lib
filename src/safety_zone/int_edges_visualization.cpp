@@ -1,4 +1,4 @@
-#include "mrs_lib/safety_zone/edges_visualization.h"
+#include "mrs_lib/safety_zone/int_edges_visualization.h"
 
 #include "mrs_lib/attitude_converter.h"
 
@@ -10,16 +10,14 @@ namespace vm = visualization_msgs;
 namespace gm = geometry_msgs;
 
 namespace mrs_lib {
-int EdgesVisualization::id_generator = 0;
+int IntEdgesVisualization::id_generator = 0;
 
-EdgesVisualization::EdgesVisualization(Prism* prism, std::string frame_id, ros::NodeHandle nh, double markers_update_rate) : id_(id_generator){
+IntEdgesVisualization::IntEdgesVisualization(Prism* prism, std::string frame_id, ros::NodeHandle nh) : id_(id_generator){
   prism_ = prism;
   frame_id_ = frame_id;
   nh_ = nh;
   id_generator++;
 
-  // publisher_ = nh_.advertise<vm::Marker>("safety_area_static_markers_out", 1);
-  // timer_ = nh_.createTimer(ros::Rate(markers_update_rate), &EdgesVisualization::sendMarker, this);
   server_ = new interactive_markers::InteractiveMarkerServer(nh_.getNamespace() + "safety_area_edges_out", std::to_string(id_), false);
   menu_handler_ = new interactive_markers::MenuHandler();
   menu_handler_->insert("Add vertex", [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->vertexAddCallback(feedback);});
@@ -33,7 +31,7 @@ EdgesVisualization::EdgesVisualization(Prism* prism, std::string frame_id, ros::
   update();
 }
 
-EdgesVisualization::~EdgesVisualization(){
+IntEdgesVisualization::~IntEdgesVisualization(){
   if(server_){
     delete server_;
   }
@@ -42,12 +40,7 @@ EdgesVisualization::~EdgesVisualization(){
   }
 }
 
-// Lines must be updated periodically. View https://github.com/ros-visualization/rviz/issues/1287
-void EdgesVisualization::sendMarker(const ros::TimerEvent& event) {
-  // publisher_.publish(last_marker_);
-}
-
-void EdgesVisualization::update() {  auto polygon = prism_->getPolygon().outer();
+void IntEdgesVisualization::update() {  auto polygon = prism_->getPolygon().outer();
   // Deleting extra vertices
   if(polygon.size() - 1 < upper_names_.size()){
     int initial_num = upper_names_.size();
@@ -119,7 +112,7 @@ void EdgesVisualization::update() {  auto polygon = prism_->getPolygon().outer()
   }
 }
 
-int EdgesVisualization::getIndexByName(std::string marker_name){
+int IntEdgesVisualization::getIndexByName(std::string marker_name){
   if(upper_indecies_.find(marker_name) != upper_indecies_.end() ){
     return upper_indecies_[marker_name];
   } else if(lower_indecies_.find(marker_name) != lower_indecies_.end()){
@@ -130,7 +123,7 @@ int EdgesVisualization::getIndexByName(std::string marker_name){
   }
 }
 
-void EdgesVisualization::addEdgeIntMarker(Point2d start, Point2d end, const double upper, const double lower, const int index){
+void IntEdgesVisualization::addEdgeIntMarker(Point2d start, Point2d end, const double upper, const double lower, const int index){
   // Visible line
   gm::Point p1;
   gm::Point p2;
@@ -261,7 +254,7 @@ void EdgesVisualization::addEdgeIntMarker(Point2d start, Point2d end, const doub
   server_->applyChanges();
 }
 
-void EdgesVisualization::vertexAddCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback){
+void IntEdgesVisualization::vertexAddCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback){
   int index = getIndexByName(feedback->marker_name);
   if(index < 0){
     return;
