@@ -9,11 +9,16 @@ namespace gm = geometry_msgs;
 
 namespace mrs_lib {
 
-StaticEdgesVisualization::StaticEdgesVisualization(Prism* prism, std::string frame_id, ros::NodeHandle nh, double markers_update_rate) {
+int StaticEdgesVisualization::id_generator_ = 0;
+visualization_msgs::MarkerArray StaticEdgesVisualization::last_markers_ = visualization_msgs::MarkerArray();
+
+StaticEdgesVisualization::StaticEdgesVisualization(Prism* prism, std::string frame_id, ros::NodeHandle nh, double markers_update_rate) : id_(id_generator_) {
   prism_ = prism;
   frame_id_ = frame_id;
   nh_ = nh;
-  publisher_ = nh_.advertise<vm::Marker>("safety_area_static_markers_out", 1);
+  id_generator_++;
+  last_markers_.markers.push_back(vm::Marker());
+  publisher_ = nh_.advertise<vm::MarkerArray>("safety_area_static_markers_out", 1);
   timer_ = nh_.createTimer(ros::Rate(markers_update_rate), &StaticEdgesVisualization::sendMarker, this);
   prism_->subscribe(this);
   update();
@@ -21,7 +26,7 @@ StaticEdgesVisualization::StaticEdgesVisualization(Prism* prism, std::string fra
 
 // Lines must be updated periodically. View https://github.com/ros-visualization/rviz/issues/1287
 void StaticEdgesVisualization::sendMarker(const ros::TimerEvent& event) {
-  publisher_.publish(last_marker_);
+  publisher_.publish(last_markers_);
 }
 
 void StaticEdgesVisualization::update() {
@@ -30,6 +35,7 @@ void StaticEdgesVisualization::update() {
   auto polygon = prism_->getPolygon().outer();
   
   vm::Marker marker;
+  marker.id = id_;
   marker.header.frame_id = frame_id_;
   marker.type = vm::Marker::LINE_LIST;
   marker.color.a = 0.3;
@@ -74,8 +80,8 @@ void StaticEdgesVisualization::update() {
     marker.points.push_back(upper_start);
     marker.points.push_back(lower_start);
   }
-  last_marker_ = marker;
-  publisher_.publish(last_marker_);
+  last_markers_.markers[id_] = marker;
+  publisher_.publish(last_markers_);
 }
 
 } // namespace mrs_lib

@@ -283,11 +283,11 @@ void show_markers(ros::NodeHandle nh) {
     BoundsControl bounds_control = BoundsControl(&outer_boarder, "map", nh);
     CenterControl center_control = CenterControl(&outer_boarder, "map", nh);
 
-    // Prism outer_boarder2 = Prism(poly, 16.0, 18.0);
-    // EdgesVisualization edges_vis2 = EdgesVisualization(&outer_boarder2, "map", nh, 2);
-    // VertexControl vertex_control2 = VertexControl(&outer_boarder2, "map", nh);
-    // BoundsControl bounds_control2 = BoundsControl(&outer_boarder2, "map", nh);
-    // CenterControl center_control2 = CenterControl(&outer_boarder2, "map", nh);
+    Prism outer_boarder2 = Prism(poly, 16.0, 18.0);
+    StaticEdgesVisualization edges_vis2 = StaticEdgesVisualization(&outer_boarder2, "map", nh, 2);
+    VertexControl vertex_control2 = VertexControl(&outer_boarder2, "map", nh);
+    BoundsControl bounds_control2 = BoundsControl(&outer_boarder2, "map", nh);
+    CenterControl center_control2 = CenterControl(&outer_boarder2, "map", nh);
 
     
     ros::spin();

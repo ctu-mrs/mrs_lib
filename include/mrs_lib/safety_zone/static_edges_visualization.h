@@ -4,6 +4,7 @@
 #include "prism.h"
 
 #include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 #include <string>
 #include <ros/ros.h>
 
@@ -23,10 +24,13 @@ private:
   std::string frame_id_;
   ros::NodeHandle nh_;
 
+  static int id_generator_;
+  const int id_;
+
   // Static markers
   ros::Publisher publisher_;
   ros::Timer timer_;
-  visualization_msgs::Marker last_marker_;
+  static visualization_msgs::MarkerArray last_markers_;
 
 }; // class StaticEdgesVisualization
 } // namespace mrs_lib
