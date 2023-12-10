@@ -19,12 +19,20 @@ CenterControl::CenterControl(Prism* prism, std::string frame_id, ros::NodeHandle
   id_generator++;
 
   server_ = new interactive_markers::InteractiveMarkerServer(nh_.getNamespace() + "safety_area_center_out", std::to_string(id), false);
+  menu_handler_ = new interactive_markers::MenuHandler();
+  menu_handler_->insert("Delete the prism", [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->deleteCallback(feedback);});
 
   prism_->subscribe(this);
   addIntMarker();
 }
 
 void CenterControl::update(){
+  if(!prism_->isActive()){
+    server_->clear();
+    server_->applyChanges();
+    return;
+  }
+
   gm::Pose pose;
   pose.position.x = prism_->getCenter().get<0>();
   pose.position.y = prism_->getCenter().get<1>();
@@ -85,6 +93,7 @@ void CenterControl::addIntMarker(){
 
   // Send to server
   server_->insert(int_marker);
+  menu_handler_->apply(*server_, int_marker.name);
   server_->setCallback(int_marker.name, 
       [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->moveCallback(feedback);}, 
       vm::InteractiveMarkerFeedback::POSE_UPDATE);
@@ -136,6 +145,10 @@ void CenterControl::mouseDownCallback(const visualization_msgs::InteractiveMarke
 
 void CenterControl::mouseUpCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback){
   is_last_valid = false;
+}
+
+void CenterControl::deleteCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback){
+  prism_->deactivate();
 }
 
 

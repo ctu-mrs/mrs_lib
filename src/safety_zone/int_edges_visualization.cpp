@@ -40,7 +40,14 @@ IntEdgesVisualization::~IntEdgesVisualization(){
   }
 }
 
-void IntEdgesVisualization::update() {  auto polygon = prism_->getPolygon().outer();
+void IntEdgesVisualization::update() {
+  if(!prism_->isActive()){
+    server_->clear();
+    server_->applyChanges();
+    return;
+  }
+  
+  auto polygon = prism_->getPolygon().outer();
   // Deleting extra vertices
   if(polygon.size() - 1 < upper_names_.size()){
     int initial_num = upper_names_.size();

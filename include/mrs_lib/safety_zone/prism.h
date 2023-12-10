@@ -17,6 +17,7 @@ private:
   Polygon polygon_;
   double max_z_;
   double min_z_;
+  bool is_active_ = true;
 
   std::set<Subscriber*> subscribers;
 
@@ -52,6 +53,10 @@ public:
     return res;
   }
 
+  bool isActive() {
+    return is_active_;
+  }
+
   void setMaxZ(double value);
 
   void setMinZ(double value);
@@ -72,6 +77,8 @@ public:
 
   // Adds new vertex in the middle of the neighboring verge
   void addVertexCounterclockwise(unsigned int index);
+
+  void deactivate();
 
   void move(Point3d adjustment);
 

@@ -30,6 +30,11 @@ void StaticEdgesVisualization::sendMarker(const ros::TimerEvent& event) {
 }
 
 void StaticEdgesVisualization::update() {
+  if(!prism_->isActive()){
+    last_markers_.markers[id_].action = vm::Marker::DELETE;
+    return;
+  }
+
   double max_z = prism_->getMaxZ();
   double min_z = prism_->getMinZ();
   auto polygon = prism_->getPolygon().outer();

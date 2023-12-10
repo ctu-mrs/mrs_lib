@@ -152,6 +152,12 @@ namespace mrs_lib
     notifySubscribers();
   }
 
+  void Prism::deactivate(){
+    is_active_ = false;
+    polygon_.outer().clear();
+    notifySubscribers();
+  }
+
   void Prism::deleteVertex(unsigned int index){
     auto &outer_ring = polygon_.outer();
     if(index >= outer_ring.size() - 1) { // -1 because the last is the same as the first

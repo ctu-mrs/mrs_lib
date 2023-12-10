@@ -25,6 +25,7 @@ private:
   void moveCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
   void mouseDownCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
   void mouseUpCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
+  void deleteCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
 
   // It is required for generating interactive marker names, 
   // because their names must be unique on topic 
@@ -37,6 +38,7 @@ private:
   ros::NodeHandle nh_;
 
   interactive_markers::InteractiveMarkerServer* server_ = nullptr;
+  interactive_markers::MenuHandler*             menu_handler_  = nullptr;
   std::string marker_name_;
 
   geometry_msgs::Quaternion last_orientation_;
