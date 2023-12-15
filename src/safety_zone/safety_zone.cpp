@@ -12,7 +12,8 @@ SafetyZone::SafetyZone(Prism outer_boarder) : outer_border_(outer_boarder){
 
 SafetyZone::SafetyZone(Prism outer_boarder, std::vector<Prism> obstacles) : outer_border_(outer_boarder){
   for(int i=0; i<obstacles.size(); i++) {
-    obstacles_.at(i) = obstacles[i];
+    obstacles_.insert({i, obstacles[i]});
+    // obstacles_[i] = obstacles[i];
   }
 }
 

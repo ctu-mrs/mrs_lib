@@ -19,14 +19,14 @@ IntEdgesVisualization::IntEdgesVisualization(Prism& prism, std::string frame_id,
   init();
 }
 
-IntEdgesVisualization::IntEdgesVisualization(SafetyZone& safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh) : id_(id_generator), prism_(safety_zone.getObstacle(obstacle_id)) {
+IntEdgesVisualization::IntEdgesVisualization(SafetyZone* safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh) : id_(id_generator), prism_(safety_zone->getObstacle(obstacle_id)) {
   frame_id_ = frame_id;
   nh_ = nh;
   id_generator++;
   init();
 }
 
-IntEdgesVisualization::IntEdgesVisualization(SafetyZone& safety_zone, std::string frame_id, ros::NodeHandle nh) : id_(id_generator), prism_(safety_zone.getBorder()) {
+IntEdgesVisualization::IntEdgesVisualization(SafetyZone* safety_zone, std::string frame_id, ros::NodeHandle nh) : id_(id_generator), prism_(safety_zone->getBorder()) {
   frame_id_ = frame_id;
   nh_ = nh;
   id_generator++;
@@ -54,13 +54,14 @@ IntEdgesVisualization::~IntEdgesVisualization(){
   if(menu_handler_){
     delete menu_handler_;
   }
-  prism_.unsubscribe(this);
+  if(is_active_){
+    prism_.unsubscribe(this);
+  }
+  cleanup();
 }
 
 void IntEdgesVisualization::update() {
-  if(!prism_.isActive()){
-    server_->clear();
-    server_->applyChanges();
+  if(!is_active_){
     return;
   }
   
@@ -134,6 +135,12 @@ void IntEdgesVisualization::update() {
 
     server_->applyChanges();
   }
+}
+
+void IntEdgesVisualization::cleanup() {
+  server_->clear();
+  server_->applyChanges();
+  is_active_ = false;
 }
 
 int IntEdgesVisualization::getIndexByName(std::string marker_name){

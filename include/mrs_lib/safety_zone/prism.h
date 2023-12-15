@@ -8,8 +8,11 @@ namespace mrs_lib
 {
 
 class Subscriber{
+protected:
+  bool is_active_ = true;
 public:
   virtual void update() = 0;
+  virtual void cleanup() = 0;
 };
 
 class Prism{
@@ -17,7 +20,6 @@ private:
   Polygon polygon_;
   double max_z_;
   double min_z_;
-  bool is_active_ = true;
 
   std::set<Subscriber*> subscribers;
 
@@ -25,9 +27,12 @@ public:
   // If max_z < min_z, automatically swaps them
   Prism(Polygon& polygon, double max_z, double min_z);
 
+  ~Prism();
+
   void subscribe(Subscriber* entity);
   void unsubscribe(Subscriber* entity);
   void notifySubscribers();
+  void cleanSubscribers();
 
   double getMaxZ(){
     return max_z_;
@@ -53,10 +58,6 @@ public:
     return res;
   }
 
-  bool isActive() {
-    return is_active_;
-  }
-
   void setMaxZ(double value);
 
   void setMinZ(double value);
@@ -77,8 +78,6 @@ public:
 
   // Adds new vertex in the middle of the neighboring verge
   void addVertexCounterclockwise(unsigned int index);
-
-  void deactivate();
 
   void move(Point3d adjustment);
 

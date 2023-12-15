@@ -20,14 +20,14 @@ VertexControl::VertexControl(Prism& prism, std::string frame_id, ros::NodeHandle
   init();
 }
 
-VertexControl::VertexControl(SafetyZone& safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh) : id_(id_generator), prism_(safety_zone.getObstacle(obstacle_id)) {
+VertexControl::VertexControl(SafetyZone* safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh) : id_(id_generator), prism_(safety_zone->getObstacle(obstacle_id)) {
   frame_id_ = frame_id;
   nh_ = nh;
   id_generator++;
   init();
 }
 
-VertexControl::VertexControl(SafetyZone& safety_zone, std::string frame_id, ros::NodeHandle nh) : id_(id_generator), prism_(safety_zone.getBorder()) {
+VertexControl::VertexControl(SafetyZone* safety_zone, std::string frame_id, ros::NodeHandle nh) : id_(id_generator), prism_(safety_zone->getBorder()) {
   frame_id_ = frame_id;
   nh_ = nh;
   id_generator++;
@@ -55,13 +55,14 @@ VertexControl::~VertexControl(){
   if(menu_handler_){
     delete menu_handler_;
   }
-  prism_.unsubscribe(this);
+  if(is_active_){
+    prism_.unsubscribe(this);
+  }
+  cleanup();
 }
 
 void VertexControl::update(){
-  if(!prism_.isActive()){
-    server_->clear();
-    server_->applyChanges();
+  if(!is_active_){
     return;
   }
 
@@ -102,6 +103,12 @@ void VertexControl::update(){
 
     server_->applyChanges();
   }
+}
+
+void VertexControl::cleanup() {
+  server_->clear();
+  server_->applyChanges();
+  is_active_ = false;
 }
 
 vm::Marker VertexControl::makeBox(vm::InteractiveMarker &msg){

@@ -16,24 +16,42 @@ BoundsControl::BoundsControl(Prism& prism, std::string frame_id, ros::NodeHandle
   init();
 }
 
-BoundsControl::BoundsControl(SafetyZone& safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh) : id_(id_generator), prism_(safety_zone.getObstacle(obstacle_id)) {
+BoundsControl::BoundsControl(SafetyZone* safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh) : id_(id_generator), obstacle_id_(obstacle_id), prism_(safety_zone->getObstacle(obstacle_id)) {
+  frame_id_ = frame_id;
+  nh_ = nh;
+  id_generator++;
+  safety_zone_ = safety_zone;
+  init();
+}
+
+BoundsControl::BoundsControl(SafetyZone* safety_zone, std::string frame_id, ros::NodeHandle nh) : id_(id_generator), prism_(safety_zone->getBorder()){
   frame_id_ = frame_id;
   nh_ = nh;
   id_generator++;
   init();
 }
 
-BoundsControl::BoundsControl(SafetyZone& safety_zone, std::string frame_id, ros::NodeHandle nh) : id_(id_generator), prism_(safety_zone.getBorder()){
-  frame_id_ = frame_id;
-  nh_ = nh;
-  id_generator++;
-  init();
+BoundsControl::~BoundsControl(){
+  if(server_){
+    delete server_;
+  }
+  if(menu_handler_){
+    delete menu_handler_;
+  }
+  if(is_active_){
+    prism_.unsubscribe(this);
+  }
+  cleanup();
 }
 
 void BoundsControl::init(){
   server_ = new interactive_markers::InteractiveMarkerServer(nh_.getNamespace() + "safety_area_bounds_out", std::to_string(id_), false);
   menu_handler_ = new interactive_markers::MenuHandler();
-  menu_handler_->insert("Delete the prism", [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->deleteCallback(feedback);});
+  if(safety_zone_) {
+    menu_handler_->insert("Delete the prism", [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->deleteCallback(feedback);});
+  } else{
+    menu_handler_->insert("Deleting is disabled for this prism");
+  }
 
   prism_.subscribe(this);
   addBoundIntMarker(true);
@@ -41,12 +59,9 @@ void BoundsControl::init(){
 }
 
 void BoundsControl::update(){
-  if(!prism_.isActive()){
-    server_->clear();
-    server_->applyChanges();
+  if(!is_active_){
     return;
   }
-
   gm::Pose pose;
   pose.position.x = prism_.getCenter().get<0>();
   pose.position.y = prism_.getCenter().get<1>();
@@ -57,6 +72,12 @@ void BoundsControl::update(){
   server_->setPose(lower_name_, pose);
 
   server_->applyChanges();
+}
+
+void BoundsControl::cleanup(){
+  server_->clear();
+  server_->applyChanges();
+  is_active_ = false;
 }
 
 vm::Marker BoundsControl::makeBox(vm::InteractiveMarker &msg){
@@ -160,7 +181,7 @@ void BoundsControl::mouseUpCallback(const visualization_msgs::InteractiveMarkerF
 }
 
 void BoundsControl::deleteCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback){
-  prism_.deactivate();
+  safety_zone_->deleteObstacle(obstacle_id_);
 }
 
 }

@@ -15,10 +15,13 @@ class StaticEdgesVisualization : public Subscriber{
 
 public:
   StaticEdgesVisualization(Prism& prism, std::string frame_id, ros::NodeHandle nh, double markers_update_rate);
-  StaticEdgesVisualization(SafetyZone& safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh, double markers_update_rate);
-  StaticEdgesVisualization(SafetyZone& safety_zone, std::string frame_id, ros::NodeHandle nh, double markers_update_rate);
+  StaticEdgesVisualization(SafetyZone* safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh, double markers_update_rate);
+  StaticEdgesVisualization(SafetyZone* safety_zone, std::string frame_id, ros::NodeHandle nh, double markers_update_rate);
+
+  ~StaticEdgesVisualization();
 
   void update();
+  void cleanup();
 
 private:
   void init();

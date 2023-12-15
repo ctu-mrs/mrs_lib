@@ -16,9 +16,13 @@ namespace mrs_lib
 class BoundsControl : public Subscriber{
 public:
   BoundsControl(Prism& prism, std::string frame_id, ros::NodeHandle nh);
-  BoundsControl(SafetyZone& safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh);
-  BoundsControl(SafetyZone& safety_zone, std::string frame_id, ros::NodeHandle nh);
+  BoundsControl(SafetyZone* safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh);
+  BoundsControl(SafetyZone* safety_zone, std::string frame_id, ros::NodeHandle nh);
+
+  ~BoundsControl();
+
   void update();
+  void cleanup();
 
 private:
   void init();
@@ -32,10 +36,11 @@ private:
   // It is required for generating interactive marker names, 
   // because their names must be unique on topic 
   static int id_generator;
-
   const int id_;
+  const int obstacle_id_ = 0;
 
   Prism& prism_;
+  SafetyZone* safety_zone_ = nullptr;
   std::string frame_id_;
   ros::NodeHandle nh_;
 

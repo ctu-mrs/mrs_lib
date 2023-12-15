@@ -30,6 +30,10 @@ namespace mrs_lib
     }
   }
 
+  Prism::~Prism(){
+    cleanSubscribers();
+  }
+
   void Prism::subscribe(Subscriber* entity) {
     subscribers.emplace(entity);
   }
@@ -41,6 +45,12 @@ namespace mrs_lib
   void Prism::notifySubscribers() {
     for(auto s : subscribers){
       s->update();
+    }
+  }
+
+  void Prism::cleanSubscribers() {
+    for(auto s : subscribers){
+      s->cleanup();
     }
   }
 
@@ -149,12 +159,6 @@ namespace mrs_lib
     bg::set<1>(new_point, (y1 + y2) / 2); 
 
     outer_ring.insert(outer_ring.begin() + index + 1, new_point);
-    notifySubscribers();
-  }
-
-  void Prism::deactivate(){
-    is_active_ = false;
-    polygon_.outer().clear();
     notifySubscribers();
   }
 

@@ -289,7 +289,42 @@ void show_markers(ros::NodeHandle nh) {
     VertexControl vertex_control2 = VertexControl(outer_boarder2, "map", nh);
     BoundsControl bounds_control2 = BoundsControl(outer_boarder2, "map", nh);
     CenterControl center_control2 = CenterControl(outer_boarder2, "map", nh);
+    
+    ros::spin();
+}
 
+void show_safety_zone(ros::NodeHandle nh) {
+    Point2d point1 = Point2d{0, 0};
+    Point2d point2 = Point2d{0, 10};
+    Point2d point3 = Point2d{10, 10};
+    Point2d point4 = Point2d{10, 0};
+    Point2d point5 = Point2d{0, 0};
+    Polygon poly = mrs_lib::Polygon();
+    bg::append(poly, point1);
+    bg::append(poly, point2);
+    bg::append(poly, point3);
+    bg::append(poly, point4);
+    bg::append(poly, point5);
+
+    Prism outer_boarder = Prism(poly, 0.0, 15);
+    Prism obstacle = Prism(poly, 16.0, 18.0);
+
+    std::vector<Prism> obstacles{obstacle};
+    SafetyZone safety_zone = SafetyZone(outer_boarder, obstacles);
+
+    StaticEdgesVisualization static_edges_vis = StaticEdgesVisualization(&safety_zone, "map", nh, 2);
+    IntEdgesVisualization edges_vis = IntEdgesVisualization(&safety_zone, "map", nh);
+    VertexControl vertex_control = VertexControl(&safety_zone, "map", nh);
+    BoundsControl bounds_control = BoundsControl(&safety_zone, "map", nh);
+    CenterControl center_control = CenterControl(&safety_zone, "map", nh);
+
+    int obstacle_id = safety_zone.getObstaclesBegin()->first;
+    std::cout << obstacle_id << std::endl;
+    StaticEdgesVisualization edges_vis2 = StaticEdgesVisualization(&safety_zone, obstacle_id, "map", nh, 2);
+    IntEdgesVisualization edges_vis_int2 = IntEdgesVisualization(&safety_zone, obstacle_id, "map", nh);
+    VertexControl vertex_control2 = VertexControl(&safety_zone, obstacle_id, "map", nh);
+    BoundsControl bounds_control2 = BoundsControl(&safety_zone, obstacle_id, "map", nh);
+    CenterControl center_control2 = CenterControl(&safety_zone, obstacle_id, "map", nh);
     
     ros::spin();
 }
@@ -306,6 +341,7 @@ int main(int argc, char **argv) {
     point_valid_after_vertex_change();
     invalid_vertex_assignment();
 
-    show_markers(nh);
+    // show_markers(nh);
+    show_safety_zone(nh);
     return 0;
 }

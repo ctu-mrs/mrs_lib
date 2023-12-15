@@ -18,12 +18,13 @@ class VertexControl : public Subscriber{
 
 public:
   VertexControl(Prism& prism, std::string frame_id, ros::NodeHandle nh);
-  VertexControl(SafetyZone& safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh);
-  VertexControl(SafetyZone&, std::string frame_id, ros::NodeHandle nh);
+  VertexControl(SafetyZone* safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh);
+  VertexControl(SafetyZone* safety_zone, std::string frame_id, ros::NodeHandle nh);
 
   ~VertexControl();
 
   void update();
+  void cleanup();
 
 private:
   void init();

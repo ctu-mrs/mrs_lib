@@ -19,12 +19,13 @@ public:
 
 public:
   IntEdgesVisualization(Prism& prism, std::string frame_id, ros::NodeHandle nh);
-  IntEdgesVisualization(SafetyZone& safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh);
-  IntEdgesVisualization(SafetyZone& safety_zone, std::string frame_id, ros::NodeHandle nh);
+  IntEdgesVisualization(SafetyZone* safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh);
+  IntEdgesVisualization(SafetyZone* safety_zone, std::string frame_id, ros::NodeHandle nh);
 
   ~IntEdgesVisualization();
 
   void update();
+  void cleanup();
 
 private:
   void init();

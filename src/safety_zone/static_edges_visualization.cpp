@@ -21,7 +21,7 @@ StaticEdgesVisualization::StaticEdgesVisualization(Prism& prism, std::string fra
   init();
 }
 
-StaticEdgesVisualization::StaticEdgesVisualization(SafetyZone& safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh, double markers_update_rate) : id_(id_generator_), prism_(safety_zone.getObstacle(obstacle_id)) {
+StaticEdgesVisualization::StaticEdgesVisualization(SafetyZone* safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh, double markers_update_rate) : id_(id_generator_), prism_(safety_zone->getObstacle(obstacle_id)) {
   frame_id_ = frame_id;
   nh_ = nh;
   id_generator_++;
@@ -30,13 +30,20 @@ StaticEdgesVisualization::StaticEdgesVisualization(SafetyZone& safety_zone, int 
   init();
 }
 
-StaticEdgesVisualization::StaticEdgesVisualization(SafetyZone& safety_zone, std::string frame_id, ros::NodeHandle nh, double markers_update_rate) : id_(id_generator_), prism_(safety_zone.getBorder()) {
+StaticEdgesVisualization::StaticEdgesVisualization(SafetyZone* safety_zone, std::string frame_id, ros::NodeHandle nh, double markers_update_rate) : id_(id_generator_), prism_(safety_zone->getBorder()) {
   frame_id_ = frame_id;
   nh_ = nh;
   id_generator_++;
   last_markers_.markers.push_back(vm::Marker());
   timer_ = nh_.createTimer(ros::Rate(markers_update_rate), &StaticEdgesVisualization::sendMarker, this);
   init();
+}
+
+StaticEdgesVisualization::~StaticEdgesVisualization(){
+  if(is_active_){
+    prism_.unsubscribe(this);
+  }
+  cleanup();
 }
 
 void StaticEdgesVisualization::init() {
@@ -51,8 +58,7 @@ void StaticEdgesVisualization::sendMarker(const ros::TimerEvent& event) {
 }
 
 void StaticEdgesVisualization::update() {
-  if(!prism_.isActive()){
-    last_markers_.markers[id_].action = vm::Marker::DELETE;
+  if(!is_active_){
     return;
   }
 
@@ -108,6 +114,11 @@ void StaticEdgesVisualization::update() {
   }
   last_markers_.markers[id_] = marker;
   publisher_.publish(last_markers_);
+}
+
+void StaticEdgesVisualization::cleanup(){
+  last_markers_.markers[id_].action = vm::Marker::DELETE;
+  is_active_ = false;
 }
 
 } // namespace mrs_lib

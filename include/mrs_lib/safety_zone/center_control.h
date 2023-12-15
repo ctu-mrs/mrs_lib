@@ -17,9 +17,13 @@ namespace mrs_lib
 class CenterControl : public Subscriber{
 public:
   CenterControl(Prism& prism, std::string frame_id, ros::NodeHandle nh);
-  CenterControl(SafetyZone& safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh);
-  CenterControl(SafetyZone& safety_zone, std::string frame_id, ros::NodeHandle nh);
+  CenterControl(SafetyZone* safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh);
+  CenterControl(SafetyZone* safety_zone, std::string frame_id, ros::NodeHandle nh);
+
+  ~CenterControl();
+
   void update();
+  void cleanup();
 
 private:
   void init();
@@ -33,10 +37,11 @@ private:
   // It is required for generating interactive marker names, 
   // because their names must be unique on topic 
   static int id_generator;
-
   const int id;
+  const int obstacle_id_ = 0;
 
   Prism& prism_;
+  SafetyZone* safety_zone_ = nullptr;
   std::string frame_id_;
   ros::NodeHandle nh_;
 
