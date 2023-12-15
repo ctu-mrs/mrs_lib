@@ -11,7 +11,10 @@ class Subscriber{
 protected:
   bool is_active_ = true;
 public:
+  // Called every time a change has been made to the prism
   virtual void update() = 0;
+
+  // Called once upon deleting the prism
   virtual void cleanup() = 0;
 };
 
@@ -84,6 +87,7 @@ public:
   // Takes angle in radians, rotates clockwise (counter-clockwise if alpha < 0)
   void rotate(double alpha);
 
+  // Deletes the vertex only if vertex_count > 3
   void deleteVertex(unsigned int index);
 
   // Controls, if 3d point lies within the prism 

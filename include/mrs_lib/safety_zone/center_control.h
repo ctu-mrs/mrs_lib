@@ -14,10 +14,26 @@
 
 namespace mrs_lib
 {
+
+
+//  Creates interactive marker 
+// XY coordinates: center of the polygon of the prism
+// Z coordinate: center of [MinZ; MaxZ] interval 
+// Marker provides moving entire prism along XY and Z axis, rotating it and 
+// deleting it (view constructors' docstring)
+// Markers also allow changing correspondings heights
 class CenterControl : public Subscriber{
 public:
+
+  // Created interactive marker does not have deleting option
   CenterControl(Prism& prism, std::string frame_id, ros::NodeHandle nh);
+
+  // Represents corresponding obstacle in the safety_zone. 
+  // Created interactive marker provides deleting option
   CenterControl(SafetyZone* safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh);
+
+  // Represents border of the safety_zone.
+  // Created interactive marker does not have deleting option
   CenterControl(SafetyZone* safety_zone, std::string frame_id, ros::NodeHandle nh);
 
   ~CenterControl();
@@ -34,8 +50,8 @@ private:
   void mouseUpCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
   void deleteCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
 
-  // It is required for generating interactive marker names, 
-  // because their names must be unique on topic 
+  // It is required for generating server id's, 
+  // because their id's must be unique on topic 
   static int id_generator;
   const int id;
   const int obstacle_id_ = 0;

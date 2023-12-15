@@ -13,13 +13,21 @@
 
 namespace mrs_lib 
 {
+
+// Visualizes the edges of the prism
+// Horizontal edges are interactive and provide adding new vertex in the middle of the edge
+// The visualization cannot be updated regularly, so lines disappear as camera moves "behind" them
+// (view https://github.com/ros-visualization/rviz/issues/1287), therefore StaticEdgesVisualization
+// class has been implemented.
 class IntEdgesVisualization : public Subscriber{
-
 public:
-
-public:
+  // Represents the prism
   IntEdgesVisualization(Prism& prism, std::string frame_id, ros::NodeHandle nh);
+
+  // Represents corresponding obstacle in the safety_zone. 
   IntEdgesVisualization(SafetyZone* safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh);
+  
+  // Represents border of the safety_zone.
   IntEdgesVisualization(SafetyZone* safety_zone, std::string frame_id, ros::NodeHandle nh);
 
   ~IntEdgesVisualization();
@@ -33,12 +41,12 @@ private:
   void addEdgeIntMarker(Point2d start, Point2d end, const double upper, const double lower, const int index);
   void vertexAddCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
 
-  // It is required for generating interactive marker names, 
-  // because their names must be unique on topic 
+  // It is required for generating server id's, 
+  // because their id's must be unique on topic 
   static int id_generator;
-
   const int id_;
   int vertex_id_ = 0;    // Each marker name must be unique
+
   Prism& prism_;
   std::string frame_id_;
   ros::NodeHandle nh_;

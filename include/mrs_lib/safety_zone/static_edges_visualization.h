@@ -14,8 +14,14 @@ namespace mrs_lib
 class StaticEdgesVisualization : public Subscriber{
 
 public:
+
+  // Represents the prism
   StaticEdgesVisualization(Prism& prism, std::string frame_id, ros::NodeHandle nh, double markers_update_rate);
+
+  // Represents corresponding obstacle in the safety_zone. 
   StaticEdgesVisualization(SafetyZone* safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh, double markers_update_rate);
+  
+  // Represents border of the safety_zone.
   StaticEdgesVisualization(SafetyZone* safety_zone, std::string frame_id, ros::NodeHandle nh, double markers_update_rate);
 
   ~StaticEdgesVisualization();
@@ -27,6 +33,8 @@ private:
   void init();
   void sendMarker(const ros::TimerEvent& event);
 
+  // It is required for generating static marker names, 
+  // because their id's must be unique on topic 
   const int id_;
   static int id_generator_;
 

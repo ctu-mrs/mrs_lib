@@ -13,10 +13,23 @@
 
 namespace mrs_lib
 {
+
+//  Creates 2 interactive markers in the center of the prism's polygon:
+// one for maximum height of the prism and the other for minimum height.
+// Both markers can be used for moving entire prism and deleting it (view constructors' docstring)
+// Markers also allow changing correspondings heights
 class BoundsControl : public Subscriber{
 public:
+
+  // Created interactive markers do not have deleting option
   BoundsControl(Prism& prism, std::string frame_id, ros::NodeHandle nh);
+
+  // Represents corresponding obstacle in the safety_zone. 
+  // Created interactive markers provide deleting option
   BoundsControl(SafetyZone* safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh);
+
+  // Represents border of the safety_zone.
+  // Created interactive markers do not have deleting option
   BoundsControl(SafetyZone* safety_zone, std::string frame_id, ros::NodeHandle nh);
 
   ~BoundsControl();
@@ -33,8 +46,8 @@ private:
   void mouseUpCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
   void deleteCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
 
-  // It is required for generating interactive marker names, 
-  // because their names must be unique on topic 
+  // It is required for generating server id's, 
+  // because their id's must be unique on topic 
   static int id_generator;
   const int id_;
   const int obstacle_id_ = 0;

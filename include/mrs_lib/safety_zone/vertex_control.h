@@ -14,11 +14,22 @@
 
 namespace mrs_lib 
 {
+
+//  Creates 2 interactive markers for eache vertex:
+// one for maximum height of the prism and the other for minimum height.
+// The markers can be used to change X and Y coordinates of corresponding vertex.
+// Provides the option to delete the corresponding vertex
 class VertexControl : public Subscriber{
 
 public:
+
+  // Represents the prism
   VertexControl(Prism& prism, std::string frame_id, ros::NodeHandle nh);
+
+  // Represents corresponding obstacle in the safety_zone. 
   VertexControl(SafetyZone* safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh);
+  
+  // Represents border of the safety_zone.
   VertexControl(SafetyZone* safety_zone, std::string frame_id, ros::NodeHandle nh);
 
   ~VertexControl();
