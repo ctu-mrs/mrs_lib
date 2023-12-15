@@ -2,6 +2,7 @@
 #define STATIC_EDGES_VISUALIZATION_H
 
 #include "prism.h"
+#include "safety_zone.h"
 
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
@@ -13,19 +14,22 @@ namespace mrs_lib
 class StaticEdgesVisualization : public Subscriber{
 
 public:
-  StaticEdgesVisualization(Prism* prism, std::string frame_id, ros::NodeHandle nh, double markers_update_rate);
+  StaticEdgesVisualization(Prism& prism, std::string frame_id, ros::NodeHandle nh, double markers_update_rate);
+  StaticEdgesVisualization(SafetyZone& safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh, double markers_update_rate);
+  StaticEdgesVisualization(SafetyZone& safety_zone, std::string frame_id, ros::NodeHandle nh, double markers_update_rate);
 
   void update();
 
 private:
+  void init();
   void sendMarker(const ros::TimerEvent& event);
 
-  Prism* prism_;
+  const int id_;
+  static int id_generator_;
+
+  Prism& prism_;
   std::string frame_id_;
   ros::NodeHandle nh_;
-
-  static int id_generator_;
-  const int id_;
 
   // Static markers
   ros::Publisher publisher_;

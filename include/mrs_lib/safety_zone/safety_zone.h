@@ -2,6 +2,7 @@
 #define MRS_LIB_SAFETYZONE_H
 
 #include <vector>
+#include <map>
 
 #include "prism.h"
 #include "polygon.h"
@@ -34,29 +35,29 @@ public:
     return outer_border_;
   }
 
-  Prism& getObstacle(const unsigned int index) {
-    return obstacles_[index];
+  Prism& getObstacle(int index) {
+    return obstacles_.at(index);
   }
 
-  std::vector<Prism>::iterator getObstaclesBegin(){
+  std::map<int, Prism>::iterator getObstaclesBegin(){
     return obstacles_.begin();
   }
 
-  std::vector<Prism>::iterator getObstaclesEnd(){
+  std::map<int, Prism>::iterator getObstaclesEnd(){
     return obstacles_.end();
   }
 
-  void addObstacle(Prism obstacle){
-    obstacles_.push_back(obstacle);
+  void addObstacle(int id, Prism obstacle){
+    obstacles_.at(id) = obstacle;
   }
 
-  void deleteObstacle(std::vector<Prism>::iterator pos){
-    obstacles_.erase(pos);
+  void deleteObstacle(int id){
+    obstacles_.erase(id);
   }
 
 private:
   Prism outer_border_;
-  std::vector<Prism> obstacles_;
+  std::map<int, Prism> obstacles_;
 };
 }  // namespace mrs_lib
 

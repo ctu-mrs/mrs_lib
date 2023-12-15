@@ -2,6 +2,7 @@
 #define BOUNDS_CONTROL_H
 
 #include "prism.h"
+#include "safety_zone.h"
 
 #include <interactive_markers/interactive_marker_server.h>
 #include <interactive_markers/menu_handler.h>
@@ -14,10 +15,13 @@ namespace mrs_lib
 {
 class BoundsControl : public Subscriber{
 public:
-  BoundsControl(Prism* prism, std::string frame_id, ros::NodeHandle nh);
+  BoundsControl(Prism& prism, std::string frame_id, ros::NodeHandle nh);
+  BoundsControl(SafetyZone& safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh);
+  BoundsControl(SafetyZone& safety_zone, std::string frame_id, ros::NodeHandle nh);
   void update();
 
 private:
+  void init();
   void addBoundIntMarker(bool is_upper);
   visualization_msgs::Marker makeBox(visualization_msgs::InteractiveMarker &msg);
   void boundMoveCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
@@ -29,9 +33,9 @@ private:
   // because their names must be unique on topic 
   static int id_generator;
 
-  const int id;
+  const int id_;
 
-  Prism* prism_;
+  Prism& prism_;
   std::string frame_id_;
   ros::NodeHandle nh_;
 

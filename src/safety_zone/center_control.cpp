@@ -12,31 +12,47 @@ namespace mrs_lib
 {
 int CenterControl::id_generator = 0;
 
-CenterControl::CenterControl(Prism* prism, std::string frame_id, ros::NodeHandle nh) : id(id_generator){
-  prism_ = prism;
+CenterControl::CenterControl(Prism& prism, std::string frame_id, ros::NodeHandle nh) : id(id_generator), prism_(prism){
   frame_id_ = frame_id;
   nh_ = nh;
   id_generator++;
+  init();
+}
 
+CenterControl::CenterControl(SafetyZone& safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh) : id(id_generator), prism_(safety_zone.getObstacle(obstacle_id)) {
+  frame_id_ = frame_id;
+  nh_ = nh;
+  id_generator++;
+  init();
+}
+
+CenterControl::CenterControl(SafetyZone& safety_zone, std::string frame_id, ros::NodeHandle nh) : id(id_generator), prism_(safety_zone.getBorder()) {
+  frame_id_ = frame_id;
+  nh_ = nh;
+  id_generator++;
+  init();
+}
+
+void CenterControl::init(){
   server_ = new interactive_markers::InteractiveMarkerServer(nh_.getNamespace() + "safety_area_center_out", std::to_string(id), false);
   menu_handler_ = new interactive_markers::MenuHandler();
   menu_handler_->insert("Delete the prism", [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->deleteCallback(feedback);});
 
-  prism_->subscribe(this);
+  prism_.subscribe(this);
   addIntMarker();
 }
 
 void CenterControl::update(){
-  if(!prism_->isActive()){
+  if(!prism_.isActive()){
     server_->clear();
     server_->applyChanges();
     return;
   }
 
   gm::Pose pose;
-  pose.position.x = prism_->getCenter().get<0>();
-  pose.position.y = prism_->getCenter().get<1>();
-  pose.position.z = (prism_->getMaxZ() + prism_->getMinZ()) / 2;
+  pose.position.x = prism_.getCenter().get<0>();
+  pose.position.y = prism_.getCenter().get<1>();
+  pose.position.z = (prism_.getMaxZ() + prism_.getMinZ()) / 2;
 
   server_->setPose(marker_name_, pose);
   server_->applyChanges();
@@ -59,14 +75,14 @@ vm::Marker CenterControl::makeBox(vm::InteractiveMarker &msg){
 }
 
 void CenterControl::addIntMarker(){
-  Point2d center = prism_->getCenter();
+  Point2d center = prism_.getCenter();
   // Interactive marker
   vm::InteractiveMarker int_marker;
   int_marker.header.frame_id = frame_id_;
   int_marker.header.stamp.fromNSec(0);
   int_marker.pose.position.x = center.get<0>();
   int_marker.pose.position.y = center.get<1>();
-  int_marker.pose.position.z = (prism_->getMaxZ() + prism_->getMinZ()) / 2;
+  int_marker.pose.position.z = (prism_.getMaxZ() + prism_.getMinZ()) / 2;
   int_marker.scale = 1; 
   int_marker.name = std::to_string(id);
   int_marker.description = "Center of polygon";
@@ -119,7 +135,7 @@ void CenterControl::moveCallback(const visualization_msgs::InteractiveMarkerFeed
   Point3d adjustment = Point3d{current_position.x - last_position_.x, 
                                current_position.y - last_position_.y,
                                current_position.z - last_position_.z};
-  prism_->move(adjustment);
+  prism_.move(adjustment);
 
   // Rotate polygon
   tf::Quaternion last;
@@ -131,7 +147,7 @@ void CenterControl::moveCallback(const visualization_msgs::InteractiveMarkerFeed
   tfScalar diff = qdiff.getAngle();
   tf::Vector3 axes = qdiff.getAxis();
   double d_alpha = diff * axes.getZ();
-  prism_->rotate(d_alpha);
+  prism_.rotate(d_alpha);
 
   last_orientation_ = current_orientation;
   last_position_ = current_position;
@@ -148,7 +164,7 @@ void CenterControl::mouseUpCallback(const visualization_msgs::InteractiveMarkerF
 }
 
 void CenterControl::deleteCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback){
-  prism_->deactivate();
+  prism_.deactivate();
 }
 
 

@@ -2,6 +2,7 @@
 #define INT_EDGES_VISUALIZATION_H
 
 #include "prism.h"
+#include "safety_zone.h"
 
 #include <interactive_markers/interactive_marker_server.h>
 #include <interactive_markers/menu_handler.h>
@@ -17,13 +18,16 @@ class IntEdgesVisualization : public Subscriber{
 public:
 
 public:
-  IntEdgesVisualization(Prism* prism, std::string frame_id, ros::NodeHandle nh);
+  IntEdgesVisualization(Prism& prism, std::string frame_id, ros::NodeHandle nh);
+  IntEdgesVisualization(SafetyZone& safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh);
+  IntEdgesVisualization(SafetyZone& safety_zone, std::string frame_id, ros::NodeHandle nh);
 
   ~IntEdgesVisualization();
 
   void update();
 
 private:
+  void init();
   int getIndexByName(std::string marker_name);
   void addEdgeIntMarker(Point2d start, Point2d end, const double upper, const double lower, const int index);
   void vertexAddCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
@@ -34,7 +38,7 @@ private:
 
   const int id_;
   int vertex_id_ = 0;    // Each marker name must be unique
-  Prism* prism_;
+  Prism& prism_;
   std::string frame_id_;
   ros::NodeHandle nh_;
 

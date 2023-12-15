@@ -12,15 +12,36 @@ namespace mrs_lib {
 int StaticEdgesVisualization::id_generator_ = 0;
 visualization_msgs::MarkerArray StaticEdgesVisualization::last_markers_ = visualization_msgs::MarkerArray();
 
-StaticEdgesVisualization::StaticEdgesVisualization(Prism* prism, std::string frame_id, ros::NodeHandle nh, double markers_update_rate) : id_(id_generator_) {
-  prism_ = prism;
+StaticEdgesVisualization::StaticEdgesVisualization(Prism& prism, std::string frame_id, ros::NodeHandle nh, double markers_update_rate) : id_(id_generator_), prism_(prism) {
+  frame_id_ = frame_id;
+  nh_ = nh;
+  id_generator_++;
+  timer_ = nh_.createTimer(ros::Rate(markers_update_rate), &StaticEdgesVisualization::sendMarker, this);
+  last_markers_.markers.push_back(vm::Marker());
+  init();
+}
+
+StaticEdgesVisualization::StaticEdgesVisualization(SafetyZone& safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh, double markers_update_rate) : id_(id_generator_), prism_(safety_zone.getObstacle(obstacle_id)) {
+  frame_id_ = frame_id;
+  nh_ = nh;
+  id_generator_++;
+  timer_ = nh_.createTimer(ros::Rate(markers_update_rate), &StaticEdgesVisualization::sendMarker, this);
+  last_markers_.markers.push_back(vm::Marker());
+  init();
+}
+
+StaticEdgesVisualization::StaticEdgesVisualization(SafetyZone& safety_zone, std::string frame_id, ros::NodeHandle nh, double markers_update_rate) : id_(id_generator_), prism_(safety_zone.getBorder()) {
   frame_id_ = frame_id;
   nh_ = nh;
   id_generator_++;
   last_markers_.markers.push_back(vm::Marker());
-  publisher_ = nh_.advertise<vm::MarkerArray>("safety_area_static_markers_out", 1);
   timer_ = nh_.createTimer(ros::Rate(markers_update_rate), &StaticEdgesVisualization::sendMarker, this);
-  prism_->subscribe(this);
+  init();
+}
+
+void StaticEdgesVisualization::init() {
+  publisher_ = nh_.advertise<vm::MarkerArray>("safety_area_static_markers_out", 1);
+  prism_.subscribe(this);
   update();
 }
 
@@ -30,14 +51,14 @@ void StaticEdgesVisualization::sendMarker(const ros::TimerEvent& event) {
 }
 
 void StaticEdgesVisualization::update() {
-  if(!prism_->isActive()){
+  if(!prism_.isActive()){
     last_markers_.markers[id_].action = vm::Marker::DELETE;
     return;
   }
 
-  double max_z = prism_->getMaxZ();
-  double min_z = prism_->getMinZ();
-  auto polygon = prism_->getPolygon().outer();
+  double max_z = prism_.getMaxZ();
+  double min_z = prism_.getMinZ();
+  auto polygon = prism_.getPolygon().outer();
   
   vm::Marker marker;
   marker.id = id_;

@@ -11,7 +11,9 @@ SafetyZone::SafetyZone(Prism outer_boarder) : outer_border_(outer_boarder){
 }
 
 SafetyZone::SafetyZone(Prism outer_boarder, std::vector<Prism> obstacles) : outer_border_(outer_boarder){
-  obstacles_ = obstacles;
+  for(int i=0; i<obstacles.size(); i++) {
+    obstacles_.at(i) = obstacles[i];
+  }
 }
 
 bool SafetyZone::isPointValid(const Point2d point) {
@@ -19,8 +21,8 @@ bool SafetyZone::isPointValid(const Point2d point) {
     return false;
   }
 
-  for (Prism& obstacle : obstacles_) {
-    if(obstacle.isPointIn(point)) {
+  for (auto obstacle : obstacles_) {
+    if(obstacle.second.isPointIn(point)) {
       return false;
     }
   }
@@ -33,8 +35,8 @@ bool SafetyZone::isPointValid(const double px, const double py) {
     return false;
   }
 
-  for (Prism& obstacle : obstacles_) {
-    if(obstacle.isPointIn(px, py)) {
+  for (auto obstacle : obstacles_) {
+    if(obstacle.second.isPointIn(px, py)) {
       return false;
     }
   }
@@ -47,8 +49,8 @@ bool SafetyZone::isPointValid(const Point3d point) {
     return false;
   }
 
-  for (Prism& obstacle : obstacles_) {
-    if(obstacle.isPointIn(point)) {
+  for (auto obstacle : obstacles_) {
+    if(obstacle.second.isPointIn(point)) {
       return false;
     }
   }
@@ -61,8 +63,8 @@ bool SafetyZone::isPointValid(const double px, const double py, const double pz)
     return false;
   }
 
-  for (Prism& obstacle : obstacles_) {
-    if(obstacle.isPointIn(px, py, pz)) {
+  for (auto obstacle : obstacles_) {
+    if(obstacle.second.isPointIn(px, py, pz)) {
       return false;
     }
   }

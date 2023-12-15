@@ -1,7 +1,7 @@
 #ifndef CENTER_CONTROL_H
 #define CENTER_CONTROL_H
 
-
+#include "safety_zone.h"
 #include "prism.h"
 
 #include <interactive_markers/interactive_marker_server.h>
@@ -16,10 +16,13 @@ namespace mrs_lib
 {
 class CenterControl : public Subscriber{
 public:
-  CenterControl(Prism* prism, std::string frame_id, ros::NodeHandle nh);
+  CenterControl(Prism& prism, std::string frame_id, ros::NodeHandle nh);
+  CenterControl(SafetyZone& safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh);
+  CenterControl(SafetyZone& safety_zone, std::string frame_id, ros::NodeHandle nh);
   void update();
 
 private:
+  void init();
   void addIntMarker();
   visualization_msgs::Marker makeBox(visualization_msgs::InteractiveMarker &msg);
   void moveCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
@@ -33,7 +36,7 @@ private:
 
   const int id;
 
-  Prism* prism_;
+  Prism& prism_;
   std::string frame_id_;
   ros::NodeHandle nh_;
 

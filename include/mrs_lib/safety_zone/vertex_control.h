@@ -2,6 +2,7 @@
 #define VERTEX_CONTROL_H
 
 #include "prism.h"
+#include "safety_zone.h"
 
 #include <interactive_markers/interactive_marker_server.h>
 #include <interactive_markers/menu_handler.h>
@@ -16,13 +17,16 @@ namespace mrs_lib
 class VertexControl : public Subscriber{
 
 public:
-  VertexControl(Prism* prism, std::string frame_id, ros::NodeHandle nh);
+  VertexControl(Prism& prism, std::string frame_id, ros::NodeHandle nh);
+  VertexControl(SafetyZone& safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh);
+  VertexControl(SafetyZone&, std::string frame_id, ros::NodeHandle nh);
 
   ~VertexControl();
 
   void update();
 
 private:
+  void init();
   int getIndexByName(std::string marker_name);
   void addVertexIntMarker(Point2d position, const double upper, const double lower, const int index);
   visualization_msgs::Marker makeBox(visualization_msgs::InteractiveMarker &msg);
@@ -35,7 +39,7 @@ private:
 
   const int id_;
   int vertex_id_ = 0;    // Each marker name must be unique
-  Prism* prism_;
+  Prism& prism_;
   std::string frame_id_;
   ros::NodeHandle nh_;
 
