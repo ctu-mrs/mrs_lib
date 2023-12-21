@@ -6,6 +6,7 @@
 
 #include "prism.h"
 #include "polygon.h"
+#include "yaml_export_visitor.h"
 
 namespace mrs_lib
 {
@@ -54,6 +55,9 @@ public:
   void deleteObstacle(int id){
     obstacles_.erase(id);
   }
+
+  // Helper method for text representation
+  void accept(Visitor& visitor); 
 
 private:
   Prism outer_border_;

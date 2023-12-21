@@ -89,4 +89,11 @@ bool SafetyZone::isPathValid(const Point3d start, const Point3d end) {
   return true;
 }
 
+void SafetyZone::accept(Visitor& visitor) {
+  visitor.visit(this);
+
+  for(auto& entry : obstacles_) {
+    entry.second.accept(visitor);
+  }
+}
 }  // namespace mrs_lib

@@ -1,4 +1,6 @@
 #include "mrs_lib/safety_zone/yaml_export_visitor.h"
+#include "mrs_lib/safety_zone/prism.h"
+#include "mrs_lib/safety_zone/safety_zone.h"
 
 #include <sstream> 
 
@@ -29,6 +31,8 @@ YamlExportVisitor::YamlExportVisitor(std::string horizontal_frame, std::string v
      << "  vertical_frame: \"" << vertical_frame << "\"" << std::endl; 
 
   safety_area_general_ = ss.str();
+
+  obstacles_ = "  obstacles:\n";
 }
 
 void YamlExportVisitor::visit(SafetyZone* safety_zone) {
@@ -51,8 +55,24 @@ void YamlExportVisitor::visit(SafetyZone* safety_zone) {
   border_ = ss.str();
 }
 
-void YamlExportVisitor::visit(Prism* prism, bool is_obstacle) {
+void YamlExportVisitor::visit(Prism* obstacle) {
+  std::stringstream ss;
 
+  ss << "    - obstacle" << obstacle_num << ":" << std::endl
+     << "        points: [" << std::endl
+     << std::setprecision(6) << std::fixed;
+  
+  auto polygon = obstacle->getPolygon().outer();
+  // TODO: add transformation
+  for(int i=0; i<polygon.size(); i++) {
+    ss << "          " << polygon[i].get<0>() << ", " << polygon[i].get<1>() << std::endl;
+  }
+  ss << "        ]" << std::endl
+     << "        max_z: " << obstacle->getMaxZ() << std::endl
+     << "        min_z: " << obstacle->getMinZ() << std::endl;
+
+  obstacles_ = obstacles_ + ss.str();
+  std::cout << "obstacle visited" << std::endl;
 }
 
 std::string YamlExportVisitor::getResult() {

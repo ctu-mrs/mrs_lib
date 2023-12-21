@@ -1,23 +1,26 @@
 #ifndef YAML_EXPORT_VISITOR_H
 #define YAML_EXPORT_VISITOR_H
 
-#include "prism.h"
-#include "safety_zone.h"
 #include "mrs_lib/transformer.h"
-
 
 namespace mrs_lib
 {
+
+class Prism;
+class SafetyZone;
+
 class Visitor{
+public:
   virtual void visit(SafetyZone* safety_zone) = 0;
 
-  virtual void visit(Prism* prism, bool is_obstacle) = 0;
+  virtual void visit(Prism* obstacle) = 0;
 };
 
 class YamlExportVisitor : public Visitor{
 private:
   std::string horizontal_frame_;
   std::string vertical_frame_;
+  int obstacle_num = 1;
   // std::string units_;
   // double origin_x_;
   // double origin_y_;
@@ -34,8 +37,10 @@ public:
   // Does not transform origin_x and origin_y to units!
   YamlExportVisitor(std::string horizontal_frame, std::string vertical_frame,  std::string units, double origin_x, double origin_y);
 
+  // Only takes a border into consideration
   void visit(SafetyZone* safety_zone);
-  void visit(Prism* prism, bool is_obstacle);
+
+  void visit(Prism* obstacle);
 
   std::string getResult();
 };

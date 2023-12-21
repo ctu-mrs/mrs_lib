@@ -310,7 +310,7 @@ void show_safety_zone(ros::NodeHandle nh) {
     Prism outer_boarder = Prism(poly, 0.0, 15);
     Prism obstacle = Prism(poly, 16.0, 18.0);
 
-    std::vector<Prism> obstacles{obstacle};
+    std::vector<Prism> obstacles{obstacle, obstacle};
     SafetyZone safety_zone = SafetyZone(outer_boarder, obstacles);
 
     StaticEdgesVisualization static_edges_vis = StaticEdgesVisualization(&safety_zone, "map", nh, 2);
@@ -328,7 +328,7 @@ void show_safety_zone(ros::NodeHandle nh) {
     CenterControl center_control2 = CenterControl(&safety_zone, obstacle_id, "map", nh);
 
     YamlExportVisitor visitor = YamlExportVisitor("map", "map", "LATLON", 0.0, 0.0);
-    visitor.visit(&safety_zone);
+    safety_zone.accept(visitor);
     std::cout << visitor.getResult() << std::endl;
     
     ros::spin();

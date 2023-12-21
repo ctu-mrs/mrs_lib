@@ -256,4 +256,8 @@ namespace mrs_lib
     return bg::within(point, polygon_);
   }
 
+void Prism::accept(Visitor& visitor) {
+  visitor.visit(this);
+}
+
 } // namespace mrs_lib

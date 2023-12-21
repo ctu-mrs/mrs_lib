@@ -2,6 +2,7 @@
 #define MRS_PRISM_H
 
 #include "polygon.h"
+#include "yaml_export_visitor.h"
 #include <boost/geometry/algorithms/centroid.hpp>
 
 namespace mrs_lib
@@ -101,6 +102,9 @@ public:
   
   // Convinient version of isPointIn(Point2d point)
   bool isPointIn(double x, double y);
+
+  // Helper method for text representation
+  void accept(Visitor& visitor);
 };
 
 } // namespace mrs_lib
