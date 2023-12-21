@@ -184,10 +184,12 @@ add_library(MrsLib_SafetyZone
   src/safety_zone/static_edges_visualization.cpp
   src/safety_zone/bounds_control.cpp
   src/safety_zone/center_control.cpp
+  src/safety_zone/yaml_export_visitor.cpp
   )
 
 target_link_libraries(MrsLib_SafetyZone
   MrsLib_AttitudeConverter
+  MrsLib_Transformer
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )

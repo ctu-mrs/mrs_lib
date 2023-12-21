@@ -4,6 +4,7 @@
 #include "mrs_lib/safety_zone/int_edges_visualization.h"
 #include "mrs_lib/safety_zone/static_edges_visualization.h"
 #include "mrs_lib/safety_zone/center_control.h"
+#include "mrs_lib/safety_zone/yaml_export_visitor.h"
 #include <ros/ros.h>
 
 #include <iostream>
@@ -325,6 +326,10 @@ void show_safety_zone(ros::NodeHandle nh) {
     VertexControl vertex_control2 = VertexControl(&safety_zone, obstacle_id, "map", nh);
     BoundsControl bounds_control2 = BoundsControl(&safety_zone, obstacle_id, "map", nh);
     CenterControl center_control2 = CenterControl(&safety_zone, obstacle_id, "map", nh);
+
+    YamlExportVisitor visitor = YamlExportVisitor("map", "map", "LATLON", 0.0, 0.0);
+    visitor.visit(&safety_zone);
+    std::cout << visitor.getResult() << std::endl;
     
     ros::spin();
 }
