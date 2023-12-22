@@ -327,7 +327,7 @@ void show_safety_zone(ros::NodeHandle nh) {
     BoundsControl bounds_control2 = BoundsControl(&safety_zone, obstacle_id, "map", nh);
     CenterControl center_control2 = CenterControl(&safety_zone, obstacle_id, "map", nh);
 
-    YamlExportVisitor visitor = YamlExportVisitor("map", "map", "LATLON", 0.0, 0.0);
+    YamlExportVisitor visitor = YamlExportVisitor("", "map", "map", "map", "LATLON", 0.0, 0.0);
     safety_zone.accept(visitor);
     std::cout << visitor.getResult() << std::endl;
     

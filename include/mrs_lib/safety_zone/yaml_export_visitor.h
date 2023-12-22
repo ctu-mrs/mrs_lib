@@ -18,12 +18,11 @@ public:
 
 class YamlExportVisitor : public Visitor{
 private:
+  std::string source_frame_;
   std::string horizontal_frame_;
   std::string vertical_frame_;
   int obstacle_num = 1;
-  // std::string units_;
-  // double origin_x_;
-  // double origin_y_;
+  bool success_ = true;
 
   // Texts
   std::string world_origin_;
@@ -35,7 +34,7 @@ private:
 
 public:
   // Does not transform origin_x and origin_y to units!
-  YamlExportVisitor(std::string horizontal_frame, std::string vertical_frame,  std::string units, double origin_x, double origin_y);
+  YamlExportVisitor(std::string prefix, std::string source_frame, std::string horizontal_frame, std::string vertical_frame,  std::string units, double origin_x, double origin_y);
 
   // Only takes a border into consideration
   void visit(SafetyZone* safety_zone);
@@ -43,6 +42,8 @@ public:
   void visit(Prism* obstacle);
 
   std::string getResult();
+
+  bool isSuccessful();
 };
 } // namespace mrs_lib
 
