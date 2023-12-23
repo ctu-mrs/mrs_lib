@@ -14,7 +14,7 @@ class SafetyZone {
 public:
   // TODO: add constructor from parameters or smth like this
   SafetyZone(Prism outer_border);
-  SafetyZone(Prism outer_broder, std::vector<Prism> obstacles);
+  SafetyZone(Prism outer_broder, std::vector<Prism>& obstacles);
 
   // Controls, if 3d point lies within the prism
   bool isPointValid(const Point3d point);
@@ -49,6 +49,7 @@ public:
   }
 
   void addObstacle(int id, Prism obstacle){
+    // TODO: this does not add, it changes!!!
     obstacles_.at(id) = obstacle;
   }
 

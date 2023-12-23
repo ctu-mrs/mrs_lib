@@ -29,7 +29,8 @@ private:
 
 public:
   // If max_z < min_z, automatically swaps them
-  Prism(Polygon& polygon, double max_z, double min_z);
+  // Throws std::invalid argument if polygon is invalid
+  Prism(std::vector<Point2d>& points, double max_z, double min_z);
 
   ~Prism();
 

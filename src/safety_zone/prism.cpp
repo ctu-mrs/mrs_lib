@@ -6,7 +6,17 @@ namespace bg = boost::geometry;
 
 namespace mrs_lib 
 {
-  Prism::Prism(Polygon& polygon, double max_z, double min_z) {
+  Prism::Prism(std::vector<Point2d>& points, double max_z, double min_z) {
+    Polygon polygon = Polygon();
+    for(size_t i=0; i<points.size(); i++){
+      bg::append(polygon, points[i]);
+    }
+
+    if(!bg::equals(points.front(), points.back())){
+      bg::append(polygon, points.front());
+    }
+
+
     std::string msg;
     bool is_valid;
     is_valid = bg::is_valid(polygon, msg);

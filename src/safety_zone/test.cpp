@@ -15,12 +15,12 @@ using namespace mrs_lib;
 
 void basic_validation(){
     std::cout<< std::endl << "Test: basic validation" << std::endl;
-    Polygon poly = mrs_lib::Polygon();
-    bg::append(poly, Point2d{0, 0});
-    bg::append(poly, Point2d{0, 10});
-    bg::append(poly, Point2d{10, 10});
-    bg::append(poly, Point2d{10,  0});
-    bg::append(poly, Point2d{0, 0});
+    Point2d point1 = Point2d{0, 0};
+    Point2d point2 = Point2d{0, 10};
+    Point2d point3 = Point2d{10, 10};
+    Point2d point4 = Point2d{10, 0};
+    Point2d point5 = Point2d{0, 0};
+    std::vector<Point2d> poly = std::vector<Point2d>{point1, point2, point3, point4};
 
     Prism outer_boarder = Prism(poly, 0.0, 15);
 
@@ -48,12 +48,7 @@ void vertex_add_counter_clockwise(){
     Point2d point3 = Point2d{10, 10};
     Point2d point4 = Point2d{10, 0};
     Point2d point5 = Point2d{0, 0};
-    Polygon poly = mrs_lib::Polygon();
-    bg::append(poly, point1);
-    bg::append(poly, point2);
-    bg::append(poly, point3);
-    bg::append(poly, point4);
-    bg::append(poly, point5);
+    std::vector<Point2d> poly = std::vector<Point2d>{point1, point2, point3, point4};
 
     Prism outer_boarder = Prism(poly, 0.0, 15);
     outer_boarder.addVertexCounterclockwise(1);
@@ -95,12 +90,7 @@ void vertex_add_clockwise() {
     Point2d point3 = Point2d{10, 10};
     Point2d point4 = Point2d{10, 0};
     Point2d point5 = Point2d{0, 0};
-    Polygon poly = mrs_lib::Polygon();
-    bg::append(poly, point1);
-    bg::append(poly, point2);
-    bg::append(poly, point3);
-    bg::append(poly, point4);
-    bg::append(poly, point5);
+    std::vector<Point2d> poly = std::vector<Point2d>{point1, point2, point3, point4};
 
     Prism outer_boarder = Prism(poly, 0.0, 15);
     outer_boarder.addVertexClockwise(1);
@@ -142,12 +132,7 @@ void vertex_add_counter_clockwise_0() {
     Point2d point3 = Point2d{10, 10};
     Point2d point4 = Point2d{10, 0};
     Point2d point5 = Point2d{0, 0};
-    Polygon poly = mrs_lib::Polygon();
-    bg::append(poly, point1);
-    bg::append(poly, point2);
-    bg::append(poly, point3);
-    bg::append(poly, point4);
-    bg::append(poly, point5);
+    std::vector<Point2d> poly = std::vector<Point2d>{point1, point2, point3, point4};
 
     Prism outer_boarder = Prism(poly, 0.0, 15);
     outer_boarder.addVertexCounterclockwise(0);
@@ -189,12 +174,7 @@ void point_valid_after_vertex_change() {
     Point2d point3 = Point2d{10, 10};
     Point2d point4 = Point2d{10, 0};
     Point2d point5 = Point2d{0, 0};
-    Polygon poly = mrs_lib::Polygon();
-    bg::append(poly, point1);
-    bg::append(poly, point2);
-    bg::append(poly, point3);
-    bg::append(poly, point4);
-    bg::append(poly, point5);
+    std::vector<Point2d> poly = std::vector<Point2d>{point1, point2, point3, point4};
 
     Prism outer_boarder = Prism(poly, 0.0, 15);
 
@@ -219,12 +199,7 @@ void invalid_vertex_assignment(){
     Point2d point3 = Point2d{10, 10};
     Point2d point4 = Point2d{10, 0};
     Point2d point5 = Point2d{0, 0};
-    Polygon poly = mrs_lib::Polygon();
-    bg::append(poly, point1);
-    bg::append(poly, point2);
-    bg::append(poly, point3);
-    bg::append(poly, point4);
-    bg::append(poly, point5);
+    std::vector<Point2d> poly = std::vector<Point2d>{point1, point2, point3, point4};
 
     Prism outer_boarder = Prism(poly, 0.0, 15);
 
@@ -269,12 +244,7 @@ void show_markers(ros::NodeHandle nh) {
     Point2d point3 = Point2d{10, 10};
     Point2d point4 = Point2d{10, 0};
     Point2d point5 = Point2d{0, 0};
-    Polygon poly = mrs_lib::Polygon();
-    bg::append(poly, point1);
-    bg::append(poly, point2);
-    bg::append(poly, point3);
-    bg::append(poly, point4);
-    bg::append(poly, point5);
+    std::vector<Point2d> poly = std::vector<Point2d>{point1, point2, point3, point4};
 
     Prism outer_boarder = Prism(poly, 0.0, 15);
 
@@ -294,18 +264,25 @@ void show_markers(ros::NodeHandle nh) {
     ros::spin();
 }
 
+void load_params(ros::NodeHandle nh){
+
+    XmlRpc::XmlRpcValue value;
+    bool success = nh.getParam("safety_area/obstacles", value);
+
+    std::cout << (success ? "success" : "not success =(" )<< std::endl;
+
+    for(size_t i=0; i<value.size(); i++){
+        std::cout << value[i].begin()->first << std::endl;
+    }
+}
+
 void show_safety_zone(ros::NodeHandle nh) {
     Point2d point1 = Point2d{0, 0};
     Point2d point2 = Point2d{0, 10};
     Point2d point3 = Point2d{10, 10};
     Point2d point4 = Point2d{10, 0};
     Point2d point5 = Point2d{0, 0};
-    Polygon poly = mrs_lib::Polygon();
-    bg::append(poly, point1);
-    bg::append(poly, point2);
-    bg::append(poly, point3);
-    bg::append(poly, point4);
-    bg::append(poly, point5);
+    std::vector<Point2d> poly = std::vector<Point2d>{point1, point2, point3, point4};
 
     Prism outer_boarder = Prism(poly, 0.0, 15);
     Prism obstacle = Prism(poly, 16.0, 18.0);
@@ -320,7 +297,7 @@ void show_safety_zone(ros::NodeHandle nh) {
     CenterControl center_control = CenterControl(&safety_zone, "map", nh);
 
     int obstacle_id = safety_zone.getObstaclesBegin()->first;
-    std::cout << obstacle_id << std::endl;
+    // std::cout << obstacle_id << std::endl;
     StaticEdgesVisualization edges_vis2 = StaticEdgesVisualization(&safety_zone, obstacle_id, "map", nh, 2);
     IntEdgesVisualization edges_vis_int2 = IntEdgesVisualization(&safety_zone, obstacle_id, "map", nh);
     VertexControl vertex_control2 = VertexControl(&safety_zone, obstacle_id, "map", nh);
@@ -329,7 +306,7 @@ void show_safety_zone(ros::NodeHandle nh) {
 
     YamlExportVisitor visitor = YamlExportVisitor("", "map", "map", "map", "LATLON", 0.0, 0.0);
     safety_zone.accept(visitor);
-    std::cout << visitor.getResult() << std::endl;
+    // std::cout << visitor.getResult() << std::endl;
     
     ros::spin();
 }
@@ -345,6 +322,8 @@ int main(int argc, char **argv) {
     vertex_add_counter_clockwise_0();
     point_valid_after_vertex_change();
     invalid_vertex_assignment();
+
+    load_params(nh);
 
     // show_markers(nh);
     show_safety_zone(nh);
