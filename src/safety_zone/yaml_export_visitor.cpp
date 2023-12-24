@@ -37,24 +37,30 @@ YamlExportVisitor::YamlExportVisitor(std::string prefix, std::string source_fram
 
   ss.str("");
   ss << "  obstacles:" << std::endl
-     << "    points: [" << std::endl;
-  obstacle_points_ = ss.str();
+     << "    data: [" << std::endl
+     << "      ";
+  obstacle_points_x_ = ss.str();
 
-  vertex_count_ = "    rows: [";
+  obstacle_points_y_ = "      ";
+  vertex_count_ = "    cols: [";
   obstacle_max_z_ = "    max_z: [";
   obstacle_min_z_ = "    min_z: [";
 }
 
 void YamlExportVisitor::visit(SafetyZone* safety_zone) {
   std::stringstream ss;
-  ss << "  boarder: " << std::endl
+  std::stringstream ss1;
+  ss << "  border: " << std::endl
      << "    points: [" << std::endl
+     << "      "
+     << std::setprecision(6) << std::fixed;
+    
+  ss1<< "      "
      << std::setprecision(6) << std::fixed;
 
   auto polygon = safety_zone->getBorder().getPolygon().outer();
 
-  // TODO: add transformation
-  for(int i=0; i<polygon.size(); i++) {
+  for(int i=0; i<polygon.size()-1; i++) {
     gm::Point point;
     point.x = polygon[i].get<0>();
     point.y = polygon[i].get<1>();
@@ -68,7 +74,8 @@ void YamlExportVisitor::visit(SafetyZone* safety_zone) {
     }
 
     point = res.value();
-    ss << "      " << point.x << ", " << point.y << std::endl;
+    ss << point.x << ", ";
+    ss1 << point.y << ", ";
   }
 
   gm::Point point_max_z;
@@ -88,19 +95,21 @@ void YamlExportVisitor::visit(SafetyZone* safety_zone) {
   point_max_z = res_max.value();
   point_min_z = res_min.value();
 
-  ss << "    ]" << std::endl
+  ss << std::endl;
+  ss1 << "\n    ]" << std::endl
      << "    max_z: " << point_max_z.z << std::endl
      << "    min_z: " << point_min_z.z << std::endl;
 
-  border_ = ss.str();
+  border_ = ss.str() + ss1.str();
 }
 
 void YamlExportVisitor::visit(Prism* obstacle) {
   std::stringstream ss;
+  std::stringstream ss1;
 
   // Writing points
-  ss //<< "    [" << std::endl
-     << std::setprecision(6) << std::fixed;
+  ss << std::setprecision(6) << std::fixed;
+  ss1 << std::setprecision(6) << std::fixed;
   
   auto polygon = obstacle->getPolygon().outer();
   for(int i=0; i<polygon.size() - 1; i++) {gm::Point point;
@@ -116,12 +125,14 @@ void YamlExportVisitor::visit(Prism* obstacle) {
     }
 
     point = res.value();
-    ss << "      " << point.x << ", " << point.y << std::endl;
+    ss << point.x << ", ";
+    ss1 << point.y << ", ";
   }
 
   // ss << "    ]," << std::endl;
 
-  obstacle_points_ = obstacle_points_ + ss.str();
+  obstacle_points_x_ = obstacle_points_x_ + ss.str();
+  obstacle_points_y_ = obstacle_points_y_ + ss1.str();
 
   // Writing number of rows in matrix (number of vertices)
   ss.str("");
@@ -160,14 +171,15 @@ std::string YamlExportVisitor::getResult() {
     return "";
   }
 
-  obstacle_points_ = obstacle_points_ + "    ]\n";
+  obstacle_points_x_ = obstacle_points_x_ + "\n";
+  obstacle_points_y_ = obstacle_points_y_ + "\n    ]\n";
   obstacle_max_z_ = obstacle_max_z_ + "]\n";
   obstacle_min_z_ = obstacle_min_z_ + "]\n";
 
-  std::string cols = "    cols: 2\n";
+  std::string rows = "    rows: 2\n";
   vertex_count_ = vertex_count_ + "]\n";
 
-  return world_origin_ + safety_area_general_ + border_ + obstacle_points_ + vertex_count_ + cols + obstacle_max_z_ + obstacle_min_z_ ;
+  return world_origin_ + safety_area_general_ + border_ + obstacle_points_x_ + obstacle_points_y_ + vertex_count_ + rows + obstacle_max_z_ + obstacle_min_z_ ;
 }
 
 bool YamlExportVisitor::isSuccessful(){
