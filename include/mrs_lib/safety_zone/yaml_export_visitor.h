@@ -21,7 +21,7 @@ private:
   std::string source_frame_;
   std::string horizontal_frame_;
   std::string vertical_frame_;
-  int obstacle_num = 1;
+  std::string vertex_count_;
   bool success_ = true;
 
   // Texts

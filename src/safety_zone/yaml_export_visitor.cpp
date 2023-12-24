@@ -39,6 +39,8 @@ YamlExportVisitor::YamlExportVisitor(std::string prefix, std::string source_fram
   ss << "  obstacles:" << std::endl
      << "    points: [" << std::endl;
   obstacle_points_ = ss.str();
+
+  vertex_count_ = "    rows: [";
   obstacle_max_z_ = "    max_z: [";
   obstacle_min_z_ = "    min_z: [";
 }
@@ -97,11 +99,11 @@ void YamlExportVisitor::visit(Prism* obstacle) {
   std::stringstream ss;
 
   // Writing points
-  ss << "    [" << std::endl
+  ss //<< "    [" << std::endl
      << std::setprecision(6) << std::fixed;
   
   auto polygon = obstacle->getPolygon().outer();
-  for(int i=0; i<polygon.size(); i++) {gm::Point point;
+  for(int i=0; i<polygon.size() - 1; i++) {gm::Point point;
     point.x = polygon[i].get<0>();
     point.y = polygon[i].get<1>();
     point.z = 0;
@@ -117,9 +119,14 @@ void YamlExportVisitor::visit(Prism* obstacle) {
     ss << "      " << point.x << ", " << point.y << std::endl;
   }
 
-  ss << "    ]," << std::endl;
+  // ss << "    ]," << std::endl;
 
   obstacle_points_ = obstacle_points_ + ss.str();
+
+  // Writing number of rows in matrix (number of vertices)
+  ss.str("");
+  ss << polygon.size() - 1 << ", ";
+  vertex_count_ = vertex_count_ + ss.str();
 
   // Writing max and min z
   gm::Point point_max_z;
@@ -157,7 +164,10 @@ std::string YamlExportVisitor::getResult() {
   obstacle_max_z_ = obstacle_max_z_ + "]\n";
   obstacle_min_z_ = obstacle_min_z_ + "]\n";
 
-  return world_origin_ + safety_area_general_ + border_ + obstacle_points_ + obstacle_max_z_ + obstacle_min_z_ ;
+  std::string cols = "    cols: 2\n";
+  vertex_count_ = vertex_count_ + "]\n";
+
+  return world_origin_ + safety_area_general_ + border_ + obstacle_points_ + vertex_count_ + cols + obstacle_max_z_ + obstacle_min_z_ ;
 }
 
 bool YamlExportVisitor::isSuccessful(){
