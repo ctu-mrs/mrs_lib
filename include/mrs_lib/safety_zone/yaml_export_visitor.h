@@ -28,7 +28,9 @@ private:
   std::string world_origin_;
   std::string safety_area_general_;
   std::string border_;
-  std::string obstacles_;
+  std::string obstacle_points_;
+  std::string obstacle_max_z_;
+  std::string obstacle_min_z_;
 
   std::shared_ptr<Transformer> transformer_;
 

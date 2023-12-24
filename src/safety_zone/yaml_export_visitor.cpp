@@ -35,7 +35,12 @@ YamlExportVisitor::YamlExportVisitor(std::string prefix, std::string source_fram
 
   safety_area_general_ = ss.str();
 
-  obstacles_ = "  obstacles:\n";
+  ss.str("");
+  ss << "  obstacles:" << std::endl
+     << "    points: [" << std::endl;
+  obstacle_points_ = ss.str();
+  obstacle_max_z_ = "    max_z: [";
+  obstacle_min_z_ = "    min_z: [";
 }
 
 void YamlExportVisitor::visit(SafetyZone* safety_zone) {
@@ -91,12 +96,11 @@ void YamlExportVisitor::visit(SafetyZone* safety_zone) {
 void YamlExportVisitor::visit(Prism* obstacle) {
   std::stringstream ss;
 
-  ss << "    - obstacle" << obstacle_num << ":" << std::endl
-     << "        points: [" << std::endl
+  // Writing points
+  ss << "    [" << std::endl
      << std::setprecision(6) << std::fixed;
   
   auto polygon = obstacle->getPolygon().outer();
-  // TODO: add transformation
   for(int i=0; i<polygon.size(); i++) {gm::Point point;
     point.x = polygon[i].get<0>();
     point.y = polygon[i].get<1>();
@@ -110,9 +114,14 @@ void YamlExportVisitor::visit(Prism* obstacle) {
     }
 
     point = res.value();
-    ss << "          " << point.x << ", " << point.y << std::endl;
+    ss << "      " << point.x << ", " << point.y << std::endl;
   }
 
+  ss << "    ]," << std::endl;
+
+  obstacle_points_ = obstacle_points_ + ss.str();
+
+  // Writing max and min z
   gm::Point point_max_z;
   gm::Point point_min_z;
   point_max_z.z = obstacle->getMaxZ();
@@ -130,18 +139,25 @@ void YamlExportVisitor::visit(Prism* obstacle) {
   point_max_z = res_max.value();
   point_min_z = res_min.value();
 
-  ss << "        ]" << std::endl
-     << "        max_z: " << point_max_z.z << std::endl
-     << "        min_z: " << point_min_z.z << std::endl;
+  ss.str("");
+  ss << point_max_z.z << ", ";
+  obstacle_max_z_ = obstacle_max_z_ + ss.str();
 
-  obstacles_ = obstacles_ + ss.str();
+  ss.str("");
+  ss << point_min_z.z << ", ";
+  obstacle_min_z_ = obstacle_min_z_ + ss.str();
 }
 
 std::string YamlExportVisitor::getResult() {
   if(!success_){
     return "";
   }
-  return world_origin_ + safety_area_general_ + border_ + obstacles_;
+
+  obstacle_points_ = obstacle_points_ + "    ]\n";
+  obstacle_max_z_ = obstacle_max_z_ + "]\n";
+  obstacle_min_z_ = obstacle_min_z_ + "]\n";
+
+  return world_origin_ + safety_area_general_ + border_ + obstacle_points_ + obstacle_max_z_ + obstacle_min_z_ ;
 }
 
 bool YamlExportVisitor::isSuccessful(){

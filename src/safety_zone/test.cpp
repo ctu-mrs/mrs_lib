@@ -306,7 +306,7 @@ void show_safety_zone(ros::NodeHandle nh) {
 
     YamlExportVisitor visitor = YamlExportVisitor("", "map", "map", "map", "LATLON", 0.0, 0.0);
     safety_zone.accept(visitor);
-    // std::cout << visitor.getResult() << std::endl;
+    std::cout << visitor.getResult() << std::endl;
     
     ros::spin();
 }
@@ -323,7 +323,7 @@ int main(int argc, char **argv) {
     point_valid_after_vertex_change();
     invalid_vertex_assignment();
 
-    load_params(nh);
+    // load_params(nh);
 
     // show_markers(nh);
     show_safety_zone(nh);
