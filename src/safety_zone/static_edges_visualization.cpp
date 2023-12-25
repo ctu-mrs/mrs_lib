@@ -70,6 +70,7 @@ void StaticEdgesVisualization::update() {
   marker.id = id_;
   marker.header.frame_id = frame_id_;
   marker.type = vm::Marker::LINE_LIST;
+  marker.action = vm::Marker::MODIFY;
   marker.color.a = 0.3;
   marker.color.r = 1.0;
   marker.color.b = 0.0;

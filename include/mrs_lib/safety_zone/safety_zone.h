@@ -51,9 +51,9 @@ public:
     return obstacles_.end();
   }
 
-  void addObstacle(int id, Prism obstacle){
-    // TODO: this does not add, it changes!!!
-    obstacles_.at(id) = obstacle;
+  int addObstacle(Prism obstacle){
+    obstacles_.insert({++next_obstacle_id, obstacle});
+    return next_obstacle_id;
   }
 
   void deleteObstacle(int id){
@@ -66,6 +66,7 @@ public:
 private:
   Prism outer_border_;
   std::map<int, Prism> obstacles_;
+  int next_obstacle_id = 0;
 };
 }  // namespace mrs_lib
 
