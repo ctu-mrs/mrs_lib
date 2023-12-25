@@ -89,6 +89,22 @@ bool SafetyZone::isPathValid(const Point3d start, const Point3d end) {
   return true;
 }
 
+bool SafetyZone::isPathValid(const Point2d start, const Point2d end) {
+  int count = (int)ceil((bg::distance(start, end) * 20));
+
+  Point2d cur_point = start;
+  Point2d ds = end;
+  bg::subtract_point(ds, start);
+  bg::divide_value(ds, count);
+  for(int i=0; i<count; i++){
+    if(!isPointValid(cur_point)){
+      return false;
+    }
+    bg::add_point(cur_point, ds);
+  }
+  return true;
+}
+
 void SafetyZone::accept(Visitor& visitor) {
   visitor.visit(this);
 

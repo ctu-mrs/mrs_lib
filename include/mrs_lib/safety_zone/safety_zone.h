@@ -22,7 +22,7 @@ public:
   // Convinient version of isPointIn(Point3d point)
   bool isPointValid(const double px, const double py, const double pz);
 
-  // Controls, if 2d point lies within the polygon of prism
+  // Controls, if 2d point lies within the polygon of prism (i.e. ignores max_z and min_z of all prisms)
   bool isPointValid(const Point2d point);
 
   // Convinient version of isPointIn(Point2d point)
@@ -31,6 +31,9 @@ public:
   // The function divides the path into smaller segments (on average 20 segments per meter) 
   // and validates each intermediate point to determine if the entire path is valid.
   bool isPathValid(const Point3d start, const Point3d end);
+
+  // 2d version of isPathValid(const Point3d start, const Point3d end), i.e. ignores max_z and min_z of all prisms
+  bool isPathValid(const Point2d start, const Point2d end);
 
   Prism& getBorder() {
     return outer_border_;
