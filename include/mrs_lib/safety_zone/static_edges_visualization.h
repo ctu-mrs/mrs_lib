@@ -16,7 +16,7 @@ class StaticEdgesVisualization : public Subscriber{
 public:
 
   // Represents the prism
-  StaticEdgesVisualization(Prism& prism, std::string frame_id, ros::NodeHandle nh, double markers_update_rate);
+  StaticEdgesVisualization(Prism* prism, std::string frame_id, ros::NodeHandle nh, double markers_update_rate);
 
   // Represents corresponding obstacle in the safety_zone. 
   StaticEdgesVisualization(SafetyZone* safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh, double markers_update_rate);
@@ -38,7 +38,7 @@ private:
   const int id_;
   static int id_generator_;
 
-  Prism& prism_;
+  Prism* prism_;
   std::string frame_id_;
   ros::NodeHandle nh_;
 

@@ -22,7 +22,7 @@ class BoundsControl : public Subscriber{
 public:
 
   // Created interactive markers do not have deleting option
-  BoundsControl(Prism& prism, std::string frame_id, ros::NodeHandle nh);
+  BoundsControl(Prism* prism, std::string frame_id, ros::NodeHandle nh);
 
   // Represents corresponding obstacle in the safety_zone. 
   // Created interactive markers provide deleting option
@@ -52,7 +52,7 @@ private:
   const int id_;
   const int obstacle_id_ = 0;
 
-  Prism& prism_;
+  Prism* prism_;
   SafetyZone* safety_zone_ = nullptr;
   std::string frame_id_;
   ros::NodeHandle nh_;

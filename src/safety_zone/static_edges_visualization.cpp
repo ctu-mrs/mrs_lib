@@ -12,7 +12,7 @@ namespace mrs_lib {
 int StaticEdgesVisualization::id_generator_ = 0;
 visualization_msgs::MarkerArray StaticEdgesVisualization::last_markers_ = visualization_msgs::MarkerArray();
 
-StaticEdgesVisualization::StaticEdgesVisualization(Prism& prism, std::string frame_id, ros::NodeHandle nh, double markers_update_rate) : id_(id_generator_), prism_(prism) {
+StaticEdgesVisualization::StaticEdgesVisualization(Prism* prism, std::string frame_id, ros::NodeHandle nh, double markers_update_rate) : id_(id_generator_), prism_(prism) {
   frame_id_ = frame_id;
   nh_ = nh;
   id_generator_++;
@@ -41,14 +41,14 @@ StaticEdgesVisualization::StaticEdgesVisualization(SafetyZone* safety_zone, std:
 
 StaticEdgesVisualization::~StaticEdgesVisualization(){
   if(is_active_){
-    prism_.unsubscribe(this);
+    prism_->unsubscribe(this);
   }
   cleanup();
 }
 
 void StaticEdgesVisualization::init() {
   publisher_ = nh_.advertise<vm::MarkerArray>("safety_area_static_markers_out", 1);
-  prism_.subscribe(this);
+  prism_->subscribe(this);
   update();
 }
 
@@ -62,15 +62,15 @@ void StaticEdgesVisualization::update() {
     return;
   }
 
-  double max_z = prism_.getMaxZ();
-  double min_z = prism_.getMinZ();
-  auto polygon = prism_.getPolygon().outer();
+  double max_z = prism_->getMaxZ();
+  double min_z = prism_->getMinZ();
+  auto polygon = prism_->getPolygon().outer();
   
   vm::Marker marker;
   marker.id = id_;
   marker.header.frame_id = frame_id_;
   marker.type = vm::Marker::LINE_LIST;
-  marker.action = vm::Marker::MODIFY;
+  marker.action = vm::Marker::ADD;
   marker.color.a = 0.3;
   marker.color.r = 1.0;
   marker.color.b = 0.0;

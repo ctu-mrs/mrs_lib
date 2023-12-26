@@ -12,7 +12,7 @@ namespace gm = geometry_msgs;
 namespace mrs_lib {
 int IntEdgesVisualization::id_generator = 0;
 
-IntEdgesVisualization::IntEdgesVisualization(Prism& prism, std::string frame_id, ros::NodeHandle nh) : id_(id_generator), prism_(prism){
+IntEdgesVisualization::IntEdgesVisualization(Prism* prism, std::string frame_id, ros::NodeHandle nh) : id_(id_generator), prism_(prism){
   frame_id_ = frame_id;
   nh_ = nh;
   id_generator++;
@@ -38,26 +38,26 @@ void IntEdgesVisualization::init() {
   menu_handler_ = new interactive_markers::MenuHandler();
   menu_handler_->insert("Add vertex", [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->vertexAddCallback(feedback);});
 
-  prism_.subscribe(this);
+  prism_->subscribe(this);
 
-  auto polygon = prism_.getPolygon().outer();
+  auto polygon = prism_->getPolygon().outer();
   for(int i=0; i<polygon.size() - 1; i++){
-    addEdgeIntMarker(polygon[i], polygon[i+1], prism_.getMaxZ(), prism_.getMinZ(), i);
+    addEdgeIntMarker(polygon[i], polygon[i+1], prism_->getMaxZ(), prism_->getMinZ(), i);
   }
   update();
 }
 
 IntEdgesVisualization::~IntEdgesVisualization(){
+  if(is_active_){
+    prism_->unsubscribe(this);
+  }
+  cleanup();
   if(server_){
     delete server_;
   }
   if(menu_handler_){
     delete menu_handler_;
   }
-  if(is_active_){
-    prism_.unsubscribe(this);
-  }
-  cleanup();
 }
 
 void IntEdgesVisualization::update() {
@@ -65,7 +65,7 @@ void IntEdgesVisualization::update() {
     return;
   }
   
-  auto polygon = prism_.getPolygon().outer();
+  auto polygon = prism_->getPolygon().outer();
   // Deleting extra vertices
   if(polygon.size() - 1 < upper_names_.size()){
     int initial_num = upper_names_.size();
@@ -89,7 +89,7 @@ void IntEdgesVisualization::update() {
   // Adding not present vertices
   if(polygon.size() - 1 > upper_names_.size()){
     for(int i=upper_names_.size(); i<polygon.size() - 1; i++){
-      addEdgeIntMarker(polygon[i], polygon[i+1], prism_.getMaxZ(), prism_.getMinZ(), i);
+      addEdgeIntMarker(polygon[i], polygon[i+1], prism_->getMaxZ(), prism_->getMinZ(), i);
     }
   }
   
@@ -98,12 +98,12 @@ void IntEdgesVisualization::update() {
     gm::Pose pose;
     pose.position.x = polygon[i].get<0>();
     pose.position.y = polygon[i].get<1>();
-    pose.position.z = prism_.getMaxZ();
+    pose.position.z = prism_->getMaxZ();
 
     gm::Point end;
     end.x = polygon[i+1].get<0>();
     end.y = polygon[i+1].get<1>();
-    end.z = prism_.getMaxZ();
+    end.z = prism_->getMaxZ();
 
     vm::InteractiveMarker int_marker;
 
@@ -115,8 +115,8 @@ void IntEdgesVisualization::update() {
     server_->insert(int_marker);
 
     // Lower marker
-    pose.position.z = prism_.getMinZ();
-    end.z = prism_.getMinZ();
+    pose.position.z = prism_->getMinZ();
+    end.z = prism_->getMinZ();
     server_->setPose(lower_names_[i], pose);
     server_->get(lower_names_[i], int_marker);
     int_marker.controls[0].markers[0].points[0] = pose.position;
@@ -124,7 +124,7 @@ void IntEdgesVisualization::update() {
     server_->insert(int_marker);
 
     // Vertical marker
-    pose.position.z = prism_.getMaxZ();
+    pose.position.z = prism_->getMaxZ();
     end.x = pose.position.x;
     end.y = pose.position.y;
     server_->setPose(vertical_names_[i], pose);
@@ -291,7 +291,7 @@ void IntEdgesVisualization::vertexAddCallback(const visualization_msgs::Interact
     return;
   }
 
-  prism_.addVertexClockwise(index);
+  prism_->addVertexClockwise(index);
 }
 
 } // namespace mrs_lib

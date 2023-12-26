@@ -58,7 +58,7 @@ void YamlExportVisitor::visit(SafetyZone* safety_zone) {
   ss1<< "      "
      << std::setprecision(6) << std::fixed;
 
-  auto polygon = safety_zone->getBorder().getPolygon().outer();
+  auto polygon = safety_zone->getBorder()->getPolygon().outer();
 
   for(int i=0; i<polygon.size()-1; i++) {
     gm::Point point;
@@ -80,8 +80,8 @@ void YamlExportVisitor::visit(SafetyZone* safety_zone) {
 
   gm::Point point_max_z;
   gm::Point point_min_z;
-  point_max_z.z = safety_zone->getBorder().getMaxZ();
-  point_min_z.z = safety_zone->getBorder().getMinZ();
+  point_max_z.z = safety_zone->getBorder()->getMaxZ();
+  point_min_z.z = safety_zone->getBorder()->getMinZ();
 
   auto res_max = transformer_->transformSingle(source_frame_, point_max_z, vertical_frame_);
   auto res_min = transformer_->transformSingle(source_frame_, point_min_z, vertical_frame_);

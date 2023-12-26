@@ -24,7 +24,7 @@ class VertexControl : public Subscriber{
 public:
 
   // Represents the prism
-  VertexControl(Prism& prism, std::string frame_id, ros::NodeHandle nh);
+  VertexControl(Prism* prism, std::string frame_id, ros::NodeHandle nh);
 
   // Represents corresponding obstacle in the safety_zone. 
   VertexControl(SafetyZone* safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh);
@@ -51,7 +51,7 @@ private:
 
   const int id_;
   int vertex_id_ = 0;    // Each marker name must be unique
-  Prism& prism_;
+  Prism* prism_;
   std::string frame_id_;
   ros::NodeHandle nh_;
 

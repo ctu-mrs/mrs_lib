@@ -9,7 +9,7 @@ namespace mrs_lib
 {
 int BoundsControl::id_generator = 0;
 
-BoundsControl::BoundsControl(Prism& prism, std::string frame_id, ros::NodeHandle nh) : id_(id_generator), prism_(prism){
+BoundsControl::BoundsControl(Prism* prism, std::string frame_id, ros::NodeHandle nh) : id_(id_generator), prism_(prism){
   frame_id_ = frame_id;
   nh_ = nh;
   id_generator++;
@@ -32,16 +32,16 @@ BoundsControl::BoundsControl(SafetyZone* safety_zone, std::string frame_id, ros:
 }
 
 BoundsControl::~BoundsControl(){
+  if(is_active_){
+    prism_->unsubscribe(this);
+  }
+  cleanup();
   if(server_){
     delete server_;
   }
   if(menu_handler_){
     delete menu_handler_;
   }
-  if(is_active_){
-    prism_.unsubscribe(this);
-  }
-  cleanup();
 }
 
 void BoundsControl::init(){
@@ -53,7 +53,7 @@ void BoundsControl::init(){
     menu_handler_->insert("Deleting is disabled for this prism");
   }
 
-  prism_.subscribe(this);
+  prism_->subscribe(this);
   addBoundIntMarker(true);
   addBoundIntMarker(false);
 }
@@ -63,12 +63,12 @@ void BoundsControl::update(){
     return;
   }
   gm::Pose pose;
-  pose.position.x = prism_.getCenter().get<0>();
-  pose.position.y = prism_.getCenter().get<1>();
-  pose.position.z = prism_.getMaxZ();
+  pose.position.x = prism_->getCenter().get<0>();
+  pose.position.y = prism_->getCenter().get<1>();
+  pose.position.z = prism_->getMaxZ();
 
   server_->setPose(upper_name_, pose);
-  pose.position.z = prism_.getMinZ();
+  pose.position.z = prism_->getMinZ();
   server_->setPose(lower_name_, pose);
 
   server_->applyChanges();
@@ -96,7 +96,7 @@ vm::Marker BoundsControl::makeBox(vm::InteractiveMarker &msg){
 }
 
 void BoundsControl::addBoundIntMarker(bool is_upper){
-  Point2d center = prism_.getCenter();
+  Point2d center = prism_->getCenter();
   // Interactive marker
   vm::InteractiveMarker int_marker;
   int_marker.header.frame_id = frame_id_;
@@ -106,12 +106,12 @@ void BoundsControl::addBoundIntMarker(bool is_upper){
   int_marker.scale = 1; 
 
   if(is_upper){
-    int_marker.pose.position.z = prism_.getMaxZ();
+    int_marker.pose.position.z = prism_->getMaxZ();
     upper_name_ = std::to_string(id_) + "_upper";
     int_marker.name = upper_name_;
     int_marker.description = "Upper bound control";
   } else {
-    int_marker.pose.position.z = prism_.getMinZ();
+    int_marker.pose.position.z = prism_->getMinZ();
     lower_name_ = std::to_string(id_) + "_lower";
     int_marker.name = lower_name_;
     int_marker.description = "Lower bound control";
@@ -152,9 +152,9 @@ void BoundsControl::addBoundIntMarker(bool is_upper){
 void BoundsControl::boundMoveCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
   double z = feedback->pose.position.z;
   if(feedback->marker_name == upper_name_){
-    prism_.setMaxZ(z);
+    prism_->setMaxZ(z);
   }else if(feedback->marker_name == lower_name_){
-    prism_.setMinZ(z);
+    prism_->setMinZ(z);
   }else{
     ROS_WARN("[BoundsControl]: unknown marker appeared %s", feedback->marker_name.c_str());
   }
@@ -167,7 +167,7 @@ void BoundsControl::boundMoveCallback(const visualization_msgs::InteractiveMarke
   Point3d adjustment = Point3d{current_position.x - last_position_.x, 
                                current_position.y - last_position_.y,
                                0};
-  prism_.move(adjustment);
+  prism_->move(adjustment);
   last_position_ = current_position;
 }
 

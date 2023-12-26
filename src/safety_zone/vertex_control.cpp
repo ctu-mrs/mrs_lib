@@ -13,7 +13,7 @@ namespace gm = geometry_msgs;
 namespace mrs_lib {
 int VertexControl::id_generator = 0;
 
-VertexControl::VertexControl(Prism& prism, std::string frame_id, ros::NodeHandle nh) : id_(id_generator), prism_(prism) {
+VertexControl::VertexControl(Prism* prism, std::string frame_id, ros::NodeHandle nh) : id_(id_generator), prism_(prism) {
   frame_id_ = frame_id;
   nh_ = nh;
   id_generator++;
@@ -40,25 +40,25 @@ void VertexControl::init() {
   menu_handler_ = new interactive_markers::MenuHandler();
   menu_handler_->insert("Delete the vertex", [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->vertexDeleteCallback(feedback);});
 
-  auto polygon = prism_.getPolygon().outer();
+  auto polygon = prism_->getPolygon().outer();
   for(int i=0; i<polygon.size() - 1; i++){
-    addVertexIntMarker(polygon[i], prism_.getMaxZ(), prism_.getMinZ(), i);
+    addVertexIntMarker(polygon[i], prism_->getMaxZ(), prism_->getMinZ(), i);
   }
 
-  prism_.subscribe(this);
+  prism_->subscribe(this);
 }
 
 VertexControl::~VertexControl(){
+  if(is_active_){
+    prism_->unsubscribe(this);
+  }
+  cleanup();
   if(server_){
     delete server_;
   }
   if(menu_handler_){
     delete menu_handler_;
   }
-  if(is_active_){
-    prism_.unsubscribe(this);
-  }
-  cleanup();
 }
 
 void VertexControl::update(){
@@ -66,7 +66,7 @@ void VertexControl::update(){
     return;
   }
 
-  auto polygon = prism_.getPolygon().outer();
+  auto polygon = prism_->getPolygon().outer();
   // Deleting extra vertices
   if(polygon.size() - 1 < upper_names_.size()){
     int initial_num = upper_names_.size();
@@ -86,7 +86,7 @@ void VertexControl::update(){
   // Adding not present vertices
   if(polygon.size() - 1 > upper_names_.size()){
     for(int i=upper_names_.size(); i<polygon.size() - 1; i++){
-      addVertexIntMarker(polygon[i], prism_.getMaxZ(), prism_.getMinZ(), i);
+      addVertexIntMarker(polygon[i], prism_->getMaxZ(), prism_->getMinZ(), i);
     }
   }
   
@@ -95,10 +95,10 @@ void VertexControl::update(){
     gm::Pose pose;
     pose.position.x = polygon[i].get<0>();
     pose.position.y = polygon[i].get<1>();
-    pose.position.z = prism_.getMaxZ();
+    pose.position.z = prism_->getMaxZ();
 
     server_->setPose(upper_names_[i], pose);
-    pose.position.z = prism_.getMinZ();
+    pose.position.z = prism_->getMinZ();
     server_->setPose(lower_names_[i], pose);
 
     server_->applyChanges();
@@ -229,7 +229,7 @@ void VertexControl::vertexMoveCallback(const visualization_msgs::InteractiveMark
     return;
   }
 
-  prism_.setVertex(polygon_point, index);
+  prism_->setVertex(polygon_point, index);
 }
 
 void VertexControl::vertexDeleteCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
@@ -238,7 +238,7 @@ void VertexControl::vertexDeleteCallback(const visualization_msgs::InteractiveMa
     return;
   }
 
-  prism_.deleteVertex(index);
+  prism_->deleteVertex(index);
 }
 
 } // namespace mrs_lib

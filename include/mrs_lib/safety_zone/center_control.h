@@ -26,7 +26,7 @@ class CenterControl : public Subscriber{
 public:
 
   // Created interactive marker does not have deleting option
-  CenterControl(Prism& prism, std::string frame_id, ros::NodeHandle nh);
+  CenterControl(Prism* prism, std::string frame_id, ros::NodeHandle nh);
 
   // Represents corresponding obstacle in the safety_zone. 
   // Created interactive marker provides deleting option
@@ -56,7 +56,7 @@ private:
   const int id;
   const int obstacle_id_ = 0;
 
-  Prism& prism_;
+  Prism* prism_;
   SafetyZone* safety_zone_ = nullptr;
   std::string frame_id_;
   ros::NodeHandle nh_;

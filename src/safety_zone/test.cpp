@@ -55,8 +55,8 @@ void vertex_add_counter_clockwise(){
 
     SafetyZone safety_zone = SafetyZone(outer_boarder);
 
-    Prism& new_outer_boarder = safety_zone.getBorder();
-    Polygon new_poly = new_outer_boarder.getPolygon();
+    Prism* new_outer_boarder = safety_zone.getBorder();
+    Polygon new_poly = new_outer_boarder->getPolygon();
 
     bool passed = true;
 
@@ -97,8 +97,8 @@ void vertex_add_clockwise() {
 
     SafetyZone safety_zone = SafetyZone(outer_boarder);
 
-    Prism& new_outer_boarder = safety_zone.getBorder();
-    Polygon new_poly = new_outer_boarder.getPolygon();
+    Prism* new_outer_boarder = safety_zone.getBorder();
+    Polygon new_poly = new_outer_boarder->getPolygon();
 
     bool passed = true;
 
@@ -139,8 +139,8 @@ void vertex_add_counter_clockwise_0() {
 
     SafetyZone safety_zone = SafetyZone(outer_boarder);
 
-    Prism& new_outer_boarder = safety_zone.getBorder();
-    Polygon new_poly = new_outer_boarder.getPolygon();
+    Prism* new_outer_boarder = safety_zone.getBorder();
+    Polygon new_poly = new_outer_boarder->getPolygon();
 
     bool passed = true;
 
@@ -180,9 +180,9 @@ void point_valid_after_vertex_change() {
 
     SafetyZone safety_zone(outer_boarder);
 
-    Prism& new_outer_boarder = safety_zone.getBorder();
+    Prism* new_outer_boarder = safety_zone.getBorder();
 
-    if(new_outer_boarder.setVertex(Point2d{0, 20}, 1)) {
+    if(new_outer_boarder->setVertex(Point2d{0, 20}, 1)) {
         if(safety_zone.isPointValid(Point2d{1, 11})){
             std::cout << "[point_valid_after_vertex_change]: Test passed\n";
         }else {
@@ -205,14 +205,14 @@ void invalid_vertex_assignment(){
 
     SafetyZone safety_zone(outer_boarder);
 
-    Prism& new_outer_boarder = safety_zone.getBorder();
+    Prism* new_outer_boarder = safety_zone.getBorder();
 
-    if(new_outer_boarder.setVertex(Point2d{12, 7}, 1)) {
+    if(new_outer_boarder->setVertex(Point2d{12, 7}, 1)) {
         std::cout<<"[invalid_vertex_assignment]: Test did not pass\n";
         return;
     }
 
-    Polygon new_poly = new_outer_boarder.getPolygon();
+    Polygon new_poly = new_outer_boarder->getPolygon();
 
     bool passed = true;
 
@@ -248,18 +248,18 @@ void show_markers(ros::NodeHandle nh) {
 
     Prism outer_boarder = Prism(poly, 0.0, 15);
 
-    StaticEdgesVisualization static_edges_vis = StaticEdgesVisualization(outer_boarder, "map", nh, 2);
-    IntEdgesVisualization edges_vis = IntEdgesVisualization(outer_boarder, "map", nh);
-    VertexControl vertex_control = VertexControl(outer_boarder, "map", nh);
-    BoundsControl bounds_control = BoundsControl(outer_boarder, "map", nh);
-    CenterControl center_control = CenterControl(outer_boarder, "map", nh);
+    StaticEdgesVisualization static_edges_vis = StaticEdgesVisualization(&outer_boarder, "map", nh, 2);
+    IntEdgesVisualization edges_vis = IntEdgesVisualization(&outer_boarder, "map", nh);
+    VertexControl vertex_control = VertexControl(&outer_boarder, "map", nh);
+    BoundsControl bounds_control = BoundsControl(&outer_boarder, "map", nh);
+    CenterControl center_control = CenterControl(&outer_boarder, "map", nh);
 
     Prism outer_boarder2 = Prism(poly, 16.0, 18.0);
-    StaticEdgesVisualization edges_vis2 = StaticEdgesVisualization(outer_boarder2, "map", nh, 2);
-    IntEdgesVisualization edges_vis_int2 = IntEdgesVisualization(outer_boarder2, "map", nh);
-    VertexControl vertex_control2 = VertexControl(outer_boarder2, "map", nh);
-    BoundsControl bounds_control2 = BoundsControl(outer_boarder2, "map", nh);
-    CenterControl center_control2 = CenterControl(outer_boarder2, "map", nh);
+    StaticEdgesVisualization edges_vis2 = StaticEdgesVisualization(&outer_boarder2, "map", nh, 2);
+    IntEdgesVisualization edges_vis_int2 = IntEdgesVisualization(&outer_boarder2, "map", nh);
+    VertexControl vertex_control2 = VertexControl(&outer_boarder2, "map", nh);
+    BoundsControl bounds_control2 = BoundsControl(&outer_boarder2, "map", nh);
+    CenterControl center_control2 = CenterControl(&outer_boarder2, "map", nh);
     
     ros::spin();
 }
@@ -287,7 +287,7 @@ void show_safety_zone(ros::NodeHandle nh) {
     Prism outer_boarder = Prism(poly, 0.0, 15);
     Prism obstacle = Prism(poly, 16.0, 18.0);
 
-    std::vector<Prism> obstacles{obstacle, obstacle};
+    std::vector<Prism*> obstacles{&obstacle, &obstacle};
     SafetyZone safety_zone = SafetyZone(outer_boarder, obstacles);
 
     StaticEdgesVisualization static_edges_vis = StaticEdgesVisualization(&safety_zone, "map", nh, 2);

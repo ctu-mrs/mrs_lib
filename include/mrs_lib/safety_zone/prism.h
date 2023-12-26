@@ -27,6 +27,8 @@ private:
 
   std::set<Subscriber*> subscribers;
 
+  void notifySubscribers();
+  void cleanSubscribers();
 public:
   // If max_z < min_z, automatically swaps them
   // Throws std::invalid argument if polygon is invalid
@@ -36,8 +38,6 @@ public:
 
   void subscribe(Subscriber* entity);
   void unsubscribe(Subscriber* entity);
-  void notifySubscribers();
-  void cleanSubscribers();
 
   double getMaxZ(){
     return max_z_;
