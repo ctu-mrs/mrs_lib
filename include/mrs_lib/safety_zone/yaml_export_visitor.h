@@ -23,6 +23,7 @@ private:
   std::string vertical_frame_;
   std::string vertex_count_;
   bool success_ = true;
+  bool obstacles_present_ = false;
 
   // Texts
   std::string world_origin_;

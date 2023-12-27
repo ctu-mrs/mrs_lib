@@ -45,7 +45,7 @@ BoundsControl::~BoundsControl(){
 }
 
 void BoundsControl::init(){
-  server_ = new interactive_markers::InteractiveMarkerServer(nh_.getNamespace() + "safety_area_bounds_out", std::to_string(id_), false);
+  server_ = new interactive_markers::InteractiveMarkerServer(nh_.getNamespace() + "/safety_area_bounds_out", std::to_string(id_), false);
   menu_handler_ = new interactive_markers::MenuHandler();
   if(safety_zone_) {
     menu_handler_->insert("Delete the prism", [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->deleteCallback(feedback);});

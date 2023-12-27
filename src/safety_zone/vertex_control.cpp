@@ -35,7 +35,7 @@ VertexControl::VertexControl(SafetyZone* safety_zone, std::string frame_id, ros:
 }
 
 void VertexControl::init() {
-  server_ = new interactive_markers::InteractiveMarkerServer(nh_.getNamespace() + "safety_area_vertices_out", std::to_string(id_), false);
+  server_ = new interactive_markers::InteractiveMarkerServer(nh_.getNamespace() + "/safety_area_vertices_out", std::to_string(id_), false);
   // Menu
   menu_handler_ = new interactive_markers::MenuHandler();
   menu_handler_->insert("Delete the vertex", [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->vertexDeleteCallback(feedback);});

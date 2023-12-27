@@ -50,7 +50,7 @@ CenterControl::~CenterControl(){
 
 
 void CenterControl::init(){
-  server_ = new interactive_markers::InteractiveMarkerServer(nh_.getNamespace() + "safety_area_center_out", std::to_string(id), false);
+  server_ = new interactive_markers::InteractiveMarkerServer(nh_.getNamespace() + "/safety_area_center_out", std::to_string(id), false);
   menu_handler_ = new interactive_markers::MenuHandler();
   if(safety_zone_){
     menu_handler_->insert("Delete the prism", [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->deleteCallback(feedback);});

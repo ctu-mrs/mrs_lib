@@ -34,7 +34,7 @@ IntEdgesVisualization::IntEdgesVisualization(SafetyZone* safety_zone, std::strin
 }
 
 void IntEdgesVisualization::init() {
-  server_ = new interactive_markers::InteractiveMarkerServer(nh_.getNamespace() + "safety_area_edges_out", std::to_string(id_), false);
+  server_ = new interactive_markers::InteractiveMarkerServer(nh_.getNamespace() + "/safety_area_edges_out", std::to_string(id_), false);
   menu_handler_ = new interactive_markers::MenuHandler();
   menu_handler_->insert("Add vertex", [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->vertexAddCallback(feedback);});
 
