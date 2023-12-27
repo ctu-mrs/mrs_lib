@@ -36,8 +36,7 @@ YamlExportVisitor::YamlExportVisitor(std::string prefix, std::string source_fram
   safety_area_general_ = ss.str();
 
   ss.str("");
-  ss << "  obstacles:" << std::endl
-     << "    data: [" << std::endl
+  ss << "    data: [" << std::endl
      << "      ";
   obstacle_points_x_ = ss.str();
 
@@ -104,6 +103,8 @@ void YamlExportVisitor::visit(SafetyZone* safety_zone) {
 }
 
 void YamlExportVisitor::visit(Prism* obstacle) {
+  obstacles_present_ = true;
+
   std::stringstream ss;
   std::stringstream ss1;
 
@@ -128,8 +129,6 @@ void YamlExportVisitor::visit(Prism* obstacle) {
     ss << point.x << ", ";
     ss1 << point.y << ", ";
   }
-
-  // ss << "    ]," << std::endl;
 
   obstacle_points_x_ = obstacle_points_x_ + ss.str();
   obstacle_points_y_ = obstacle_points_y_ + ss1.str();
@@ -171,6 +170,8 @@ std::string YamlExportVisitor::getResult() {
     return "";
   }
 
+  std::string present = std::string("  obstacles:\n    present: ") + (obstacles_present_ ? "true\n" : "false\n");
+
   obstacle_points_x_ = obstacle_points_x_ + "\n";
   obstacle_points_y_ = obstacle_points_y_ + "\n    ]\n";
   obstacle_max_z_ = obstacle_max_z_ + "]\n";
@@ -179,7 +180,12 @@ std::string YamlExportVisitor::getResult() {
   std::string rows = "    rows: 2\n";
   vertex_count_ = vertex_count_ + "]\n";
 
-  return world_origin_ + safety_area_general_ + border_ + obstacle_points_x_ + obstacle_points_y_ + vertex_count_ + rows + obstacle_max_z_ + obstacle_min_z_ ;
+  std::string result = world_origin_ + safety_area_general_ + border_ + present;
+  if(obstacles_present_){
+    result = result + obstacle_points_x_ + obstacle_points_y_ + vertex_count_ + rows + obstacle_max_z_ + obstacle_min_z_ ;
+  }
+
+  return result;
 }
 
 bool YamlExportVisitor::isSuccessful(){
