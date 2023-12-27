@@ -38,33 +38,39 @@ public:
 
   ~CenterControl();
 
-  void update();
-  void cleanup();
+  void update() override;
+  void cleanup() override;
 
 private:
+  // Tools for convenience 
   void init();
   void addIntMarker();
   visualization_msgs::Marker makeBox(visualization_msgs::InteractiveMarker &msg);
+
+  // Makrer's callbacks
   void moveCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
   void mouseDownCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
-  void mouseUpCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
-  void deleteCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
+  void mouseUpCallback( [[maybe_unused]] const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
+  void deleteCallback( [[maybe_unused]] const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
 
   // It is required for generating server id's, 
   // because their id's must be unique on topic 
   static int id_generator;
   const int id;
-  const int obstacle_id_ = 0;
 
+  // Attributes received in constructor
   Prism* prism_;
   SafetyZone* safety_zone_ = nullptr;
+  const int obstacle_id_ = 0;
   std::string frame_id_;
   ros::NodeHandle nh_;
 
+  // Communication with RVIZ
   interactive_markers::InteractiveMarkerServer* server_ = nullptr;
   interactive_markers::MenuHandler*             menu_handler_  = nullptr;
   std::string marker_name_;
 
+  // Required for moving the prism
   geometry_msgs::Quaternion last_orientation_;
   geometry_msgs::Point      last_position_;
   bool                      is_last_valid = false;

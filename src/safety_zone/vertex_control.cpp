@@ -41,7 +41,7 @@ void VertexControl::init() {
   menu_handler_->insert("Delete the vertex", [this](const vm::InteractiveMarkerFeedbackConstPtr &feedback){this->vertexDeleteCallback(feedback);});
 
   auto polygon = prism_->getPolygon().outer();
-  for(int i=0; i<polygon.size() - 1; i++){
+  for(size_t i=0; i<polygon.size() - 1; i++){
     addVertexIntMarker(polygon[i], prism_->getMaxZ(), prism_->getMinZ(), i);
   }
 
@@ -85,13 +85,13 @@ void VertexControl::update(){
 
   // Adding not present vertices
   if(polygon.size() - 1 > upper_names_.size()){
-    for(int i=upper_names_.size(); i<polygon.size() - 1; i++){
+    for(size_t i=upper_names_.size(); i<polygon.size() - 1; i++){
       addVertexIntMarker(polygon[i], prism_->getMaxZ(), prism_->getMinZ(), i);
     }
   }
   
   // Updating the positions
-  for(int i=0; i<polygon.size() - 1; i++){
+  for(size_t i=0; i<polygon.size() - 1; i++){
     gm::Pose pose;
     pose.position.x = polygon[i].get<0>();
     pose.position.y = polygon[i].get<1>();

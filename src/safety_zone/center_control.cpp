@@ -183,11 +183,11 @@ void CenterControl::mouseDownCallback(const visualization_msgs::InteractiveMarke
   is_last_valid = true;
 }
 
-void CenterControl::mouseUpCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback){
+void CenterControl::mouseUpCallback( [[maybe_unused]] const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback){
   is_last_valid = false;
 }
 
-void CenterControl::deleteCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback){
+void CenterControl::deleteCallback( [[maybe_unused]] const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback){
   safety_zone_->deleteObstacle(obstacle_id_);
 }
 

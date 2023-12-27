@@ -32,13 +32,16 @@ public:
 
   ~IntEdgesVisualization();
 
-  void update();
-  void cleanup();
+  void update() override;
+  void cleanup() override;
 
 private:
+  // Tools for convenience 
   void init();
   int getIndexByName(std::string marker_name);
   void addEdgeIntMarker(Point2d start, Point2d end, const double upper, const double lower, const int index);
+
+  // Markers's callback
   void vertexAddCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
 
   // It is required for generating server id's, 
@@ -47,6 +50,7 @@ private:
   const int id_;
   int vertex_id_ = 0;    // Each marker name must be unique
 
+  // Attributes received in constructor
   Prism* prism_;
   std::string frame_id_;
   ros::NodeHandle nh_;

@@ -14,7 +14,6 @@ namespace mrs_lib
 class StaticEdgesVisualization : public Subscriber{
 
 public:
-
   // Represents the prism
   StaticEdgesVisualization(Prism* prism, std::string frame_id, ros::NodeHandle nh, double markers_update_rate);
 
@@ -26,12 +25,12 @@ public:
 
   ~StaticEdgesVisualization();
 
-  void update();
-  void cleanup();
+  void update() override;
+  void cleanup() override;
 
 private:
   void init();
-  void sendMarker(const ros::TimerEvent& event);
+  void sendMarker( [[maybe_unused]] const ros::TimerEvent& event);
 
   // It is required for generating static marker names, 
   // because their id's must be unique on topic 

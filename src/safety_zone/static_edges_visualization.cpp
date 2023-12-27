@@ -53,7 +53,7 @@ void StaticEdgesVisualization::init() {
 }
 
 // Lines must be updated periodically. View https://github.com/ros-visualization/rviz/issues/1287
-void StaticEdgesVisualization::sendMarker(const ros::TimerEvent& event) {
+void StaticEdgesVisualization::sendMarker( [[maybe_unused]] const ros::TimerEvent& event) {
   publisher_.publish(last_markers_);
 }
 
@@ -78,7 +78,7 @@ void StaticEdgesVisualization::update() {
   marker.pose.orientation = mrs_lib::AttitudeConverter(0, 0, 0);
   marker.scale.x = 0.2;
 
-  for(int i=0; i<polygon.size() - 1; i++){  // -1 because the last is the same as the first one      
+  for(size_t i=0; i<polygon.size() - 1; i++){  // -1 because the last is the same as the first one      
     // Adding upper horizontal edges
     gm::Point upper_start;
     gm::Point upper_end;

@@ -176,11 +176,11 @@ void BoundsControl::mouseDownCallback(const visualization_msgs::InteractiveMarke
   is_last_valid = true;
 }
 
-void BoundsControl::mouseUpCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback){
+void BoundsControl::mouseUpCallback( [[maybe_unused]] const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback){
   is_last_valid = false;
 }
 
-void BoundsControl::deleteCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback){
+void BoundsControl::deleteCallback( [[maybe_unused]] const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback){
   safety_zone_->deleteObstacle(obstacle_id_);
 }
 

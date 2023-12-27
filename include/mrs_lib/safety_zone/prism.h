@@ -39,29 +39,17 @@ public:
   void subscribe(Subscriber* entity);
   void unsubscribe(Subscriber* entity);
 
-  double getMaxZ(){
-    return max_z_;
-  }
+  double getMaxZ();
 
-  double getMinZ(){
-    return min_z_;
-  }
+  double getMinZ();
 
-  Polygon getPolygon(){
-    return polygon_;
-  }
+  Polygon getPolygon();
 
   // Returns number of vertices in the polygon of the prism.
-  unsigned int getVerticesNum(){
-    return polygon_.outer().size() - 1;
-  }
+  unsigned int getVerticesNum();
 
   // Returns the centroid of the polygon of the prism.
-  Point2d getCenter(){
-    Point2d res;
-    boost::geometry::centroid(polygon_, res);
-    return res;
-  }
+  Point2d getCenter();
 
   void setMaxZ(double value);
 

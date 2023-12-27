@@ -107,7 +107,7 @@ namespace mrs_lib
     Polygon backup = polygon_;
     auto &outer_ring = polygon_.outer();
     bool success = true;
-    for(int i=0; i<vertices.size(); i++){
+    for(size_t i=0; i<vertices.size(); i++){
       Point2d vertex = vertices[i];
       unsigned int index = indices[i];
       if(index >= outer_ring.size() - 1) { // -1 because the last is the same as the first
@@ -205,7 +205,7 @@ namespace mrs_lib
     if(dx != 0 || dy != 0){
       do_notify = true;
       auto& outer_ring = polygon_.outer();
-      for(int i=0; i<outer_ring.size(); i++){
+      for(size_t i=0; i<outer_ring.size(); i++){
         bg::add_point(outer_ring[i], adjustment2d);
       }
     }  
@@ -222,7 +222,7 @@ namespace mrs_lib
 
     Point2d cur_center = getCenter();
     auto& outer_ring = polygon_.outer();
-    for(int i=0; i<outer_ring.size(); i++){
+    for(size_t i=0; i<outer_ring.size(); i++){
       double x1 = outer_ring[i].get<0>();
       double y1 = outer_ring[i].get<1>();
       double x2 = (x1-cur_center.get<0>())*cos(alpha) - (y1-cur_center.get<1>())*sin(alpha) + cur_center.get<0>();
@@ -268,6 +268,28 @@ namespace mrs_lib
 
 void Prism::accept(Visitor& visitor) {
   visitor.visit(this);
+}
+
+Point2d Prism::getCenter(){
+  Point2d res;
+  boost::geometry::centroid(polygon_, res);
+  return res;
+}
+
+double Prism::getMaxZ(){
+  return max_z_;
+}
+
+double Prism::getMinZ(){
+  return min_z_;
+}
+
+Polygon Prism::getPolygon(){
+  return polygon_;
+}
+
+unsigned int Prism::getVerticesNum(){
+  return polygon_.outer().size() - 1;
 }
 
 } // namespace mrs_lib

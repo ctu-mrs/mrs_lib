@@ -34,36 +34,44 @@ public:
 
   ~BoundsControl();
 
-  void update();
-  void cleanup();
+  void update() override;
+  void cleanup() override;
 
 private:
+  // Tools for convenience 
   void init();
   void addBoundIntMarker(bool is_upper);
   visualization_msgs::Marker makeBox(visualization_msgs::InteractiveMarker &msg);
+
+  // Markers' callbacks
   void boundMoveCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
   void mouseDownCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
-  void mouseUpCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
-  void deleteCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
+  void mouseUpCallback( [[maybe_unused]] const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
+  void deleteCallback( [[maybe_unused]] const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
 
   // It is required for generating server id's, 
   // because their id's must be unique on topic 
   static int id_generator;
-  const int id_;
-  const int obstacle_id_ = 0;
+  const int  obstacle_id_ = 0;
+  const int  id_;
 
-  Prism* prism_;
-  SafetyZone* safety_zone_ = nullptr;
-  std::string frame_id_;
+  // Attributes received in constructor
+  SafetyZone*     safety_zone_ = nullptr;
+  Prism*          prism_;
+  std::string     frame_id_;
   ros::NodeHandle nh_;
 
+  // Communication with RVIZ
   interactive_markers::InteractiveMarkerServer* server_ = nullptr;
   interactive_markers::MenuHandler*             menu_handler_ = nullptr;
+
+  // Distinguishin features of 2 markers
   std::string upper_name_;
   std::string lower_name_;
   
-  geometry_msgs::Point      last_position_;
-  bool                      is_last_valid = false;
+  // Required for moving the prism
+  geometry_msgs::Point last_position_;
+  bool                 is_last_valid = false;
 }; // class BoundsControl
 } // namespace mrs_lib
 

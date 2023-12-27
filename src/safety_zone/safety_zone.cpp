@@ -11,7 +11,7 @@ SafetyZone::SafetyZone(Prism outer_boarder) : outer_border_(outer_boarder){
 }
 
 SafetyZone::SafetyZone(Prism outer_boarder, std::vector<Prism*>& obstacles) : outer_border_(outer_boarder){
-  for(int i=0; i<obstacles.size(); i++) {
+  for(size_t i=0; i<obstacles.size(); i++) {
     obstacles_.insert({next_obstacle_id, obstacles[i]});
     next_obstacle_id ++;
   }
@@ -118,4 +118,31 @@ void SafetyZone::accept(Visitor& visitor) {
     entry.second->accept(visitor);
   }
 }
+
+Prism* SafetyZone::getBorder() {
+  return &outer_border_;
+}
+
+Prism* SafetyZone::getObstacle(int index) {
+  return obstacles_.at(index);
+}
+
+std::map<int, Prism*>::iterator SafetyZone::getObstaclesBegin(){
+  return obstacles_.begin();
+}
+
+std::map<int, Prism*>::iterator SafetyZone::getObstaclesEnd(){
+  return obstacles_.end();
+}
+
+int SafetyZone::addObstacle(Prism* obstacle){
+  obstacles_.insert({++next_obstacle_id, obstacle});
+  return next_obstacle_id;
+}
+
+void SafetyZone::deleteObstacle(int id){
+  delete obstacles_.at(id);
+  obstacles_.erase(id);
+}
+
 }  // namespace mrs_lib

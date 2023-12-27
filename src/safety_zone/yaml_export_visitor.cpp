@@ -42,7 +42,7 @@ YamlExportVisitor::YamlExportVisitor(std::string prefix, std::string source_fram
   obstacle_points_x_ = ss.str();
 
   obstacle_points_y_ = "      ";
-  vertex_count_ = "    cols: [";
+  vertex_count_ =   "    cols: [";
   obstacle_max_z_ = "    max_z: [";
   obstacle_min_z_ = "    min_z: [";
 }
@@ -60,7 +60,7 @@ void YamlExportVisitor::visit(SafetyZone* safety_zone) {
 
   auto polygon = safety_zone->getBorder()->getPolygon().outer();
 
-  for(int i=0; i<polygon.size()-1; i++) {
+  for(size_t i=0; i<polygon.size()-1; i++) {
     gm::Point point;
     point.x = polygon[i].get<0>();
     point.y = polygon[i].get<1>();
@@ -112,7 +112,7 @@ void YamlExportVisitor::visit(Prism* obstacle) {
   ss1 << std::setprecision(6) << std::fixed;
   
   auto polygon = obstacle->getPolygon().outer();
-  for(int i=0; i<polygon.size() - 1; i++) {gm::Point point;
+  for(size_t i=0; i<polygon.size() - 1; i++) {gm::Point point;
     point.x = polygon[i].get<0>();
     point.y = polygon[i].get<1>();
     point.z = 0;

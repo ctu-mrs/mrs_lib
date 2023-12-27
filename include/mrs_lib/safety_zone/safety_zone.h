@@ -12,7 +12,6 @@ namespace mrs_lib
 {
 class SafetyZone {
 public:
-  // TODO: add constructor from parameters or smth like this
   SafetyZone(Prism outer_border);
 
   // Cleaning the obstacles' memory is SafetyZone's responsibility
@@ -39,31 +38,17 @@ public:
   // 2d version of isPathValid(const Point3d start, const Point3d end), i.e. ignores max_z and min_z of all prisms
   bool isPathValid(const Point2d start, const Point2d end);
 
-  Prism* getBorder() {
-    return &outer_border_;
-  }
+  Prism* getBorder();
 
-  Prism* getObstacle(int index) {
-    return obstacles_.at(index);
-  }
+  Prism* getObstacle(int index);
 
-  std::map<int, Prism*>::iterator getObstaclesBegin(){
-    return obstacles_.begin();
-  }
+  std::map<int, Prism*>::iterator getObstaclesBegin();
 
-  std::map<int, Prism*>::iterator getObstaclesEnd(){
-    return obstacles_.end();
-  }
+  std::map<int, Prism*>::iterator getObstaclesEnd();
 
-  int addObstacle(Prism* obstacle){
-    obstacles_.insert({++next_obstacle_id, obstacle});
-    return next_obstacle_id;
-  }
+  int addObstacle(Prism* obstacle);
 
-  void deleteObstacle(int id){
-    delete obstacles_.at(id);
-    obstacles_.erase(id);
-  }
+  void deleteObstacle(int id);
 
   // Helper method for text representation
   void accept(Visitor& visitor); 
@@ -72,7 +57,9 @@ private:
   Prism outer_border_;
   std::map<int, Prism*> obstacles_;
   int next_obstacle_id = 0;
-};
-}  // namespace mrs_lib
+
+}; // class SafetyZone
+
+} // namespace mrs_lib
 
 #endif  // MRS_LIB_SAFETYZONE_H

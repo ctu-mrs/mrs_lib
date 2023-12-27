@@ -19,7 +19,6 @@ void basic_validation(){
     Point2d point2 = Point2d{0, 10};
     Point2d point3 = Point2d{10, 10};
     Point2d point4 = Point2d{10, 0};
-    Point2d point5 = Point2d{0, 0};
     std::vector<Point2d> poly = std::vector<Point2d>{point1, point2, point3, point4};
 
     Prism outer_boarder = Prism(poly, 0.0, 15);
@@ -173,7 +172,6 @@ void point_valid_after_vertex_change() {
     Point2d point2 = Point2d{0, 10};
     Point2d point3 = Point2d{10, 10};
     Point2d point4 = Point2d{10, 0};
-    Point2d point5 = Point2d{0, 0};
     std::vector<Point2d> poly = std::vector<Point2d>{point1, point2, point3, point4};
 
     Prism outer_boarder = Prism(poly, 0.0, 15);
@@ -243,7 +241,6 @@ void show_markers(ros::NodeHandle nh) {
     Point2d point2 = Point2d{0, 10};
     Point2d point3 = Point2d{10, 10};
     Point2d point4 = Point2d{10, 0};
-    Point2d point5 = Point2d{0, 0};
     std::vector<Point2d> poly = std::vector<Point2d>{point1, point2, point3, point4};
 
     Prism outer_boarder = Prism(poly, 0.0, 15);
@@ -271,7 +268,7 @@ void load_params(ros::NodeHandle nh){
 
     std::cout << (success ? "success" : "not success =(" )<< std::endl;
 
-    for(size_t i=0; i<value.size(); i++){
+    for(int i=0; i<value.size(); i++){
         std::cout << value[i].begin()->first << std::endl;
     }
 }
@@ -281,7 +278,6 @@ void show_safety_zone(ros::NodeHandle nh) {
     Point2d point2 = Point2d{0, 10};
     Point2d point3 = Point2d{10, 10};
     Point2d point4 = Point2d{10, 0};
-    Point2d point5 = Point2d{0, 0};
     std::vector<Point2d> poly = std::vector<Point2d>{point1, point2, point3, point4};
 
     Prism outer_boarder = Prism(poly, 0.0, 15);
