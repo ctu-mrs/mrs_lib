@@ -19,7 +19,7 @@ namespace mrs_lib
 // The visualization cannot be updated regularly, so lines disappear as camera moves "behind" them
 // (view https://github.com/ros-visualization/rviz/issues/1287), therefore StaticEdgesVisualization
 // class has been implemented.
-class IntEdgesVisualization : public Subscriber{
+class IntEdgesVisualization final : public Subscriber{
 public:
   // Represents the prism
   IntEdgesVisualization(Prism* prism, std::string frame_id, ros::NodeHandle nh);

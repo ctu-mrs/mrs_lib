@@ -18,7 +18,7 @@ namespace mrs_lib
 // one for maximum height of the prism and the other for minimum height.
 // Both markers can be used for moving entire prism and deleting it (view constructors' docstring)
 // Markers also allow changing correspondings heights
-class BoundsControl : public Subscriber{
+class BoundsControl final : public Subscriber{
 public:
 
   // Created interactive markers do not have deleting option

@@ -19,7 +19,7 @@ namespace mrs_lib
 // one for maximum height of the prism and the other for minimum height.
 // The markers can be used to change X and Y coordinates of corresponding vertex.
 // Provides the option to delete the corresponding vertex
-class VertexControl : public Subscriber{
+class VertexControl final : public Subscriber{
 
 public:
   // Represents the prism

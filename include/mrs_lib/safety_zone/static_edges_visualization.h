@@ -11,7 +11,7 @@
 
 namespace mrs_lib 
 {
-class StaticEdgesVisualization : public Subscriber{
+class StaticEdgesVisualization final : public Subscriber{
 
 public:
   // Represents the prism

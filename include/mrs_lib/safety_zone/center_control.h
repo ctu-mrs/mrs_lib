@@ -22,7 +22,7 @@ namespace mrs_lib
 // Marker provides moving entire prism along XY and Z axis, rotating it and 
 // deleting it (view constructors' docstring)
 // Markers also allow changing correspondings heights
-class CenterControl : public Subscriber{
+class CenterControl final : public Subscriber{
 public:
 
   // Created interactive marker does not have deleting option
