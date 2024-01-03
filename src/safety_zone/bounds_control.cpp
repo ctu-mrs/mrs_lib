@@ -1,6 +1,8 @@
 #include "mrs_lib/safety_zone/bounds_control.h"
 
 #include <tf/tf.h>
+#include <cmath>
+#include <sstream> 
 
 namespace vm = visualization_msgs;
 namespace gm = geometry_msgs;
@@ -67,8 +69,18 @@ void BoundsControl::update(){
   pose.position.y = prism_->getCenter().get<1>();
   pose.position.z = prism_->getMaxZ();
 
+  // Upper marker
+  vm::InteractiveMarker cur_marker;
+  server_->get(upper_name_, cur_marker);
+  cur_marker.controls[2].markers[0] = makeText(pose.position.z);
+  server_->insert(cur_marker);
   server_->setPose(upper_name_, pose);
+
+  // Lower marker
   pose.position.z = prism_->getMinZ();
+  server_->get(lower_name_, cur_marker);
+  cur_marker.controls[2].markers[0] = makeText(pose.position.z);
+  server_->insert(cur_marker);
   server_->setPose(lower_name_, pose);
 
   server_->applyChanges();
@@ -95,6 +107,31 @@ vm::Marker BoundsControl::makeBox(vm::InteractiveMarker &msg){
   return marker;
 }
 
+vm::Marker BoundsControl::makeText(double value){
+  vm::Marker marker;
+
+  marker.type = vm::Marker::TEXT_VIEW_FACING;
+  marker.scale.x = 0.45;
+  marker.scale.y = 0.45;
+  marker.scale.z = 0.45;
+  marker.color.r = 0.0;
+  marker.color.g = 0.0;
+  marker.color.b = 0.0;
+  marker.color.a = 1.0;
+  marker.pose.position.x = 0;
+  marker.pose.position.y = 0;
+  marker.pose.position.z = 3;
+
+  std::stringstream ss;
+  ss << std::setprecision(2) << std::fixed
+     << frame_id_ << ":" << std::endl
+     << "Z: " << value;
+
+  marker.text = ss.str();
+
+  return marker;
+}
+
 void BoundsControl::addBoundIntMarker(bool is_upper){
   Point2d center = prism_->getCenter();
   // Interactive marker
@@ -103,18 +140,16 @@ void BoundsControl::addBoundIntMarker(bool is_upper){
   int_marker.header.stamp.fromNSec(0);
   int_marker.pose.position.x = center.get<0>();
   int_marker.pose.position.y = center.get<1>();
-  int_marker.scale = 1; 
+  int_marker.scale = 3; 
 
   if(is_upper){
     int_marker.pose.position.z = prism_->getMaxZ();
     upper_name_ = std::to_string(id_) + "_upper";
     int_marker.name = upper_name_;
-    int_marker.description = "Upper bound control";
   } else {
     int_marker.pose.position.z = prism_->getMinZ();
     lower_name_ = std::to_string(id_) + "_lower";
     int_marker.name = lower_name_;
-    int_marker.description = "Lower bound control";
   }
 
   // Control
@@ -131,6 +166,13 @@ void BoundsControl::addBoundIntMarker(bool is_upper){
   control.interaction_mode = vm::InteractiveMarkerControl::MOVE_PLANE;
   control.markers.push_back(makeBox(int_marker));
   control.always_visible = true;
+  int_marker.controls.push_back(control);
+
+  // Text
+  control.interaction_mode = vm::InteractiveMarkerControl::NONE;
+  control.orientation_mode = vm::InteractiveMarkerControl::VIEW_FACING;
+  control.markers.clear();
+  control.markers.push_back(makeText(int_marker.pose.position.z));
   int_marker.controls.push_back(control);
 
   // Send to server
@@ -151,6 +193,7 @@ void BoundsControl::addBoundIntMarker(bool is_upper){
 
 void BoundsControl::boundMoveCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
   double z = feedback->pose.position.z;
+  z = round(z*5) / 5;
   if(feedback->marker_name == upper_name_){
     prism_->setMaxZ(z);
   }else if(feedback->marker_name == lower_name_){

@@ -107,9 +107,8 @@ void CenterControl::addIntMarker(){
   int_marker.pose.position.x = center.get<0>();
   int_marker.pose.position.y = center.get<1>();
   int_marker.pose.position.z = (prism_->getMaxZ() + prism_->getMinZ()) / 2;
-  int_marker.scale = 1; 
+  int_marker.scale = 3; 
   int_marker.name = std::to_string(id);
-  int_marker.description = "Center of polygon";
 
   // Control
   vm::InteractiveMarkerControl control;

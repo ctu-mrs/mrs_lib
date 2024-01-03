@@ -115,9 +115,9 @@ vm::Marker VertexControl::makeBox(vm::InteractiveMarker &msg){
   vm::Marker marker;
 
   marker.type = vm::Marker::CUBE;
-  marker.scale.x = msg.scale * 0.45;
-  marker.scale.y = msg.scale * 0.45;
-  marker.scale.z = msg.scale * 0.45;
+  marker.scale.x = msg.scale * 0.65;
+  marker.scale.y = msg.scale * 0.65;
+  marker.scale.z = msg.scale * 0.65;
   marker.color.r = 0.5;
   marker.color.g = 0.5;
   marker.color.b = 0.5;
@@ -135,9 +135,8 @@ void VertexControl::addVertexIntMarker(mrs_lib::Point2d position, const double u
   upper_int_marker.pose.position.x = position.get<0>();
   upper_int_marker.pose.position.y = position.get<1>();
   upper_int_marker.pose.position.z = upper;
-  upper_int_marker.scale = 1; 
+  upper_int_marker.scale = 2; 
   upper_int_marker.name = std::to_string(id_) + "_upper_" + std::to_string(vertex_id_);// Each marker name must be unique
-  upper_int_marker.description = "Vertex control\n(2D Move)";
 
   // Control
   vm::InteractiveMarkerControl upper_control;
@@ -171,9 +170,8 @@ void VertexControl::addVertexIntMarker(mrs_lib::Point2d position, const double u
   lower_int_marker.pose.position.x = position.get<0>();
   lower_int_marker.pose.position.y = position.get<1>();
   lower_int_marker.pose.position.z = lower;
-  lower_int_marker.scale = 1; 
+  lower_int_marker.scale = 2; 
   lower_int_marker.name = std::to_string(id_) + "_lower_" + std::to_string(vertex_id_);// Each marker name must be unique
-  lower_int_marker.description = "Vertex control\n(2D Move)";
 
   // Control
   vm::InteractiveMarkerControl lower_control;

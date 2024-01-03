@@ -42,6 +42,7 @@ private:
   void init();
   void addBoundIntMarker(bool is_upper);
   visualization_msgs::Marker makeBox(visualization_msgs::InteractiveMarker &msg);
+  visualization_msgs::Marker makeText(double value);
 
   // Markers' callbacks
   void boundMoveCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
