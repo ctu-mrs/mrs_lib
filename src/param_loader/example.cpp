@@ -29,7 +29,7 @@ int main(int argc, char **argv)
   /* Set up ROS. */
   const std::string node_name("param_loader_example");
   ros::init(argc, argv, node_name);
-  ros::NodeHandle nh;
+  ros::NodeHandle nh("~");
 
   /* Set up some parameters to be loaded by the example. In normal usage,
    * you don't have to do this. Parameters are loaded from the rosparam
@@ -37,6 +37,7 @@ int main(int argc, char **argv)
   ROS_INFO_STREAM("[" << node_name << "]: pushing testing parameters to the rosparam server");
   nh.setParam("test_param_double", std::numeric_limits<double>::quiet_NaN());
   nh.setParam("test_param_vector", std::vector<int>({6, 6, 6}));
+  /* nh.setParam("test_param_matrix_3x3", std::vector<int>({0, 1, 2, 3, 4, 5, 6, 7, 8})); */
 
   /* Initialize the param loader with a NodeHandle and optionally the name of this node. */
   ROS_INFO_STREAM("[" << node_name <<" ]: loading parameters using ParamLoader");
@@ -57,6 +58,10 @@ int main(int argc, char **argv)
   /* Load a compulsory parameter - without a default value. This will fail in this
    * case, unless you manually push the parameter to the server. */ 
   const auto test_param_bool = pl.loadParam2<bool>("test_param_bool");
+
+  Eigen::MatrixXd matxd;
+  pl.loadMatrixDynamic("test_param_matrix_3x3", matxd, -1, 3);
+  ROS_INFO_STREAM("[" << node_name << "]: Loaded matrix: " << matxd);
 
   /* So far, all the parameters were loaded from the ROS parameter server.
    * These must be loaded to the server using the param or rosparam commands
