@@ -375,7 +375,9 @@ target_link_libraries(cyclic_example
 ## |                           Testing                          |
 ## --------------------------------------------------------------
 
-if(CATKIN_ENABLE_TESTING)
+if(CATKIN_ENABLE_TESTING AND MRS_ENABLE_TESTING)
+
+  message(WARNING "Testing enabled.")
 
   add_subdirectory(test)
 

@@ -1,6 +1,16 @@
 <launch>
 
-  <test pkg="mrs_lib" type="MedianFilterTest" test-name="median_filter_test" time-limit="10.0">
+  <arg name="this_path" default="$(dirname)" />
+
+    <!-- automatically deduce the test name -->
+  <arg name="test_name" default="$(eval arg('this_path').split('/')[-1])" />
+
+    <!-- automatically deduce the package name -->
+  <arg name="import_eval" default="eval('_' + '_import_' + '_')"/>
+  <arg name="package_eval" default="eval(arg('import_eval') + '(\'rospkg\')').get_package_name(arg('this_path'))" />
+  <arg name="package" default="$(eval eval(arg('package_eval')))" />
+
+  <test pkg="$(arg package)" type="test_$(arg test_name)" test-name="$(arg test_name)" time-limit="60.0">
   </test>
 
 </launch>
