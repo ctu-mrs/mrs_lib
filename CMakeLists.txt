@@ -146,6 +146,13 @@ target_link_libraries(lkf_example
   ${Eigen_LIBRARIES}
   )
 
+add_executable(dkf_example src/dkf/example.cpp)
+target_link_libraries(dkf_example
+  MrsLib_Geometry
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
 # # Slows the compilation of the library waaaay too much - just generate the conversions on-demand
 # # instead of pre-generating all combinations.
 # add_library(MrsLib_VectorConverter src/vector_converter/vector_converter.cpp)
