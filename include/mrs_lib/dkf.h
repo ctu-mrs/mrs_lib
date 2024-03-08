@@ -89,18 +89,23 @@ namespace mrs_lib
     virtual std::enable_if_t<(n > 3), statecov_t> correctLine(const statecov_t& sc, const pt3_t& line_origin, const vec3_t& line_direction, const double line_variance) const
     {
       assert(line_direction.norm() > 0.0);
-      const vec3_t zunit {0.0, 0.0, 1.0};
-      // rot is a rotation matrix, transforming from F to F'
-      const mat3_t rot = mrs_lib::geometry::rotationBetween(line_direction, zunit);
-      /* const mat3_t rotT = rot.transpose(); */
 
-      H_t H = Eigen::Matrix<double, 2, n>::Zero();
-      H.block(2, 2, 0, 0) = rot.block<2, 2>(0, 0);
+      using M_t = Eigen::Matrix<double, 3, n>;
+      using W_t = Eigen::Matrix<double, 3, 1>;
+      using N_t = Eigen::Matrix<double, 3, 2>;
+      using o_t = Eigen::Matrix<double, 3, 1>;
+      using R_t = Eigen::Matrix<double, 2, 2>;
 
-      const pt3_t oprime = rot*line_origin;
-      const pt2_t z = oprime.head<2>();
+      const M_t M = M_t::Identity();
+      const W_t W = line_direction;
+      const o_t o = line_origin;
 
-      const mat2_t R = line_variance*mat2_t::Identity();
+      const Eigen::FullPivLU<W_t> lu(W);
+      const N_t N = lu.kernel();
+      const z_t z = N.transpose() * o;
+      const H_t H = N.transpose() * M;
+      const R_t R = line_variance * N.transpose() * N;
+
       return this->correction_impl(sc, z, R, H);
     };
     //}
