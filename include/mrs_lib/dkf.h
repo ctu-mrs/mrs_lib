@@ -100,8 +100,14 @@ namespace mrs_lib
       const W_t W = line_direction;
       const o_t o = line_origin;
 
-      const Eigen::FullPivLU<W_t> lu(W);
-      const N_t N = lu.kernel();
+      // doesn't work - the kernel is always zero for some reason
+      /* const Eigen::FullPivLU<W_t> lu(W); */
+      /* const N_t N = lu.kernel(); */
+      // works for a line measurement
+      const mat3_t rot = mrs_lib::geometry::rotationBetween(W_t::UnitX(), W);
+      // the first column should have the same direction as W - we don't care about it,
+      // take the second and third column vectors, those are the null space of W
+      const N_t N = rot.block<3, 2>(0, 1);
       const z_t z = N.transpose() * o;
       const H_t H = N.transpose() * M;
       const R_t R = line_variance * N.transpose() * N;

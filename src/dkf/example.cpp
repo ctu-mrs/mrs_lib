@@ -87,13 +87,14 @@ obs_t observation(const x_t& x, const double meas_std)
 {
   // the first three states are the x, y, z coordinates of the target's position
   const pt3_t target = x.head<3>();
-  const vec3_t meas_noise = normal_randmat<3>(meas_std*mat3_t::Identity());
+  const vec3_t meas_noise = normal_randmat<3>(meas_std*meas_std*mat3_t::Identity());
 
   obs_t ret;
   // generate a random observation point
-  ret.line_origin = 100.0*pt3_t::Random();
-  ret.line_direction = (target - ret.line_origin).normalized() + meas_noise;
-  ret.line_variance = meas_std;
+  const pt3_t observer = target + 100.0*pt3_t::Random();
+  ret.line_direction = (target - observer).normalized();
+  ret.line_origin = observer + meas_noise;
+  ret.line_variance = meas_std*meas_std;
   return ret;
 }
 
@@ -106,7 +107,7 @@ int main()
 
   // Initialize the state transition matrix
   A = A_t::Identity();
-  A.block<3, 3>(3, 3) = dt*mat3_t::Identity();
+  A.block<3, 3>(0, 3) = dt*mat3_t::Identity();
 
   const mat3_t Q_a = sigma_a*sigma_a*mat3_t::Identity();
   Eigen::Matrix<double, 6, 3> B_Q;
@@ -116,9 +117,11 @@ int main()
   const Q_t Q = B_Q * Q_a * B_Q.transpose();
 
   // Generate initial state and covariance
-  const x_t x0 = 100.0*x_t::Random();
+  x_t x_gt = 100.0*x_t::Random();
+
   const P_t P_tmp = P_t::Random();
   const P_t P0 = 10.0*P_tmp*P_tmp.transpose();
+  const x_t x0 = x_gt + normal_randmat(P0);
   const statecov_t sc0({x0, P0});
 
   // Instantiate the KF itself
@@ -126,12 +129,16 @@ int main()
 
   const int n_its = 1e4;
   // Prepare the ground-truth state and the estimated state and covariance
-  x_t x_gt = sc0.x;
   statecov_t sc_est = sc0;
+
+  std::cout << "A: " << A << "\n";
+  std::cout << "Q: " << Q << "\n";
+  std::cout << "x0_gt: " << x_gt << "\n";
+  std::cout << "x0_est: " << sc_est.x << "\n";
 
   for (int it = 0; it < n_its; it++)
   {
-    std::cout << "step: " << it << std::endl;
+    /* std::cout << "step: " << it << std::endl; */
 
     // Generate a new input vector
     const u_t u = u_t::Random();
@@ -158,12 +165,16 @@ int main()
       ROS_ERROR("KF failed: %s", e.what());
     }
 
-    const auto error = (x_gt-sc_est.x).norm();
-    std::cout << "Current KF estimation error is: " << error << std::endl;
-    std::cout << "Current ground-truth state is:  " << x_gt.transpose() << std::endl;
-    std::cout << "Current KF estimated state is: " << sc_est.x.transpose() << std::endl;
-    std::cout << "Current KF state covariance is:" << std::endl << sc_est.P << std::endl;
   }
+
+  const x_t error = x_gt - sc_est.x;
+  const double RMSE = (error).norm();
+  const double maha = std::sqrt( error.transpose() * sc_est.P.inverse() * error );
+  std::cout << "Current KF estimation error is: " << RMSE << std::endl;
+  std::cout << "Current KF mahalanobis error is: " << maha << std::endl;
+  std::cout << "Current ground-truth state is:  " << x_gt.transpose() << std::endl;
+  std::cout << "Current KF estimated state is: " << sc_est.x.transpose() << std::endl;
+  std::cout << "Current KF state covariance is:" << std::endl << sc_est.P << std::endl;
 
   return 0;
 }
