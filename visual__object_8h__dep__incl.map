@@ -1,0 +1,4 @@
+<map id="include/mrs_lib/visual_object.h" name="include/mrs_lib/visual_object.h">
+<area shape="rect" id="node1" title="Object abstraction for the Batch Visualizer." alt="" coords="5,5,169,47"/>
+<area shape="rect" id="node2" href="$batch__visualizer_8h.html" title="For convenient and computationally lightweight drawing of geometry in RVIZ using marker arrays." alt="" coords="7,95,168,136"/>
+</map>

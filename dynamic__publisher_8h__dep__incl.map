@@ -1,0 +1,4 @@
+<map id="include/mrs_lib/dynamic_publisher.h" name="include/mrs_lib/dynamic_publisher.h">
+<area shape="rect" id="node1" title="Defines DynamicPublisher for easy debug publishing of ROS messages." alt="" coords="5,5,187,47"/>
+<area shape="rect" id="node2" href="$dynamic__publisher_2example_8cpp.html" title="Example file for the DynamicPublisher convenience class." alt="" coords="12,95,180,136"/>
+</map>
