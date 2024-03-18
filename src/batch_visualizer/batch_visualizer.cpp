@@ -157,6 +157,14 @@ void BatchVisualizer::addCone(const mrs_lib::geometry::Cone &cone, const double 
 }
 //}
 
+/* addPath //{ */
+void BatchVisualizer::addPath(const mrs_msgs::Path &p, const double r, const double g, const double b, const double a, const bool filled,
+                              const ros::Duration &timeout) {
+  VisualObject obj = VisualObject(p, r, g, b, a, timeout, filled, uuid++);
+  visual_objects.insert(obj);
+}
+//}
+
 /* addTrajectory //{ */
 void BatchVisualizer::addTrajectory(const mrs_msgs::TrajectoryReference &traj, const double r, const double g, const double b, const double a,
                                     const bool filled, const ros::Duration &timeout) {

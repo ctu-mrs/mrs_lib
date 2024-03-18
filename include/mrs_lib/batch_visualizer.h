@@ -10,6 +10,7 @@
 #include <ros/ros.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <mrs_lib/geometry/shapes.h>
+#include <mrs_msgs/Path.h>
 #include <mrs_msgs/TrajectoryReference.h>
 #include <mrs_lib/visual_object.h>
 #include <set>
@@ -158,6 +159,20 @@ public:
                const bool filled = true, const bool capped = true, const int sides = DEFAULT_ELLIPSE_POINTS, const ros::Duration &timeout = ros::Duration(0));
 
   /**
+   * @brief add a path to the buffer
+   *
+   * @param p path to be added
+   * @param r red color in range <0,1>
+   * @param g green color in range <0,1>
+   * @param b blue color in range <0,1>
+   * @param a alpha in range <0,1> (0 is fully transparent)
+   * @param filled bool to set fill. True = continuous line, False = only visualize points
+   * @param timeout time in seconds after which the object should be removed from buffer
+   */
+  void addPath(const mrs_msgs::Path &p, const double r = 0.3, const double g = 1.0, const double b = 0.3, const double a = 1.0, const bool filled = true,
+               const ros::Duration &timeout = ros::Duration(0));
+
+  /**
    * @brief add a trajectory to the buffer
    *
    * @param traj trajectory reference to be added
@@ -226,10 +241,10 @@ private:
   ros::Publisher                  visual_pub;
   visualization_msgs::MarkerArray msg;
 
-  std::string parent_frame; // coordinate frame id
+  std::string parent_frame;  // coordinate frame id
   std::string marker_topic_name;
 
-  std::set<VisualObject> visual_objects; // buffer for objects to be visualized
+  std::set<VisualObject> visual_objects;  // buffer for objects to be visualized
 
   visualization_msgs::Marker points_marker;
   visualization_msgs::Marker lines_marker;
@@ -241,7 +256,7 @@ private:
   double points_scale = 0.02;
   double lines_scale  = 0.04;
 
-  unsigned long uuid = 0; // create unique ID for items in object buffer
+  unsigned long uuid = 0;  // create unique ID for items in object buffer
 };
 
 }  // namespace mrs_lib

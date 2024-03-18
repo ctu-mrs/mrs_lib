@@ -11,6 +11,7 @@
 #include <std_msgs/ColorRGBA.h>
 #include <geometry_msgs/Point.h>
 #include <mrs_lib/geometry/shapes.h>
+#include <mrs_msgs/Path.h>
 #include <mrs_msgs/TrajectoryReference.h>
 
 #define DEFAULT_ELLIPSE_POINTS 64
@@ -52,6 +53,9 @@ public:
 
   VisualObject(const mrs_lib::geometry::Cone& cone, const double r, const double g, const double b, const double a, const ros::Duration& timeout,
                const bool filled, const bool capped, const unsigned long& id, const int num_sides = DEFAULT_ELLIPSE_POINTS);
+
+  VisualObject(const mrs_msgs::Path& p, const double r, const double g, const double b, const double a, const ros::Duration& timeout, const bool filled,
+               const unsigned long& id);
 
   VisualObject(const mrs_msgs::TrajectoryReference& traj, const double r, const double g, const double b, const double a, const ros::Duration& timeout,
                const bool filled, const unsigned long& id);
