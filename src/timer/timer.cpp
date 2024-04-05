@@ -170,6 +170,8 @@ void ThreadTimer::Impl::setPeriod(const ros::Duration& duration, [[maybe_unused]
 }
 
 void ThreadTimer::Impl::setCallback(const std::function<void(const ros::TimerEvent&)>& callback){
+  std::scoped_lock lock(mutex_state_);
+
   callback_ = callback;
 }
 
