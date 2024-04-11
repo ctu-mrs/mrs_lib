@@ -37,6 +37,7 @@ public:
   void start();
   void stop();
   void setPeriod(const ros::Duration& duration, const bool reset = true);
+  void setCallback(const std::function<void(const ros::TimerEvent&)>& callback);
 
   friend class ThreadTimer;
 

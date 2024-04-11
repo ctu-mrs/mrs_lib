@@ -44,6 +44,15 @@ namespace mrs_lib
     virtual void setPeriod(const ros::Duration& duration, const bool reset = true) = 0;
 
     /**
+     * @brief change the callback method 
+     *
+     * Usable e.g. for running thread with a specific parameter if you bind it using std::bind
+     *
+     * @param callback          callback method to be called.
+     */
+    virtual void setCallback(const std::function<void(const ros::TimerEvent&)>& callback) = 0;
+
+    /**
      * @brief returns true if callbacks should be called
      *
      * @return true if timer is running
@@ -208,6 +217,15 @@ namespace mrs_lib
      * @param reset    ignored in this implementation.
      */
     virtual void setPeriod(const ros::Duration& duration, const bool reset = true) override;
+    
+    /**
+     * @brief change the callback method
+     *
+     * Usable e.g. for running thread with a specific parameter if you bind it using std::bind
+     *
+     * @param callback          callback method to be called.
+     */
+    virtual void setCallback(const std::function<void(const ros::TimerEvent&)>& callback) override;
 
     /**
      * @brief returns true if callbacks should be called

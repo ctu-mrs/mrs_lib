@@ -93,6 +93,16 @@ void ThreadTimer::setPeriod(const ros::Duration& duration, [[maybe_unused]] cons
 
 //}
 
+/* ThreadTimer::setCallback() //{ */
+
+void ThreadTimer::setCallback(const std::function<void(const ros::TimerEvent&)>& callback) {
+  if (impl_) {
+    impl_->setCallback(callback);
+  }
+}
+
+//}
+
 /* ThreadTimer::running() //{ */
 
 bool ThreadTimer::running()
@@ -157,6 +167,12 @@ void ThreadTimer::Impl::setPeriod(const ros::Duration& duration, [[maybe_unused]
   // gracefully handle the special case
   if (duration == ros::Duration(0))
     this->oneshot_  = true;
+}
+
+void ThreadTimer::Impl::setCallback(const std::function<void(const ros::TimerEvent&)>& callback){
+  std::scoped_lock lock(mutex_state_);
+
+  callback_ = callback;
 }
 
 //}
