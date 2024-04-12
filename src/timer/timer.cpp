@@ -43,6 +43,15 @@ void ROSTimer::setPeriod(const ros::Duration& duration, const bool reset) {
 }
 
 //}
+//
+/* setCallback() //{ */
+
+void ROSTimer::setCallback([[maybe_unused]] const std::function<void(const ros::TimerEvent&)>& callback) {
+
+  ROS_ERROR("[mrs_lib::ROSTimer]: setCallback(...) is not implemented for ROSTimer! Check [mrs_lib/src/timer/timer.cpp].");
+}
+
+//}
 
 /* running() //{ */
 
