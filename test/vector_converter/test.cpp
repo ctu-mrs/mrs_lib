@@ -2,7 +2,7 @@
 #pragma GCC diagnostic ignored "-Wnarrowing"
 #include <mrs_lib/vector_converter.h>
 #pragma GCC diagnostic pop
-#include <impl/vector_converter_types.h>
+#include <mrs_lib/impl/vector_converter_types.h>
 #include <iostream>
 
 #include <gtest/gtest.h>

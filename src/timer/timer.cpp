@@ -43,6 +43,15 @@ void ROSTimer::setPeriod(const ros::Duration& duration, const bool reset) {
 }
 
 //}
+//
+/* setCallback() //{ */
+
+void ROSTimer::setCallback([[maybe_unused]] const std::function<void(const ros::TimerEvent&)>& callback) {
+
+  ROS_ERROR("[mrs_lib::ROSTimer]: setCallback(...) is not implemented for ROSTimer! Check [mrs_lib/src/timer/timer.cpp].");
+}
+
+//}
 
 /* running() //{ */
 
@@ -88,6 +97,16 @@ void ThreadTimer::setPeriod(const ros::Duration& duration, [[maybe_unused]] cons
 
   if (impl_) {
     impl_->setPeriod(duration, reset);
+  }
+}
+
+//}
+
+/* ThreadTimer::setCallback() //{ */
+
+void ThreadTimer::setCallback(const std::function<void(const ros::TimerEvent&)>& callback) {
+  if (impl_) {
+    impl_->setCallback(callback);
   }
 }
 
@@ -157,6 +176,12 @@ void ThreadTimer::Impl::setPeriod(const ros::Duration& duration, [[maybe_unused]
   // gracefully handle the special case
   if (duration == ros::Duration(0))
     this->oneshot_  = true;
+}
+
+void ThreadTimer::Impl::setCallback(const std::function<void(const ros::TimerEvent&)>& callback){
+  std::scoped_lock lock(mutex_state_);
+
+  callback_ = callback;
 }
 
 //}

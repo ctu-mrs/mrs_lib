@@ -250,6 +250,40 @@ VisualObject::VisualObject(const mrs_lib::geometry::Cone& cone, const double r, 
 }
 //}
 
+/* mrs_msgs::Path //{ */
+VisualObject::VisualObject(const mrs_msgs::Path& p, const double r, const double g, const double b, const double a, const ros::Duration& timeout,
+                           const bool filled, const unsigned long& id)
+    : id_(id) {
+  if (p.points.size() < 2) {
+    return;
+  }
+  if (filled) {
+    for (size_t i = 0; i < p.points.size() - 1; i++) {
+      Eigen::Vector3d p1, p2;
+      p1.x()   = p.points[i].position.x;
+      p1.y()   = p.points[i].position.y;
+      p1.z()   = p.points[i].position.z;
+      p2.x()   = p.points[i + 1].position.x;
+      p2.y()   = p.points[i + 1].position.y;
+      p2.z()   = p.points[i + 1].position.z;
+      auto ray = mrs_lib::geometry::Ray::twopointCast(p1, p2);
+      addRay(ray, r, g, b, a);
+    }
+  } else {
+    type_ = MarkerType::POINT;
+    for (size_t i = 0; i < p.points.size(); i++) {
+      points_.push_back(p.points[i].position);
+      colors_.push_back(generateColor(r, g, b, a));
+    }
+  }
+  if (timeout.toSec() <= 0) {
+    timeout_time_ = ros::Time(0);
+  } else {
+    timeout_time_ = ros::Time::now() + timeout;
+  }
+}
+//}
+
 /* mrs_msgs::TrajectoryReference //{ */
 VisualObject::VisualObject(const mrs_msgs::TrajectoryReference& traj, const double r, const double g, const double b, const double a,
                            const ros::Duration& timeout, const bool filled, const unsigned long& id)

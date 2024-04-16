@@ -23,11 +23,12 @@ namespace mrs_lib
   * \tparam n_measurements   number of measurements of the system (length of the \f$ \mathbf{z} \f$ vector).
   *
   */
-  class DKF : public LKF<3, -1, 2>
+  template <int n_states, int n_inputs>
+  class DKF : public LKF<n_states, n_inputs, -1>
   {
   public:
     /* DKF definitions (typedefs, constants etc) //{ */
-    using Base_class = LKF<n, m, p>;            /*!< \brief Base class of this class. */
+    using Base_class = LKF<n_states, n_inputs, -1>;            /*!< \brief Base class of this class. */
 
     static constexpr int n = Base_class::n;              /*!< \brief Length of the state vector of the system. */
     static constexpr int m = Base_class::m;              /*!< \brief Length of the input vector of the system. */
@@ -49,7 +50,9 @@ namespace mrs_lib
     using mat2_t = Eigen::Matrix<double, 2, 2>;
     using mat3_t = Eigen::Matrix<double, 3, 3>;
     using pt3_t = mrs_lib::geometry::vec3_t;
+    using pt2_t = mrs_lib::geometry::vec2_t;
     using vec3_t = mrs_lib::geometry::vec3_t;
+    //}
 
   public:
   /*!
@@ -69,7 +72,7 @@ namespace mrs_lib
     */
     DKF(const A_t& A, const B_t& B) : Base_class(A, B, {}) {};
 
-    /* correct() method //{ */
+    /* correctLine() method //{ */
   /*!
     * \brief Applies the correction (update, measurement, data) step of the Kalman filter.
     *
@@ -83,21 +86,33 @@ namespace mrs_lib
     * \param R           The measurement noise covariance matrix to be used for correction.
     * \return            The state and covariance after the correction update.
     */
-    virtual statecov_t correctLine(const statecov_t& sc, const pt3_t& line_origin, const vec3_t& line_direction, const double line_variance) const
+    virtual std::enable_if_t<(n > 3), statecov_t> correctLine(const statecov_t& sc, const pt3_t& line_origin, const vec3_t& line_direction, const double line_variance) const
     {
       assert(line_direction.norm() > 0.0);
-      const vec3_t zunit {0.0, 0.0, 1.0};
-      // rot is a rotation matrix, transforming from F to F'
-      const mat3_t rot = mrs_lib::geometry::rotationBetween(line_direction, zunit);
-      /* const mat3_t rotT = rot.transpose(); */
 
-      const H_t Hprime = rot.block<2, 2>(0, 0);
+      using M_t = Eigen::Matrix<double, 3, n>;
+      using W_t = Eigen::Matrix<double, 3, 1>;
+      using N_t = Eigen::Matrix<double, 3, 2>;
+      using o_t = Eigen::Matrix<double, 3, 1>;
+      using R_t = Eigen::Matrix<double, 2, 2>;
 
-      const pt3_t oprime = rot*line_origin;
-      const z_t z = oprime.block<2, 1>(0, 0);
+      const M_t M = M_t::Identity();
+      const W_t W = line_direction;
+      const o_t o = line_origin;
 
-      const R_t R = line_variance*R_t::Identity();
-      return correction_impl(sc, z, R, Hprime);
+      // doesn't work - the kernel is always zero for some reason
+      /* const Eigen::FullPivLU<W_t> lu(W); */
+      /* const N_t N = lu.kernel(); */
+      // works for a line measurement
+      const mat3_t rot = mrs_lib::geometry::rotationBetween(W_t::UnitX(), W);
+      // the first column should have the same direction as W - we don't care about it,
+      // take the second and third column vectors, those are the null space of W
+      const N_t N = rot.block<3, 2>(0, 1);
+      const z_t z = N.transpose() * o;
+      const H_t H = N.transpose() * M;
+      const R_t R = line_variance * N.transpose() * N;
+
+      return this->correction_impl(sc, z, R, H);
     };
     //}
   };
