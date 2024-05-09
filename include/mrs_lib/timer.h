@@ -9,8 +9,6 @@
 
 namespace mrs_lib
 {
-  bool breakable_sleep(const ros::Duration& dur, const std::atomic<bool>& continue_sleep);
-
   /**
    * @brief Common wrapper representing the functionality of the ros::Timer.
    *

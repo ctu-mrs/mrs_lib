@@ -24,17 +24,17 @@ struct obj_t
   bool null_cbk = false;
   bool cbk_not_running = false;
   std::atomic_bool cbk_running = false;
-  double max_dt_err_s = 0.0;
-  double avg_dt_err_s = 0.0;
+  ros::Duration max_dt_err = ros::Duration(0.0);
+  ros::Duration avg_dt_err = ros::Duration(0.0);
 
   // parameters
   bool check_dt_err = false;
   ros::Duration desired_dt;
-  double max_expected_dt_err_s;
+  ros::Duration max_expected_dt_err;
   mrs_lib::TimeoutManager::timeout_id_t timeout_id;
 
   obj_t(const ros::Duration& desired_dt, const ros::Duration& max_expected_dt_err)
-    : desired_dt(desired_dt), max_expected_dt_err_s(1.5*max_expected_dt_err.toSec())
+    : desired_dt(desired_dt), max_expected_dt_err(max_expected_dt_err)
   {
   }
 
@@ -46,28 +46,29 @@ struct obj_t
 
   void callback(const ros::Time& last_update)
   {
-    const auto now = ros::Time::now();
     mrs_lib::AtomicScopeFlag flg(cbk_running);
     std::scoped_lock lck(mtx);
+    const auto now = ros::Time::now();
     n_cbks++;
 
     if (!tom)
     {
       ROS_ERROR_STREAM("Callback called while timer is already destroyed!");
       null_cbk = true;
-      cbk_running = false;
       return;
     }
 
     if (check_dt_err)
     {
       const ros::Duration dt = now - last_update;
-      const double dt_err_s = std::abs((dt - desired_dt).toSec());
-      if (dt_err_s > max_expected_dt_err_s)
-        ROS_ERROR_STREAM("Callback has a larger/smaller delay than expected: " << dt << "s (should be " << desired_dt << "s). Error: " << dt_err_s << "s (max. expected: " << max_expected_dt_err_s << "s)!");
-      if (dt_err_s > max_dt_err_s || n_cbks == 1)
-        max_dt_err_s = dt_err_s;
-      avg_dt_err_s = (dt_err_s + (n_cbks-1)*avg_dt_err_s) / n_cbks;
+      const auto dt_err = dt - desired_dt;
+      if (dt_err < ros::Duration(0))
+        ROS_ERROR_STREAM("Callback has a larger/smaller delay than expected: " << dt << "s (should be " << desired_dt << "s). Error: " << dt_err << "s (max. expected: " << max_expected_dt_err << "s)!");
+      if (dt_err > max_expected_dt_err)
+        ROS_ERROR_STREAM("Callback has a larger/smaller delay than expected: " << dt << "s (should be " << desired_dt << "s). Error: " << dt_err << "s (max. expected: " << max_expected_dt_err << "s)!");
+      if (dt_err > max_dt_err || n_cbks == 1)
+        max_dt_err = dt_err;
+      avg_dt_err = (dt_err + avg_dt_err*(n_cbks-1)) * (1.0/n_cbks);
       tom->reset(timeout_id, now);
     }
 
@@ -82,17 +83,18 @@ struct obj_t
       tom->pause(timeout_id);
       /* cout << "\tStopping timer from callback."; */
     }
-    cbk_running = false;
   }
 };
 
 TEST(TESTSuite, timeout_test)
 {
-  const ros::Duration update_period(0.0005); // values lower than 0.5ms reach ROS's capabilities
+  const ros::Duration update_period(0.001); // values lower than 1ms reach ROS's capabilities
+  const ros::Duration spin_period(0.0005);
+  const ros::Duration max_expected_delay = update_period + spin_period;
   std::array<ros::Duration, 4> tos = { ros::Duration{ 0.1 }, ros::Duration{ 0.01 }, ros::Duration{ 0.001 }, ros::Duration{ 0.001 } };
 
   tom = std::make_unique<mrs_lib::TimeoutManager>(*nh, ros::Rate(update_period));
-  std::array<obj_t, 4> objs = {obj_t(tos[0], update_period), obj_t(tos[1], update_period), obj_t(tos[2], update_period), obj_t(tos[3], update_period)};
+  std::array<obj_t, 4> objs = {obj_t(tos[0], max_expected_delay), obj_t(tos[1], max_expected_delay), obj_t(tos[2], max_expected_delay), obj_t(tos[3], max_expected_delay)};
 
   const auto now = ros::Time::now();
   for (int it = 0; it < 4; it++)
@@ -108,7 +110,7 @@ TEST(TESTSuite, timeout_test)
     const ros::Duration test_dur(0.5);
     while (ros::Time::now() - start < test_dur)
     {
-      ros::Duration(0.00005).sleep();
+      spin_period.sleep();
       ros::spinOnce();
     }
     tom->pauseAll();
@@ -117,9 +119,9 @@ TEST(TESTSuite, timeout_test)
     {
       auto& obj = objs[it];
       auto& to = tos[it];
-      std::scoped_lock lck(obj.mtx);
       cout << "\tChecking object " << it << std::endl;
       EXPECT_FALSE(obj.cbk_running);
+      std::scoped_lock lck(obj.mtx);
 
       const int expected_cbks = std::floor(test_dur.toSec() / to.toSec());
       const bool callback_while_not_running = obj.cbk_not_running;
@@ -175,12 +177,12 @@ TEST(TESTSuite, timeout_test)
 
       const bool callback_while_not_running = obj.cbk_not_running;
       const bool callback_while_tm_null = obj.null_cbk;
-      cout << "Max. dt error:       " << obj.max_dt_err_s << "s" << std::endl;
-      cout << "Mean dt error:       " << obj.avg_dt_err_s << "s" << std::endl;
-      cout << "Max. expected error: " << obj.max_expected_dt_err_s << "s" << std::endl;
+      cout << "Max. dt error:       " << obj.max_dt_err << "s" << std::endl;
+      cout << "Mean dt error:       " << obj.avg_dt_err << "s" << std::endl;
+      cout << "Max. expected error: " << obj.max_expected_dt_err << "s" << std::endl;
 
-      EXPECT_LE(obj.max_dt_err_s, obj.max_expected_dt_err_s);
-      EXPECT_LE(obj.avg_dt_err_s, update_period.toSec());
+      EXPECT_LE(obj.max_dt_err, obj.max_expected_dt_err);
+      EXPECT_LE(obj.avg_dt_err, update_period);
       EXPECT_FALSE(callback_while_tm_null);
       EXPECT_FALSE(callback_while_not_running);
 
