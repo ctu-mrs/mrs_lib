@@ -15,6 +15,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_definitions(-Wall)
 add_definitions(-Wextra)
 add_definitions(-Wpedantic)
+add_definitions(-fsanitize=address)
+add_link_options(-fsanitize=address)
 
 if(COVERAGE)
   message(WARNING "building with --coverage, the performance might be limited")
@@ -382,13 +384,14 @@ target_link_libraries(cyclic_example
 ## |                           Testing                          |
 ## --------------------------------------------------------------
 
-if(CATKIN_ENABLE_TESTING AND MRS_ENABLE_TESTING)
+# if(CATKIN_ENABLE_TESTING AND MRS_ENABLE_TESTING)
 
   message(WARNING "Testing enabled.")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fsanitize=address,undefined -fno-omit-frame-pointer")
 
   add_subdirectory(test)
 
-endif()
+# endif()
 
 ## --------------------------------------------------------------
 ## |                           Install                          |

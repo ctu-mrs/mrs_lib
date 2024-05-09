@@ -323,8 +323,8 @@ private:
   template <int rows, int cols, typename T>
   std::pair<Eigen::Matrix<T, rows, cols>, bool> loadMatrixStatic_internal(const std::string& name, const Eigen::Matrix<T, rows, cols>& default_value, optional_t optional, unique_t unique)
   {
-    const auto [dynamic, loaded_ok] = loadMatrixX(name, MatrixX<T>(default_value), rows, cols, optional, unique, NO_SWAP);
-    return {dynamic, loaded_ok};
+    const auto [ret, loaded_ok] = loadMatrixX(name, MatrixX<T>(default_value), rows, cols, optional, unique, NO_SWAP);
+    return {ret, loaded_ok};
   }
   //}
 
@@ -1074,9 +1074,9 @@ public:
   template <typename T>
   bool loadMatrixKnown(const std::string& name, MatrixX<T>& mat, int rows, int cols)
   {
-    const auto [ret, loaded_ok] = loadMatrixKnown_internal(name, MatrixX<T>(), rows, cols, COMPULSORY, UNIQUE);
-    mat = ret;
-    return loaded_ok;
+    const std::pair<MatrixX<T>, bool> result = loadMatrixKnown_internal(name, MatrixX<T>(), rows, cols, COMPULSORY, UNIQUE);
+    mat = result.first;
+    return result.second;
   }
 
   /*!

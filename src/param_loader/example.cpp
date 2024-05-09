@@ -63,6 +63,9 @@ int main(int argc, char **argv)
   pl.loadMatrixDynamic("test_param_matrix_3x3", matxd, -1, 3);
   ROS_INFO_STREAM("[" << node_name << "]: Loaded matrix: " << matxd);
 
+  const auto mat_3x3 = pl.loadMatrixKnown2("test_param_matrix_3x3", 3, 3);
+  ROS_INFO_STREAM("[" << node_name << "]: Loaded matrix: " << mat_3x3);
+
   /* So far, all the parameters were loaded from the ROS parameter server.
    * These must be loaded to the server using the param or rosparam commands
    * in the launchfile (or manually using the CLI tools). However, loading
