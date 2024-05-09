@@ -21,6 +21,7 @@ struct obj_t
   // error flags
   std::mutex mtx;
   int n_cbks = 0;
+  int sooner_cbks = 0;
   bool null_cbk = false;
   bool cbk_not_running = false;
   std::atomic_bool cbk_running = false;
@@ -63,7 +64,10 @@ struct obj_t
       const ros::Duration dt = now - last_update;
       const auto dt_err = dt - desired_dt;
       if (dt_err < ros::Duration(0))
-        ROS_ERROR_STREAM("Callback has a larger/smaller delay than expected: " << dt << "s (should be " << desired_dt << "s). Error: " << dt_err << "s (max. expected: " << max_expected_dt_err << "s)!");
+      {
+        ROS_ERROR_STREAM("Callback called sooner than expected: " << dt << "s (should be " << desired_dt << "s). Error: " << dt_err << "s < 0!");
+        sooner_cbks++;
+      }
       if (dt_err > max_expected_dt_err)
         ROS_ERROR_STREAM("Callback has a larger/smaller delay than expected: " << dt << "s (should be " << desired_dt << "s). Error: " << dt_err << "s (max. expected: " << max_expected_dt_err << "s)!");
       if (dt_err > max_dt_err || n_cbks == 1)
@@ -183,6 +187,7 @@ TEST(TESTSuite, timeout_test)
 
       EXPECT_LE(obj.max_dt_err, obj.max_expected_dt_err);
       EXPECT_LE(obj.avg_dt_err, update_period);
+      EXPECT_EQ(obj.sooner_cbks, 0);
       EXPECT_FALSE(callback_while_tm_null);
       EXPECT_FALSE(callback_while_not_running);
 

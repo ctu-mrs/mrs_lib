@@ -16,12 +16,12 @@ namespace mrs_lib
     const auto new_id = m_timeouts.size();
     m_timeouts.emplace_back(
       timeout_info_t{
-        .oneshot = oneshot,
-        .started = autostart,
-        .callback = callback,
-        .timeout = timeout,
-        .last_reset = last_reset,
-        .last_callback =  last_reset
+        oneshot,
+        autostart,
+        callback,
+        timeout,
+        last_reset,
+        last_reset
       });
     return new_id;
   }

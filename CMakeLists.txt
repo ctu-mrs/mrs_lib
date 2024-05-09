@@ -16,6 +16,11 @@ add_definitions(-Wall)
 add_definitions(-Wextra)
 add_definitions(-Wpedantic)
 
+# if(CATKIN_ENABLE_TESTING AND MRS_ENABLE_TESTING)
+#   add_definitions(-fsanitize=address -g3 -fno-omit-frame-pointer)
+#   add_link_options(-fsanitize=address)
+# endif()
+
 if(COVERAGE)
   message(WARNING "building with --coverage, the performance might be limited")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage")
