@@ -81,10 +81,11 @@ namespace mrs_lib
     * is ignored in this implementation. The updated state and covariance after the correction step
     * is returned.
     *
-    * \param sc          The state and covariance to which the correction step is to be applied.
-    * \param z           The measurement vector to be used for correction.
-    * \param R           The measurement noise covariance matrix to be used for correction.
-    * \return            The state and covariance after the correction update.
+    * \param sc             The state and covariance to which the correction step is to be applied.
+    * \param line_origin    A point lying on the measurement line
+    * \param line_direction A vector defining the span of the measurement line
+    * \param line_variance  Variance defining the uncertainty of the measured state in the direction perpendicular to the measurement line. The uncertainty in the parallel direciton is assumed to be infinite for this case of DKF.
+    * \return               The state and covariance after the correction update.
     */
     virtual std::enable_if_t<(n > 3), statecov_t> correctLine(const statecov_t& sc, const pt3_t& line_origin, const vec3_t& line_direction, const double line_variance) const
     {
@@ -111,6 +112,43 @@ namespace mrs_lib
       const z_t z = N.transpose() * o;
       const H_t H = N.transpose() * M;
       const R_t R = line_variance * N.transpose() * N;
+
+      return this->correction_impl(sc, z, R, H);
+    };
+    //}
+    
+    /* correctPlane() method //{ */
+  /*!
+    * \brief Applies the correction (update, measurement, data) step of the Kalman filter.
+    *
+    * This method applies the linear Kalman filter correction step to the state and covariance
+    * passed in \p sc using the measurement \p z and measurement noise \p R. The parameter \p param
+    * is ignored in this implementation. The updated state and covariance after the correction step
+    * is returned.
+    *
+    * \param sc             The state and covariance to which the correction step is to be applied.
+    * \param plane_origin   A point lying on the measurement plane
+    * \param plane_normal   The normal vector of the measurement plane
+    * \param plane_variance Variance defining the uncertainty of the measured state in the direction perpendicular to the measurement plane. The uncertainty in the spane of the plane is assumed to be infinite for this case of DKF.
+    * \return               The state and covariance after the correction update.
+    */
+    virtual std::enable_if_t<(n > 3), statecov_t> correctPlane(const statecov_t& sc, const pt3_t& plane_origin, const vec3_t& plane_normal, const double plane_variance) const
+    {
+      assert(plane_normal.norm() > 0.0);
+
+      // we don't need W, since the plane is minimally defined by its origin and normal, where the normal is a basis for its null space
+      using M_t = Eigen::Matrix<double, 3, n>;
+      using N_t = Eigen::Matrix<double, 3, 1>;
+      using o_t = Eigen::Matrix<double, 3, 1>;
+      using R_t = Eigen::Matrix<double, 1, 1>;
+
+      const M_t M = M_t::Identity();
+      const o_t o = plane_origin;
+
+      const N_t N = plane_normal.normalized(); //works for plane
+      const z_t z = N.transpose() * o;
+      const H_t H = N.transpose() * M;
+      const R_t R = (R_t() << plane_variance).finished(); //R is a scalar here
 
       return this->correction_impl(sc, z, R, H);
     };
