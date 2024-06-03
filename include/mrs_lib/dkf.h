@@ -129,7 +129,7 @@ namespace mrs_lib
     * \param sc             The state and covariance to which the correction step is to be applied.
     * \param plane_origin   A point lying on the measurement plane
     * \param plane_normal   The normal vector of the measurement plane
-    * \param plane_variance Variance defining the uncertainty of the measured state in the direction perpendicular to the measurement plane. The uncertainty in the spane of the plane is assumed to be infinite for this case of DKF.
+    * \param plane_variance Variance defining the uncertainty of the measured state in the direction perpendicular to the measurement plane. The uncertainty in the span of the plane is assumed to be infinite for this case of DKF.
     * \return               The state and covariance after the correction update.
     */
     virtual std::enable_if_t<(n > 3), statecov_t> correctPlane(const statecov_t& sc, const pt3_t& plane_origin, const vec3_t& plane_normal, const double plane_variance) const
