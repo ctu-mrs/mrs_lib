@@ -77,9 +77,8 @@ namespace mrs_lib
     * \brief Applies the correction (update, measurement, data) step of the Kalman filter.
     *
     * This method applies the linear Kalman filter correction step to the state and covariance
-    * passed in \p sc using the measurement \p z and measurement noise \p R. The parameter \p param
-    * is ignored in this implementation. The updated state and covariance after the correction step
-    * is returned.
+    * passed in \p sc using a measurement in the form of a line direcition vector, a point on the line and a perpendicular variance.
+    * The updated state and covariance after the correction step is returned.
     *
     * \param sc             The state and covariance to which the correction step is to be applied.
     * \param line_origin    A point lying on the measurement line
@@ -122,9 +121,8 @@ namespace mrs_lib
     * \brief Applies the correction (update, measurement, data) step of the Kalman filter.
     *
     * This method applies the linear Kalman filter correction step to the state and covariance
-    * passed in \p sc using the measurement \p z and measurement noise \p R. The parameter \p param
-    * is ignored in this implementation. The updated state and covariance after the correction step
-    * is returned.
+    * passed in \p sc using a measurement in the form of a plane normal vector, a point on the plane and a perpendicular variance.
+    * The updated state and covariance after the correction step is returned.
     *
     * \param sc             The state and covariance to which the correction step is to be applied.
     * \param plane_origin   A point lying on the measurement plane
