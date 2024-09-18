@@ -1,0 +1,5 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classmrs__lib_1_1MRSTimer.html" title="Common wrapper representing the functionality of the ros::Timer." alt="" coords="5,31,151,57"/>
+<area shape="rect" id="node2" href="$classmrs__lib_1_1ROSTimer.html" title="ros::Timer wrapper. The interface is the same as with ros::Timer, except for the initialization metho..." alt="" coords="208,5,351,32"/>
+<area shape="rect" id="node3" href="$classmrs__lib_1_1ThreadTimer.html" title="Custom thread&#45;based Timers with the same interface as mrs_lib::ROSTimer." alt="" coords="199,56,360,83"/>
+</map>

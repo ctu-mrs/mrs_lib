@@ -1,0 +1,5 @@
+<map id="mrs_lib::MRSTimer" name="mrs_lib::MRSTimer">
+<area shape="rect" id="node1" title="Common wrapper representing the functionality of the ros::Timer." alt="" coords="92,5,237,32"/>
+<area shape="rect" id="node2" href="$classmrs__lib_1_1ROSTimer.html" title="ros::Timer wrapper. The interface is the same as with ros::Timer, except for the initialization metho..." alt="" coords="5,80,148,107"/>
+<area shape="rect" id="node3" href="$classmrs__lib_1_1ThreadTimer.html" title="Custom thread&#45;based Timers with the same interface as mrs_lib::ROSTimer." alt="" coords="172,80,333,107"/>
+</map>

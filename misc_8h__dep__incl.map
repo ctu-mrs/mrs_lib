@@ -1,0 +1,8 @@
+<map id="include/mrs_lib/geometry/misc.h" name="include/mrs_lib/geometry/misc.h">
+<area shape="rect" id="node1" title="Defines useful geometry utilities and functions." alt="" coords="190,5,378,47"/>
+<area shape="rect" id="node2" href="$attitude__converter_8h.html" title="Conversions between various representations of object attitude in 3D. Supports Quaternions,..." alt="" coords="5,95,181,136"/>
+<area shape="rect" id="node4" href="$dkf_8h_source.html" title=" " alt="" coords="205,102,363,129"/>
+<area shape="rect" id="node6" href="$transformer_8h_source.html" title=" " alt="" coords="387,102,600,129"/>
+<area shape="rect" id="node3" href="$msg__extractor_8h.html" title="utility functions for getting stuff from ROS msgs" alt="" coords="17,184,170,225"/>
+<area shape="rect" id="node5" href="$dkf_2example_8cpp.html" title="Example file for the DKF implementation." alt="" coords="207,191,361,218"/>
+</map>

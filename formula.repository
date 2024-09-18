@@ -1,0 +1,64 @@
+\_form#0:$ \mathbf{x} $
+\_form#1:$ \mathbf{u} $
+\_form#2:$ \mathbf{z} $
+\_form#3:$n \times 1$
+\_form#4:$m \times 1$
+\_form#5:$p \times 1$
+\_form#6:$n \times n$
+\_form#7:$p \times p$
+\_form#8:$n \times m$
+\_form#9:$p \times n$
+\_form#10:$n \times p$
+\_form#11:$ r \in {\rm I\!R} $
+\_form#12:$ v \in {\rm I\!R} $
+\_form#13:$ v + kr,~k \in {\rm I\!N} $
+\_form#14:$ v $
+\_form#15:$ v \in [~m,~s~[ $
+\_form#16:$ m $
+\_form#17:$ s $
+\_form#18:$ s = m + r $
+\_form#19:$ v \in [~-\pi,~\pi~[ $
+\_form#20:$ v \in [~0,~2\pi~[ $
+\_form#21:$ r $
+\_form#22:$ r/2 $
+\_form#23:$ v' = v + kr $
+\_form#24:$ v' $
+\_form#25:$ m = 0,~s=360 $
+\_form#26:$ \pi $
+\_form#27:$ a \times b $
+\_form#28:$ n_q \times 1 $
+\_form#29:$ p \times n_q $
+\_form#30:$ n_q \times p $
+\_form#31:$ r\sum_i c_i $
+\_form#32:$ c_i $
+\_form#33:$ i $
+\_form#34:$ 3\times 1 $
+\_form#35:$ 3\times 2 $
+\_form#36:$ \mathbf{\theta} $
+\_form#37:$ \mathbf{\theta}^T \mathbf{u}\left( \mathbf{x} \right) = 0 $
+\_form#38:$ \mathbf{u}\left( \mathbf{x} \right) $
+\_form#39:$ \left[ \mathbf{x}, 1 \right] $
+\_form#40:$ \partial_{\mathbf{x}} \mathbf{z}\left( \mathbf{x} \right) $
+\_form#41:$ \mathbf{z}\left( \mathbf{x} \right) $
+\_form#42:$ \mathbf{u}\left( \mathbf{x} \right) = \left[ \mathbf{z}\left( \mathbf{x} \right), 1 \right] $
+\_form#43:$ \mathbf{\eta} $
+\_form#44:$k \times 1$
+\_form#45:$l \times 1$
+\_form#46:$k \times k$
+\_form#47:$l_r \times 1$
+\_form#48:$ \mathbf{J} \mathbf{z}\left( \mathbf{x} \right) $
+\_form#49:$m \mathbf{A} 1$
+\_form#50:$l_r \times l_r$
+\_form#51:$m \mathbf{B} 1$
+\_form#52:$m \mathbf{M} 1$
+\_form#53:$m \mathbf{N} 1$
+\_form#54:$ \mathbf{\theta}_{k} $
+\_form#55:$ \mathbf{\theta}_{k-1} $
+\_form#56:$ \mathbf{x}_i $
+\_form#57:$ \mathbf{P}_i $
+\_form#58:$ a x + b y + c z + d = 0 $
+\_form#59:$ a $
+\_form#60:$ b $
+\_form#61:$ c $
+\_form#62:$ d $
+\_form#63:$ \mathbf{ \theta } $

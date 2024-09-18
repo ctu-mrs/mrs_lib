@@ -1,0 +1,4 @@
+<map id="include/mrs_lib/attitude_converter.h" name="include/mrs_lib/attitude_converter.h">
+<area shape="rect" id="node1" title="Conversions between various representations of object attitude in 3D. Supports Quaternions,..." alt="" coords="5,5,181,47"/>
+<area shape="rect" id="node2" href="$msg__extractor_8h.html" title="utility functions for getting stuff from ROS msgs" alt="" coords="17,95,170,136"/>
+</map>
