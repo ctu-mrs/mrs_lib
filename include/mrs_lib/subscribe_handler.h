@@ -7,6 +7,8 @@
 #ifndef SUBRSCRIBE_HANDLER_H
 #define SUBRSCRIBE_HANDLER_H
 
+#include <optional>
+
 #include <ros/ros.h>
 #include <mrs_lib/timeout_manager.h>
 

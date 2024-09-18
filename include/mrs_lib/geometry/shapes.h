@@ -8,6 +8,8 @@
 #ifndef SHAPES_H
 #define SHAPES_H
 
+#include <optional>
+
 #include <boost/optional.hpp>
 #include <Eigen/Dense>
 
