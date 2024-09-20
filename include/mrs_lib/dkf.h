@@ -86,7 +86,7 @@ namespace mrs_lib
     * \param line_variance  Variance defining the uncertainty of the measured state in the direction perpendicular to the measurement line. The uncertainty in the parallel direciton is assumed to be infinite for this case of DKF.
     * \return               The state and covariance after the correction update.
     */
-    virtual std::enable_if_t<(n > 3), statecov_t> correctLine(const statecov_t& sc, const pt3_t& line_origin, const vec3_t& line_direction, const double line_variance) const
+    virtual std::enable_if_t<((n > 3) || (n == Eigen::Dynamic)), statecov_t> correctLine(const statecov_t& sc, const pt3_t& line_origin, const vec3_t& line_direction, const double line_variance) const
     {
       assert(line_direction.norm() > 0.0);
 
@@ -96,7 +96,7 @@ namespace mrs_lib
       using o_t = Eigen::Matrix<double, 3, 1>;
       using R_t = Eigen::Matrix<double, 2, 2>;
 
-      const M_t M = M_t::Identity();
+      const M_t M = M_t::Identity(3, sc.P.cols());
       const W_t W = line_direction;
       const o_t o = line_origin;
 
@@ -130,7 +130,7 @@ namespace mrs_lib
     * \param plane_variance Variance defining the uncertainty of the measured state in the direction perpendicular to the measurement plane. The uncertainty in the span of the plane is assumed to be infinite for this case of DKF.
     * \return               The state and covariance after the correction update.
     */
-    virtual std::enable_if_t<(n > 3), statecov_t> correctPlane(const statecov_t& sc, const pt3_t& plane_origin, const vec3_t& plane_normal, const double plane_variance) const
+    virtual std::enable_if_t<((n > 3) || (n == Eigen::Dynamic)), statecov_t> correctPlane(const statecov_t& sc, const pt3_t& plane_origin, const vec3_t& plane_normal, const double plane_variance) const
     {
       assert(plane_normal.norm() > 0.0);
 
@@ -140,7 +140,7 @@ namespace mrs_lib
       using o_t = Eigen::Matrix<double, 3, 1>;
       using R_t = Eigen::Matrix<double, 1, 1>;
 
-      const M_t M = M_t::Identity();
+      const M_t M = M_t::Identity(3, sc.P.cols());
       const o_t o = plane_origin;
 
       const N_t N = plane_normal.normalized(); //works for plane
