@@ -39,21 +39,20 @@ namespace mrs_lib
           m_queue_size(options.queue_size),
           m_transport_hints(options.transport_hints)
     {
+      // initialize the callback for the TimeoutManager
+      if (options.timeout_callback)
+        m_timeout_mgr_callback = std::bind(options.timeout_callback, topicName(), std::placeholders::_1);
+      else
+        m_timeout_mgr_callback = std::bind(&Impl::default_timeout_callback, this, topicName(), std::placeholders::_1);
+
       if (options.no_message_timeout != mrs_lib::no_timeout)
       {
         // initialize a new TimeoutManager if not provided by the user
         if (!m_timeout_manager)
-          m_timeout_manager = std::make_shared<mrs_lib::TimeoutManager>(m_nh, ros::Rate(2.0/options.no_message_timeout.toSec()));
-
-        // initialize the callback for the TimeoutManager
-        std::function<void(const ros::Time&)> timeout_mgr_callback;
-        if (options.timeout_callback)
-          timeout_mgr_callback = std::bind(options.timeout_callback, topicName(), std::placeholders::_1);
-        else
-          timeout_mgr_callback = std::bind(&Impl::default_timeout_callback, this, topicName(), std::placeholders::_1);
+          m_timeout_manager = std::make_shared<mrs_lib::TimeoutManager>(m_nh, ros::Rate(options.no_message_timeout * 0.5));
 
         // register the timeout callback with the TimeoutManager
-        m_timeout_id = m_timeout_manager->registerNew(options.no_message_timeout, timeout_mgr_callback);
+        m_timeout_id = m_timeout_manager->registerNew(options.no_message_timeout, m_timeout_mgr_callback);
       }
 
       const std::string msg = "Subscribed to topic '" + m_topic_name + "' -> '" + topicName() + "'";
@@ -142,11 +141,44 @@ namespace mrs_lib
     }
     //}
 
+    /* getNumPublishers() method //{ */
+    virtual uint32_t getNumPublishers() const
+    {
+      return m_sub.getNumPublishers();
+    };
+    //}
+
+    /* setNoMessageTimeout() method //{ */
+    virtual void setNoMessageTimeout(const ros::Duration& timeout)
+    {
+      if (timeout == mrs_lib::no_timeout)
+      {
+        // if there is a timeout callback already registered but the user wants to disable it, pause it
+        if (m_timeout_manager != nullptr && m_timeout_id.has_value())
+          m_timeout_manager->pause(m_timeout_id.value());
+        // otherwise, there is no callback, so nothing to do
+      }
+      else
+      {
+        // if there is no callback manager, create it
+        if (m_timeout_manager == nullptr)
+          m_timeout_manager = std::make_shared<mrs_lib::TimeoutManager>(m_nh, ros::Rate(timeout * 0.5));
+
+        // if there is an existing timeout callback registered, change its timeout
+        if (m_timeout_id.has_value())
+          m_timeout_manager->change(m_timeout_id.value(), timeout, m_timeout_mgr_callback);
+        // otherwise, register it
+        else
+          m_timeout_id = m_timeout_manager->registerNew(timeout, m_timeout_mgr_callback);
+      }
+    }
+    //}
+
     /* start() method //{ */
     virtual void start()
     {
-      if (m_timeout_manager)
-        m_timeout_manager->start(m_timeout_id);
+      if (m_timeout_manager && m_timeout_id.has_value())
+        m_timeout_manager->start(m_timeout_id.value());
       m_sub = m_nh.subscribe(m_topic_name, m_queue_size, &Impl::data_callback, this, m_transport_hints);
     }
     //}
@@ -154,8 +186,8 @@ namespace mrs_lib
     /* stop() method //{ */
     virtual void stop()
     {
-      if (m_timeout_manager)
-        m_timeout_manager->pause(m_timeout_id);
+      if (m_timeout_manager && m_timeout_id.has_value())
+        m_timeout_manager->pause(m_timeout_id.value());
       m_sub.shutdown();
     }
     //}
@@ -179,7 +211,8 @@ namespace mrs_lib
 
   protected:
     std::shared_ptr<mrs_lib::TimeoutManager> m_timeout_manager;
-    mrs_lib::TimeoutManager::timeout_id_t m_timeout_id;
+    std::optional<mrs_lib::TimeoutManager::timeout_id_t> m_timeout_id;
+    mrs_lib::TimeoutManager::callback_t m_timeout_mgr_callback;
 
   protected:
     ros::Time m_latest_message_time;
@@ -223,8 +256,8 @@ namespace mrs_lib
     {
       {
         std::lock_guard lck(m_new_data_mtx);
-        if (m_timeout_manager)
-          m_timeout_manager->reset(m_timeout_id);
+        if (m_timeout_manager && m_timeout_id.has_value())
+          m_timeout_manager->reset(m_timeout_id.value());
         process_new_message(msg);
       }
 
@@ -309,8 +342,8 @@ namespace mrs_lib
     {
       {
         std::scoped_lock lck(m_mtx, this->m_new_data_mtx);
-        if (this->m_timeout_manager)
-          this->m_timeout_manager->reset(this->m_timeout_id);
+        if (this->m_timeout_manager && this->m_timeout_id.has_value())
+          this->m_timeout_manager->reset(this->m_timeout_id.value());
         impl_class_t::process_new_message(msg);
       }
 

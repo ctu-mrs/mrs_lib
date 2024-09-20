@@ -7,6 +7,8 @@
 #ifndef SUBRSCRIBE_HANDLER_H
 #define SUBRSCRIBE_HANDLER_H
 
+#include <optional>
+
 #include <ros/ros.h>
 #include <mrs_lib/timeout_manager.h>
 
@@ -136,7 +138,8 @@ namespace mrs_lib
     /*!
       * \brief Blocks until new data becomes available or until the timeout runs out or until a spurious wake-up.
       *
-      * \return the message if a new message is available after waking up, \p nullptr otherwise.
+      * \param timeout    after this duration, this method will return a nullptr if no new data becomes available.
+      * \return           the message if a new message is available after waking up, \p nullptr otherwise.
       */
       virtual typename MessageType::ConstPtr waitForNew(const ros::WallDuration& timeout) {assert(m_pimpl); return m_pimpl->waitForNew(timeout);};
 
@@ -160,6 +163,20 @@ namespace mrs_lib
       * \return name of the handled topic.
       */
       virtual std::string subscribedTopicName() const {assert(m_pimpl); return m_pimpl->m_topic_name;};
+
+    /*!
+      * \brief Returns number of publishers registered at the topic.
+      *
+      * \return number of publishers.
+      */
+      virtual uint32_t getNumPublishers() const {assert(m_pimpl); return m_pimpl->getNumPublishers();};
+
+    /*!
+      * \brief Sets the timeout for no received message.
+      *
+      * \param timeout    The new timeout for no received messages.
+      */
+      virtual void setNoMessageTimeout(const ros::Duration& timeout) {assert(m_pimpl); return m_pimpl->setNoMessageTimeout(timeout);};
 
     /*!
       * \brief Enables the callbacks for the handled topic.

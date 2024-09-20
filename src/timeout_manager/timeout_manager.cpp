@@ -14,8 +14,15 @@ namespace mrs_lib
   {
     std::scoped_lock lck(m_mtx);
     const auto new_id = m_timeouts.size();
-    const timeout_info_t new_info = {oneshot, autostart, callback, timeout, last_reset, last_reset};
-    m_timeouts.push_back(new_info);
+    m_timeouts.emplace_back(
+      timeout_info_t{
+        oneshot,
+        autostart,
+        callback,
+        timeout,
+        last_reset,
+        last_reset
+      });
     return new_id;
   }
 
@@ -85,7 +92,7 @@ namespace mrs_lib
     std::scoped_lock lck(m_mtx);
     for (auto& timeout_info : m_timeouts)
     {
-      // don't worry, this'll get optimized out by the compiler
+      // don't worry, these variables will get optimized out by the compiler
       const bool started = timeout_info.started;
       const bool last_reset_timeout = now - timeout_info.last_reset >= timeout_info.timeout;
       const bool last_callback_timeout = now - timeout_info.last_callback >= timeout_info.timeout;

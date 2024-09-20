@@ -7,6 +7,8 @@
 #ifndef PARAM_PROVIDER_H
 #define PARAM_PROVIDER_H
 
+#include <optional>
+
 #include <yaml-cpp/yaml.h>
 #include <ros/node_handle.h>
 
