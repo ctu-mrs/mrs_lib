@@ -22,8 +22,8 @@ public:
 class Prism{
 private:
   Polygon polygon_;
-  double max_z_;
   double min_z_;
+  double max_z_;
 
   std::set<Subscriber*> subscribers;
 
@@ -32,7 +32,7 @@ private:
 public:
   // If max_z < min_z, automatically swaps them
   // Throws std::invalid argument if polygon is invalid
-  Prism(std::vector<Point2d>& points, double max_z, double min_z);
+  Prism(const std::vector<Point2d>& points, double max_z, double min_z);
 
   ~Prism();
 

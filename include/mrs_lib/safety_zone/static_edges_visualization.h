@@ -8,6 +8,7 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <string>
 #include <ros/ros.h>
+#include <memory>
 
 namespace mrs_lib 
 {

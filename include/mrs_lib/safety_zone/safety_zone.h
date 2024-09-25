@@ -7,6 +7,8 @@
 #include "prism.h"
 #include "polygon.h"
 #include "yaml_export_visitor.h"
+#include <unordered_map>
+#include <memory>
 
 namespace mrs_lib
 {
@@ -15,9 +17,9 @@ public:
   SafetyZone(Prism outer_border);
 
   // Cleaning the obstacles' memory is SafetyZone's responsibility
-  SafetyZone(Prism outer_broder, std::vector<Prism*>& obstacles);
+  SafetyZone(Prism outer_border, std::vector<Prism*> obstacles);
 
-  ~SafetyZone();
+  ~SafetyZone() noexcept;
 
   // Controls, if 3d point lies within the prism
   bool isPointValid(const Point3d point);
@@ -56,7 +58,7 @@ public:
 private:
   Prism outer_border_;
   std::map<int, Prism*> obstacles_;
-  int next_obstacle_id = 0;
+  int next_obstacle_id_ = 0;
 
 }; // class SafetyZone
 
