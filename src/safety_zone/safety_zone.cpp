@@ -9,11 +9,12 @@ namespace bg = boost::geometry;
 namespace mrs_lib
 {
 
-  SafetyZone::SafetyZone(Prism outer_border) : outer_border_(std::move(outer_border))
+  SafetyZone::SafetyZone(Prism outer_border) : outer_border_(outer_border)
   {
   }
 
-  SafetyZone::SafetyZone(Prism outer_border, std::vector<Prism*> obstacles) : outer_border_(std::move(outer_border))
+  SafetyZone::SafetyZone(Prism outer_border, std::vector<Prism*> obstacles)
+    : outer_border_(outer_border)
   {
 
     for (size_t i = 0; i < obstacles.size(); i++)
@@ -21,7 +22,6 @@ namespace mrs_lib
       obstacles_.insert({next_obstacle_id_, obstacles[i]});
       next_obstacle_id_++;
     }
-
 
   }
 
