@@ -12,56 +12,57 @@
 
 namespace mrs_lib
 {
-class SafetyZone {
-public:
-  SafetyZone(Prism outer_border);
+  class SafetyZone
+  {
+  public:
+    SafetyZone(Prism outer_border);
 
-  // Cleaning the obstacles' memory is SafetyZone's responsibility
-  SafetyZone(Prism outer_border, std::vector<Prism*> obstacles);
+    // Cleaning the obstacles' memory is SafetyZone's responsibility
+    SafetyZone(Prism outer_border, std::vector<Prism*> obstacles);
 
-  ~SafetyZone() noexcept;
+    ~SafetyZone();
 
-  // Controls, if 3d point lies within the prism
-  bool isPointValid(const Point3d point);
+    // Controls, if 3d point lies within the prism
+    bool isPointValid(const Point3d point);
 
-  // Convinient version of isPointIn(Point3d point)
-  bool isPointValid(const double px, const double py, const double pz);
+    // Convinient version of isPointIn(Point3d point)
+    bool isPointValid(const double px, const double py, const double pz);
 
-  // Controls, if 2d point lies within the polygon of prism (i.e. ignores max_z and min_z of all prisms)
-  bool isPointValid(const Point2d point);
+    // Controls, if 2d point lies within the polygon of prism (i.e. ignores max_z and min_z of all prisms)
+    bool isPointValid(const Point2d point);
 
-  // Convinient version of isPointIn(Point2d point)
-  bool isPointValid(const double px, const double py);
+    // Convinient version of isPointIn(Point2d point)
+    bool isPointValid(const double px, const double py);
 
-  // The function divides the path into smaller segments (on average 20 segments per meter) 
-  // and validates each intermediate point to determine if the entire path is valid.
-  bool isPathValid(const Point3d start, const Point3d end);
+    // The function divides the path into smaller segments (on average 20 segments per meter)
+    // and validates each intermediate point to determine if the entire path is valid.
+    bool isPathValid(const Point3d start, const Point3d end);
 
-  // 2d version of isPathValid(const Point3d start, const Point3d end), i.e. ignores max_z and min_z of all prisms
-  bool isPathValid(const Point2d start, const Point2d end);
+    // 2d version of isPathValid(const Point3d start, const Point3d end), i.e. ignores max_z and min_z of all prisms
+    bool isPathValid(const Point2d start, const Point2d end);
 
-  Prism* getBorder();
+    Prism* getBorder();
 
-  Prism* getObstacle(int index);
+    Prism* getObstacle(int index);
 
-  std::map<int, Prism*>::iterator getObstaclesBegin();
+    std::map<int, Prism*>::iterator getObstaclesBegin();
 
-  std::map<int, Prism*>::iterator getObstaclesEnd();
+    std::map<int, Prism*>::iterator getObstaclesEnd();
 
-  int addObstacle(Prism* obstacle);
+    int addObstacle(Prism* obstacle);
 
-  void deleteObstacle(int id);
+    void deleteObstacle(int id);
 
-  // Helper method for text representation
-  void accept(Visitor& visitor); 
+    // Helper method for text representation
+    void accept(Visitor& visitor);
 
-private:
-  Prism outer_border_;
-  std::map<int, Prism*> obstacles_;
-  int next_obstacle_id_ = 0;
+  private:
+    Prism outer_border_;
+    std::map<int, Prism*> obstacles_;
+    int next_obstacle_id_ = 0;
 
-}; // class SafetyZone
+  };  // class SafetyZone
 
-} // namespace mrs_lib
+}  // namespace mrs_lib
 
 #endif  // MRS_LIB_SAFETYZONE_H

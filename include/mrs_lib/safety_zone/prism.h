@@ -8,94 +8,98 @@
 namespace mrs_lib
 {
 
-class Subscriber{
-protected:
-  bool is_active_ = true;
-public:
-  // Called every time a change has been made to the prism
-  virtual void update() = 0;
+  class Subscriber
+  {
+  protected:
+    bool is_active_ = true;
 
-  // Called once upon deleting the prism
-  virtual void cleanup() = 0;
-};
+  public:
+    // Called every time a change has been made to the prism
+    virtual void update() = 0;
 
-class Prism{
-private:
-  Polygon polygon_;
-  double min_z_;
-  double max_z_;
+    // Called once upon deleting the prism
+    virtual void cleanup() = 0;
+  };
 
-  std::set<Subscriber*> subscribers;
+  class Prism
+  {
+  private:
+    Polygon polygon_;
+    double min_z_;
+    double max_z_;
 
-  void notifySubscribers();
-  void cleanSubscribers();
-public:
-  // If max_z < min_z, automatically swaps them
-  // Throws std::invalid argument if polygon is invalid
-  Prism(const std::vector<Point2d>& points, double max_z, double min_z);
+    std::set<Subscriber*> subscribers;
 
-  ~Prism();
+    void notifySubscribers();
+    void cleanSubscribers();
 
-  void subscribe(Subscriber* entity);
-  void unsubscribe(Subscriber* entity);
+  public:
+    // If max_z < min_z, automatically swaps them
+    // Throws std::invalid argument if polygon is invalid
+    Prism(const std::vector<Point2d>& points, double max_z, double min_z);
 
-  double getMaxZ();
+    ~Prism();
 
-  double getMinZ();
+    void subscribe(Subscriber* entity);
+    void unsubscribe(Subscriber* entity);
 
-  Polygon getPolygon();
+    double getMaxZ();
 
-  // Returns number of vertices in the polygon of the prism.
-  unsigned int getVerticesNum();
+    double getMinZ();
 
-  // Returns the centroid of the polygon of the prism.
-  Point2d getCenter();
+    Polygon getPolygon();
 
-  void setMaxZ(double value);
+    // Returns number of vertices in the polygon of the prism.
+    unsigned int getVerticesNum();
 
-  void setMinZ(double value);
+    // Returns the centroid of the polygon of the prism.
+    Point2d getCenter();
 
-  // Tries to change the coordinates of given vertex. 
-  // returns true if succeeded
-  // returns false otherwise
-  bool setVertex(Point2d vertex, unsigned int index);
+    void setMaxZ(double value);
 
-  // Tries to change the coordinates of given vertecies. 
-  // Only notifies subsribers once in case of success
-  // returns true if succeeded
-  // returns false otherwise
-  bool setVertices(std::vector<Point2d>& vertices, std::vector<unsigned int> indices);
+    void setMinZ(double value);
 
-  // Adds new vertex in the middle of the neighboring verge
-  void addVertexClockwise(unsigned int index);
+    // Tries to change the coordinates of given vertex.
+    // returns true if succeeded
+    // returns false otherwise
+    bool setVertex(Point2d vertex, unsigned int index);
 
-  // Adds new vertex in the middle of the neighboring verge
-  void addVertexCounterclockwise(unsigned int index);
+    // Tries to change the coordinates of given vertecies.
+    // Only notifies subsribers once in case of success
+    // returns true if succeeded
+    // returns false otherwise
+    bool setVertices(std::vector<Point2d>& vertices, std::vector<unsigned int> indices);
 
-  void move(Point3d adjustment);
+    // Adds new vertex in the middle of the neighboring verge
+    void addVertexClockwise(unsigned int index);
 
-  // Takes angle in radians, rotates clockwise (counter-clockwise if alpha < 0)
-  void rotate(double alpha);
+    // Adds new vertex in the middle of the neighboring verge
+    void addVertexCounterclockwise(unsigned int index);
 
-  // Deletes the vertex only if vertex_count > 3
-  void deleteVertex(unsigned int index);
+    void move(Point3d adjustment);
 
-  // Controls, if 3d point lies within the prism 
-  bool isPointIn(Point3d point);
+    // Takes angle in radians, rotates clockwise (counter-clockwise if alpha < 0)
+    void rotate(double alpha);
 
-  // Convinient version of isPointIn(Point3d point)
-  bool isPointIn(double x, double y, double z);
+    // Deletes the vertex only if vertex_count > 3
+    void deleteVertex(unsigned int index);
 
-  // Controls, if 2d point lies within the polygon of prism
-  bool isPointIn(Point2d point);
-  
-  // Convinient version of isPointIn(Point2d point)
-  bool isPointIn(double x, double y);
+    // Controls, if 3d point lies within the prism
+    bool isPointIn(Point3d point);
 
-  // Helper method for text representation
-  void accept(Visitor& visitor);
-};
+    // Convinient version of isPointIn(Point3d point)
+    bool isPointIn(double x, double y, double z);
 
-} // namespace mrs_lib
+    // Controls, if 2d point lies within the polygon of prism
+    bool isPointIn(Point2d point);
+
+    // Convinient version of isPointIn(Point2d point)
+    bool isPointIn(double x, double y);
+
+    // Helper method for text representation
+    void accept(Visitor& visitor);
+  };
+
+}  // namespace mrs_lib
 
 #endif
