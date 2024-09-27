@@ -6,7 +6,8 @@ namespace bg = boost::geometry;
 namespace mrs_lib
 {
   /* Prism() //{ */
-  Prism::Prism(const std::vector<Point2d>& points, double max_z, double min_z) : polygon_(), min_z_(std::min(min_z, max_z_)), max_z_(std::max(min_z, max_z))
+  Prism::Prism(const std::vector<Point2d>& points, double max_z, double min_z)
+    : polygon_(), min_z_(std::min(min_z,max_z_)), max_z_(std::max(min_z,max_z))
   {
     if (points.size() < 3)
       throw std::invalid_argument("A valid polygon must have at least three points.");

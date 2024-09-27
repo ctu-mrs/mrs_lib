@@ -11,69 +11,70 @@
 #include <string>
 #include <ros/ros.h>
 
-namespace mrs_lib 
+namespace mrs_lib
 {
 
-// Visualizes the edges of the prism
-// Horizontal edges are interactive and provide adding new vertex in the middle of the edge
-// The visualization cannot be updated regularly, so lines disappear as camera moves "behind" them
-// (view https://github.com/ros-visualization/rviz/issues/1287), therefore StaticEdgesVisualization
-// class has been implemented.
-class IntEdgesVisualization final : public Subscriber{
-public:
-  // Represents the prism
-  IntEdgesVisualization(Prism* prism, std::string frame_id, ros::NodeHandle nh);
+  // Visualizes the edges of the prism
+  // Horizontal edges are interactive and provide adding new vertex in the middle of the edge
+  // The visualization cannot be updated regularly, so lines disappear as camera moves "behind" them
+  // (view https://github.com/ros-visualization/rviz/issues/1287), therefore StaticEdgesVisualization
+  // class has been implemented.
+  class IntEdgesVisualization final : public Subscriber
+  {
+  public:
+    // Represents the prism
+    IntEdgesVisualization(Prism* prism, const std::string frame_id, const ros::NodeHandle nh);
 
-  // Represents corresponding obstacle in the safety_zone. 
-  IntEdgesVisualization(SafetyZone* safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh);
-  
-  // Represents border of the safety_zone.
-  IntEdgesVisualization(SafetyZone* safety_zone, std::string frame_id, ros::NodeHandle nh);
+    // Represents corresponding obstacle in the safety_zone.
+    IntEdgesVisualization(SafetyZone* safety_zone, const int obstacle_id, const std::string frame_id, const ros::NodeHandle nh);
 
-  ~IntEdgesVisualization();
+    // Represents border of the safety_zone.
+    IntEdgesVisualization(SafetyZone* safety_zone, const std::string frame_id, const ros::NodeHandle nh);
 
-  void update() override;
-  void cleanup() override;
+    ~IntEdgesVisualization();
 
-private:
-  // Tools for convenience 
-  void init();
-  int getIndexByName(std::string marker_name);
-  void addEdgeIntMarker(Point2d start, Point2d end, const double upper, const double lower, const int index);
+    void update() override;
+    void cleanup() override;
 
-  // Markers's callback
-  void vertexAddCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
+  private:
+    // Tools for convenience
+    void init();
+    int getIndexByName(const std::string marker_name);
+    void addEdgeIntMarker(const Point2d start, const Point2d end, const double upper, const double lower, const int index);
 
-  // It is required for generating server id's, 
-  // because their id's must be unique on topic 
-  static int id_generator;
-  const int id_;
-  int vertex_id_ = 0;    // Each marker name must be unique
+    // Markers's callback
+    void vertexAddCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback);
 
-  // Attributes received in constructor
-  Prism* prism_;
-  std::string frame_id_;
-  ros::NodeHandle nh_;
+    // It is required for generating server id's,
+    // because their id's must be unique on topic
+    static int id_generator;
+    const int id_;
+    int vertex_id_ = 0;  // Each marker name must be unique
 
-  // Interactive markers
-  interactive_markers::InteractiveMarkerServer* server_ = nullptr;
-  interactive_markers::MenuHandler*             menu_handler_  = nullptr;
+    // Attributes received in constructor
+    Prism* prism_;
+    std::string frame_id_;
+    ros::NodeHandle nh_;
 
-  // Note:
-  // Since no method find_by_value() is present and markers may not be ordered,
-  // it was decided to make several containers.
-  // std::map takes O(n) amount of memory and CRUD operations have logarithmic complexity.
-  // Because there will rarely more than 10 vertecies per prism and vertexMoveCallback can
-  // be called more than 10 times per second, such containers fit perfectly 
-  std::map<std::string, int> upper_indecies_;
-  std::map<std::string, int> lower_indecies_;
-  std::map<std::string, int> vertical_indecies_;
-  std::map<int, std::string> upper_names_;
-  std::map<int, std::string> lower_names_;
-  std::map<int, std::string> vertical_names_;
+    // Interactive markers
+    interactive_markers::InteractiveMarkerServer* server_ = nullptr;
+    interactive_markers::MenuHandler* menu_handler_ = nullptr;
 
-}; // class IntEdgesVisualization
-} // namespace mrs_lib
+    // Note:
+    // Since no method find_by_value() is present and markers may not be ordered,
+    // it was decided to make several containers.
+    // std::map takes O(n) amount of memory and CRUD operations have logarithmic complexity.
+    // Because there will rarely more than 10 vertices per prism and vertexMoveCallback can
+    // be called more than 10 times per second, such containers fit perfectly
+    std::map<std::string, int> upper_indecies_;
+    std::map<std::string, int> lower_indecies_;
+    std::map<std::string, int> vertical_indecies_;
+    std::map<int, std::string> upper_names_;
+    std::map<int, std::string> lower_names_;
+    std::map<int, std::string> vertical_names_;
+
+  };  // class IntEdgesVisualization
+}  // namespace mrs_lib
 
 
 #endif

@@ -187,7 +187,7 @@ namespace mrs_lib
 
   /* getBorder() //{ */
 
-  Prism* SafetyZone::getBorder()
+  Prism* SafetyZone::getBorder() 
   {
     return &outer_border_;
   }
@@ -196,7 +196,7 @@ namespace mrs_lib
 
   /* getObstacle() //{ */
 
-  Prism* SafetyZone::getObstacle(int index)
+  Prism* SafetyZone::getObstacle(int index) 
   {
     return obstacles_.at(index);
   }
