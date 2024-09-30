@@ -14,66 +14,71 @@
 namespace mrs_lib
 {
 
-//  Creates 2 interactive markers in the center of the prism's polygon:
-// one for maximum height of the prism and the other for minimum height.
-// Both markers can be used for moving entire prism and deleting it (view constructors' docstring)
-// Markers also allow changing correspondings heights
-class BoundsControl final : public Subscriber{
-public:
+  //  Creates 2 interactive markers in the center of the prism's polygon:
+  // one for maximum height of the prism and the other for minimum height.
+  // Both markers can be used for moving entire prism and deleting it (view constructors' docstring)
+  // Markers also allow changing correspondings heights
+  class BoundsControl final : public Subscriber
+  {
+  public:
+    // Created interactive markers do not have deleting option
+    BoundsControl(Prism* prism, const std::string& frame_id, const ros::NodeHandle& nh);
+    // Represents corresponding obstacle in the safety_zone.
+    // Created interactive markers provide deleting option
+    BoundsControl(SafetyZone* safety_zone, const int& obstacle_id, const std::string& frame_id, const ros::NodeHandle& nh);
+    // Represents border of the safety_zone.
+    // Created interactive markers do not have deleting option
+    BoundsControl(SafetyZone* safety_zone, const std::string& frame_id, const ros::NodeHandle& nh);
 
-  // Created interactive markers do not have deleting option
-  BoundsControl(Prism* prism, std::string frame_id, ros::NodeHandle nh);
+    ~BoundsControl();
 
-  // Represents corresponding obstacle in the safety_zone. 
-  // Created interactive markers provide deleting option
-  BoundsControl(SafetyZone* safety_zone, int obstacle_id, std::string frame_id, ros::NodeHandle nh);
+    void update() override;
+    void cleanup() override;
 
-  // Represents border of the safety_zone.
-  // Created interactive markers do not have deleting option
-  BoundsControl(SafetyZone* safety_zone, std::string frame_id, ros::NodeHandle nh);
+  private:
+    enum class BoundaryType
+    {
+      UPPER,
+      LOWER
+    };
 
-  ~BoundsControl();
+    // Tools for convenience
+    void init();
+    void addBoundIntMarker(const BoundaryType& boundary_type);
+    visualization_msgs::Marker makeBox(const visualization_msgs::InteractiveMarker& msg);
+    visualization_msgs::Marker makeText(const double& value);
 
-  void update() override;
-  void cleanup() override;
+    // Markers' callbacks
+    void boundMoveCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback);
+    void mouseDownCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback);
+    void mouseUpCallback([[maybe_unused]] const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback);
+    void deleteCallback([[maybe_unused]] const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback);
 
-private:
-  // Tools for convenience 
-  void init();
-  void addBoundIntMarker(bool is_upper);
-  visualization_msgs::Marker makeBox(visualization_msgs::InteractiveMarker &msg);
-  visualization_msgs::Marker makeText(double value);
+    // It is required for generating server id's,
+    // because their id's must be unique on topic
+    const int id_;
+    static std::atomic<int> id_generator;
+    const int obstacle_id_ = 0;
 
-  // Markers' callbacks
-  void boundMoveCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
-  void mouseDownCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
-  void mouseUpCallback( [[maybe_unused]] const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
-  void deleteCallback( [[maybe_unused]] const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
+    // Attributes received in constructor
+    Prism* prism_;
+    std::string frame_id_;
+    ros::NodeHandle nh_;
+    SafetyZone* safety_zone_ = nullptr;
 
-  // It is required for generating server id's, 
-  // because their id's must be unique on topic 
-  static int id_generator;
-  const int  obstacle_id_ = 0;
-  const int  id_;
+    // Communication with RVIZ
+    interactive_markers::InteractiveMarkerServer* server_ = nullptr;
+    interactive_markers::MenuHandler* menu_handler_ = nullptr;
 
-  // Attributes received in constructor
-  SafetyZone*     safety_zone_ = nullptr;
-  Prism*          prism_;
-  std::string     frame_id_;
-  ros::NodeHandle nh_;
+    // Distinguishing features of 2 markers
+    std::string upper_name_;
+    std::string lower_name_;
 
-  // Communication with RVIZ
-  interactive_markers::InteractiveMarkerServer* server_ = nullptr;
-  interactive_markers::MenuHandler*             menu_handler_ = nullptr;
+    // Required for moving the prism
+    geometry_msgs::Point last_position_;
+    bool is_last_valid_ = false;
 
-  // Distinguishin features of 2 markers
-  std::string upper_name_;
-  std::string lower_name_;
-  
-  // Required for moving the prism
-  geometry_msgs::Point last_position_;
-  bool                 is_last_valid = false;
-}; // class BoundsControl
-} // namespace mrs_lib
+  };  // class BoundsControl
+}  // namespace mrs_lib
 
 #endif

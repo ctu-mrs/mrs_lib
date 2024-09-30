@@ -25,13 +25,13 @@ namespace mrs_lib
 
   public:
     // Represents the prism
-    VertexControl(Prism* prism, const std::string frame_id, const ros::NodeHandle nh);
+    VertexControl(Prism* prism, const std::string& frame_id, const ros::NodeHandle& nh);
 
     // Represents corresponding obstacle in the safety_zone.
-    VertexControl(SafetyZone* safety_zone, const int obstacle_id, const std::string frame_id, const ros::NodeHandle nh);
+    VertexControl(SafetyZone* safety_zone, const int& obstacle_id, const std::string& frame_id, const ros::NodeHandle& nh);
 
     // Represents border of the safety_zone.
-    VertexControl(SafetyZone* safety_zone, const std::string frame_id, const ros::NodeHandle nh);
+    VertexControl(SafetyZone* safety_zone, const std::string& frame_id, const ros::NodeHandle& nh);
 
     ~VertexControl();
 
@@ -41,8 +41,8 @@ namespace mrs_lib
   private:
     // Tools for convenience
     void init();
-    int getIndexByName(std::string marker_name);
-    void addVertexIntMarker(Point2d position, const double upper, const double lower, const int index);
+    void addVertexIntMarker(const Point2d& position, const double& upper, const double& lower, const int& index);
+    int getIndexByName(const std::string& marker_name);
     visualization_msgs::Marker makeBox(visualization_msgs::InteractiveMarker& msg);
 
     // Markers' callbacks

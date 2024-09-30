@@ -12,49 +12,42 @@ namespace gm = geometry_msgs;
 
 namespace mrs_lib
 {
-  //Atomic to avoid duplicates
-  std::atomic<int> VertexControl::id_generator= 0;
+  // Atomic to avoid duplicates
+  std::atomic<int> VertexControl::id_generator = 0;
 
   /* VertexControl() //{ */
-  
-  VertexControl::VertexControl(Prism* prism, const std::string frame_id, const ros::NodeHandle nh)
-    : id_(id_generator++), prism_(prism), frame_id_(frame_id), nh_(nh) 
+
+  VertexControl::VertexControl(Prism* prism, const std::string& frame_id, const ros::NodeHandle& nh)
+      : id_(id_generator++), prism_(prism), frame_id_(frame_id), nh_(nh)
   {
-    /* frame_id_ = frame_id; */
-    /* nh_ = nh; */
-    /* id_generator++; */
     init();
   }
-  
+
   //}
 
   /* VertexControl() //{ */
-  
-  VertexControl::VertexControl(SafetyZone* safety_zone, const int obstacle_id, const std::string frame_id, const ros::NodeHandle nh)
-      : id_(id_generator), prism_(safety_zone->getObstacle(obstacle_id))
+
+  VertexControl::VertexControl(SafetyZone* safety_zone, const int& obstacle_id, const std::string& frame_id, const ros::NodeHandle& nh)
+      : id_(id_generator++), prism_(safety_zone->getObstacle(obstacle_id)), frame_id_(frame_id), nh_(nh)
   {
-    frame_id_ = frame_id;
-    nh_ = nh;
-    id_generator++;
     init();
   }
-  
+
   //}
 
- /* VertexControl() //{ */
- 
-  VertexControl::VertexControl(SafetyZone* safety_zone, const std::string frame_id, const ros::NodeHandle nh) : id_(id_generator), prism_(safety_zone->getBorder())
+  /* VertexControl() //{ */
+
+  VertexControl::VertexControl(SafetyZone* safety_zone, const std::string& frame_id, const ros::NodeHandle& nh)
+      : id_(id_generator++), prism_(safety_zone->getBorder()), frame_id_(frame_id), nh_(nh)
+
   {
-    frame_id_ = frame_id;
-    nh_ = nh;
-    id_generator++;
     init();
   }
- 
- //}
 
- /* init() //{ */
- 
+  //}
+
+  /* init() //{ */
+
   void VertexControl::init()
   {
     server_ = new interactive_markers::InteractiveMarkerServer(nh_.getNamespace() + "/safety_area_vertices_out", std::to_string(id_), false);
@@ -62,7 +55,7 @@ namespace mrs_lib
     menu_handler_ = new interactive_markers::MenuHandler();
     menu_handler_->insert("Delete the vertex", [this](const vm::InteractiveMarkerFeedbackConstPtr& feedback) { this->vertexDeleteCallback(feedback); });
 
-    auto polygon = prism_->getPolygon().outer();
+    const auto polygon = prism_->getPolygon().outer();
     for (size_t i = 0; i < polygon.size() - 1; i++)
     {
       addVertexIntMarker(polygon[i], prism_->getMaxZ(), prism_->getMinZ(), i);
@@ -71,11 +64,11 @@ namespace mrs_lib
     prism_->subscribe(this);
     /* is_active_ = true; */
   }
- 
- //}
 
- /* ~VertexControl() //{ */
- 
+  //}
+
+  /* ~VertexControl() //{ */
+
   VertexControl::~VertexControl()
   {
     if (is_active_)
@@ -92,11 +85,11 @@ namespace mrs_lib
       delete menu_handler_;
     }
   }
- 
- //}
+
+  //}
 
   /* update() //{ */
-  
+
   void VertexControl::update()
   {
     if (!is_active_)
@@ -104,7 +97,7 @@ namespace mrs_lib
       return;
     }
 
-    auto polygon = prism_->getPolygon().outer();
+    const auto polygon = prism_->getPolygon().outer();
     // Deleting extra vertices
     if (polygon.size() - 1 < upper_names_.size())
     {
@@ -144,25 +137,26 @@ namespace mrs_lib
       pose.position.z = prism_->getMinZ();
       server_->setPose(lower_names_[i], pose);
 
-      server_->applyChanges(); //can it be called after all the updates are performed?
+      server_->applyChanges();  
     }
+
   }
-  
+
   //}
 
- /* cleanup() //{ */
- 
+  /* cleanup() //{ */
+
   void VertexControl::cleanup()
   {
     server_->clear();
     server_->applyChanges();
     is_active_ = false;
   }
- 
- //}
 
- /* makeBox() //{ */
- 
+  //}
+
+  /* makeBox() //{ */
+
   vm::Marker VertexControl::makeBox(vm::InteractiveMarker& msg)
   {
     vm::Marker marker;
@@ -178,12 +172,12 @@ namespace mrs_lib
 
     return marker;
   }
- 
- //}
 
- /* addVertexIntMarker() //{ */
- 
-  void VertexControl::addVertexIntMarker(mrs_lib::Point2d position, const double upper, const double lower, const int index)
+  //}
+
+  /* addVertexIntMarker() //{ */
+
+  void VertexControl::addVertexIntMarker(const mrs_lib::Point2d& position, const double& upper, const double& lower, const int& index)
   {
     // | ------------------ Upper bound -------------------- |
     // Interactive marker
@@ -262,12 +256,12 @@ namespace mrs_lib
     menu_handler_->apply(*server_, lower_int_marker.name);
     server_->applyChanges();
   }
- 
- //}
 
- /* getIndexByName() //{ */
- 
-  int VertexControl::getIndexByName(std::string marker_name)
+  //}
+
+  /* getIndexByName() //{ */
+
+  int VertexControl::getIndexByName(const std::string& marker_name)
   {
     if (upper_indecies_.find(marker_name) != upper_indecies_.end())
     {
@@ -281,18 +275,18 @@ namespace mrs_lib
       return -1;
     }
   }
- 
- //}
+
+  //}
 
   // --------------------------------------------------------------
   // |                          Callbacks                         |
   // --------------------------------------------------------------
 
-/* vertexMoveCallback() //{ */
+  /* vertexMoveCallback() //{ */
 
   void VertexControl::vertexMoveCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback)
   {
-    gm::Pose pose = feedback->pose;
+    const gm::Pose pose = feedback->pose;
     Point2d polygon_point = Point2d{pose.position.x, pose.position.y};
     int index = getIndexByName(feedback->marker_name);
     if (index < 0)
@@ -303,13 +297,13 @@ namespace mrs_lib
     prism_->setVertex(polygon_point, index);
   }
 
-//}
+  //}
 
   /* vertexDeleteCallback() //{ */
-  
+
   void VertexControl::vertexDeleteCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback)
   {
-    int index = getIndexByName(feedback->marker_name);
+    const int index = getIndexByName(feedback->marker_name);
     if (index < 0)
     {
       return;
@@ -317,7 +311,7 @@ namespace mrs_lib
 
     prism_->deleteVertex(index);
   }
-  
+
   //}
 
 }  // namespace mrs_lib

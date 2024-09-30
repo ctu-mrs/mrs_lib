@@ -14,12 +14,9 @@ namespace mrs_lib
 
   /* StaticEdgesVisualization() //{ */
 
-  StaticEdgesVisualization::StaticEdgesVisualization(Prism* prism, const std::string frame_id, const ros::NodeHandle nh, const double markers_update_rate)
-      : id_(id_generator_), prism_(prism)
+  StaticEdgesVisualization::StaticEdgesVisualization(Prism* prism, const std::string& frame_id, const ros::NodeHandle& nh, const double& markers_update_rate)
+      : id_(id_generator_++), prism_(prism), frame_id_(frame_id), nh_(nh)
   {
-    frame_id_ = frame_id;
-    nh_ = nh;
-    id_generator_++;
     timer_ = nh_.createTimer(ros::Rate(markers_update_rate), &StaticEdgesVisualization::sendMarker, this);
     last_markers_.markers.push_back(vm::Marker());
     init();
@@ -29,13 +26,10 @@ namespace mrs_lib
 
   /* StaticEdgesVisualization() //{ */
 
-  StaticEdgesVisualization::StaticEdgesVisualization(SafetyZone* safety_zone, const int obstacle_id, const std::string frame_id, const ros::NodeHandle nh,
-                                                     double markers_update_rate)
-      : id_(id_generator_), prism_(safety_zone->getObstacle(obstacle_id))
+  StaticEdgesVisualization::StaticEdgesVisualization(SafetyZone* safety_zone, const int& obstacle_id, const std::string& frame_id, const ros::NodeHandle& nh,
+                                                     const double& markers_update_rate)
+      : id_(id_generator_++), prism_(safety_zone->getObstacle(obstacle_id)), frame_id_(frame_id), nh_(nh)
   {
-    frame_id_ = frame_id;
-    nh_ = nh;
-    id_generator_++;
     timer_ = nh_.createTimer(ros::Rate(markers_update_rate), &StaticEdgesVisualization::sendMarker, this);
     last_markers_.markers.push_back(vm::Marker());
     init();
@@ -45,13 +39,10 @@ namespace mrs_lib
 
   /* StaticEdgesVisualization() //{ */
 
-  StaticEdgesVisualization::StaticEdgesVisualization(SafetyZone* safety_zone, const std::string frame_id, const ros::NodeHandle nh,
-                                                     const double markers_update_rate)
-      : id_(id_generator_), prism_(safety_zone->getBorder())
+  StaticEdgesVisualization::StaticEdgesVisualization(SafetyZone* safety_zone, const std::string& frame_id, const ros::NodeHandle& nh,
+                                                     const double& markers_update_rate)
+      : id_(id_generator_++), prism_(safety_zone->getBorder()), frame_id_(frame_id), nh_(nh)
   {
-    frame_id_ = frame_id;
-    nh_ = nh;
-    id_generator_++;
     last_markers_.markers.push_back(vm::Marker());
     timer_ = nh_.createTimer(ros::Rate(markers_update_rate), &StaticEdgesVisualization::sendMarker, this);
     init();
@@ -59,7 +50,7 @@ namespace mrs_lib
 
   //}
 
-  /* StaticEdgesVisualization() //{ */
+  /* ~StaticEdgesVisualization() //{ */
 
   StaticEdgesVisualization::~StaticEdgesVisualization()
   {
@@ -79,7 +70,7 @@ namespace mrs_lib
     publisher_ = nh_.advertise<vm::MarkerArray>("safety_area_static_markers_out", 1);
     prism_->subscribe(this);
     update();
-    /* is_active_= true; */
+    is_active_ = true;  // is_active_ flag inherited from Subscriber class (defined in Prism)
   }
 
   //}

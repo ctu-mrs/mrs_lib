@@ -23,13 +23,13 @@ namespace mrs_lib
   {
   public:
     // Represents the prism
-    IntEdgesVisualization(Prism* prism, const std::string frame_id, const ros::NodeHandle nh);
+    IntEdgesVisualization(Prism* prism, const std::string& frame_id, const ros::NodeHandle& nh);
 
     // Represents corresponding obstacle in the safety_zone.
-    IntEdgesVisualization(SafetyZone* safety_zone, const int obstacle_id, const std::string frame_id, const ros::NodeHandle nh);
+    IntEdgesVisualization(SafetyZone* safety_zone, const int& obstacle_id, const std::string& frame_id, const ros::NodeHandle& nh);
 
     // Represents border of the safety_zone.
-    IntEdgesVisualization(SafetyZone* safety_zone, const std::string frame_id, const ros::NodeHandle nh);
+    IntEdgesVisualization(SafetyZone* safety_zone, const std::string& frame_id, const ros::NodeHandle& nh);
 
     ~IntEdgesVisualization();
 
@@ -39,15 +39,16 @@ namespace mrs_lib
   private:
     // Tools for convenience
     void init();
-    int getIndexByName(const std::string marker_name);
-    void addEdgeIntMarker(const Point2d start, const Point2d end, const double upper, const double lower, const int index);
+    int getIndexByName(const std::string& marker_name);
+    void addEdgeIntMarker(const Point2d& start, const Point2d& end, const double& upper, const double& lower, const int& index);
 
     // Markers's callback
     void vertexAddCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback);
 
     // It is required for generating server id's,
     // because their id's must be unique on topic
-    static int id_generator;
+    static std::atomic<int> id_generator_;
+
     const int id_;
     int vertex_id_ = 0;  // Each marker name must be unique
 

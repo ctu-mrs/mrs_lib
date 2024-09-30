@@ -18,13 +18,14 @@ namespace mrs_lib
 
   public:
     // Represents the prism
-    StaticEdgesVisualization(Prism* prism, const std::string frame_id, const ros::NodeHandle nh, const double markers_update_rate);
+    StaticEdgesVisualization(Prism* prism, const std::string& frame_id, const ros::NodeHandle& nh, const double& markers_update_rate);
 
     // Represents corresponding obstacle in the safety_zone.
-    StaticEdgesVisualization(SafetyZone* safety_zone, int obstacle_id, const std::string frame_id, const ros::NodeHandle nh, const double markers_update_rate);
+    StaticEdgesVisualization(SafetyZone* safety_zone, const int& obstacle_id, const std::string& frame_id, const ros::NodeHandle& nh,
+                             const double& markers_update_rate);
 
     // Represents border of the safety_zone.
-    StaticEdgesVisualization(SafetyZone* safety_zone, const std::string frame_id, const ros::NodeHandle nh, const double markers_update_rate);
+    StaticEdgesVisualization(SafetyZone* safety_zone, const std::string& frame_id, const ros::NodeHandle& nh, const double& markers_update_rate);
 
     ~StaticEdgesVisualization();
 

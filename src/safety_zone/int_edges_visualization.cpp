@@ -10,48 +10,41 @@ namespace gm = geometry_msgs;
 
 namespace mrs_lib
 {
-  int IntEdgesVisualization::id_generator = 0;
+  std::atomic<int> IntEdgesVisualization::id_generator_ = 0;
+
 
   /* IntEdgesVisualization() //{ */
-  
-  IntEdgesVisualization::IntEdgesVisualization(Prism* prism, const std::string frame_id, const ros::NodeHandle nh) : id_(id_generator), prism_(prism)
+
+  IntEdgesVisualization::IntEdgesVisualization(Prism* prism, const std::string& frame_id, const ros::NodeHandle& nh)
+      : id_(id_generator_++), prism_(prism), frame_id_(frame_id), nh_(nh)
   {
-    frame_id_ = frame_id;
-    nh_ = nh;
-    id_generator++;
     init();
   }
-  
+
   //}
 
- /* IntEdgesVisualization() //{ */
- 
-  IntEdgesVisualization::IntEdgesVisualization(SafetyZone* safety_zone, const int obstacle_id, const std::string frame_id, const ros::NodeHandle nh)
-      : id_(id_generator), prism_(safety_zone->getObstacle(obstacle_id))
+  /* IntEdgesVisualization() //{ */
+
+  IntEdgesVisualization::IntEdgesVisualization(SafetyZone* safety_zone, const int& obstacle_id, const std::string& frame_id, const ros::NodeHandle& nh)
+      : id_(id_generator_++), prism_(safety_zone->getObstacle(obstacle_id)), frame_id_(frame_id), nh_(nh)
   {
-    frame_id_ = frame_id;
-    nh_ = nh;
-    id_generator++;
     init();
   }
- 
- //}
 
- /* IntEdgesVisualization() //{ */
- 
-  IntEdgesVisualization::IntEdgesVisualization(SafetyZone* safety_zone, const std::string frame_id, const ros::NodeHandle nh)
-      : id_(id_generator), prism_(safety_zone->getBorder())
+  //}
+
+  /* IntEdgesVisualization() //{ */
+
+  IntEdgesVisualization::IntEdgesVisualization(SafetyZone* safety_zone, const std::string& frame_id, const ros::NodeHandle& nh)
+      : id_(id_generator_++), prism_(safety_zone->getBorder()), frame_id_(frame_id), nh_(nh)
   {
-    frame_id_ = frame_id;
-    nh_ = nh;
-    id_generator++;
     init();
   }
- 
- //}
 
- /* init() //{ */
- 
+  //}
+
+  /* init() //{ */
+
   void IntEdgesVisualization::init()
   {
     server_ = new interactive_markers::InteractiveMarkerServer(nh_.getNamespace() + "/safety_area_edges_out", std::to_string(id_), false);
@@ -60,18 +53,21 @@ namespace mrs_lib
 
     prism_->subscribe(this);
 
-    auto polygon = prism_->getPolygon().outer();
+    const auto polygon = prism_->getPolygon().outer();
     for (size_t i = 0; i < polygon.size() - 1; i++)
     {
       addEdgeIntMarker(polygon[i], polygon[i + 1], prism_->getMaxZ(), prism_->getMinZ(), i);
     }
-    update();
-  }
- 
- //}
 
- /* IntEdgesVisualization() //{ */
- 
+    is_active_ = true; //Inherited from Subscriber class, defined in prism
+    update();
+
+  }
+
+  //}
+
+  /* IntEdgesVisualization() //{ */
+
   IntEdgesVisualization::~IntEdgesVisualization()
   {
     if (is_active_)
@@ -88,10 +84,10 @@ namespace mrs_lib
       delete menu_handler_;
     }
   }
- 
- //}
 
-/* update() //{ */
+  //}
+
+  /* update() //{ */
 
   void IntEdgesVisualization::update()
   {
@@ -100,7 +96,7 @@ namespace mrs_lib
       return;
     }
 
-    auto polygon = prism_->getPolygon().outer();
+    const auto polygon = prism_->getPolygon().outer();
     // Deleting extra vertices
     if (polygon.size() - 1 < upper_names_.size())
     {
@@ -177,22 +173,22 @@ namespace mrs_lib
     }
   }
 
-//}
+  //}
 
- /* cleanup() //{ */
- 
+  /* cleanup() //{ */
+
   void IntEdgesVisualization::cleanup()
   {
     server_->clear();
     server_->applyChanges();
     is_active_ = false;
   }
- 
- //}
 
- /* getIndexByName() //{ */
- 
-  int IntEdgesVisualization::getIndexByName(const std::string marker_name)
+  //}
+
+  /* getIndexByName() //{ */
+
+  int IntEdgesVisualization::getIndexByName(const std::string& marker_name)
   {
     if (upper_indecies_.find(marker_name) != upper_indecies_.end())
     {
@@ -206,12 +202,12 @@ namespace mrs_lib
       return -1;
     }
   }
- 
- //}
 
-/* addEdgeIntMarker() //{ */
+  //}
 
-  void IntEdgesVisualization::addEdgeIntMarker(const Point2d start, const Point2d end, const double upper, const double lower, const int index)
+  /* addEdgeIntMarker() //{ */
+
+  void IntEdgesVisualization::addEdgeIntMarker(const Point2d& start, const Point2d& end, const double& upper, const double& lower, const int& index)
   {
     // Visible line
     gm::Point p1;
@@ -236,7 +232,8 @@ namespace mrs_lib
     // Interactive marker
     vm::InteractiveMarker upper_int_marker;
     upper_int_marker.header.frame_id = frame_id_;
-    upper_int_marker.header.stamp.fromNSec(0);
+    /* upper_int_marker.header.stamp.fromNSec(0); */
+    upper_int_marker.header.stamp = ros::Time::now();
     upper_int_marker.pose.position.x = start.get<0>();
     upper_int_marker.pose.position.y = start.get<1>();
     upper_int_marker.pose.position.z = upper;
@@ -343,9 +340,9 @@ namespace mrs_lib
     server_->applyChanges();
   }
 
-//}
+  //}
 
-/* vertexAddCallback() //{ */
+  /* vertexAddCallback() //{ */
 
   void IntEdgesVisualization::vertexAddCallback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback)
   {
@@ -358,6 +355,6 @@ namespace mrs_lib
     prism_->addVertexClockwise(index);
   }
 
-//}
+  //}
 
 }  // namespace mrs_lib
