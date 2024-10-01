@@ -28,7 +28,7 @@ namespace mrs_lib
     double min_z_;
     double max_z_;
 
-    std::set<Subscriber*> subscribers;
+    std::set<Subscriber*> subscribers_;
 
     void notifySubscribers();
     void cleanSubscribers();
@@ -36,7 +36,7 @@ namespace mrs_lib
   public:
     // If max_z < min_z, automatically swaps them
     // Throws std::invalid argument if polygon is invalid
-    Prism(const std::vector<Point2d>& points, double max_z, double min_z);
+    Prism(const std::vector<Point2d>& points, const double max_z, const double min_z);
 
     ~Prism();
 
@@ -55,46 +55,46 @@ namespace mrs_lib
     // Returns the centroid of the polygon of the prism.
     Point2d getCenter();
 
-    void setMaxZ(double value);
+    void setMaxZ(const double value);
 
-    void setMinZ(double value);
+    void setMinZ(const double value);
 
     // Tries to change the coordinates of given vertex.
     // returns true if succeeded
     // returns false otherwise
-    bool setVertex(Point2d vertex, unsigned int index);
+    bool setVertex(const Point2d& vertex, const unsigned int index);
 
     // Tries to change the coordinates of given vertecies.
     // Only notifies subsribers once in case of success
     // returns true if succeeded
     // returns false otherwise
-    bool setVertices(std::vector<Point2d>& vertices, std::vector<unsigned int> indices);
+    bool setVertices(const std::vector<Point2d>& vertices, const std::vector<unsigned int>& indices);
 
     // Adds new vertex in the middle of the neighboring verge
-    void addVertexClockwise(unsigned int index);
+    void addVertexClockwise(const unsigned int index);
 
     // Adds new vertex in the middle of the neighboring verge
-    void addVertexCounterclockwise(unsigned int index);
+    void addVertexCounterclockwise(const unsigned int index);
 
-    void move(Point3d adjustment);
+    void move(const Point3d& adjustment);
 
     // Takes angle in radians, rotates clockwise (counter-clockwise if alpha < 0)
-    void rotate(double alpha);
+    void rotate(const double alpha);
 
     // Deletes the vertex only if vertex_count > 3
-    void deleteVertex(unsigned int index);
+    void deleteVertex(const unsigned int index);
 
     // Controls, if 3d point lies within the prism
-    bool isPointIn(Point3d point);
+    bool isPointIn(const Point3d& point);
 
     // Convinient version of isPointIn(Point3d point)
-    bool isPointIn(double x, double y, double z);
+    bool isPointIn(const double x, const double y, const double z);
 
     // Controls, if 2d point lies within the polygon of prism
-    bool isPointIn(Point2d point);
+    bool isPointIn(const Point2d& point);
 
     // Convinient version of isPointIn(Point2d point)
-    bool isPointIn(double x, double y);
+    bool isPointIn(const double x, const double y);
 
     // Helper method for text representation
     void accept(Visitor& visitor);

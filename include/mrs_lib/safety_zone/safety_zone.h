@@ -43,7 +43,7 @@ namespace mrs_lib
 
     Prism* getBorder();
 
-    Prism* getObstacle(int index);
+    Prism* getObstacle(const int index);
 
     std::map<int, Prism*>::iterator getObstaclesBegin();
 
@@ -51,7 +51,7 @@ namespace mrs_lib
 
     int addObstacle(Prism* obstacle);
 
-    void deleteObstacle(int id);
+    void deleteObstacle(const int id);
 
     // Helper method for text representation
     void accept(Visitor& visitor);
@@ -61,6 +61,8 @@ namespace mrs_lib
     std::map<int, Prism*> obstacles_;
     int next_obstacle_id_ = 0;
 
+    //Used to discretize between start and end for the path validation
+    int _discretization_steps_ = 20; 
   };  // class SafetyZone
 
 }  // namespace mrs_lib

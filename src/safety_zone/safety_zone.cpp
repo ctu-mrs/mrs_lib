@@ -129,19 +129,19 @@ namespace mrs_lib
 
   bool SafetyZone::isPathValid(const Point3d start, const Point3d end)
   {
-    int count = (int)ceil((bg::distance(start, end) * 20));
+    int count = static_cast<int>(ceil((bg::distance(start, end) * _discretization_steps_)));
 
-    Point3d cur_point = start;
-    Point3d ds = end;
-    bg::subtract_point(ds, start);
-    bg::divide_value(ds, count);
+    Point3d current_point = start;
+    Point3d increment = end;
+    bg::subtract_point(increment, start);  // Calculate a vector from start to end
+    bg::divide_value(increment, count);    // Obtaing the incremental step vector
     for (int i = 0; i < count; i++)
     {
-      if (!isPointValid(cur_point))
+      if (!isPointValid(current_point))
       {
         return false;
       }
-      bg::add_point(cur_point, ds);
+      bg::add_point(current_point, increment);  // Advancing current point by the step vector to move along the path
     }
     return true;
   }
@@ -152,19 +152,19 @@ namespace mrs_lib
 
   bool SafetyZone::isPathValid(const Point2d start, const Point2d end)
   {
-    int count = (int)ceil((bg::distance(start, end) * 20));
+    int count = static_cast<int>(ceil((bg::distance(start, end) * _discretization_steps_)));
 
-    Point2d cur_point = start;
-    Point2d ds = end;
-    bg::subtract_point(ds, start);
-    bg::divide_value(ds, count);
+    Point2d current_point = start;
+    Point2d increment = end;
+    bg::subtract_point(increment, start);  // Calculate a vector from start to end
+    bg::divide_value(increment, count);    // Obtaing the incremental step vector
     for (int i = 0; i < count; i++)
     {
-      if (!isPointValid(cur_point))
+      if (!isPointValid(current_point))
       {
         return false;
       }
-      bg::add_point(cur_point, ds);
+      bg::add_point(current_point, increment);  // Advancing current point by step vector to move along the path
     }
     return true;
   }
@@ -187,7 +187,7 @@ namespace mrs_lib
 
   /* getBorder() //{ */
 
-  Prism* SafetyZone::getBorder() 
+  Prism* SafetyZone::getBorder()
   {
     return &outer_border_;
   }
@@ -196,7 +196,7 @@ namespace mrs_lib
 
   /* getObstacle() //{ */
 
-  Prism* SafetyZone::getObstacle(int index) 
+  Prism* SafetyZone::getObstacle(const int index)
   {
     return obstacles_.at(index);
   }

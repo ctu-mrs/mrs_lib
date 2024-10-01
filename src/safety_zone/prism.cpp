@@ -6,8 +6,7 @@ namespace bg = boost::geometry;
 namespace mrs_lib
 {
   /* Prism() //{ */
-  Prism::Prism(const std::vector<Point2d>& points, double max_z, double min_z)
-    : polygon_(), min_z_(std::min(min_z,max_z_)), max_z_(std::max(min_z,max_z))
+  Prism::Prism(const std::vector<Point2d>& points, const double max_z, const double min_z) : polygon_(), min_z_(std::min(min_z, max_z_)), max_z_(std::max(min_z, max_z))
   {
     if (points.size() < 3)
       throw std::invalid_argument("A valid polygon must have at least three points.");
@@ -48,21 +47,21 @@ namespace mrs_lib
   /* subscribe() //{ */
   void Prism::subscribe(Subscriber* entity)
   {
-    subscribers.emplace(entity);
+    subscribers_.emplace(entity);
   }
   //}
 
   /* unsubscribe() //{ */
   void Prism::unsubscribe(Subscriber* entity)
   {
-    subscribers.erase(entity);
+    subscribers_.erase(entity);
   }
   //}
 
   /* notifySubscribers() //{ */
   void Prism::notifySubscribers()
   {
-    for (auto s : subscribers)
+    for (auto s : subscribers_)
     {
       s->update();
     }
@@ -72,7 +71,7 @@ namespace mrs_lib
   /* cleanSubscribers() //{ */
   void Prism::cleanSubscribers()
   {
-    for (auto s : subscribers)
+    for (auto s : subscribers_)
     {
       s->cleanup();
     }
@@ -80,7 +79,7 @@ namespace mrs_lib
   //}
 
   /* setMaxZ() //{ */
-  void Prism::setMaxZ(double value)
+  void Prism::setMaxZ(const double value)
   {
     max_z_ = value < min_z_ ? min_z_ : value;
     notifySubscribers();
@@ -88,7 +87,7 @@ namespace mrs_lib
   //}
 
   /* setMinZ() //{ */
-  void Prism::setMinZ(double value)
+  void Prism::setMinZ(const double value)
   {
     min_z_ = value > max_z_ ? max_z_ : value;
     notifySubscribers();
@@ -96,7 +95,7 @@ namespace mrs_lib
   //}
 
   /* setVertex() //{ */
-  bool Prism::setVertex(Point2d vertex, unsigned int index)
+  bool Prism::setVertex(const Point2d& vertex, const unsigned int index)
   {
     auto& outer_ring = polygon_.outer();
     if (index >= outer_ring.size() - 1)
@@ -127,7 +126,7 @@ namespace mrs_lib
   //}
 
   /* setVertices() //{ */
-  bool Prism::setVertices(std::vector<Point2d>& vertices, std::vector<unsigned int> indices)
+  bool Prism::setVertices(const std::vector<Point2d>& vertices, const std::vector<unsigned int>& indices)
   {
     if (vertices.size() != indices.size())
     {
@@ -195,7 +194,7 @@ namespace mrs_lib
   //}
 
   /* addVertexClockwise() //{ */
-  void Prism::addVertexClockwise(unsigned int index)
+  void Prism::addVertexClockwise(const unsigned int index)
   {
     auto& outer_ring = polygon_.outer();
     if (index >= outer_ring.size() - 1)
@@ -218,7 +217,7 @@ namespace mrs_lib
   //}
 
   /* deleteVertex() //{ */
-  void Prism::deleteVertex(unsigned int index)
+  void Prism::deleteVertex(const unsigned int index)
   {
     auto& outer_ring = polygon_.outer();
     if (index >= outer_ring.size() - 1)
@@ -242,7 +241,7 @@ namespace mrs_lib
 
   /* move() //{ */
 
-  void Prism::move(Point3d adjustment)
+  void Prism::move(const Point3d& adjustment)
   {
     bool do_notify = false;
 
@@ -276,21 +275,21 @@ namespace mrs_lib
   //}
 
   /* rotate() //{ */
-  void Prism::rotate(double alpha)
+  void Prism::rotate(const double alpha)
   {
     if (alpha == 0.0)
     {
       return;
     }
 
-    Point2d cur_center = getCenter();
+    Point2d current_center = getCenter();
     auto& outer_ring = polygon_.outer();
     for (size_t i = 0; i < outer_ring.size(); i++)
     {
       double x1 = outer_ring[i].get<0>();
       double y1 = outer_ring[i].get<1>();
-      double x2 = (x1 - cur_center.get<0>()) * cos(alpha) - (y1 - cur_center.get<1>()) * sin(alpha) + cur_center.get<0>();
-      double y2 = (x1 - cur_center.get<0>()) * sin(alpha) + (y1 - cur_center.get<1>()) * cos(alpha) + cur_center.get<1>();
+      double x2 = (x1 - current_center.get<0>()) * cos(alpha) - (y1 - current_center.get<1>()) * sin(alpha) + current_center.get<0>();
+      double y2 = (x1 - current_center.get<0>()) * sin(alpha) + (y1 - current_center.get<1>()) * cos(alpha) + current_center.get<1>();
       outer_ring[i].set<0>(x2);
       outer_ring[i].set<1>(y2);
     }
@@ -300,7 +299,7 @@ namespace mrs_lib
   //}
 
   /* isPointIn(Point3d point) //{ */
-  bool Prism::isPointIn(Point3d point)
+  bool Prism::isPointIn(const Point3d& point)
   {
     Point2d point2d;
     bg::set<0>(point2d, bg::get<0>(point));
@@ -314,8 +313,9 @@ namespace mrs_lib
   //}
 
   /* isPointIn(double x, double y, double z) //{ */
-  bool Prism::isPointIn(double x, double y, double z)
+  bool Prism::isPointIn(const double x, const double y, const double z)
   {
+    // Fill in 3d point and call point3d function
     Point3d point;
     bg::set<0>(point, x);
     bg::set<1>(point, y);
@@ -326,14 +326,14 @@ namespace mrs_lib
   //}
 
   /* isPointIn(Point2d point) //{ */
-  bool Prism::isPointIn(Point2d point)
+  bool Prism::isPointIn(const Point2d& point)
   {
     return bg::within(point, polygon_);
   }
   //}
 
   /* isPointIn(double x, double y) //{ */
-  bool Prism::isPointIn(double x, double y)
+  bool Prism::isPointIn(const double x, const double y)
   {
     Point2d point;
     bg::set<0>(point, x);
