@@ -18,9 +18,9 @@ namespace mrs_lib
     SafetyZone(Prism outer_border);
 
     // Cleaning the obstacles' memory is SafetyZone's responsibility
-    SafetyZone(Prism outer_border, std::vector<Prism*> obstacles);
+    SafetyZone(Prism outer_border, std::vector<std::unique_ptr<Prism>> obstacles);
 
-    ~SafetyZone();
+    ~SafetyZone() = default;
 
     // Controls, if 3d point lies within the prism
     bool isPointValid(const Point3d point);
@@ -45,11 +45,11 @@ namespace mrs_lib
 
     Prism* getObstacle(const int index);
 
-    std::map<int, Prism*>::iterator getObstaclesBegin();
+    std::map<int, std::unique_ptr<Prism>>::iterator getObstaclesBegin();
 
-    std::map<int, Prism*>::iterator getObstaclesEnd();
+    std::map<int, std::unique_ptr<Prism>>::iterator getObstaclesEnd();
 
-    int addObstacle(Prism* obstacle);
+    int addObstacle(std::unique_ptr<Prism> obstacle);
 
     void deleteObstacle(const int id);
 
@@ -58,7 +58,7 @@ namespace mrs_lib
 
   private:
     Prism outer_border_;
-    std::map<int, Prism*> obstacles_;
+    std::map<int, std::unique_ptr<Prism>> obstacles_;
     int next_obstacle_id_ = 0;
 
     //Used to discretize between start and end for the path validation

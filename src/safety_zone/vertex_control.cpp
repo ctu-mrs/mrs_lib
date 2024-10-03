@@ -50,9 +50,9 @@ namespace mrs_lib
 
   void VertexControl::init()
   {
-    server_ = new interactive_markers::InteractiveMarkerServer(nh_.getNamespace() + "/safety_area_vertices_out", std::to_string(id_), false);
+    server_ = std::make_unique<interactive_markers::InteractiveMarkerServer>(nh_.getNamespace() + "/safety_area_vertices_out", std::to_string(id_), false);
     // Menu
-    menu_handler_ = new interactive_markers::MenuHandler();
+    menu_handler_ = std::make_unique<interactive_markers::MenuHandler>();
     menu_handler_->insert("Delete the vertex", [this](const vm::InteractiveMarkerFeedbackConstPtr& feedback) { this->vertexDeleteCallback(feedback); });
 
     const auto polygon = prism_->getPolygon().outer();
@@ -76,14 +76,6 @@ namespace mrs_lib
       prism_->unsubscribe(this);
     }
     cleanup();
-    if (server_)
-    {
-      delete server_;
-    }
-    if (menu_handler_)
-    {
-      delete menu_handler_;
-    }
   }
 
   //}
@@ -137,9 +129,8 @@ namespace mrs_lib
       pose.position.z = prism_->getMinZ();
       server_->setPose(lower_names_[i], pose);
 
-      server_->applyChanges();  
+      server_->applyChanges();
     }
-
   }
 
   //}

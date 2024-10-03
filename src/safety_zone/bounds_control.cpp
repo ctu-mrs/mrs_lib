@@ -57,14 +57,6 @@ namespace mrs_lib
       prism_->unsubscribe(this);
     }
     cleanup();
-    if (server_)
-    {
-      delete server_;
-    }
-    if (menu_handler_)
-    {
-      delete menu_handler_;
-    }
   }
 
   //}
@@ -73,8 +65,8 @@ namespace mrs_lib
 
   void BoundsControl::init()
   {
-    server_ = new interactive_markers::InteractiveMarkerServer(nh_.getNamespace() + "/safety_area_bounds_out", std::to_string(id_), false);
-    menu_handler_ = new interactive_markers::MenuHandler();
+    server_ = std::make_unique<interactive_markers::InteractiveMarkerServer>(nh_.getNamespace() + "/safety_area_bounds_out", std::to_string(id_), false);
+    menu_handler_ = std::make_unique<interactive_markers::MenuHandler>();
     if (safety_zone_)
     {
       menu_handler_->insert("Delete the prism", [this](const vm::InteractiveMarkerFeedbackConstPtr& feedback) { this->deleteCallback(feedback); });
@@ -88,7 +80,7 @@ namespace mrs_lib
     addBoundIntMarker(BoundaryType::UPPER);
     addBoundIntMarker(BoundaryType::LOWER);
 
-    is_active_ = true; //flag inherited from Subscriber class, defined in Prism
+    is_active_ = true;  // flag inherited from Subscriber class, defined in Prism
   }
 
   //}

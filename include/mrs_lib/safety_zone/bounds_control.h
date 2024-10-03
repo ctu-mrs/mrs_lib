@@ -67,8 +67,8 @@ namespace mrs_lib
     SafetyZone* safety_zone_ = nullptr;
 
     // Communication with RVIZ
-    interactive_markers::InteractiveMarkerServer* server_ = nullptr;
-    interactive_markers::MenuHandler* menu_handler_ = nullptr;
+    std::unique_ptr<interactive_markers::InteractiveMarkerServer> server_ = nullptr;
+    std::unique_ptr<interactive_markers::MenuHandler> menu_handler_ = nullptr;
 
     // Distinguishing features of 2 markers
     std::string upper_name_;

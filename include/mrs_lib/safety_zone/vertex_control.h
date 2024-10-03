@@ -61,8 +61,8 @@ namespace mrs_lib
     ros::NodeHandle nh_;
 
     // Interactive markers
-    interactive_markers::InteractiveMarkerServer* server_ = nullptr;
-    interactive_markers::MenuHandler* menu_handler_ = nullptr;
+    std::unique_ptr<interactive_markers::InteractiveMarkerServer> server_ = nullptr;
+    std::unique_ptr<interactive_markers::MenuHandler> menu_handler_ = nullptr;
 
     // Note:
     // Since no method find_by_value() is present and markers may not be ordered,

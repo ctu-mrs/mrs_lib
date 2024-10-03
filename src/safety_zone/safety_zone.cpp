@@ -16,24 +16,14 @@ namespace mrs_lib
   //}
 
   /* SafetyZone() //{ */
-  SafetyZone::SafetyZone(Prism outer_border, std::vector<Prism*> obstacles) : outer_border_(outer_border)
+  SafetyZone::SafetyZone(Prism outer_border, std::vector<std::unique_ptr<Prism>> obstacles) : outer_border_(outer_border)
   {
 
-    for (size_t i = 0; i < obstacles.size(); i++)
+    for (auto& obstacle : obstacles)
     {
-      obstacles_.insert({next_obstacle_id_, obstacles[i]});
-      next_obstacle_id_++;
+      obstacles_.emplace(next_obstacle_id_++, std::move(obstacle));
     }
-  }
-  //}
 
-  /* ~SafetyZone() //{ */
-  SafetyZone::~SafetyZone()
-  {
-    for (auto obstacle : obstacles_)
-    {
-      delete obstacle.second;
-    }
   }
   //}
 
@@ -46,7 +36,7 @@ namespace mrs_lib
       return false;
     }
 
-    for (auto obstacle : obstacles_)
+    for (auto& obstacle : obstacles_)
     {
       if (obstacle.second->isPointIn(point))
       {
@@ -68,7 +58,7 @@ namespace mrs_lib
       return false;
     }
 
-    for (auto obstacle : obstacles_)
+    for (auto& obstacle : obstacles_)
     {
       if (obstacle.second->isPointIn(px, py))
       {
@@ -90,7 +80,7 @@ namespace mrs_lib
       return false;
     }
 
-    for (auto obstacle : obstacles_)
+    for (auto& obstacle : obstacles_)
     {
       if (obstacle.second->isPointIn(point))
       {
@@ -112,7 +102,7 @@ namespace mrs_lib
       return false;
     }
 
-    for (auto obstacle : obstacles_)
+    for (auto& obstacle : obstacles_)
     {
       if (obstacle.second->isPointIn(px, py, pz))
       {
@@ -198,14 +188,20 @@ namespace mrs_lib
 
   Prism* SafetyZone::getObstacle(const int index)
   {
-    return obstacles_.at(index);
+    auto it = obstacles_.find(index);
+
+    if (it != obstacles_.end()){
+      return it->second.get();
+
+    }
+    return nullptr;
   }
 
   //}
 
   /* getObstacleBegin() //{ */
 
-  std::map<int, Prism*>::iterator SafetyZone::getObstaclesBegin()
+  std::map<int, std::unique_ptr<Prism>>::iterator SafetyZone::getObstaclesBegin()
   {
     return obstacles_.begin();
   }
@@ -214,7 +210,7 @@ namespace mrs_lib
 
   /* getObstacleEnd() //{ */
 
-  std::map<int, Prism*>::iterator SafetyZone::getObstaclesEnd()
+  std::map<int, std::unique_ptr<Prism>>::iterator SafetyZone::getObstaclesEnd()
   {
     return obstacles_.end();
   }
@@ -223,9 +219,10 @@ namespace mrs_lib
 
   /* addObstacle //{ */
 
-  int SafetyZone::addObstacle(Prism* obstacle)
+  int SafetyZone::addObstacle(std::unique_ptr<Prism> obstacle)
   {
-    obstacles_.insert({++next_obstacle_id_, obstacle});
+    int current_id = ++next_obstacle_id_;
+    obstacles_.emplace(current_id, std::move(obstacle));
     return next_obstacle_id_;
   }
 
@@ -235,8 +232,8 @@ namespace mrs_lib
 
   void SafetyZone::deleteObstacle(int id)
   {
-    delete obstacles_.at(id);
-    obstacles_.erase(id);
+    auto it = obstacles_.find(id);
+    obstacles_.erase(it); //this will automatically delete the obstacle in the map
   }
 
   //}

@@ -47,8 +47,8 @@ namespace mrs_lib
 
   void IntEdgesVisualization::init()
   {
-    server_ = new interactive_markers::InteractiveMarkerServer(nh_.getNamespace() + "/safety_area_edges_out", std::to_string(id_), false);
-    menu_handler_ = new interactive_markers::MenuHandler();
+    server_ = std::make_unique<interactive_markers::InteractiveMarkerServer>(nh_.getNamespace() + "/safety_area_edges_out", std::to_string(id_), false);
+    menu_handler_ = std::make_unique<interactive_markers::MenuHandler>();
     menu_handler_->insert("Add vertex", [this](const vm::InteractiveMarkerFeedbackConstPtr& feedback) { this->vertexAddCallback(feedback); });
 
     prism_->subscribe(this);
@@ -59,9 +59,8 @@ namespace mrs_lib
       addEdgeIntMarker(polygon[i], polygon[i + 1], prism_->getMaxZ(), prism_->getMinZ(), i);
     }
 
-    is_active_ = true; //Inherited from Subscriber class, defined in prism
+    is_active_ = true;  // Inherited from Subscriber class, defined in prism
     update();
-
   }
 
   //}
@@ -75,14 +74,6 @@ namespace mrs_lib
       prism_->unsubscribe(this);
     }
     cleanup();
-    if (server_)
-    {
-      delete server_;
-    }
-    if (menu_handler_)
-    {
-      delete menu_handler_;
-    }
   }
 
   //}

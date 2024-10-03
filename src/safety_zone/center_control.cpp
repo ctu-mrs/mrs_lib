@@ -13,13 +13,13 @@ namespace mrs_lib
   std::atomic<int> CenterControl::id_generator_ = 0;
 
   /* CenterControl() //{ */
-  
+
   CenterControl::CenterControl(Prism* prism, const std::string& frame_id, const ros::NodeHandle& nh)
       : id_(id_generator_++), prism_(prism), frame_id_(frame_id), nh_(nh)
   {
     init();
   }
-  
+
   //}
 
   /* CenterControl() //{ */
@@ -52,14 +52,6 @@ namespace mrs_lib
       prism_->unsubscribe(this);
     }
     cleanup();
-    if (server_)
-    {
-      delete server_;
-    }
-    if (menu_handler_)
-    {
-      delete menu_handler_;
-    }
   }
 
   //}
@@ -68,8 +60,8 @@ namespace mrs_lib
 
   void CenterControl::init()
   {
-    server_ = new interactive_markers::InteractiveMarkerServer(nh_.getNamespace() + "/safety_area_center_out", std::to_string(id_), false);
-    menu_handler_ = new interactive_markers::MenuHandler();
+    server_ = std::make_unique<interactive_markers::InteractiveMarkerServer>(nh_.getNamespace() + "/safety_area_center_out", std::to_string(id_), false);
+    menu_handler_ = std::make_unique<interactive_markers::MenuHandler>();
     if (safety_zone_)
     {
       menu_handler_->insert("Delete the prism", [this](const vm::InteractiveMarkerFeedbackConstPtr& feedback) { this->deleteCallback(feedback); });
@@ -80,7 +72,7 @@ namespace mrs_lib
 
     prism_->subscribe(this);
     addIntMarker();
-    is_active_ = true; //flag inherited from Subscriber class (defined in prism) 
+    is_active_ = true;  // flag inherited from Subscriber class (defined in prism)
   }
 
   //}
@@ -146,7 +138,7 @@ namespace mrs_lib
     vm::InteractiveMarker interactive_marker;
     interactive_marker.header.frame_id = frame_id_;
     /* interactive_marker.header.stamp.fromNSec(0); */
-    interactive_marker.header.stamp = ros::Time::now(); 
+    interactive_marker.header.stamp = ros::Time::now();
     interactive_marker.pose.position.x = center.get<0>();
     interactive_marker.pose.position.y = center.get<1>();
     interactive_marker.pose.position.z = (prism_->getMaxZ() + prism_->getMinZ()) / 2;
