@@ -283,7 +283,7 @@ void show_safety_zone(ros::NodeHandle nh) {
     Prism outer_boarder = Prism(poly, 0.0, 15);
     Prism obstacle = Prism(poly, 16.0, 18.0);
 
-    std::vector<Prism*> obstacles{&obstacle, &obstacle};
+    std::vector<std::unique_ptr<Prism>> obstacles{&obstacle, &obstacle};
     SafetyZone safety_zone = SafetyZone(outer_boarder, obstacles);
 
     StaticEdgesVisualization static_edges_vis = StaticEdgesVisualization(&safety_zone, "map", nh, 2);
