@@ -43,6 +43,8 @@ namespace mrs_lib
 
     Prism* getBorder();
 
+    const std::map<int, std::unique_ptr<Prism>>& getObstacles() const;
+
     Prism* getObstacle(const int index);
 
     std::map<int, std::unique_ptr<Prism>>::iterator getObstaclesBegin();

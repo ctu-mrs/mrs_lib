@@ -6,7 +6,8 @@ namespace bg = boost::geometry;
 namespace mrs_lib
 {
   /* Prism() //{ */
-  Prism::Prism(const std::vector<Point2d>& points, const double max_z, const double min_z) : polygon_(), min_z_(std::min(min_z, max_z_)), max_z_(std::max(min_z, max_z))
+  Prism::Prism(const std::vector<Point2d>& points, const double max_z, const double min_z)
+      : polygon_(), min_z_(std::min(min_z, max_z_)), max_z_(std::max(min_z, max_z))
   {
     if (points.size() < 3)
       throw std::invalid_argument("A valid polygon must have at least three points.");
@@ -356,6 +357,23 @@ namespace mrs_lib
     Point2d res;
     boost::geometry::centroid(polygon_, res);
     return res;
+  }
+  //}
+
+  /* getPoints() //{ */
+  std::vector<Point2d> Prism::getPoints()
+  {
+    std::vector<Point2d> points;
+    const auto& outer_ring = polygon_.outer();
+
+    points.reserve(outer_ring.size());
+
+    for (const auto& point : outer_ring)
+    {
+      points.emplace_back(point);
+    }
+
+    return points;
   }
   //}
 

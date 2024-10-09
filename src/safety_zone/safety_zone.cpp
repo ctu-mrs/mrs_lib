@@ -49,7 +49,7 @@ namespace mrs_lib
 
   //}
 
-  /* isPointVavlid(px, py) //{ */
+  /* isPointValid(px, py) //{ */
 
   bool SafetyZone::isPointValid(const double px, const double py)
   {
@@ -180,6 +180,15 @@ namespace mrs_lib
   Prism* SafetyZone::getBorder()
   {
     return &outer_border_;
+  }
+
+  //}
+ 
+  /* getObstacles() //{ */
+
+  const std::map<int, std::unique_ptr<Prism>>& SafetyZone::getObstacles() const
+  {
+    return obstacles_;
   }
 
   //}

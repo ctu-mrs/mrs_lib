@@ -43,8 +43,8 @@ namespace mrs_lib
     void subscribe(Subscriber* entity);
     void unsubscribe(Subscriber* entity);
 
+    std::vector<Point2d> getPoints();
     double getMaxZ();
-
     double getMinZ();
 
     Polygon getPolygon();
