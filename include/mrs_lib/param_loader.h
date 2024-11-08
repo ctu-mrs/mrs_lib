@@ -67,7 +67,7 @@ private:
   bool m_load_successful, m_print_values;
   std::string m_node_name;
   std::string m_prefix;
-  const ros::NodeHandle& m_nh;
+  ros::NodeHandle m_nh;
   mrs_lib::ParamProvider m_pp;
   std::unordered_set<std::string> m_loaded_params;
 
