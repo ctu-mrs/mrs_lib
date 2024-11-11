@@ -61,6 +61,7 @@ namespace mrs_lib
   private:
     Prism outer_border_;
     std::map<int, std::unique_ptr<Prism>> obstacles_;
+    std::mutex mutex_safety_zone_;
     int next_obstacle_id_ = 0;
 
     //Used to discretize between start and end for the path validation

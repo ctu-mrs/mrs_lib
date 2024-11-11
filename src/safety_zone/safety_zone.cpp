@@ -23,7 +23,6 @@ namespace mrs_lib
     {
       obstacles_.emplace(next_obstacle_id_++, std::move(obstacle));
     }
-
   }
   //}
 
@@ -31,6 +30,7 @@ namespace mrs_lib
 
   bool SafetyZone::isPointValid(const Point2d point)
   {
+    std::scoped_lock lock(mutex_safety_zone_);
     if (!outer_border_.isPointIn(point))
     {
       return false;
@@ -53,6 +53,7 @@ namespace mrs_lib
 
   bool SafetyZone::isPointValid(const double px, const double py)
   {
+    std::scoped_lock lock(mutex_safety_zone_);
     if (!outer_border_.isPointIn(px, py))
     {
       return false;
@@ -75,6 +76,7 @@ namespace mrs_lib
 
   bool SafetyZone::isPointValid(const Point3d point)
   {
+    std::scoped_lock lock(mutex_safety_zone_);
     if (!outer_border_.isPointIn(point))
     {
       return false;
@@ -97,6 +99,7 @@ namespace mrs_lib
 
   bool SafetyZone::isPointValid(const double px, const double py, const double pz)
   {
+    std::scoped_lock lock(mutex_safety_zone_);
     if (!outer_border_.isPointIn(px, py, pz))
     {
       return false;
@@ -165,6 +168,7 @@ namespace mrs_lib
 
   void SafetyZone::accept(Visitor& visitor)
   {
+    std::scoped_lock lock(mutex_safety_zone_);
     visitor.visit(this);
 
     for (auto& entry : obstacles_)
@@ -179,15 +183,17 @@ namespace mrs_lib
 
   Prism* SafetyZone::getBorder()
   {
+    std::scoped_lock lock(mutex_safety_zone_);
     return &outer_border_;
   }
 
   //}
- 
+
   /* getObstacles() //{ */
 
   const std::map<int, std::unique_ptr<Prism>>& SafetyZone::getObstacles() const
   {
+    std::scoped_lock lock(mutex_safety_zone_);
     return obstacles_;
   }
 
@@ -197,11 +203,12 @@ namespace mrs_lib
 
   Prism* SafetyZone::getObstacle(const int index)
   {
+    std::scoped_lock lock(mutex_safety_zone_);
     auto it = obstacles_.find(index);
 
-    if (it != obstacles_.end()){
+    if (it != obstacles_.end())
+    {
       return it->second.get();
-
     }
     return nullptr;
   }
@@ -212,6 +219,7 @@ namespace mrs_lib
 
   std::map<int, std::unique_ptr<Prism>>::iterator SafetyZone::getObstaclesBegin()
   {
+    std::scoped_lock lock(mutex_safety_zone_);
     return obstacles_.begin();
   }
 
@@ -221,6 +229,7 @@ namespace mrs_lib
 
   std::map<int, std::unique_ptr<Prism>>::iterator SafetyZone::getObstaclesEnd()
   {
+    std::scoped_lock lock(mutex_safety_zone_);
     return obstacles_.end();
   }
 
@@ -230,6 +239,7 @@ namespace mrs_lib
 
   int SafetyZone::addObstacle(std::unique_ptr<Prism> obstacle)
   {
+    std::scoped_lock lock(mutex_safety_zone_);
     int current_id = ++next_obstacle_id_;
     obstacles_.emplace(current_id, std::move(obstacle));
     return next_obstacle_id_;
@@ -241,8 +251,9 @@ namespace mrs_lib
 
   void SafetyZone::deleteObstacle(int id)
   {
+    std::scoped_lock lock(mutex_safety_zone_);
     auto it = obstacles_.find(id);
-    obstacles_.erase(it); //this will automatically delete the obstacle in the map
+    obstacles_.erase(it);  // this will automatically delete the obstacle in the map
   }
 
   //}
