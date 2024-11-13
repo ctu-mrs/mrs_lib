@@ -12,7 +12,7 @@ namespace mrs_lib
   std::atomic<int> StaticEdgesVisualization::id_generator_ = 0;
   visualization_msgs::MarkerArray StaticEdgesVisualization::last_markers_ = visualization_msgs::MarkerArray();
 
-  /* StaticEdgesVisualization() //{ */
+  /* StaticEdgesVisualization(prism) //{ */
 
   StaticEdgesVisualization::StaticEdgesVisualization(Prism* prism, const std::string& frame_id, const ros::NodeHandle& nh, const double& markers_update_rate)
       : id_(id_generator_++), prism_(prism), frame_id_(frame_id), nh_(nh)
@@ -24,7 +24,7 @@ namespace mrs_lib
 
   //}
 
-  /* StaticEdgesVisualization() //{ */
+  /* StaticEdgesVisualization(obstacle) //{ */
 
   StaticEdgesVisualization::StaticEdgesVisualization(SafetyZone* safety_zone, const int& obstacle_id, const std::string& frame_id, const ros::NodeHandle& nh,
                                                      const double& markers_update_rate)
@@ -37,11 +37,11 @@ namespace mrs_lib
 
   //}
 
-  /* StaticEdgesVisualization() //{ */
+  /* StaticEdgesVisualization(safety border) //{ */
 
   StaticEdgesVisualization::StaticEdgesVisualization(SafetyZone* safety_zone, const std::string& frame_id, const ros::NodeHandle& nh,
-                                                     const double& markers_update_rate)
-      : id_(id_generator_++), prism_(safety_zone->getBorder()), frame_id_(frame_id), nh_(nh)
+                                                     const double& markers_update_rate, std::shared_ptr<mrs_lib::Transformer>& transformer)
+      : id_(id_generator_++), prism_(safety_zone->getBorder()), frame_id_(frame_id), nh_(nh), transformer_(transformer)
   {
     last_markers_.markers.push_back(vm::Marker());
     timer_ = nh_.createTimer(ros::Rate(markers_update_rate), &StaticEdgesVisualization::sendMarker, this);

@@ -25,7 +25,7 @@ namespace mrs_lib
                              const double& markers_update_rate);
 
     // Represents border of the safety_zone.
-    StaticEdgesVisualization(SafetyZone* safety_zone, const std::string& frame_id, const ros::NodeHandle& nh, const double& markers_update_rate);
+    StaticEdgesVisualization(SafetyZone* safety_zone, const std::string& frame_id, const ros::NodeHandle& nh, const double& markers_update_rate, std::shared_ptr<mrs_lib::Transformer>& transformer);
 
     ~StaticEdgesVisualization();
 
@@ -44,6 +44,7 @@ namespace mrs_lib
     Prism* prism_;
     std::string frame_id_;
     ros::NodeHandle nh_;
+    std::shared_ptr<mrs_lib::Transformer> transformer_;
 
     // Static markers
     ros::Publisher publisher_;
