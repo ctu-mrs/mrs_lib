@@ -17,8 +17,8 @@ namespace mrs_lib
 
   /* VertexControl() //{ */
 
-  VertexControl::VertexControl(Prism* prism, const std::string& frame_id, const ros::NodeHandle& nh)
-      : id_(id_generator++), prism_(prism), frame_id_(frame_id), nh_(nh)
+  VertexControl::VertexControl(Prism* prism, const std::string& uav_name, const std::string& frame_id, const ros::NodeHandle& nh)
+      : id_(id_generator++), prism_(prism), uav_name_(uav_name), frame_id_(frame_id), nh_(nh)
   {
     init();
   }
@@ -27,8 +27,8 @@ namespace mrs_lib
 
   /* VertexControl() //{ */
 
-  VertexControl::VertexControl(SafetyZone* safety_zone, const int& obstacle_id, const std::string& frame_id, const ros::NodeHandle& nh)
-      : id_(id_generator++), prism_(safety_zone->getObstacle(obstacle_id)), frame_id_(frame_id), nh_(nh)
+  VertexControl::VertexControl(SafetyZone* safety_zone, const int& obstacle_id, const std::string& uav_name, const std::string& frame_id, const ros::NodeHandle& nh)
+      : id_(id_generator++), prism_(safety_zone->getObstacle(obstacle_id)), uav_name_(uav_name), frame_id_(frame_id), nh_(nh)
   {
     init();
   }
@@ -37,8 +37,8 @@ namespace mrs_lib
 
   /* VertexControl() //{ */
 
-  VertexControl::VertexControl(SafetyZone* safety_zone, const std::string& frame_id, const ros::NodeHandle& nh)
-      : id_(id_generator++), prism_(safety_zone->getBorder()), frame_id_(frame_id), nh_(nh)
+  VertexControl::VertexControl(SafetyZone* safety_zone, const std::string& uav_name, const std::string& frame_id, const ros::NodeHandle& nh)
+      : id_(id_generator++), prism_(safety_zone->getBorder()), uav_name_(uav_name), frame_id_(frame_id), nh_(nh)
 
   {
     init();
@@ -173,7 +173,9 @@ namespace mrs_lib
     // | ------------------ Upper bound -------------------- |
     // Interactive marker
     vm::InteractiveMarker upper_int_marker;
-    upper_int_marker.header.frame_id = frame_id_;
+    std::string target_frame_id = "world_origin";
+    upper_int_marker.header.frame_id = uav_name_ + "/" + target_frame_id;
+
     /* upper_int_marker.header.stamp.fromNSec(0); */
     upper_int_marker.header.stamp = ros::Time::now();
     upper_int_marker.pose.position.x = position.get<0>();
@@ -210,7 +212,7 @@ namespace mrs_lib
     // | ------------------ Lower bound -------------------- |
     // Interactive marker
     vm::InteractiveMarker lower_int_marker;
-    lower_int_marker.header.frame_id = frame_id_;
+    lower_int_marker.header.frame_id = uav_name_ + "/" + target_frame_id;
     lower_int_marker.pose.position.x = position.get<0>();
     lower_int_marker.pose.position.y = position.get<1>();
     lower_int_marker.pose.position.z = lower;

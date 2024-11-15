@@ -26,13 +26,13 @@ namespace mrs_lib
   {
   public:
     // Created interactive marker does not have deleting option
-    CenterControl(Prism* prism, const std::string& frame_id, const ros::NodeHandle& nh);
+    CenterControl(Prism* prism, const std::string& uav_name, const std::string& frame_id, const ros::NodeHandle& nh);
     // Represents corresponding obstacle in the safety_zone.
     // Created interactive marker provides deleting option
-    CenterControl(SafetyZone* safety_zone, const int& obstacle_id, const std::string& frame_id, const ros::NodeHandle& nh);
+    CenterControl(SafetyZone* safety_zone, const int& obstacle_id, const std::string& uav_name, const std::string& frame_id, const ros::NodeHandle& nh);
     // Represents border of the safety_zone.
     // Created interactive marker does not have deleting option
-    CenterControl(SafetyZone* safety_zone, const std::string& frame_id, const ros::NodeHandle& nh);
+    CenterControl(SafetyZone* safety_zone, const std::string& uav_name, const std::string& frame_id, const ros::NodeHandle& nh);
 
     ~CenterControl();
 
@@ -59,6 +59,7 @@ namespace mrs_lib
     // Attributes received in constructor
     Prism* prism_;
     const int obstacle_id_ = 0;
+    std::string uav_name_;
     std::string frame_id_;
     ros::NodeHandle nh_;
     SafetyZone* safety_zone_ = nullptr;

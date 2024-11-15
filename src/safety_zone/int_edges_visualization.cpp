@@ -15,8 +15,8 @@ namespace mrs_lib
 
   /* IntEdgesVisualization() //{ */
 
-  IntEdgesVisualization::IntEdgesVisualization(Prism* prism, const std::string& frame_id, const ros::NodeHandle& nh)
-      : id_(id_generator_++), prism_(prism), frame_id_(frame_id), nh_(nh)
+  IntEdgesVisualization::IntEdgesVisualization(Prism* prism, const std::string& uav_name, const std::string& frame_id, const ros::NodeHandle& nh)
+      : id_(id_generator_++), prism_(prism), uav_name_(uav_name), frame_id_(frame_id), nh_(nh)
   {
     init();
   }
@@ -25,8 +25,8 @@ namespace mrs_lib
 
   /* IntEdgesVisualization() //{ */
 
-  IntEdgesVisualization::IntEdgesVisualization(SafetyZone* safety_zone, const int& obstacle_id, const std::string& frame_id, const ros::NodeHandle& nh)
-      : id_(id_generator_++), prism_(safety_zone->getObstacle(obstacle_id)), frame_id_(frame_id), nh_(nh)
+  IntEdgesVisualization::IntEdgesVisualization(SafetyZone* safety_zone, const int& obstacle_id, const std::string& uav_name, const std::string& frame_id, const ros::NodeHandle& nh)
+      : id_(id_generator_++), prism_(safety_zone->getObstacle(obstacle_id)), uav_name_(uav_name),frame_id_(frame_id), nh_(nh)
   {
     init();
   }
@@ -35,8 +35,8 @@ namespace mrs_lib
 
   /* IntEdgesVisualization() //{ */
 
-  IntEdgesVisualization::IntEdgesVisualization(SafetyZone* safety_zone, const std::string& frame_id, const ros::NodeHandle& nh)
-      : id_(id_generator_++), prism_(safety_zone->getBorder()), frame_id_(frame_id), nh_(nh)
+  IntEdgesVisualization::IntEdgesVisualization(SafetyZone* safety_zone, const std::string& uav_name, const std::string& frame_id, const ros::NodeHandle& nh)
+      : id_(id_generator_++), prism_(safety_zone->getBorder()), uav_name_(uav_name),frame_id_(frame_id), nh_(nh)
   {
     init();
   }
@@ -210,7 +210,8 @@ namespace mrs_lib
     p2.y = end.get<1>();
     p2.z = upper;
     vm::Marker line;
-    line.header.frame_id = frame_id_;
+    std::string target_frame_id = "world_origin";
+    line.header.frame_id = uav_name_ + "/" + target_frame_id;
     line.type = vm::Marker::LINE_LIST;
     line.color.a = 0.3;
     line.color.r = 1.0;
@@ -222,7 +223,8 @@ namespace mrs_lib
     // | ------------------ Upper bound -------------------- |
     // Interactive marker
     vm::InteractiveMarker upper_int_marker;
-    upper_int_marker.header.frame_id = frame_id_;
+
+    upper_int_marker.header.frame_id = uav_name_ + "/" + target_frame_id;
     /* upper_int_marker.header.stamp.fromNSec(0); */
     upper_int_marker.header.stamp = ros::Time::now();
     upper_int_marker.pose.position.x = start.get<0>();
@@ -257,7 +259,8 @@ namespace mrs_lib
     // | ------------------ Lower bound -------------------- |
     // Interactive marker
     vm::InteractiveMarker lower_int_marker;
-    lower_int_marker.header.frame_id = frame_id_;
+
+    lower_int_marker.header.frame_id = uav_name_ + "/" + target_frame_id;
     lower_int_marker.pose.position.x = start.get<0>();
     lower_int_marker.pose.position.y = start.get<1>();
     lower_int_marker.pose.position.z = lower;
@@ -290,7 +293,7 @@ namespace mrs_lib
     // | ---------------- Vertical edges ------------------- |
     // Interactive marker
     vm::InteractiveMarker vertical_int_marker;
-    vertical_int_marker.header.frame_id = frame_id_;
+    vertical_int_marker.header.frame_id = uav_name_ + "/" + target_frame_id;
     vertical_int_marker.pose.position.x = start.get<0>();
     vertical_int_marker.pose.position.y = start.get<1>();
     vertical_int_marker.pose.position.z = lower;

@@ -23,13 +23,13 @@ namespace mrs_lib
   {
   public:
     // Represents the prism
-    IntEdgesVisualization(Prism* prism, const std::string& frame_id, const ros::NodeHandle& nh);
+    IntEdgesVisualization(Prism* prism, const std::string& uav_name, const std::string& frame_id, const ros::NodeHandle& nh);
 
     // Represents corresponding obstacle in the safety_zone.
-    IntEdgesVisualization(SafetyZone* safety_zone, const int& obstacle_id, const std::string& frame_id, const ros::NodeHandle& nh);
+    IntEdgesVisualization(SafetyZone* safety_zone, const int& obstacle_id, const std::string& uav_name, const std::string& frame_id, const ros::NodeHandle& nh);
 
     // Represents border of the safety_zone.
-    IntEdgesVisualization(SafetyZone* safety_zone, const std::string& frame_id, const ros::NodeHandle& nh);
+    IntEdgesVisualization(SafetyZone* safety_zone, const std::string& uav_name, const std::string& frame_id, const ros::NodeHandle& nh);
 
     ~IntEdgesVisualization();
 
@@ -54,6 +54,7 @@ namespace mrs_lib
 
     // Attributes received in constructor
     Prism* prism_;
+    std::string uav_name_;
     std::string frame_id_;
     ros::NodeHandle nh_;
 

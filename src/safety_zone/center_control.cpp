@@ -14,8 +14,8 @@ namespace mrs_lib
 
   /* CenterControl() //{ */
 
-  CenterControl::CenterControl(Prism* prism, const std::string& frame_id, const ros::NodeHandle& nh)
-      : id_(id_generator_++), prism_(prism), frame_id_(frame_id), nh_(nh)
+  CenterControl::CenterControl(Prism* prism, const std::string& uav_name, const std::string& frame_id, const ros::NodeHandle& nh)
+      : id_(id_generator_++), prism_(prism), uav_name_(uav_name), frame_id_(frame_id), nh_(nh)
   {
     init();
   }
@@ -24,8 +24,8 @@ namespace mrs_lib
 
   /* CenterControl() //{ */
 
-  CenterControl::CenterControl(SafetyZone* safety_zone, const int& obstacle_id, const std::string& frame_id, const ros::NodeHandle& nh)
-      : id_(id_generator_++), prism_(safety_zone->getObstacle(obstacle_id)), obstacle_id_(obstacle_id), frame_id_(frame_id), nh_(nh), safety_zone_(safety_zone)
+  CenterControl::CenterControl(SafetyZone* safety_zone, const int& obstacle_id, const std::string& uav_name, const std::string& frame_id, const ros::NodeHandle& nh)
+      : id_(id_generator_++), prism_(safety_zone->getObstacle(obstacle_id)), obstacle_id_(obstacle_id), uav_name_(uav_name), frame_id_(frame_id), nh_(nh), safety_zone_(safety_zone)
   {
     init();
     std::cout << "Center vis of obstacle inited\n";
@@ -35,8 +35,8 @@ namespace mrs_lib
 
   /* CenterControl() //{ */
 
-  CenterControl::CenterControl(SafetyZone* safety_zone, const std::string& frame_id, const ros::NodeHandle& nh)
-      : id_(id_generator_++), prism_(safety_zone->getBorder()), frame_id_(frame_id), nh_(nh)
+  CenterControl::CenterControl(SafetyZone* safety_zone, const std::string& uav_name, const std::string& frame_id, const ros::NodeHandle& nh)
+      : id_(id_generator_++), prism_(safety_zone->getBorder()), uav_name_(uav_name),  frame_id_(frame_id), nh_(nh)
   {
     init();
   }
@@ -136,7 +136,8 @@ namespace mrs_lib
     const Point2d center = prism_->getCenter();
     // Interactive marker
     vm::InteractiveMarker interactive_marker;
-    interactive_marker.header.frame_id = frame_id_;
+    std::string target_frame_id = "world_origin";
+    interactive_marker.header.frame_id = uav_name_ + "/" + target_frame_id;
     /* interactive_marker.header.stamp.fromNSec(0); */
     interactive_marker.header.stamp = ros::Time::now();
     interactive_marker.pose.position.x = center.get<0>();

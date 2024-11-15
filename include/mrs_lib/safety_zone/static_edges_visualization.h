@@ -20,14 +20,16 @@ namespace mrs_lib
 
   public:
     // Represents the prism
-    StaticEdgesVisualization(Prism* prism, const std::string& uav_name, const std::string& frame_id, const ros::NodeHandle& nh, const double& markers_update_rate);
-
-    // Represents corresponding obstacle in the safety_zone.
-    StaticEdgesVisualization(SafetyZone* safety_zone, const int& obstacle_id, const std::string& uav_name, const std::string& frame_id, const ros::NodeHandle& nh,
+    StaticEdgesVisualization(Prism* prism, const std::string& uav_name, const std::string& frame_id, const ros::NodeHandle& nh,
                              const double& markers_update_rate);
 
+    // Represents corresponding obstacle in the safety_zone.
+    StaticEdgesVisualization(SafetyZone* safety_zone, const int& obstacle_id, const std::string& uav_name, const std::string& frame_id,
+                             const ros::NodeHandle& nh, const double& markers_update_rate);
+
     // Represents border of the safety_zone.
-    StaticEdgesVisualization(SafetyZone* safety_zone, const std::string& uav_name, const std::string& frame_id, const ros::NodeHandle& nh, const double& markers_update_rate, std::shared_ptr<mrs_lib::Transformer>& transformer);
+    StaticEdgesVisualization(SafetyZone* safety_zone, const std::string& uav_name, const std::string& frame_id, const ros::NodeHandle& nh,
+                             const double& markers_update_rate);
 
     ~StaticEdgesVisualization();
 
@@ -48,7 +50,7 @@ namespace mrs_lib
     std::string uav_name_;
     std::string frame_id_;
     ros::NodeHandle nh_;
-    std::shared_ptr<mrs_lib::Transformer> transformer_;
+    /* std::shared_ptr<mrs_uav_managers::safety_area_manager::CommonHandlers_t> common_handlers; */
 
     // Static markers
     ros::Publisher publisher_;
