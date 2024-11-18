@@ -14,13 +14,13 @@ namespace mrs_lib
   /* YamlExportVisitor() //{ */
 
   YamlExportVisitor::YamlExportVisitor(const std::string& prefix, const std::string& source_frame, const std::string& horizontal_frame,
-                                       const std::string& vertical_frame, const std::string& units, const double origin_x, const double origin_y)
+                                       const std::string& vertical_frame, const std::string& units, const double origin_x, const double origin_y, std::shared_ptr<mrs_lib::Transformer> transformer)
       : source_frame_(source_frame),
         horizontal_frame_(horizontal_frame),
         vertical_frame_(vertical_frame),
-        transformer_(std::make_shared<mrs_lib::Transformer>("SafetyAreaManager"))
+        transformer_(transformer)
   {
-    transformer_->setDefaultPrefix(prefix);
+    /* transformer_->setDefaultPrefix(prefix); */
 
     std::stringstream ss;
     ss << "world_origin:" << std::endl

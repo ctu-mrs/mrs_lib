@@ -168,7 +168,6 @@ namespace mrs_lib
 
   void SafetyZone::accept(Visitor& visitor)
   {
-    std::scoped_lock lock(mutex_safety_zone_);
     visitor.visit(this);
 
     for (auto& entry : obstacles_)

@@ -40,7 +40,7 @@ namespace mrs_lib
   public:
     // Does not transform origin_x and origin_y to units!
     YamlExportVisitor(const std::string& prefix, const std::string& source_frame, const std::string& horizontal_frame, const std::string& vertical_frame, const std::string& units,
-                      const double origin_x, const double origin_y);
+                      const double origin_x, const double origin_y, std::shared_ptr<mrs_lib::Transformer> transformer);
 
     // Only takes a border into consideration
     void visit(SafetyZone* safety_zone);
