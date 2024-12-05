@@ -22,6 +22,8 @@ add_subdirectory(./timeout_manager)
 
 add_subdirectory(./timer)
 
+add_subdirectory(./timeseries_interpolator)
+
 add_subdirectory(./transformer)
 
 add_subdirectory(./ukf)

@@ -88,6 +88,7 @@ set(LIBRARIES
   MrsLib_Math
   MrsLib_DynamicPublisher
   MrsLib_TimeoutManager
+  MrsLib_TimeseriesInterpolator
   )
 
 catkin_package(
@@ -379,6 +380,12 @@ target_link_libraries(geometry_tests
 add_executable(cyclic_example src/geometry/cyclic_example.cpp)
 target_link_libraries(cyclic_example
   MrsLib_Geometry
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+add_executable(MrsLib_TimeseriesInterpolator src/timeseries_interpolator/timeseries_interpolator.cpp)
+target_link_libraries(MrsLib_TimeseriesInterpolator
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
