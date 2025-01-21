@@ -119,7 +119,7 @@ namespace mrs_lib
     //}
 
     /* intersectionRay //{ */
-    const boost::optional<Eigen::Vector3d> Triangle::intersectionRay(Ray r, double epsilon) const
+    const std::optional<Eigen::Vector3d> Triangle::intersectionRay(Ray r, double epsilon) const
     {
       // The Möller–Trumbore algorithm
       // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
@@ -129,20 +129,20 @@ namespace mrs_lib
       double res = v1.dot(h);
       if (res > -epsilon && res < epsilon)
       {
-        return boost::none;
+        return {};
       }
       double f = 1.0 / res;
       Eigen::Vector3d s = r.p1() - point1;
       double u = f * s.dot(h);
       if (u < 0.0 || u > 1.0)
       {
-        return boost::none;
+        return {};
       }
       Eigen::Vector3d q = s.cross(v1);
       double v = f * r.direction().dot(q);
       if (v < 0.0 || u + v > 1.0)
       {
-        return boost::none;
+        return {};
       }
       double t = f * v2.dot(q);
       if (t > epsilon)
@@ -150,7 +150,7 @@ namespace mrs_lib
         Eigen::Vector3d ret = r.p1() + r.direction() * t;
         return ret;
       }
-      return boost::none;
+      return {};
     }
     //}
 
@@ -244,12 +244,12 @@ namespace mrs_lib
     //}
 
     /* intersectionRay //{ */
-    const boost::optional<Eigen::Vector3d> Rectangle::intersectionRay(Ray r, double epsilon) const
+    const std::optional<Eigen::Vector3d> Rectangle::intersectionRay(Ray r, double epsilon) const
     {
       Triangle t1 = triangles()[0];
       Triangle t2 = triangles()[1];
       auto result = t1.intersectionRay(r, epsilon);
-      if (result != boost::none)
+      if (result)
       {
         return result;
       }
@@ -432,9 +432,9 @@ namespace mrs_lib
       {
         Rectangle side = getRectangle(i);
         auto side_intersect = side.intersectionRay(r, epsilon);
-        if (side_intersect != boost::none)
+        if (!side_intersect)
         {
-          ret.push_back(side_intersect.get());
+          ret.push_back(side_intersect.value());
         }
       }
       return ret;

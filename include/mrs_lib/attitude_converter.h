@@ -12,17 +12,11 @@
 #ifndef ATTITUDE_CONVERTER_H
 #define ATTITUDE_CONVERTER_H
 
-#include <vector>
 #include <cmath>
 #include <Eigen/Dense>
 #include <tuple>
 
-#include <tf2_ros/transform_listener.h>
-#include <tf2_ros/buffer.h>
-#include <tf2_eigen/tf2_eigen.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include <tf/transform_datatypes.h>
-#include <tf_conversions/tf_eigen.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include <mrs_lib/geometry/misc.h>
 
@@ -104,11 +98,11 @@ public:
   Vector3Converter(const Eigen::Vector3d& vector3);
 
   /**
-   * @brief Constructor with geometry_msgs::Vector3
+   * @brief Constructor with geometry_msgs::msg::Vector3
    *
    * @param vector3
    */
-  Vector3Converter(const geometry_msgs::Vector3& vector3);
+  Vector3Converter(const geometry_msgs::msg::Vector3& vector3);
 
   /**
    * @brief Constructor with doubles: x, y, z
@@ -134,11 +128,11 @@ public:
   operator Eigen::Vector3d() const;
 
   /**
-   * @brief typecast overloaded for geometry_msgs::Vector3
+   * @brief typecast overloaded for geometry_msgs::msg::Vector3
    *
    * @return vector3
    */
-  operator geometry_msgs::Vector3() const;
+  operator geometry_msgs::msg::Vector3() const;
 
 private:
   tf2::Vector3 vector3_;
@@ -148,7 +142,7 @@ private:
 
 /**
  * @brief The main convertor class. Instantiate with any type in constructor and get the value in any other type by assigning the instance to your variable,
- * as: tf::Quaternion tf1_quaternion = AttitudeConverter(roll, pitch, yaw); All the default Euler angles are in the extrinsic RPY notation.
+ * as: tf2::Quaternion tf2_quaternion = AttitudeConverter(roll, pitch, yaw); All the default Euler angles are in the extrinsic RPY notation.
  */
 class AttitudeConverter {
 public:
@@ -209,18 +203,11 @@ public:
   AttitudeConverter(const double& roll, const double& pitch, const double& yaw, const RPY_convention_t& format = RPY_EXTRINSIC);
 
   /**
-   * @brief tf::Quaternion constructor
+   * @brief geometry_msgs::msg::Quaternion constructor
    *
-   * @param quaternion tf::Quaternion quaternion
+   * @param quaternion geometry_msgs::msg::Quaternion quaternion
    */
-  AttitudeConverter(const tf::Quaternion quaternion);
-
-  /**
-   * @brief geometry_msgs::Quaternion constructor
-   *
-   * @param quaternion geometry_msgs::Quaternion quaternion
-   */
-  AttitudeConverter(const geometry_msgs::Quaternion quaternion);
+  AttitudeConverter(const geometry_msgs::msg::Quaternion quaternion);
 
   /**
    * @brief mrs_lib::EulerAttitude constructor
@@ -283,18 +270,11 @@ public:
   operator tf2::Quaternion() const;
 
   /**
-   * @brief typecast to tf::Quaternion
+   * @brief typecast to geometry_msgs::msg::Quaternion
    *
-   * @return orientation in tf::Quaternion
+   * @return orientation in geometry_msgs::msg::Quaternion
    */
-  operator tf::Quaternion() const;
-
-  /**
-   * @brief typecast to geometry_msgs::Quaternion
-   *
-   * @return orientation in geometry_msgs::Quaternion
-   */
-  operator geometry_msgs::Quaternion() const;
+  operator geometry_msgs::msg::Quaternion() const;
 
   /**
    * @brief typecast to EulerAttitude
@@ -516,18 +496,26 @@ constexpr auto AttitudeConverter::get() {
 
 template <>
 struct std::tuple_size<mrs_lib::AttitudeConverter>
-{ static constexpr int value = 3; };
+{
+  static constexpr int value = 3;
+};
 
 template <>
 struct std::tuple_element<0, mrs_lib::AttitudeConverter>
-{ using type = double; };
+{
+  using type = double;
+};
 
 template <>
 struct std::tuple_element<1, mrs_lib::AttitudeConverter>
-{ using type = double; };
+{
+  using type = double;
+};
 
 template <>
 struct std::tuple_element<2, mrs_lib::AttitudeConverter>
-{ using type = double; };
+{
+  using type = double;
+};
 
 #endif

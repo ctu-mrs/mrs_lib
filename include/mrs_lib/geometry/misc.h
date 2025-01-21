@@ -10,8 +10,8 @@
 
 #include <cmath>
 #include <Eigen/Dense>
-#include <geometry_msgs/Point.h>
-#include <geometry_msgs/Quaternion.h>
+#include <geometry_msgs/msg/point.h>
+#include <geometry_msgs/msg/quaternion.h>
 
 namespace mrs_lib
 {
@@ -56,7 +56,7 @@ namespace mrs_lib
     template <typename T>
     double headingFromRot(const T& rot)
     {
-      const vec3_t rot_vec = rot*vec3_t::UnitX();
+      const vec3_t rot_vec = rot * vec3_t::UnitX();
       return std::atan2(rot_vec.y(), rot_vec.x());
     }
 
@@ -299,7 +299,7 @@ namespace mrs_lib
     //}
 
     /* rotateCovariance() //{ */
-    
+
     /*!
      * \brief Returns the covariance rotated using the specified rotation.
      *
@@ -313,9 +313,9 @@ namespace mrs_lib
     mat3_t rotateCovariance(const mat3_t& cov, const T& rot)
     {
       const mat3_t matrot(rot);
-      return matrot*cov*matrot.transpose();
+      return matrot * cov * matrot.transpose();
     }
-    
+
     //}
 
   }  // namespace geometry

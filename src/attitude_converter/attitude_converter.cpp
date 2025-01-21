@@ -1,5 +1,7 @@
 // clang: TomasFormat
 
+#include <cstdio>
+#include <iostream>
 #include <mrs_lib/attitude_converter.h>
 #include <mrs_lib/utils.h>
 
@@ -36,7 +38,7 @@ Vector3Converter::Vector3Converter(const Eigen::Vector3d& vector3) {
   vector3_[2] = vector3[2];
 }
 
-Vector3Converter::Vector3Converter(const geometry_msgs::Vector3& vector3) {
+Vector3Converter::Vector3Converter(const geometry_msgs::msg::Vector3& vector3) {
 
   vector3_[0] = vector3.x;
   vector3_[1] = vector3.y;
@@ -60,9 +62,9 @@ Vector3Converter::operator Eigen::Vector3d() const {
   return Eigen::Vector3d(vector3_[0], vector3_[1], vector3_[2]);
 }
 
-Vector3Converter::operator geometry_msgs::Vector3() const {
+Vector3Converter::operator geometry_msgs::msg::Vector3() const {
 
-  geometry_msgs::Vector3 vector_3;
+  geometry_msgs::msg::Vector3 vector_3;
 
   vector_3.x = vector3_[0];
   vector_3.y = vector3_[1];
@@ -103,17 +105,7 @@ AttitudeConverter::AttitudeConverter(const double& roll, const double& pitch, co
   validateOrientation();
 }
 
-AttitudeConverter::AttitudeConverter(const tf::Quaternion quaternion) {
-
-  tf2_quaternion_.setX(quaternion.x());
-  tf2_quaternion_.setY(quaternion.y());
-  tf2_quaternion_.setZ(quaternion.z());
-  tf2_quaternion_.setW(quaternion.w());
-
-  validateOrientation();
-}
-
-AttitudeConverter::AttitudeConverter(const geometry_msgs::Quaternion quaternion) {
+AttitudeConverter::AttitudeConverter(const geometry_msgs::msg::Quaternion quaternion) {
   tf2_quaternion_.setX(quaternion.x);
   tf2_quaternion_.setY(quaternion.y);
   tf2_quaternion_.setZ(quaternion.z);
@@ -170,21 +162,9 @@ AttitudeConverter::operator tf2::Quaternion() const {
   return tf2_quaternion_;
 }
 
-AttitudeConverter::operator tf::Quaternion() const {
+AttitudeConverter::operator geometry_msgs::msg::Quaternion() const {
 
-  tf::Quaternion tf_quaternion;
-
-  tf_quaternion.setX(tf2_quaternion_.x());
-  tf_quaternion.setY(tf2_quaternion_.y());
-  tf_quaternion.setZ(tf2_quaternion_.z());
-  tf_quaternion.setW(tf2_quaternion_.w());
-
-  return tf_quaternion;
-}
-
-AttitudeConverter::operator geometry_msgs::Quaternion() const {
-
-  geometry_msgs::Quaternion geom_quaternion;
+  geometry_msgs::msg::Quaternion geom_quaternion;
 
   geom_quaternion.x = tf2_quaternion_.x();
   geom_quaternion.y = tf2_quaternion_.y();
@@ -292,7 +272,7 @@ double AttitudeConverter::getYawRateIntrinsic(const double& heading_rate) {
   double projected_norm        = projected.norm();
 
   if (fabs(projected_norm) < 1e-5) {
-    ROS_ERROR("[AttitudeConverter]: getYawRateIntrinsic(): \"projected_norm\" in denominator is almost zero!!!");
+    std::cout << ("[AttitudeConverter]: getYawRateIntrinsic(): \"projected_norm\" in denominator is almost zero!!!") << std::endl;
     throw MathErrorException();
   }
 
@@ -301,7 +281,7 @@ double AttitudeConverter::getYawRateIntrinsic(const double& heading_rate) {
   double output_yaw_rate = direction * (orbital_velocity_norm / projected_norm);
 
   if (!std::isfinite(output_yaw_rate)) {
-    ROS_ERROR("[AttitudeConverter]: getYawRateIntrinsic(): NaN detected in variable \"output_yaw_rate\"!!!");
+    std::cout << "[AttitudeConverter]: getYawRateIntrinsic(): NaN detected in variable \"output_yaw_rate\"!!!" << std::endl;
     throw MathErrorException();
   }
 
@@ -329,7 +309,7 @@ double AttitudeConverter::getHeadingRate(const Vector3Converter& attitude_rate) 
   double denom = rx * rx + ry * ry;
 
   if (fabs(denom) <= 1e-5) {
-    ROS_ERROR("[AttitudeConverter]: getHeadingRate(): denominator near zero!!!");
+    std::cout << "[AttitudeConverter]: getHeadingRate(): denominator near zero!!!" << std::endl;
     throw MathErrorException();
   }
 

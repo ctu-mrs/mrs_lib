@@ -4,7 +4,6 @@
 #include <boost/array.hpp>
 
 #include <gtest/gtest.h>
-#include <log4cxx/logger.h>
 
 using namespace mrs_lib;
 using namespace std;

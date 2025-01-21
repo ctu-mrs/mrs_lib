@@ -1,40 +1,26 @@
 <?xml version="1.0"?>
-<package format="2">
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
 
   <name>mrs_lib</name>
-  <version>1.0.4</version>
-  <description>The MRS library</description>
-
-  <author email="matous.vrba@fel.cvut.cz">Matous Vrba</author>
-  <maintainer email="tomas.baca@fel.cvut.cz">Tomas Baca</maintainer>
+  <version>2.0.0</version>
+  <description>MRS C++ libraries</description>
+  <maintainer email="matous.vrba@fel.cvut.cz">Matous Vrba</maintainer>
+  <maintainer email="matous.vrba@fel.cvut.cz">Matous Vrba</maintainer>
 
   <license>BSD 3-Clause</license>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <depend>cmake_modules</depend>
-  <depend>cv_bridge</depend>
+  <depend>rclcpp</depend>
+  <depend>launch_ros</depend>
   <depend>geometry_msgs</depend>
-  <depend>image_transport</depend>
-  <depend>mrs_msgs</depend>
-  <depend>nav_msgs</depend>
-  <depend>pcl_conversions</depend>
-  <depend>pcl_msgs</depend>
-  <depend>pcl_ros</depend>
-  <depend>roscpp</depend>
-  <depend>sensor_msgs</depend>
-  <depend>std_msgs</depend>
-  <depend>tf2</depend>
   <depend>tf2_geometry_msgs</depend>
-  <depend>tf_conversions</depend>
-  <depend>visualization_msgs</depend>
-  <depend>yaml-cpp</depend>
 
-  <depend>libopencv-dev</depend>
-
-  <test_depend>rostest</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
 
   <export>
+    <build_type>ament_cmake</build_type>
   </export>
 
 </package>

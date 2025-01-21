@@ -436,9 +436,9 @@ namespace mrs_lib
         return diff(lhs, rhs);
       }
 
-      protected:
-        flt val;
-      };
+    protected:
+      flt val;
+    };
 
     /*!
      * \brief Implementation of the comparison operation between two angles.
@@ -478,7 +478,7 @@ namespace mrs_lib
      * \return    a reference to the stream.
      */
     template <typename flt, class spec>
-    std::ostream& operator<<(std::ostream &out, const cyclic<flt, spec>& ang)
+    std::ostream& operator<<(std::ostream& out, const cyclic<flt, spec>& ang)
     {
       return (out << ang.value());
     }

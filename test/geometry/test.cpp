@@ -5,9 +5,6 @@
 #include <complex>
 
 #include <gtest/gtest.h>
-#include <log4cxx/logger.h>
-
-#include <random>
 
 using namespace mrs_lib::geometry;
 using namespace std;

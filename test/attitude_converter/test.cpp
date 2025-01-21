@@ -6,7 +6,6 @@
 #include <chrono>
 
 #include <gtest/gtest.h>
-#include <log4cxx/logger.h>
 
 using namespace mrs_lib;
 using namespace std;
@@ -32,20 +31,19 @@ TEST(TESTSuite, conversion_chain) {
 
   printf("original input: roll=%1.2f, pitch=%1.2f, yaw=%1.2f, heading=%1.2f\n", roll, pitch, yaw, yaw);
 
-  tf::Quaternion            tf1_quaternion  = AttitudeConverter(roll, pitch, yaw);
-  tf2::Quaternion           tf2_quaternion  = AttitudeConverter(tf1_quaternion);
-  tf2::Matrix3x3            tf2_matrix      = AttitudeConverter(tf2_quaternion);
-  geometry_msgs::Quaternion geom_quaternion = AttitudeConverter(tf2_matrix);
-  Eigen::Quaterniond        eig_quaternion  = AttitudeConverter(geom_quaternion);
-  Eigen::AngleAxis<double>  eig_angle_axis  = AttitudeConverter(eig_quaternion);
-  Eigen::Matrix3d           eig_matrix      = AttitudeConverter(eig_angle_axis);
-  EulerAttitude             euler_angles    = AttitudeConverter(eig_matrix);
-  auto [roll2, pitch2, yaw2]                = AttitudeConverter(euler_angles);
-  tie(roll2, pitch2, yaw2)                  = AttitudeConverter(roll2, pitch2, yaw2);
-  double roll3                              = AttitudeConverter(roll2, pitch2, yaw2).getRoll();
-  double pitch3                             = AttitudeConverter(roll2, pitch2, yaw2).getPitch();
-  double yaw3                               = AttitudeConverter(roll2, pitch2, yaw2).getYaw();
-  double heading1                           = AttitudeConverter(roll3, pitch3, yaw3).getHeading();
+  tf2::Quaternion                tf2_quaternion  = AttitudeConverter(roll, pitch, yaw);
+  tf2::Matrix3x3                 tf2_matrix      = AttitudeConverter(tf2_quaternion);
+  geometry_msgs::msg::Quaternion geom_quaternion = AttitudeConverter(tf2_matrix);
+  Eigen::Quaterniond             eig_quaternion  = AttitudeConverter(geom_quaternion);
+  Eigen::AngleAxis<double>       eig_angle_axis  = AttitudeConverter(eig_quaternion);
+  Eigen::Matrix3d                eig_matrix      = AttitudeConverter(eig_angle_axis);
+  EulerAttitude                  euler_angles    = AttitudeConverter(eig_matrix);
+  auto [roll2, pitch2, yaw2]                     = AttitudeConverter(euler_angles);
+  tie(roll2, pitch2, yaw2)                       = AttitudeConverter(roll2, pitch2, yaw2);
+  double roll3                                   = AttitudeConverter(roll2, pitch2, yaw2).getRoll();
+  double pitch3                                  = AttitudeConverter(roll2, pitch2, yaw2).getPitch();
+  double yaw3                                    = AttitudeConverter(roll2, pitch2, yaw2).getYaw();
+  double heading1                                = AttitudeConverter(roll3, pitch3, yaw3).getHeading();
 
   printf("final output:   roll=%1.2f, pitch=%1.2f, yaw=%1.2f, heading=%1.2f\n", roll3, pitch3, yaw3, heading1);
   printf("\n");
@@ -283,8 +281,8 @@ TEST(TESTSuite, get_heading_rate) {
   Eigen::Matrix3d R = AttitudeConverter(0.2, 1.0, 0.8);
 
   // attitude rate in the body frame
-  geometry_msgs::Vector3 w     = Vector3Converter(0, 0, 0.9);
-  Eigen::Vector3d        w_eig = Vector3Converter(w);
+  geometry_msgs::msg::Vector3 w     = Vector3Converter(0, 0, 0.9);
+  Eigen::Vector3d             w_eig = Vector3Converter(w);
 
   double dt  = 0.1;  // [s]
   int    len = int(round(2 * M_PI / dt));

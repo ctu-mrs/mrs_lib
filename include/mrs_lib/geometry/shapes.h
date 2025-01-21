@@ -10,7 +10,6 @@
 
 #include <optional>
 
-#include <boost/optional.hpp>
 #include <Eigen/Dense>
 
 namespace mrs_lib
@@ -175,9 +174,9 @@ namespace mrs_lib
        * @param r ray to calculate intersection with
        * @param epsilon calculation tolerance
        *
-       * @return vector3 intersection if exists, boost::none if no intersection is found
+       * @return vector3 intersection if exists, std::none if no intersection is found
        */
-      const boost::optional<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-4) const;
+      const std::optional<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-4) const;
     };
     //}
 
@@ -286,9 +285,9 @@ namespace mrs_lib
        * @param r ray to calculate intersection with
        * @param epsilon calculation tolerance
        *
-       * @return vector3 intersection if exists, boost::none if no intersection is found
+       * @return vector3 intersection if exists, std::none if no intersection is found
        */
-      const boost::optional<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-4) const;
+      const std::optional<Eigen::Vector3d> intersectionRay(Ray r, double epsilon = 1e-4) const;
 
       /**
        * @brief check if the normal is facing a given point, i.e. if the point lies in the same half-space as the rectangle normal
