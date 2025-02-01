@@ -113,3 +113,5 @@ install(DIRECTORY include
 ament_export_include_directories(include)
 
 ament_export_dependencies(${DEPENDENCIES})
+
+ament_package()
