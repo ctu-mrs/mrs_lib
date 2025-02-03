@@ -29,7 +29,7 @@ struct PublisherHandlerOptions
 
   double throttle_rate = 0;
 
-  rclcpp::QoS qos = rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_default));
+  rclcpp::QoS qos = rclcpp::SystemDefaultsQoS();
 };
 
 /* class PublisherHandler_impl //{ */
@@ -99,7 +99,7 @@ private:
 
   std::string address_;
 
-  bool   throttle_ = false;
+  bool   throttle_        = false;
   double throttle_min_dt_ = 0;
 
   rclcpp::Time last_time_published_;
