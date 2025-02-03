@@ -2,6 +2,8 @@
 #ifndef PUBLISHER_HANDLER_HPP
 #define PUBLISHER_HANDLER_HPP
 
+#include <mrs_lib/publisher_handler.h>
+
 namespace mrs_lib
 {
 
@@ -13,22 +15,29 @@ namespace mrs_lib
 
 template <class TopicType>
 PublisherHandler_impl<TopicType>::PublisherHandler_impl(void) : publisher_initialized_(false) {
+
+  last_time_published_ = node_->get_clock()->now();
 }
 
 //}
 
-/* PublisherHandler_impl(std::shared_ptr<rclcpp::Node> node, const std::string& address, const unsigned int& buffer_size, const bool& latch, const double& rate)
- * //{ */
+/* PublisherHandler_impl(const PublisherHandlerOptions& options, const std::string& address) //{ */
 
 template <class TopicType>
-PublisherHandler_impl<TopicType>::PublisherHandler_impl(std::shared_ptr<rclcpp::Node> node, const std::string& address, const unsigned int& buffer_size,
-                                                        const bool& latch, const double& rate) {
+PublisherHandler_impl<TopicType>::PublisherHandler_impl(const PublisherHandlerOptions& options, const std::string& address) {
+
+  node_ = options.node;
 
   {
     std::scoped_lock lock(mutex_publisher_);
 
     address_   = address;
-    publisher_ = node->create_publisher<TopicType>(address, buffer_size);
+    publisher_ = node_->create_publisher<TopicType>(address, options.qos);
+  }
+
+  if (options.throttle_rate > 1e-3) {
+    this->throttle_min_dt_ = 1.0 / options.throttle_rate;
+    this->throttle_        = true;
   }
 
   publisher_initialized_ = true;
@@ -48,7 +57,14 @@ void PublisherHandler_impl<TopicType>::publish(const TopicType& msg) {
   {
     std::scoped_lock lock(mutex_publisher_);
 
-    publisher_->publish(msg);
+    rclcpp::Time now = node_->get_clock()->now();
+
+    double passed = now.seconds() - last_time_published_.seconds();
+
+    if (passed > throttle_min_dt_) {
+      publisher_->publish(msg);
+      last_time_published_ = now;
+    }
   }
 }
 
@@ -66,7 +82,14 @@ void PublisherHandler_impl<TopicType>::publish(const std::shared_ptr<TopicType>&
   {
     std::scoped_lock lock(mutex_publisher_);
 
-    publisher_->publish(msg);
+    rclcpp::Time now = node_->get_clock()->now();
+
+    double passed = now.seconds() - last_time_published_.seconds();
+
+    if (passed > throttle_min_dt_) {
+      publisher_->publish(msg);
+      last_time_published_ = now;
+    }
   }
 }
 
@@ -84,7 +107,14 @@ void PublisherHandler_impl<TopicType>::publish(const std::shared_ptr<TopicType c
   {
     std::scoped_lock lock(mutex_publisher_);
 
-    publisher_->publish(msg);
+    rclcpp::Time now = node_->get_clock()->now();
+
+    double passed = now.seconds() - last_time_published_.seconds();
+
+    if (passed > throttle_min_dt_) {
+      publisher_->publish(msg);
+      last_time_published_ = now;
+    }
   }
 }
 
@@ -138,14 +168,26 @@ PublisherHandler<TopicType>::PublisherHandler(const PublisherHandler<TopicType>&
 
 //}
 
-/* PublisherHandler(std::shared_ptr<rclcpp::Node> node, const std::string& address, const unsigned int& buffer_size, const bool& latch,
-                                              const double& rate) //{ */
+/* PublisherHandler(std::shared_ptr<rclcpp::Node> node, const std::string& address) //{ */
 
 template <class TopicType>
-PublisherHandler<TopicType>::PublisherHandler(std::shared_ptr<rclcpp::Node> node, const std::string& address, const unsigned int& buffer_size,
-                                              const bool& latch, const double& rate) {
+PublisherHandler<TopicType>::PublisherHandler(std::shared_ptr<rclcpp::Node> node, const std::string& address) {
 
-  impl_ = std::make_shared<PublisherHandler_impl<TopicType>>(node, address, buffer_size, latch, rate);
+  PublisherHandlerOptions opts;
+
+  opts.node = node;
+
+  impl_ = std::make_shared<PublisherHandler_impl<TopicType>>(opts, address);
+}
+
+//}
+
+/* PublisherHandler(const rclcpp::PublisherOptions& options, const std::string& address) //{ */
+
+template <class TopicType>
+PublisherHandler<TopicType>::PublisherHandler(const PublisherHandlerOptions& options, const std::string& address) {
+
+  impl_ = std::make_shared<PublisherHandler_impl<TopicType>>(options, address);
 }
 
 //}

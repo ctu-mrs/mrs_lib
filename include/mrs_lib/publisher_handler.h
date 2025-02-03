@@ -9,6 +9,7 @@
 #include <memory>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/node.hpp>
+#include <rclcpp/time_source.hpp>
 
 #include <atomic>
 #include <string>
@@ -16,6 +17,20 @@
 
 namespace mrs_lib
 {
+
+struct PublisherHandlerOptions
+{
+  PublisherHandlerOptions(const std::shared_ptr<rclcpp::Node> node) : node(node) {
+  }
+
+  PublisherHandlerOptions() = default;
+
+  std::shared_ptr<rclcpp::Node> node;
+
+  double throttle_rate = 0;
+
+  rclcpp::QoS qos = rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_default));
+};
 
 /* class PublisherHandler_impl //{ */
 
@@ -37,15 +52,12 @@ public:
   ~PublisherHandler_impl(void){};
 
   /**
-   * @brief constructor
+   * @brief full constructor with options
    *
-   * @param node ROS node handler
-   * @param address topic address
-   * @param buffer_size buffer size
-   * @param latch latching
+   * @param options
+   * @param address
    */
-  PublisherHandler_impl(std::shared_ptr<rclcpp::Node> node, const std::string& address, const unsigned int& buffer_size = 1, const bool& latch = false,
-                        const double& rate = 0.0);
+  PublisherHandler_impl(const PublisherHandlerOptions& options, const std::string& address);
 
   /**
    * @brief publish message
@@ -77,13 +89,19 @@ public:
   unsigned int getNumSubscribers(void);
 
 private:
-  std::shared_ptr<rclcpp::Publisher<TopicType>> publisher_;
-  std::mutex                                    mutex_publisher_;
-  std::atomic<bool>                             publisher_initialized_;
+  std::shared_ptr<rclcpp::Node> node_;
 
-  std::string  address_;
-  bool         throttle_ = false;
-  double       throttle_min_dt_;
+  std::shared_ptr<rclcpp::Publisher<TopicType>> publisher_;
+
+  std::mutex mutex_publisher_;
+
+  std::atomic<bool> publisher_initialized_;
+
+  std::string address_;
+
+  bool   throttle_ = false;
+  double throttle_min_dt_ = 0;
+
   rclcpp::Time last_time_published_;
 };
 
@@ -125,15 +143,20 @@ public:
   PublisherHandler(const PublisherHandler& other);
 
   /**
-   * @brief constructor
+   * @brief slim constructor
    *
-   * @param node ROS node handler
-   * @param address topic address
-   * @param buffer_size buffer size
-   * @param latch latching
+   * @param node
+   * @param address
    */
-  PublisherHandler(std::shared_ptr<rclcpp::Node> node, const std::string& address, const unsigned int& buffer_size = 1, const bool& latch = false,
-                   const double& rate = 0);
+  PublisherHandler(std::shared_ptr<rclcpp::Node> node, const std::string& address);
+
+  /**
+   * @brief full constructor
+   *
+   * @param options
+   * @param address
+   */
+  PublisherHandler(const PublisherHandlerOptions& options, const std::string& address);
 
   /**
    * @brief publish message
@@ -171,6 +194,8 @@ private:
 
 }  // namespace mrs_lib
 
+#ifndef PUBLISHER_HANDLER_HPP
 #include <mrs_lib/impl/publisher_handler.hpp>
+#endif  // PUBLISHER_HANDLER_H
 
 #endif  // PUBLISHER_HANDLER_H
