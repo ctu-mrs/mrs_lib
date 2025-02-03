@@ -22,6 +22,11 @@ namespace mrs_lib
 
     ~SafetyZone() = default;
 
+    //Enable/Disable safety zone
+    void enableSafetyZone(const bool enable);
+
+    bool safetyZoneEnabled(void);
+
     // Controls, if 3d point lies within the prism
     bool isPointValid(const Point3d point);
 
@@ -63,6 +68,7 @@ namespace mrs_lib
     std::map<int, std::unique_ptr<Prism>> obstacles_;
     mutable std::mutex mutex_safety_zone_;
     int next_obstacle_id_ = 0;
+    bool safety_zone_enabled_;
 
     //Used to discretize between start and end for the path validation
     int _discretization_steps_ = 20; 

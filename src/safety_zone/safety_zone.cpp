@@ -26,6 +26,29 @@ namespace mrs_lib
   }
   //}
 
+  /* enableSafetyZone() //{ */
+
+  void SafetyZone::enableSafetyZone(const bool enable)
+  {
+    std::scoped_lock lock(mutex_safety_zone_);
+    enable ? safety_zone_enabled_ = true : safety_zone_enabled_ = false; 
+  }
+
+  //}
+  
+  /* safetyZoneEnabled() //{ */
+
+  bool SafetyZone::safetyZoneEnabled(void)
+  {
+    bool result;
+    safety_zone_enabled_ ? result = true: result = false;
+
+    return result;
+    
+  }
+
+  //}
+
   /* isPointValid(Point2d) //{ */
 
   bool SafetyZone::isPointValid(const Point2d point)
