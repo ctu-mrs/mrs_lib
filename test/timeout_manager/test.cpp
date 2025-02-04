@@ -342,7 +342,7 @@ TEST_F(TimeoutManager, test_timeout_manager) {
     // wait for one callback to be called
     int min_n_cbks = std::numeric_limits<int>::max();
 
-    rclcpp::Rate rate(100.0);
+    rclcpp::Rate rate(100.0, clock);
 
     do {
       rate.sleep();
