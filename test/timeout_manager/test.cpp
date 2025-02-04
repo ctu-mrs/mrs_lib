@@ -10,6 +10,8 @@
 #include <mrs_lib/timeout_manager.h>
 #include <mrs_lib/utils.h>
 
+using namespace std::chrono_literals;
+
 class TimeoutManager : public ::testing::Test {
 
 public:
@@ -259,7 +261,7 @@ TEST_F(TimeoutManager, test_timeout_manager) {
       obj.n_cbks = 0;
     }
 
-    clock->sleep_for(std::chrono::milliseconds(int(200)));
+    clock->sleep_for(200ms);
 
     for (int it = 0; it < 4; it++) {
       auto& obj = objs[it];
@@ -283,9 +285,13 @@ TEST_F(TimeoutManager, test_timeout_manager) {
 
     const double test_dur = 0.5;
 
-    while (node_->get_clock()->now().seconds() - start.seconds() < test_dur) {
+    {
+      rclcpp::Rate rate(10000, clock);
 
-      clock->sleep_for(std::chrono::nanoseconds(int(100)));
+      while ((node_->get_clock()->now() - start).seconds() < test_dur) {
+
+        rate.sleep();
+      }
     }
 
     tom_->pauseAll();
@@ -313,7 +319,7 @@ TEST_F(TimeoutManager, test_timeout_manager) {
       obj.n_cbks = 0;
     }
 
-    clock->sleep_for(std::chrono::milliseconds(int(200)));
+    clock->sleep_for(200ms);
 
     for (int it = 0; it < 4; it++) {
       auto& obj = objs[it];
@@ -400,7 +406,7 @@ TEST_F(TimeoutManager, test_timeout_manager) {
 
   despin();
 
-  clock->sleep_for(std::chrono::milliseconds(1000));
+  clock->sleep_for(1s);
 
   EXPECT_TRUE(result);
 }
