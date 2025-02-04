@@ -8,6 +8,8 @@
 
 #include <thread>
 
+using namespace std::chrono_literals;
+
 class TestSubscription : public ::testing::Test {
 
 public:
@@ -99,6 +101,8 @@ TEST_F(TestSubscription, test_publish) {
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
+  auto clock = node_->get_clock();
+
   bool result = 1;
 
   RCLCPP_INFO(node_->get_logger(), "creating publisher");
@@ -120,13 +124,15 @@ TEST_F(TestSubscription, test_publish) {
   RCLCPP_INFO(node_->get_logger(), "initialized");
 
   {
+    rclcpp::Rate rate(1.0, clock);
+
     for (int i = 0; i < 10; i++) {
 
       if (sub1->get_publisher_count() > 0) {
         break;
       }
 
-      rclcpp::sleep_for(std::chrono::milliseconds(1000));
+      rate.sleep();
     }
   }
 
@@ -135,23 +141,26 @@ TEST_F(TestSubscription, test_publish) {
     result &= false;
   }
 
-  rclcpp::sleep_for(std::chrono::milliseconds(1000));
+  clock->sleep_for(1s);
 
   std_msgs::msg::Int64 data;
   data.data = num_to_send;
 
   {
+
+    rclcpp::Rate rate(100.0, clock);
+
     for (int i = 0; i < 10; i++) {
 
       RCLCPP_INFO(node_->get_logger(), "publishing");
 
       ph_int.publish(data);
 
-      rclcpp::sleep_for(std::chrono::milliseconds(10));
+      rate.sleep();
     }
   }
 
-  rclcpp::sleep_for(std::chrono::milliseconds(1000));
+  clock->sleep_for(1s);
 
   if (num_received != 10) {
     RCLCPP_ERROR(node_->get_logger(), "did not received the correct number of messages, %d != %d", num_received, 10);
@@ -162,7 +171,7 @@ TEST_F(TestSubscription, test_publish) {
 
   despin();
 
-  rclcpp::sleep_for(std::chrono::milliseconds(1000));
+  clock->sleep_for(1s);
 
   EXPECT_TRUE(result);
 }
@@ -174,6 +183,8 @@ TEST_F(TestSubscription, test_publish) {
 TEST_F(TestSubscription, test_opts) {
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  auto clock = node_->get_clock();
 
   bool result = 1;
 
@@ -206,7 +217,7 @@ TEST_F(TestSubscription, test_opts) {
         break;
       }
 
-      rclcpp::sleep_for(std::chrono::milliseconds(1000));
+      clock->sleep_for(1s);
     }
   }
 
@@ -215,23 +226,25 @@ TEST_F(TestSubscription, test_opts) {
     result &= false;
   }
 
-  rclcpp::sleep_for(std::chrono::milliseconds(1000));
+  rclcpp::sleep_for(1s);
 
   std_msgs::msg::Int64 data;
   data.data = num_to_send;
 
   {
+    rclcpp::Rate rate(10, clock);
+
     for (int i = 0; i < 10; i++) {
 
       RCLCPP_INFO(node_->get_logger(), "publishing");
 
       ph_int.publish(data);
 
-      rclcpp::sleep_for(std::chrono::milliseconds(10));
+      rate.sleep();
     }
   }
 
-  rclcpp::sleep_for(std::chrono::milliseconds(1000));
+  rclcpp::sleep_for(1s);
 
   if (num_received != 10) {
     RCLCPP_ERROR(node_->get_logger(), "did not received the correct number of messages, %d != %d", num_received, 10);
@@ -242,7 +255,7 @@ TEST_F(TestSubscription, test_opts) {
 
   despin();
 
-  rclcpp::sleep_for(std::chrono::milliseconds(1000));
+  rclcpp::sleep_for(1s);
 
   EXPECT_TRUE(result);
 }
@@ -255,6 +268,8 @@ TEST_F(TestSubscription, throttling) {
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
+  auto clock = node_->get_clock();
+
   bool result = 1;
 
   RCLCPP_INFO(node_->get_logger(), "creating publisher");
@@ -263,7 +278,7 @@ TEST_F(TestSubscription, throttling) {
 
   mrs_lib::PublisherHandlerOptions opts;
 
-  opts.node = node_;
+  opts.node          = node_;
   opts.throttle_rate = 10.0;
 
   mrs_lib::PublisherHandler<std_msgs::msg::Int64> ph_int = mrs_lib::PublisherHandler<std_msgs::msg::Int64>(opts, "/topic1");
@@ -287,7 +302,7 @@ TEST_F(TestSubscription, throttling) {
         break;
       }
 
-      rclcpp::sleep_for(std::chrono::milliseconds(1000));
+      rclcpp::sleep_for(1s);
     }
   }
 
@@ -296,23 +311,25 @@ TEST_F(TestSubscription, throttling) {
     result &= false;
   }
 
-  rclcpp::sleep_for(std::chrono::milliseconds(1000));
+  rclcpp::sleep_for(1s);
 
   std_msgs::msg::Int64 data;
   data.data = num_to_send;
 
   {
+    rclcpp::Rate rate(100, clock);
+
     for (int i = 0; i < 100; i++) {
 
       RCLCPP_INFO(node_->get_logger(), "publishing");
 
       ph_int.publish(data);
 
-      rclcpp::sleep_for(std::chrono::milliseconds(10));
+      rate.sleep();
     }
   }
 
-  rclcpp::sleep_for(std::chrono::milliseconds(1000));
+  rclcpp::sleep_for(1s);
 
   if (num_received < 9 || num_received > 11) {
     RCLCPP_ERROR(node_->get_logger(), "did not received the correct number of messages, want 9 >= %d <= 11", num_received);
@@ -323,7 +340,7 @@ TEST_F(TestSubscription, throttling) {
 
   despin();
 
-  rclcpp::sleep_for(std::chrono::milliseconds(1000));
+  rclcpp::sleep_for(1s);
 
   EXPECT_TRUE(result);
 }
