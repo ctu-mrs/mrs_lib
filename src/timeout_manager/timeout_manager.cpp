@@ -95,8 +95,8 @@ namespace mrs_lib
     {
       // don't worry, these variables will get optimized out by the compiler
       const bool started = timeout_info.started;
-      const bool last_reset_timeout = now.seconds() - timeout_info.last_reset.seconds() >= timeout_info.timeout;
-      const bool last_callback_timeout = now.seconds() - timeout_info.last_callback.seconds() >= timeout_info.timeout;
+      const bool last_reset_timeout = (now - timeout_info.last_reset).seconds() >= timeout_info.timeout;
+      const bool last_callback_timeout = (now - timeout_info.last_callback).seconds() >= timeout_info.timeout;
 
       if (started && last_reset_timeout && last_callback_timeout)
       {

@@ -148,7 +148,7 @@ struct obj_t
 
     if (check_dt_err) {
 
-      const double dt     = now.seconds() - last_update.seconds();
+      const double dt     = (now - last_update).seconds();
       const auto   dt_err = dt - desired_dt;
 
       if (dt_err < 0.0) {
@@ -187,6 +187,8 @@ TEST_F(TimeoutManager, test_timeout_manager) {
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
+  auto clock = node_->get_clock();
+
   bool result = 1;
 
   test_stop_from_cbk = std::make_shared<std::atomic<bool>>(false);
@@ -222,9 +224,8 @@ TEST_F(TimeoutManager, test_timeout_manager) {
 
     const double test_dur = 0.5;
 
-    while (node_->get_clock()->now().seconds() - start.seconds() < test_dur) {
-
-      rclcpp::sleep_for(std::chrono::nanoseconds(int(spin_period * 1e6)));
+    while ((node_->get_clock()->now() - start).seconds() < test_dur) {
+      clock->sleep_for(std::chrono::nanoseconds(int(spin_period * 1e6)));
     }
 
     tom_->pauseAll();
@@ -258,7 +259,7 @@ TEST_F(TimeoutManager, test_timeout_manager) {
       obj.n_cbks = 0;
     }
 
-    rclcpp::sleep_for(std::chrono::milliseconds(int(200)));
+    clock->sleep_for(std::chrono::milliseconds(int(200)));
 
     for (int it = 0; it < 4; it++) {
       auto& obj = objs[it];
@@ -284,7 +285,7 @@ TEST_F(TimeoutManager, test_timeout_manager) {
 
     while (node_->get_clock()->now().seconds() - start.seconds() < test_dur) {
 
-      rclcpp::sleep_for(std::chrono::nanoseconds(int(100)));
+      clock->sleep_for(std::chrono::nanoseconds(int(100)));
     }
 
     tom_->pauseAll();
@@ -312,7 +313,7 @@ TEST_F(TimeoutManager, test_timeout_manager) {
       obj.n_cbks = 0;
     }
 
-    rclcpp::sleep_for(std::chrono::milliseconds(int(200)));
+    clock->sleep_for(std::chrono::milliseconds(int(200)));
 
     for (int it = 0; it < 4; it++) {
       auto& obj = objs[it];
@@ -341,9 +342,11 @@ TEST_F(TimeoutManager, test_timeout_manager) {
     // wait for one callback to be called
     int min_n_cbks = std::numeric_limits<int>::max();
 
-    do {
+    rclcpp::Rate rate(100.0);
 
-      rclcpp::sleep_for(std::chrono::milliseconds(int(100)));
+    do {
+      rate.sleep();
+
       min_n_cbks = std::numeric_limits<int>::max();
 
       for (const auto& obj : objs) {
@@ -367,7 +370,7 @@ TEST_F(TimeoutManager, test_timeout_manager) {
       max_period = std::max(max_period, to);
     }
 
-    rclcpp::sleep_for(std::chrono::milliseconds(int(2 * max_period * 1000)));
+    clock->sleep_for(std::chrono::milliseconds(int(2 * max_period * 1000)));
 
     // check that no callbacks were called afterwards
     for (auto& obj : objs) {
@@ -397,7 +400,7 @@ TEST_F(TimeoutManager, test_timeout_manager) {
 
   despin();
 
-  rclcpp::sleep_for(std::chrono::milliseconds(1000));
+  clock->sleep_for(std::chrono::milliseconds(1000));
 
   EXPECT_TRUE(result);
 }

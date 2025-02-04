@@ -12,11 +12,6 @@
 
 namespace mrs_lib
 {
-  /* TimeoutManager class //{ */
-  /**
-   * \brief TODO
-   *
-   */
   class TimeoutManager
   {
   public:
@@ -27,10 +22,6 @@ namespace mrs_lib
   public:
     // | --------------------- public methods --------------------- |
 
-    /*!
-     * \brief TODO
-     *
-     */
     TimeoutManager(const std::shared_ptr<rclcpp::Node>& node, const double& update_rate);
 
     timeout_id_t registerNew(const double& timeout, const callback_t& callback, const rclcpp::Time& last_reset, const bool oneshot = false,
@@ -85,7 +76,7 @@ namespace mrs_lib
 
     //}
   };
-  //}
+
 }  // namespace mrs_lib
 
 #endif  // TIMEOUT_MANAGER_H
