@@ -11,6 +11,6 @@ done
 
 colcon test-result --delete-yes
 
-colcon test --packages-select mrs_lib --ctest-args -R 'publisher_handler'
+colcon test --packages-select mrs_lib --ctest-args -R 'timeout_manager'
 
 colcon test-result --all --verbose

@@ -9,6 +9,8 @@ while [ ! -e "build/COLCON_IGNORE" ]; do
   fi
 done
 
-colcon test --ctest-args tests
+colcon test-result --delete-yes
+
+colcon test --packages-select mrs_lib
 
 colcon test-result --all --verbose

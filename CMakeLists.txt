@@ -41,6 +41,7 @@ set(DEPENDENCIES
 set(LIBRARIES
   MrsLib_Geometry
   MrsLib_AttitudeConverter
+  MrsLib_TimeoutManager
   )
 
 ## Geometry
@@ -76,6 +77,21 @@ add_library(MrsLib_AttitudeConverter SHARED
 
 ament_target_dependencies(MrsLib_AttitudeConverter
   tf2_geometry_msgs
+  ${Eigen_LIBRARIES}
+  )
+
+# Timeout manager
+
+add_library(MrsLib_TimeoutManager SHARED
+  src/timeout_manager/timeout_manager.cpp
+  )
+
+target_link_libraries(MrsLib_TimeoutManager
+  MrsLib_Utils
+  )
+
+ament_target_dependencies(MrsLib_TimeoutManager
+  rclcpp
   ${Eigen_LIBRARIES}
   )
 

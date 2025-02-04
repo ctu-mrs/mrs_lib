@@ -16,7 +16,7 @@ namespace mrs_lib
 template <class TopicType>
 PublisherHandler_impl<TopicType>::PublisherHandler_impl(void) : publisher_initialized_(false) {
 
-  last_time_published_ = node_->get_clock()->now();
+  last_time_published_ = rclcpp::Time(0, 0, node_->get_clock()->get_clock_type());
 }
 
 //}
@@ -27,6 +27,8 @@ template <class TopicType>
 PublisherHandler_impl<TopicType>::PublisherHandler_impl(const PublisherHandlerOptions& options, const std::string& address) {
 
   node_ = options.node;
+
+  last_time_published_ = node_->get_clock()->now();
 
   {
     std::scoped_lock lock(mutex_publisher_);
@@ -59,7 +61,7 @@ void PublisherHandler_impl<TopicType>::publish(const TopicType& msg) {
 
     rclcpp::Time now = node_->get_clock()->now();
 
-    double passed = now.seconds() - last_time_published_.seconds();
+    double passed = (now - last_time_published_).seconds();
 
     if (passed > throttle_min_dt_) {
       publisher_->publish(msg);
@@ -84,7 +86,7 @@ void PublisherHandler_impl<TopicType>::publish(const std::shared_ptr<TopicType>&
 
     rclcpp::Time now = node_->get_clock()->now();
 
-    double passed = now.seconds() - last_time_published_.seconds();
+    double passed = (now - last_time_published_).seconds();
 
     if (passed > throttle_min_dt_) {
       publisher_->publish(msg);
@@ -109,7 +111,7 @@ void PublisherHandler_impl<TopicType>::publish(const std::shared_ptr<TopicType c
 
     rclcpp::Time now = node_->get_clock()->now();
 
-    double passed = now.seconds() - last_time_published_.seconds();
+    double passed = (now - last_time_published_).seconds();
 
     if (passed > throttle_min_dt_) {
       publisher_->publish(msg);
