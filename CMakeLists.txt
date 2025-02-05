@@ -42,6 +42,7 @@ set(LIBRARIES
   MrsLib_Geometry
   MrsLib_AttitudeConverter
   MrsLib_TimeoutManager
+  MrsLib_TimerHandler
   )
 
 ## Geometry
@@ -91,6 +92,22 @@ target_link_libraries(MrsLib_TimeoutManager
   )
 
 ament_target_dependencies(MrsLib_TimeoutManager
+  rclcpp
+  ${Eigen_LIBRARIES}
+  )
+
+# Timer handler
+
+add_library(MrsLib_TimerHandler SHARED
+  src/timer_handler/timer_handler.cpp
+  )
+
+target_link_libraries(MrsLib_TimerHandler
+
+  MrsLib_Utils
+  )
+
+ament_target_dependencies(MrsLib_TimerHandler
   rclcpp
   ${Eigen_LIBRARIES}
   )
