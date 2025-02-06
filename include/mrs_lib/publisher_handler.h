@@ -21,13 +21,16 @@ namespace mrs_lib
 
 struct PublisherHandlerOptions
 {
-  PublisherHandlerOptions(const std::shared_ptr<rclcpp::Node> node) : node(node) {
+  PublisherHandlerOptions(const rclcpp::Node::SharedPtr& node) : node(node) {
   }
 
   PublisherHandlerOptions() = default;
 
-  std::shared_ptr<rclcpp::Node> node;
+  rclcpp::Node::SharedPtr node;
 
+  /**
+   * @brief when > 0, the publisher output is limited to this rate in [Hz]
+   */
   double throttle_rate = 0;
 
   rclcpp::QoS qos = rclcpp::SystemDefaultsQoS();
@@ -55,8 +58,8 @@ public:
   /**
    * @brief full constructor with options
    *
-   * @param options
-   * @param address
+   * @param options subscribe handler options
+   * @param address topic address
    */
   PublisherHandler_impl(const PublisherHandlerOptions& options, const std::string& address);
 
@@ -71,14 +74,14 @@ public:
   /**
    * @brief publish message, boost ptr overload
    *
-   * @param msg
+   * @param msg message
    */
   void publish(const std::shared_ptr<TopicType>& msg);
 
   /**
    * @brief publish message, boost const ptr overload
    *
-   * @param msg
+   * @param msg message
    */
   void publish(const std::shared_ptr<TopicType const>& msg);
 
@@ -90,7 +93,7 @@ public:
   unsigned int getNumSubscribers(void);
 
 private:
-  std::shared_ptr<rclcpp::Node> node_;
+  rclcpp::Node::SharedPtr node_;
 
   std::shared_ptr<rclcpp::Publisher<TopicType>> publisher_;
 
@@ -149,7 +152,7 @@ public:
    * @param node
    * @param address
    */
-  PublisherHandler(std::shared_ptr<rclcpp::Node> node, const std::string& address);
+  PublisherHandler(const rclcpp::Node::SharedPtr& node, const std::string& address);
 
   /**
    * @brief full constructor

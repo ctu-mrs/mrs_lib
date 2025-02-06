@@ -1,4 +1,3 @@
-#include <mrs_lib/publisher_handler.h>
 #include <cmath>
 #include <chrono>
 
@@ -6,11 +5,13 @@
 
 #include <std_msgs/msg/int64.hpp>
 
+#include <mrs_lib/publisher_handler.h>
+
 #include <thread>
 
 using namespace std::chrono_literals;
 
-class TestSubscription : public ::testing::Test {
+class Test : public ::testing::Test {
 
 public:
   /* callback1() //{ */
@@ -54,7 +55,7 @@ protected:
 
     finished_future_ = finished_promise_.get_future();
 
-    main_thread_ = std::thread(&TestSubscription::spin, this);
+    main_thread_ = std::thread(&Test::spin, this);
   }
 
   //}
@@ -95,9 +96,9 @@ protected:
   std::future<bool>  finished_future_;
 };
 
-/* TEST_F(TestSubscription, test_publish) //{ */
+/* TEST_F(Test, test_publish) //{ */
 
-TEST_F(TestSubscription, test_publish) {
+TEST_F(Test, test_publish) {
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
@@ -115,7 +116,7 @@ TEST_F(TestSubscription, test_publish) {
 
   RCLCPP_INFO(node_->get_logger(), "creating subscriber");
 
-  const std::function<void(const std_msgs::msg::Int64::SharedPtr)> callback1_ptr = std::bind(&TestSubscription::callback1, this, std::placeholders::_1);
+  const std::function<void(const std_msgs::msg::Int64::SharedPtr)> callback1_ptr = std::bind(&Test::callback1, this, std::placeholders::_1);
 
   auto sub1 = node_->create_subscription<std_msgs::msg::Int64>("/topic1", 100, callback1_ptr);
 
@@ -178,9 +179,9 @@ TEST_F(TestSubscription, test_publish) {
 
 //}
 
-/* TEST_F(TestSubscription, test_opts) //{ */
+/* TEST_F(Test, test_opts) //{ */
 
-TEST_F(TestSubscription, test_opts) {
+TEST_F(Test, test_opts) {
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
@@ -202,7 +203,7 @@ TEST_F(TestSubscription, test_opts) {
 
   RCLCPP_INFO(node_->get_logger(), "creating subscriber");
 
-  const std::function<void(const std_msgs::msg::Int64::SharedPtr)> callback1_ptr = std::bind(&TestSubscription::callback1, this, std::placeholders::_1);
+  const std::function<void(const std_msgs::msg::Int64::SharedPtr)> callback1_ptr = std::bind(&Test::callback1, this, std::placeholders::_1);
 
   auto sub1 = node_->create_subscription<std_msgs::msg::Int64>("/topic1", 100, callback1_ptr);
 
@@ -262,9 +263,9 @@ TEST_F(TestSubscription, test_opts) {
 
 //}
 
-/* TEST_F(TestSubscription, throttling) //{ */
+/* TEST_F(Test, throttling) //{ */
 
-TEST_F(TestSubscription, throttling) {
+TEST_F(Test, throttling) {
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
@@ -287,7 +288,7 @@ TEST_F(TestSubscription, throttling) {
 
   RCLCPP_INFO(node_->get_logger(), "creating subscriber");
 
-  const std::function<void(const std_msgs::msg::Int64::SharedPtr)> callback1_ptr = std::bind(&TestSubscription::callback1, this, std::placeholders::_1);
+  const std::function<void(const std_msgs::msg::Int64::SharedPtr)> callback1_ptr = std::bind(&Test::callback1, this, std::placeholders::_1);
 
   auto sub1 = node_->create_subscription<std_msgs::msg::Int64>("/topic1", 100, callback1_ptr);
 
