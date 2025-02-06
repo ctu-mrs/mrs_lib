@@ -23,6 +23,8 @@ find_package(Eigen3 REQUIRED)
 set(Eigen_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIRS})
 set(Eigen_LIBRARIES ${EIGEN3_LIBRARIES})
 
+find_package(yaml-cpp REQUIRED)
+
 include_directories(
   include
   ${rclcpp_INCLUDE_DIRS}
@@ -36,6 +38,7 @@ include_directories(
 set(DEPENDENCIES
   rclcpp
   geometry_msgs
+  yaml-cpp
 )
 
 set(LIBRARIES
@@ -43,6 +46,8 @@ set(LIBRARIES
   MrsLib_AttitudeConverter
   MrsLib_TimeoutManager
   MrsLib_TimerHandler
+  MrsLib_ParamProvider
+  MrsLib_ParamLoader
   )
 
 ## Geometry
@@ -111,6 +116,38 @@ ament_target_dependencies(MrsLib_TimerHandler
   rclcpp
   ${Eigen_LIBRARIES}
   )
+
+# Param provider
+
+add_library(MrsLib_ParamProvider SHARED
+  src/param_loader/param_provider.cpp
+  )
+
+target_link_libraries(MrsLib_ParamProvider
+  MrsLib_Utils
+  )
+
+ament_target_dependencies(MrsLib_ParamProvider
+  rclcpp
+  ${Eigen_LIBRARIES}
+  yaml-cpp
+  )
+
+# Param loader 
+
+# add_library(MrsLib_ParamLoader SHARED
+#   src/timer_handler/timer_handler.cpp
+#   )
+
+# target_link_libraries(MrsLib_ParamLoader 
+#   MrsLib_Utils
+#   MrsLib_ParamProvider
+#   )
+
+# ament_target_dependencies(MrsLib_ParamLoader
+#   rclcpp
+#   ${Eigen_LIBRARIES}
+#   )
 
 ## --------------------------------------------------------------
 ## |                           Testing                          |
