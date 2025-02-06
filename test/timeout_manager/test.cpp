@@ -12,7 +12,7 @@
 
 using namespace std::chrono_literals;
 
-class TimeoutManager : public ::testing::Test {
+class Test : public ::testing::Test {
 
 public:
   /* callback1() //{ */
@@ -56,7 +56,7 @@ protected:
 
     finished_future_ = finished_promise_.get_future();
 
-    main_thread_ = std::thread(&TimeoutManager::spin, this);
+    main_thread_ = std::thread(&Test::spin, this);
   }
 
   //}
@@ -185,7 +185,7 @@ struct obj_t
 
 /* TEST_F(TimeoutManager, test_timeout_manager) //{ */
 
-TEST_F(TimeoutManager, test_timeout_manager) {
+TEST_F(Test, test_timeout_manager) {
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 

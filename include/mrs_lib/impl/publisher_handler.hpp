@@ -170,10 +170,10 @@ PublisherHandler<TopicType>::PublisherHandler(const PublisherHandler<TopicType>&
 
 //}
 
-/* PublisherHandler(std::shared_ptr<rclcpp::Node> node, const std::string& address) //{ */
+/* PublisherHandler(rclcpp::Node::SharedPtr node, const std::string& address) //{ */
 
 template <class TopicType>
-PublisherHandler<TopicType>::PublisherHandler(std::shared_ptr<rclcpp::Node> node, const std::string& address) {
+PublisherHandler<TopicType>::PublisherHandler(const rclcpp::Node::SharedPtr& node, const std::string& address) {
 
   PublisherHandlerOptions opts;
 
