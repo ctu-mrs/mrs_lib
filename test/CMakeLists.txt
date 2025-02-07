@@ -18,3 +18,5 @@ add_subdirectory(./publisher_handler)
 add_subdirectory(./timeout_manager)
 
 add_subdirectory(./timer_handler)
+
+add_subdirectory(./service_client_handler)

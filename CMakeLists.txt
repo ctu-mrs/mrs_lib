@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 project(mrs_lib)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -48,6 +48,7 @@ set(LIBRARIES
   MrsLib_TimerHandler
   MrsLib_ParamProvider
   MrsLib_ParamLoader
+  MrsLib_ServiceClientHandler
   )
 
 ## Geometry
@@ -148,6 +149,20 @@ ament_target_dependencies(MrsLib_ParamProvider
 #   rclcpp
 #   ${Eigen_LIBRARIES}
 #   )
+
+# service client handler
+
+add_library(MrsLib_ServiceClientHandler SHARED
+  src/timer_handler/timer_handler.cpp
+  )
+
+target_link_libraries(MrsLib_ServiceClientHandler
+  )
+
+ament_target_dependencies(MrsLib_ServiceClientHandler
+  rclcpp
+  ${Eigen_LIBRARIES}
+  )
 
 ## --------------------------------------------------------------
 ## |                           Testing                          |
