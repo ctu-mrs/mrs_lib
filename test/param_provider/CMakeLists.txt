@@ -13,3 +13,5 @@ ament_target_dependencies(test_${TEST_NAME}
   rclcpp
   std_msgs
   )
+
+file(COPY test_config.yaml DESTINATION /tmp/mrs_lib/test/param_provider/)

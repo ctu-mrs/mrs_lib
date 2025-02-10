@@ -127,12 +127,12 @@ add_library(MrsLib_ParamProvider SHARED
 
 target_link_libraries(MrsLib_ParamProvider
   MrsLib_Utils
+  yaml-cpp
   )
 
 ament_target_dependencies(MrsLib_ParamProvider
   rclcpp
   ${Eigen_LIBRARIES}
-  yaml-cpp
   )
 
 # Param loader 

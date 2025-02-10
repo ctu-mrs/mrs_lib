@@ -11,6 +11,6 @@ done
 
 colcon test-result --delete-yes
 
-colcon test --packages-select mrs_lib --ctest-args -R 'math'
+colcon test --packages-select mrs_lib --ctest-args -R 'param_provider'
 
 colcon test-result --all --verbose
