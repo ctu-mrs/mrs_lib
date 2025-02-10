@@ -44,11 +44,11 @@ ServiceClientHandler_impl<ServiceType>::ServiceClientHandler_impl(rclcpp::Node::
 /* callSync(const ServiceType::Request& request, ServiceType::Response& response) //{ */
 
 template <class ServiceType>
-std::shared_ptr<typename ServiceType::Response> ServiceClientHandler_impl<ServiceType>::callSync(
+std::optional<std::shared_ptr<typename ServiceType::Response>> ServiceClientHandler_impl<ServiceType>::callSync(
     const std::shared_ptr<typename ServiceType::Request>& request) {
 
   if (!service_initialized_) {
-    return nullptr;
+    return {};
   }
 
   /* always check if the service is ready before calling */
@@ -60,17 +60,17 @@ std::shared_ptr<typename ServiceType::Response> ServiceClientHandler_impl<Servic
     /* it is a good practice to check if the future object is not already invalid after the call */
     /* if valid() is false, the future has UNDEFINED behavior */
     if (future_msg.valid() == false) {
-      return nullptr;
+      return {};
     }
 
     return future_msg.get();
 
   } else {
-    RCLCPP_WARN_STREAM(node_->get_logger(), "Can not call service in sync mode. Service not ready!");
-    return nullptr;
+    // this branch occurs when the service can not contact the service server.
+    return {};
   }
 
-  return nullptr;
+  return {};
 }
 
 //}
@@ -78,14 +78,26 @@ std::shared_ptr<typename ServiceType::Response> ServiceClientHandler_impl<Servic
 /* callAsync(const ServiceType::Request& request, ServiceType::Response& response) //{ */
 
 template <class ServiceType>
-std::shared_future<std::shared_ptr<typename ServiceType::Response>> ServiceClientHandler_impl<ServiceType>::callAsync(
+std::optional<std::shared_future<std::shared_ptr<typename ServiceType::Response>>> ServiceClientHandler_impl<ServiceType>::callAsync(
     const std::shared_ptr<typename ServiceType::Request>& request) {
 
-  std::shared_future<std::shared_ptr<typename ServiceType::Response>> future_response;
+  /* always check if the service is ready before calling */
+  if (service_client_->service_is_ready()) {
 
-  future_response = service_client_->async_send_request(request).future.share();
+    auto future = service_client_->async_send_request(request).future.share();
 
-  return future_response;
+    /* it is a good practice to check if the future object is not already invalid after the call */
+    /* if valid() is false, the future has UNDEFINED behavior */
+    if (future.valid() == false) {
+      return {};
+    }
+
+    return {future};
+
+  } else {
+    // this branch occurs when the service can not contact the service server.
+    return {};
+  }
 }
 
 //}
@@ -147,7 +159,8 @@ void ServiceClientHandler<ServiceType>::initialize(rclcpp::Node::SharedPtr& node
 /* callSync(const ServiceType::Request& request, ServiceType::Response& response) //{ */
 
 template <class ServiceType>
-std::shared_ptr<typename ServiceType::Response> ServiceClientHandler<ServiceType>::callSync(const std::shared_ptr<typename ServiceType::Request>& request) {
+std::optional<std::shared_ptr<typename ServiceType::Response>> ServiceClientHandler<ServiceType>::callSync(
+    const std::shared_ptr<typename ServiceType::Request>& request) {
 
   return impl_->callSync(request);
 }
@@ -157,7 +170,7 @@ std::shared_ptr<typename ServiceType::Response> ServiceClientHandler<ServiceType
 /* callAsync(const ServiceType::Request& request, ServiceType::Response& response) //{ */
 
 template <class ServiceType>
-std::shared_future<std::shared_ptr<typename ServiceType::Response>> ServiceClientHandler<ServiceType>::callAsync(
+std::optional<std::shared_future<std::shared_ptr<typename ServiceType::Response>>> ServiceClientHandler<ServiceType>::callAsync(
     const std::shared_ptr<typename ServiceType::Request>& request) {
 
   return impl_->callAsync(request);

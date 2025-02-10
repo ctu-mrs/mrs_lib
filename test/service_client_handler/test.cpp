@@ -145,9 +145,9 @@ TEST_F(Test, test_call) {
 
     auto response = client1.callSync(request);
 
-    EXPECT_NE(response, nullptr);
-    EXPECT_TRUE(response->success);
-    EXPECT_EQ(response->message, "set");
+    EXPECT_TRUE(response.has_value());
+    EXPECT_TRUE(response.value()->success);
+    EXPECT_EQ(response.value()->message, "set");
   }
 
   {
@@ -157,9 +157,9 @@ TEST_F(Test, test_call) {
 
     auto response = client1.callSync(request);
 
-    EXPECT_NE(response, nullptr);
-    EXPECT_TRUE(response->success);
-    EXPECT_EQ(response->message, "unset");
+    EXPECT_TRUE(response.has_value());
+    EXPECT_TRUE(response.value()->success);
+    EXPECT_EQ(response.value()->message, "unset");
   }
 
   RCLCPP_INFO(node_->get_logger(), "finished");
@@ -195,7 +195,11 @@ TEST_F(Test, asynctest_call) {
   {
     request->data = true;
 
-    auto response = client1.callAsync(request);
+    auto opt_response = client1.callAsync(request);
+
+    ASSERT_TRUE(opt_response.has_value());
+
+    auto response = opt_response.value();
 
     while (rclcpp::ok()) {
 
@@ -222,27 +226,47 @@ TEST_F(Test, asynctest_call) {
 
 //}
 
-/* if (!srv.response) { */
-/*   success = false; */
-/*   ROS_ERROR("[%s]: normal service call failed", ros::this_node::getName().c_str()); */
-/* } */
+/* TEST_F(Test, test_bad_address) //{ */
 
-/* std::future<std_srvs::srv::SetBool> future1_res = client1.callSync(request, response, 3); */
-/* std::future<std_srvs::srv::SetBool> future2_res = client2.callSync(request, response, 10); */
+TEST_F(Test, test_bad_address) {
 
-/* if (!srv.response) { */
-/*   success = false; */
-/*   ROS_ERROR("[%s]: normal service call failed", ros::this_node::getName().c_str()); */
-/* } */
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
-/* future_res.wait(); */
-/* if (!future_res.get().response.success) { */
-/*   success = false; */
-/*   ROS_ERROR("[%s]: async service call failed", ros::this_node::getName().c_str()); */
-/* } */
+  auto clock = node_->get_clock();
 
-/* future2_res.wait(); */
-/* if (!future2_res.get().response.success) { */
-/*   success = false; */
-/*   ROS_ERROR("[%s]: async failing service call failed", ros::this_node::getName().c_str()); */
-/* } */
+  // | ----------------- create a service client ---------------- |
+
+  mrs_lib::ServiceClientHandler<std_srvs::srv::SetBool> client1 = mrs_lib::ServiceClientHandler<std_srvs::srv::SetBool>(node_, "random");
+
+  RCLCPP_INFO(node_->get_logger(), "initialized");
+
+  {
+    auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
+
+    request->data = true;
+
+    auto response = client1.callSync(request);
+
+    EXPECT_FALSE(response.has_value());
+  }
+
+  {
+    auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
+
+    request->data = true;
+
+    auto response = client1.callAsync(request);
+
+    clock->sleep_for(2s);
+
+    EXPECT_FALSE(response.has_value());
+  }
+
+  RCLCPP_INFO(node_->get_logger(), "finished");
+
+  despin();
+
+  clock->sleep_for(1s);
+}
+
+//}

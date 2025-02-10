@@ -46,18 +46,18 @@ public:
    *
    * @param request request
    *
-   * @return shared pointer to the response
+   * @return optional shared pointer to the response
    */
-  std::shared_ptr<typename ServiceType::Response> callSync(const std::shared_ptr<typename ServiceType::Request>& request);
+  std::optional<std::shared_ptr<typename ServiceType::Response>> callSync(const std::shared_ptr<typename ServiceType::Request>& request);
 
   /**
    * @brief asynchronous service call
    *
    * @param request request
    *
-   * @return shared future to the result
+   * @return optional shared future to the result
    */
-  std::shared_future<std::shared_ptr<typename ServiceType::Response>> callAsync(const std::shared_ptr<typename ServiceType::Request>& request);
+  std::optional<std::shared_future<std::shared_ptr<typename ServiceType::Response>>> callAsync(const std::shared_ptr<typename ServiceType::Request>& request);
 
 private:
   rclcpp::Node::SharedPtr node_;
@@ -127,18 +127,18 @@ public:
    *
    * @param request request
    *
-   * @return shared pointer to the result
+   * @return optional shared pointer to the result
    */
-  std::shared_ptr<typename ServiceType::Response> callSync(const std::shared_ptr<typename ServiceType::Request>& request);
+  std::optional<std::shared_ptr<typename ServiceType::Response>> callSync(const std::shared_ptr<typename ServiceType::Request>& request);
 
   /**
    * @brief asynchronous call
    *
    * @param request request
    *
-   * @return shared future to the result
+   * @return optional shared future to the result
    */
-  std::shared_future<std::shared_ptr<typename ServiceType::Response>> callAsync(const std::shared_ptr<typename ServiceType::Request>& request);
+  std::optional<std::shared_future<std::shared_ptr<typename ServiceType::Response>>> callAsync(const std::shared_ptr<typename ServiceType::Request>& request);
 
 private:
   std::shared_ptr<ServiceClientHandler_impl<ServiceType>> impl_;
