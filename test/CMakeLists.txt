@@ -24,3 +24,5 @@ add_subdirectory(./service_client_handler)
 add_subdirectory(./math)
 
 add_subdirectory(./param_provider)
+
+add_subdirectory(./mutex)
