@@ -26,3 +26,5 @@ add_subdirectory(./math)
 add_subdirectory(./param_provider)
 
 add_subdirectory(./mutex)
+
+add_subdirectory(./scope_timer)
