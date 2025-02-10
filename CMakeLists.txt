@@ -52,6 +52,7 @@ set(LIBRARIES
   MrsLib_Math
   MrsLib_ScopeTimer
   MrsLib_LKF
+  MrsLib_UKF
   )
 
 ## Geometry
@@ -205,6 +206,20 @@ target_link_libraries(MrsLib_LKF
   )
 
 ament_target_dependencies(MrsLib_LKF
+  rclcpp
+  ${Eigen_LIBRARIES}
+  )
+
+# ukf
+
+add_library(MrsLib_UKF SHARED
+  src/ukf/example.cpp
+  )
+
+target_link_libraries(MrsLib_UKF
+  )
+
+ament_target_dependencies(MrsLib_UKF
   rclcpp
   ${Eigen_LIBRARIES}
   )
