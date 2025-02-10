@@ -44,8 +44,11 @@ namespace mrs_lib
     return false;
   }
 
-  // bool ParamProvider::getParam(const std::string& param_name, XmlRpc::XmlRpcValue& value_out) const
+  // bool ParamProvider::getParam(const std::string& param_name, rclcpp::Parameter& value_out) const
   // {
+  //   if (m_use_rosparam)
+  //     m_node->declare_parameter(param_name, value_out.get_parameter_value());
+
   //   if (m_use_rosparam && m_node->get_parameter(param_name, value_out))
   //     return true;
 
@@ -53,7 +56,7 @@ namespace mrs_lib
   //   {
   //     const auto found_node = findYamlNode(param_name);
   //     if (found_node.has_value())
-  //       RCLCPP_WARN_STREAM(m_node->get_logger(), "[" << m_node_name << "]: Parameter \"" << param_name << "\" of desired type XmlRpc::XmlRpcValue is only available as a static parameter, which doesn't support loading of this type.");
+  //       RCLCPP_WARN_STREAM(m_node->get_logger(), "[" << m_node_name << "]: Parameter \"" << param_name << "\" of desired type rclcpp::Parameter is only available as a static parameter, which doesn't support loading of this type.");
   //   }
   //   catch (const YAML::Exception& e)
   //   {
