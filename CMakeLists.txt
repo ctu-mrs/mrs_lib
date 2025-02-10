@@ -13,6 +13,7 @@ find_package(ament_cmake REQUIRED)
 
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
@@ -27,7 +28,7 @@ find_package(yaml-cpp REQUIRED)
 
 include_directories(
   include
-  ${rclcpp_INCLUDE_DIRS}
+  # ${rclcpp_INCLUDE_DIRS}
   ${Eigen_INCLUDE_DIRS}
 )
 
@@ -137,19 +138,21 @@ ament_target_dependencies(MrsLib_ParamProvider
 
 # Param loader 
 
-# add_library(MrsLib_ParamLoader SHARED
-#   src/timer_handler/timer_handler.cpp
-#   )
+add_library(MrsLib_ParamLoader SHARED
+  src/param_loader/param_loader.cpp
+  )
 
-# target_link_libraries(MrsLib_ParamLoader 
-#   MrsLib_Utils
-#   MrsLib_ParamProvider
-#   )
+target_link_libraries(MrsLib_ParamLoader 
+  MrsLib_Utils
+  MrsLib_ParamProvider
+  std_msgs
+  )
 
-# ament_target_dependencies(MrsLib_ParamLoader
-#   rclcpp
-#   ${Eigen_LIBRARIES}
-#   )
+ament_target_dependencies(MrsLib_ParamLoader
+  rclcpp
+  std_msgs
+  ${Eigen_LIBRARIES}
+  )
 
 # service client handler
 

@@ -1,19 +1,13 @@
-// clang: MatousFormat
-/**  \file
-     \brief Defines ParamLoader - a convenience class for loading static ROS parameters.
-     \author Matouš Vrba - vrbamato@fel.cvut.cz
- */
-
 #ifndef PARAM_LOADER_H
 #define PARAM_LOADER_H
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 #include <string>
 #include <map>
 #include <unordered_set>
 #include <iostream>
 #include <Eigen/Dense>
-#include <std_msgs/ColorRGBA.h>
+#include <std_msgs/msg/color_rgba.h>
 #include <mrs_lib/param_provider.h>
 
 namespace mrs_lib
@@ -35,9 +29,9 @@ namespace mrs_lib
 * of std::vectors of various values are also provided.
 *
 * To load parameters into the `rosparam` server, use a launchfile prefferably.
-* See documentation of ROS launchfiles here: http://wiki.ros.org/roslaunch/XML.
-* Specifically, the `param` XML tag is used for loading parameters directly from the launchfile: http://wiki.ros.org/roslaunch/XML/param,
-* and the `rosparam` XML tag tag is used for loading parameters from a `yaml` file: http://wiki.ros.org/roslaunch/XML/rosparam.
+* See documentation of ROS launchfiles here: http://wiki.rclcpp.org/roslaunch/XML.
+* Specifically, the `param` XML tag is used for loading parameters directly from the launchfile: http://wiki.rclcpp.org/roslaunch/XML/param,
+* and the `rosparam` XML tag tag is used for loading parameters from a `yaml` file: http://wiki.rclcpp.org/roslaunch/XML/rosparam.
 *
 */
 class ParamLoader
@@ -67,7 +61,7 @@ private:
   bool m_load_successful, m_print_values;
   std::string m_node_name;
   std::string m_prefix;
-  ros::NodeHandle m_nh;
+  std::shared_ptr<rclcpp::Node> m_node;
   mrs_lib::ParamProvider m_pp;
   std::unordered_set<std::string> m_loaded_params;
 
@@ -76,16 +70,16 @@ private:
   void printError(const std::string& str)
   {
     if (m_node_name.empty())
-      ROS_ERROR_STREAM(str);
+      RCLCPP_ERROR_STREAM(m_node->get_logger(), str);
     else
-      ROS_ERROR_STREAM("[" << m_node_name << "]: " << str);
+      RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node_name << "]: " << str);
   }
   void print_warning(const std::string& str)
   {
     if (m_node_name.empty())
-      ROS_WARN_STREAM(str);
+      RCLCPP_WARN_STREAM(m_node->get_logger(), str);
     else
-      ROS_WARN_STREAM("[" << m_node_name << "]: " << str);
+      RCLCPP_WARN_STREAM(m_node->get_logger(), "[" << m_node_name << "]: " << str);
   }
   //}
 
@@ -97,7 +91,7 @@ private:
     if (m_node_name.empty())
       std::cout << "\t" << name << ":\t" << value << std::endl;
     else
-      ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << name << "':\t" << value);
+      RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << name << "':\t" << value);
   }
 
   template <typename T>
@@ -118,7 +112,7 @@ private:
     if (m_node_name.empty())
       std::cout << strstr.str() << std::endl;
     else
-      ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << strstr.str());
+      RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << strstr.str());
   }
 
   template <typename T1, typename T2>
@@ -139,7 +133,7 @@ private:
     if (m_node_name.empty())
       std::cout << strstr.str() << std::endl;
     else
-      ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << strstr.str());
+      RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << strstr.str());
   }
 
   template <typename T>
@@ -153,61 +147,69 @@ private:
     if (m_node_name.empty())
       std::cout << "\t" << name << ":\t" << std::endl << strstr.str() << std::endl;
     else
-      ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << name << "':" << std::endl << strstr.str());
+      RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << name << "':" << std::endl << strstr.str());
   }
 
-  std::string printValue_recursive(const std::string& name, XmlRpc::XmlRpcValue& value, unsigned depth = 0)
-  {
-    std::stringstream strstr;
-    for (unsigned it = 0; it < depth; it++)
-      strstr << "\t";
-    strstr << name << ":";
-    switch (value.getType())
-    {
-      case XmlRpc::XmlRpcValue::TypeArray:
-        {
-          for (int it = 0; it < value.size(); it++)
-          {
-            strstr << std::endl;
-            const std::string name = "[" + std::to_string(it) + "]";
-            strstr << printValue_recursive(name, value[it], depth+1);
-          }
-          break;
-        }
-      case XmlRpc::XmlRpcValue::TypeStruct:
-        {
-          int it = 0;
-          for (auto& pair : value)
-          {
-            strstr << std::endl;
-            strstr << printValue_recursive(pair.first, pair.second, depth+1);
-            it++;
-          }
-          break;
-        }
-      default:
-        {
-          strstr << "\t" << value;
-          break;
-        }
-    }
-    return strstr.str();
-  }
+  // std::string printValue_recursive(const std::string& name, rclcpp::Parameter& value, unsigned depth = 0)
+  // {
+  //   std::stringstream strstr;
+  //   for (unsigned it = 0; it < depth; it++)
+  //     strstr << "\t";
+  //   strstr << name << ":";
+  //   switch (value.get_type())
+  //   {
+  //     case rclcpp::ParameterType::PARAMETER_BYTE_ARRAY:
+  //     case rclcpp::ParameterType::PARAMETER_BOOL_ARRAY:
+  //     case rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY:
+  //     case rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY:
+  //     case rclcpp::ParameterType::PARAMETER_STRING_ARRAY:
+  //       // {
+  //       //   for (int it = 0; it < value.size(); it++)
+  //       //   {
+  //       //     strstr << std::endl;
+  //       //     const std::string name = "[" + std::to_string(it) + "]";
+  //       //     strstr << printValue_recursive(name, value[it], depth+1);
+  //       //   }
+  //       //   break;
+  //       // }
+  //       {
+  //         printVal
+  //         break;
+  //       }
+  //     case rclcpp::Parameter::TypeStruct:
+  //       {
+  //         int it = 0;
+  //         for (auto& pair : value)
+  //         {
+  //           strstr << std::endl;
+  //           strstr << printValue_recursive(pair.first, pair.second, depth+1);
+  //           it++;
+  //         }
+  //         break;
+  //       }
+  //     default:
+  //       {
+  //         strstr << "\t" << value;
+  //         break;
+  //       }
+  //   }
+  //   return strstr.str();
+  // }
 
-  void printValue(const std::string& name, XmlRpc::XmlRpcValue& value)
-  {
-    const std::string txt = printValue_recursive(name, value);
-    if (m_node_name.empty())
-      std::cout << txt << std::endl;
-    else
-      ROS_INFO_STREAM("[" << m_node_name << "]: parameter '" << txt);
-  }
+  // void printValue(const std::string& name, rclcpp::Parameter& value)
+  // {
+  //   const std::string txt = printValue_recursive(name, value);
+  //   if (m_node_name.empty())
+  //     std::cout << txt << std::endl;
+  //   else
+  //     RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << txt);
+  // }
 
-  //}
+  // //}
   
   std::string resolved(const std::string& param_name)
   {
-    return m_nh.resolveName(param_name);
+    return m_node->get_fully_qualified_name() + param_name;
   }
   //}
 
@@ -495,12 +497,12 @@ public:
     * \param printValues  If true, the loaded values will be printed to stdout using std::cout or ROS_INFO if node_name is not empty.
     * \param node_name     Optional node name used when printing the loaded values or loading errors.
     */
-  ParamLoader(const ros::NodeHandle& nh, bool printValues = true, std::string_view node_name = std::string())
+  ParamLoader(const std::shared_ptr<rclcpp::Node>& node, bool printValues = true, std::string_view node_name = std::string())
       : m_load_successful(true),
         m_print_values(printValues),
         m_node_name(node_name),
-        m_nh(nh),
-        m_pp(nh, m_node_name)
+        m_node(node),
+        m_pp(node, static_cast<std::string>(node_name))
   {
     /* std::cout << "Initialized1 ParamLoader for node " << node_name << std::endl; */
   }
@@ -512,8 +514,8 @@ public:
     * \param nh            The parameters will be loaded from rosparam using this node handle.
     * \param node_name     Optional node name used when printing the loaded values or loading errors.
     */
-  ParamLoader(const ros::NodeHandle& nh, std::string_view node_name)
-      : ParamLoader(nh, true, node_name)
+  ParamLoader(const std::shared_ptr<rclcpp::Node>& node, std::string_view node_name)
+      : ParamLoader(node, true, node_name)
   {
     /* std::cout << "Initialized2 ParamLoader for node " << node_name << std::endl; */
   }
@@ -524,10 +526,10 @@ public:
     * \param nh            The parameters will be loaded from rosparam using this node handle.
     * \param node_name     Optional node name used when printing the loaded values or loading errors.
     */
-  ParamLoader(const std::string& filepath, const ros::NodeHandle& nh)
-    : ParamLoader(nh, "none")
+  ParamLoader(const std::string& filepath, const std::shared_ptr<rclcpp::Node>& node)
+    : ParamLoader(node, "none")
   {
-    YAML::Node node = YAML::Load(filepath);
+    YAML::Node yaml_node = YAML::Load(filepath);
   }
   //}
 
@@ -768,49 +770,49 @@ public:
   }
   //}
 
-  /* loadParam specializations for ros::Duration type //{ */
+  /* loadParam specializations for rclcpp::Duration type //{ */
 
   /*!
-    * \brief An overload for loading ros::Duration.
+    * \brief An overload for loading rclcpp::Duration.
     *
-    * The duration will be loaded as a \p double, representing a number of seconds, and then converted to ros::Duration.
+    * The duration will be loaded as a \p double, representing a number of seconds, and then converted to rclcpp::Duration.
     *
     * \param name          Name of the parameter in the rosparam server.
     * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
     * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
     */
-  bool loadParam(const std::string& name, ros::Duration& out, const ros::Duration& default_value)
+  bool loadParam(const std::string& name, rclcpp::Duration& out, const rclcpp::Duration& default_value)
   {
     double secs;
-    const bool ret = loadParam<double>(name, secs, default_value.toSec());
-    out = ros::Duration(secs);
+    const bool ret = loadParam<double>(name, secs, default_value.seconds());
+    out = rclcpp::Duration(secs, 0);
     return ret;
   }
 
   /*!
-    * \brief An overload for loading ros::Duration.
+    * \brief An overload for loading rclcpp::Duration.
     *
-    * The duration will be loaded as a \p double, representing a number of seconds, and then converted to ros::Duration.
+    * The duration will be loaded as a \p double, representing a number of seconds, and then converted to rclcpp::Duration.
     *
     * \param name          Name of the parameter in the rosparam server.
     * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
     * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
     */
-  bool loadParam(const std::string& name, ros::Duration& out)
+  bool loadParam(const std::string& name, rclcpp::Duration& out)
   {
     double secs;
     const bool ret = loadParam<double>(name, secs);
-    out = ros::Duration(secs);
+    out = rclcpp::Duration(secs, 0);
     return ret;
   }
   
   //}
 
-  /* loadParam specializations for std_msgs::ColorRGBA type //{ */
+  /* loadParam specializations for std_msgs::msg::ColorRGBA type //{ */
 
   /*!
-    * \brief An overload for loading std_msgs::ColorRGBA.
+    * \brief An overload for loading std_msgs::msg::ColorRGBA.
     *
     * The color will be loaded as several \p double -typed variables, representing the R, G, B and A color elements.
     *
@@ -819,44 +821,44 @@ public:
     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
     * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
     */
-  bool loadParam(const std::string& name, std_msgs::ColorRGBA& out, const std_msgs::ColorRGBA& default_value = {})
-  {
-    std_msgs::ColorRGBA res;
-    bool ret = true;
-    ret = ret & loadParam(name+"/r", res.r, default_value.r);
-    ret = ret & loadParam(name+"/g", res.g, default_value.g);
-    ret = ret & loadParam(name+"/b", res.b, default_value.b);
-    ret = ret & loadParam(name+"/a", res.a, default_value.a);
-    if (ret)
-      out = res;
-    return ret;
-  }
+  // bool loadParam(const std::string& name, std_msgs::msg::ColorRGBA& out, const std_msgs::msg::ColorRGBA& default_value = {})
+  // {
+  //   std_msgs::msg::ColorRGBA res;
+  //   bool ret = true;
+  //   ret = ret & loadParam(name+"/r", res.r, default_value.r);
+  //   ret = ret & loadParam(name+"/g", res.g, default_value.g);
+  //   ret = ret & loadParam(name+"/b", res.b, default_value.b);
+  //   ret = ret & loadParam(name+"/a", res.a, default_value.a);
+  //   if (ret)
+  //     out = res;
+  //   return ret;
+  // }
 
-  /*!
-    * \brief An overload for loading std_msgs::ColorRGBA.
-    *
-    * The color will be loaded as several \p double -typed variables, representing the R, G, B and A color elements.
-    *
-    * \param name          Name of the parameter in the rosparam server.
-    * \param default_value This value will be used if the parameter name is not found in the rosparam server.
-    * \return              The loaded parameter value.
-    */
-  std_msgs::ColorRGBA loadParam2(const std::string& name, const std_msgs::ColorRGBA& default_value = {})
-  {
-    std_msgs::ColorRGBA ret;
-    loadParam(name, ret, default_value);
-    return ret;
-  }
+  // /*!
+  //   * \brief An overload for loading std_msgs::msg::ColorRGBA.
+  //   *
+  //   * The color will be loaded as several \p double -typed variables, representing the R, G, B and A color elements.
+  //   *
+  //   * \param name          Name of the parameter in the rosparam server.
+  //   * \param default_value This value will be used if the parameter name is not found in the rosparam server.
+  //   * \return              The loaded parameter value.
+  //   */
+  // std_msgs::msg::ColorRGBA loadParam2(const std::string& name, const std_msgs::msg::ColorRGBA& default_value = {})
+  // {
+  //   std_msgs::msg::ColorRGBA ret;
+  //   loadParam(name, ret, default_value);
+  //   return ret;
+  // }
 
   //}
 
   /* loadParam specializations for XmlRpc::Value type //{ */
 
   /*!
-    * \brief An overload for loading an optional XmlRpc::XmlRpcValue.
+    * \brief An overload for loading an optional rclcpp::Parameter.
     *
     * This can be used if you want to manually parse some more complex parameter but still take advantage of ParamLoader.
-    * \warning  XmlRpc::XmlRpcValue must be loaded from a rosparam server and not directly from a YAML file
+    * \warning  rclcpp::Parameter must be loaded from a rosparam server and not directly from a YAML file
     * (i.e. you cannot use it to load parameters from a file added using the addYamlFile() or addYamlFileFromParam() methods).
     *
     * \param name          Name of the parameter in the rosparam server.
@@ -864,42 +866,42 @@ public:
     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
     * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
     */
-  bool loadParam(const std::string& name, XmlRpc::XmlRpcValue& out, const XmlRpc::XmlRpcValue& default_value)
-  {
-    return loadParam<XmlRpc::XmlRpcValue>(name, out, default_value);
-  }
+  // bool loadParam(const std::string& name, rclcpp::Parameter& out, const rclcpp::Parameter& default_value)
+  // {
+  //   return loadParam<rclcpp::Parameter>(name, out, default_value);
+  // }
 
   /*!
-    * \brief An overload for loading a compulsory XmlRpc::XmlRpcValue.
+    * \brief An overload for loading a compulsory rclcpp::Parameter.
     *
     * This can be used if you want to manually parse some more complex parameter but still take advantage of ParamLoader.
-    * \warning  XmlRpc::XmlRpcValue must be loaded from a rosparam server and not directly from a YAML file
+    * \warning  rclcpp::Parameter must be loaded from a rosparam server and not directly from a YAML file
     * (i.e. you cannot use it to load parameters from a file added using the addYamlFile() or addYamlFileFromParam() methods).
     *
     * \param name          Name of the parameter in the rosparam server.
     * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
     * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
     */
-  bool loadParam(const std::string& name, XmlRpc::XmlRpcValue& out)
-  {
-    return loadParam<XmlRpc::XmlRpcValue>(name, out);
-  }
+  // bool loadParam(const std::string& name, rclcpp::Parameter& out)
+  // {
+  //   return loadParam<rclcpp::Parameter>(name, out);
+  // }
 
   /*!
-    * \brief An overload for loading an optional XmlRpc::XmlRpcValue.
+    * \brief An overload for loading an optional rclcpp::Parameter.
     *
     * This can be used if you want to manually parse some more complex parameter but still take advantage of ParamLoader.
-    * \warning  XmlRpc::XmlRpcValue must be loaded from a rosparam server and not directly from a YAML file
+    * \warning  rclcpp::Parameter must be loaded from a rosparam server and not directly from a YAML file
     * (i.e. you cannot use it to load parameters from a file added using the addYamlFile() or addYamlFileFromParam() methods).
     *
     * \param name          Name of the parameter in the rosparam server.
     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
     * \return              the loaded parameter.
     */
-  XmlRpc::XmlRpcValue loadParam2(const std::string& name, const XmlRpc::XmlRpcValue& default_value)
-  {
-    return loadParam2<XmlRpc::XmlRpcValue>(name, default_value);
-  }
+  // rclcpp::Parameter loadParam2(const std::string& name, const rclcpp::Parameter& default_value)
+  // {
+  //   return loadParam2<rclcpp::Parameter>(name, default_value);
+  // }
 
   //}
 
@@ -1341,27 +1343,27 @@ public:
 //}
 
   /*!
-    * \brief An overload for loading ros::Duration.
+    * \brief An overload for loading rclcpp::Duration.
     *
-    * The duration will be loaded as a \p double, representing a number of seconds, and then converted to ros::Duration.
+    * The duration will be loaded as a \p double, representing a number of seconds, and then converted to rclcpp::Duration.
     *
     * \param name          Name of the parameter in the rosparam server.
     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
     * \return              The loaded parameter value.
     */
   template <>
-  ros::Duration ParamLoader::loadParam2<ros::Duration>(const std::string& name, const ros::Duration& default_value);
+  rclcpp::Duration ParamLoader::loadParam2<rclcpp::Duration>(const std::string& name, const rclcpp::Duration& default_value);
 
   /*!
-    * \brief An overload for loading ros::Duration.
+    * \brief An overload for loading rclcpp::Duration.
     *
-    * The duration will be loaded as a \p double, representing a number of seconds, and then converted to ros::Duration.
+    * The duration will be loaded as a \p double, representing a number of seconds, and then converted to rclcpp::Duration.
     *
     * \param name          Name of the parameter in the rosparam server.
     * \return              The loaded parameter value.
     */
   template <>
-  ros::Duration ParamLoader::loadParam2<ros::Duration>(const std::string& name);
+  rclcpp::Duration ParamLoader::loadParam2<rclcpp::Duration>(const std::string& name);
 
 }  // namespace mrs_lib
 

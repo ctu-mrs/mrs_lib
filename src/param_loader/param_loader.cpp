@@ -1,3 +1,4 @@
+#include <chrono>
 #include <mrs_lib/param_loader.h>
 
 // Explicit instantiation of the tepmplated functions to precompile them into mrs_lib and speed up compilation of user program.
@@ -16,17 +17,15 @@ template bool mrs_lib::ParamLoader::loadParam<std::string>(const std::string& na
 template bool mrs_lib::ParamLoader::loadParamReusable<std::string>(const std::string& name, std::string& out_value, const std::string& default_value);
 
 template <>
-ros::Duration mrs_lib::ParamLoader::loadParam2<ros::Duration>(const std::string& name, const ros::Duration& default_value)
+rclcpp::Duration mrs_lib::ParamLoader::loadParam2<rclcpp::Duration>(const std::string& name, const rclcpp::Duration& default_value)
 {
-  const auto secs = loadParam2<double>(name, default_value.toSec());
-  const ros::Duration ret(secs);
-  return ret;
+  const auto secs = loadParam2<double>(name, default_value.seconds());
+  return rclcpp::Duration::from_seconds(secs);
 }
 
 template <>
-ros::Duration mrs_lib::ParamLoader::loadParam2<ros::Duration>(const std::string& name)
+rclcpp::Duration mrs_lib::ParamLoader::loadParam2<rclcpp::Duration>(const std::string& name)
 {
   const auto secs = loadParam2<double>(name);
-  const ros::Duration ret(secs);
-  return ret;
+  return rclcpp::Duration::from_seconds(secs);
 }
