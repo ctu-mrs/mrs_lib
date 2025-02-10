@@ -49,6 +49,7 @@ set(LIBRARIES
   MrsLib_ParamProvider
   MrsLib_ParamLoader
   MrsLib_ServiceClientHandler
+  MrsLib_Math
   )
 
 ## Geometry
@@ -160,6 +161,20 @@ target_link_libraries(MrsLib_ServiceClientHandler
   )
 
 ament_target_dependencies(MrsLib_ServiceClientHandler
+  rclcpp
+  ${Eigen_LIBRARIES}
+  )
+
+# math
+
+add_library(MrsLib_Math SHARED
+  src/math/math.cpp
+  )
+
+target_link_libraries(MrsLib_Math
+  )
+
+ament_target_dependencies(MrsLib_Math
   rclcpp
   ${Eigen_LIBRARIES}
   )
