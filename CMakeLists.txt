@@ -51,6 +51,7 @@ set(LIBRARIES
   MrsLib_ParamLoader
   MrsLib_ServiceClientHandler
   MrsLib_Math
+  MrsLib_ScopeTimer
   )
 
 ## Geometry
@@ -136,17 +137,17 @@ ament_target_dependencies(MrsLib_ParamProvider
   ${Eigen_LIBRARIES}
   )
 
-# Param loader 
+# Param loader
 
 add_library(MrsLib_ParamLoader SHARED
   src/param_loader/param_loader.cpp
   )
 
-target_link_libraries(MrsLib_ParamLoader 
-  MrsLib_Utils
-  MrsLib_ParamProvider
-  std_msgs
-  )
+# target_link_libraries(MrsLib_ParamLoader 
+#   MrsLib_Utils
+#   MrsLib_ParamProvider
+#   std_msgs
+#   )
 
 ament_target_dependencies(MrsLib_ParamLoader
   rclcpp
@@ -164,6 +165,20 @@ target_link_libraries(MrsLib_ServiceClientHandler
   )
 
 ament_target_dependencies(MrsLib_ServiceClientHandler
+  rclcpp
+  ${Eigen_LIBRARIES}
+  )
+
+# scope timer
+
+add_library(MrsLib_ScopeTimer SHARED
+  src/scope_timer/scope_timer.cpp
+  )
+
+target_link_libraries(MrsLib_ScopeTimer
+  )
+
+ament_target_dependencies(MrsLib_ScopeTimer
   rclcpp
   ${Eigen_LIBRARIES}
   )
