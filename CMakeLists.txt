@@ -15,6 +15,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(mrs_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 # find_package(Threads REQUIRED)
@@ -52,6 +53,7 @@ set(LIBRARIES
   MrsLib_ServiceClientHandler
   MrsLib_Math
   MrsLib_ScopeTimer
+  MrsLib_Profiler
   )
 
 ## Geometry
@@ -190,6 +192,20 @@ ament_target_dependencies(MrsLib_Math
   rclcpp
   ${Eigen_LIBRARIES}
   )
+
+# profiler
+
+# add_library(MrsLib_Profiler SHARED
+#   src/profiler/profiler.cpp
+#   )
+
+# target_link_libraries(MrsLib_Profiler
+#   )
+
+# ament_target_dependencies(MrsLib_Profiler
+#   rclcpp
+#   ${Eigen_LIBRARIES}
+#   )
 
 ## --------------------------------------------------------------
 ## |                           Testing                          |
