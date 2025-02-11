@@ -58,19 +58,6 @@ namespace mrs_lib
       template <typename T>
       bool getParam(const std::string& param_name, T& value_out) const;
 
-  /*!
-    * \brief Specialization of getParam() for the rclcpp::Parameter type.
-    *
-    * The rclcpp::Parameter can be useful for manual parsing of more complex types.
-    *
-    * \warning XmlRpc::XmlRpcValue parameters cannot be loaded from a YAML file - only from ROS!
-    *
-    * \param param_name   Name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
-    * \param value_out    Output argument that will hold the value of the loaded parameter, if successfull. Not modified otherwise.
-    * \return             Returns true iff the parameter was successfully loaded.
-    */
-      // bool getParam(const std::string& param_name, rclcpp::Parameter& value_out) const;
-
     private:
 
       std::vector<YAML::Node> m_yamls;
