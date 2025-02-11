@@ -7,7 +7,7 @@
 #include <unordered_set>
 #include <iostream>
 #include <Eigen/Dense>
-#include <std_msgs/msg/color_rgba.h>
+#include <std_msgs/msg/color_rgba.hpp>
 #include <mrs_lib/param_provider.h>
 
 namespace mrs_lib
@@ -150,66 +150,9 @@ private:
       RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << name << "':" << std::endl << strstr.str());
   }
 
-  // std::string printValue_recursive(const std::string& name, rclcpp::Parameter& value, unsigned depth = 0)
-  // {
-  //   std::stringstream strstr;
-  //   for (unsigned it = 0; it < depth; it++)
-  //     strstr << "\t";
-  //   strstr << name << ":";
-  //   switch (value.get_type())
-  //   {
-  //     case rclcpp::ParameterType::PARAMETER_BYTE_ARRAY:
-  //     case rclcpp::ParameterType::PARAMETER_BOOL_ARRAY:
-  //     case rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY:
-  //     case rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY:
-  //     case rclcpp::ParameterType::PARAMETER_STRING_ARRAY:
-  //       // {
-  //       //   for (int it = 0; it < value.size(); it++)
-  //       //   {
-  //       //     strstr << std::endl;
-  //       //     const std::string name = "[" + std::to_string(it) + "]";
-  //       //     strstr << printValue_recursive(name, value[it], depth+1);
-  //       //   }
-  //       //   break;
-  //       // }
-  //       {
-  //         printVal
-  //         break;
-  //       }
-  //     case rclcpp::Parameter::TypeStruct:
-  //       {
-  //         int it = 0;
-  //         for (auto& pair : value)
-  //         {
-  //           strstr << std::endl;
-  //           strstr << printValue_recursive(pair.first, pair.second, depth+1);
-  //           it++;
-  //         }
-  //         break;
-  //       }
-  //     default:
-  //       {
-  //         strstr << "\t" << value;
-  //         break;
-  //       }
-  //   }
-  //   return strstr.str();
-  // }
-
-  // void printValue(const std::string& name, rclcpp::Parameter& value)
-  // {
-  //   const std::string txt = printValue_recursive(name, value);
-  //   if (m_node_name.empty())
-  //     std::cout << txt << std::endl;
-  //   else
-  //     RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << txt);
-  // }
-
-  // //}
-  
   std::string resolved(const std::string& param_name)
   {
-    return m_node->get_fully_qualified_name() + param_name;
+    return std::string(*m_node->get_fully_qualified_name() + "/" + param_name);
   }
   //}
 
@@ -378,7 +321,7 @@ private:
   {
     const std::string name_prefixed = m_prefix + name;
     int rows;
-    std::vector<int> cols;
+    std::vector<long int> cols;
     bool success = true;
     success = success && m_pp.getParam(name_prefixed + "/rows", rows);
     success = success && m_pp.getParam(name_prefixed + "/cols", cols);
@@ -786,7 +729,7 @@ public:
   {
     double secs;
     const bool ret = loadParam<double>(name, secs, default_value.seconds());
-    out = rclcpp::Duration(secs, 0);
+    out = rclcpp::Duration::from_seconds(secs);
     return ret;
   }
 
@@ -803,7 +746,7 @@ public:
   {
     double secs;
     const bool ret = loadParam<double>(name, secs);
-    out = rclcpp::Duration(secs, 0);
+    out = rclcpp::Duration::from_seconds(secs);
     return ret;
   }
   
@@ -821,87 +764,34 @@ public:
     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
     * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
     */
-  // bool loadParam(const std::string& name, std_msgs::msg::ColorRGBA& out, const std_msgs::msg::ColorRGBA& default_value = {})
-  // {
-  //   std_msgs::msg::ColorRGBA res;
-  //   bool ret = true;
-  //   ret = ret & loadParam(name+"/r", res.r, default_value.r);
-  //   ret = ret & loadParam(name+"/g", res.g, default_value.g);
-  //   ret = ret & loadParam(name+"/b", res.b, default_value.b);
-  //   ret = ret & loadParam(name+"/a", res.a, default_value.a);
-  //   if (ret)
-  //     out = res;
-  //   return ret;
-  // }
-
-  // /*!
-  //   * \brief An overload for loading std_msgs::msg::ColorRGBA.
-  //   *
-  //   * The color will be loaded as several \p double -typed variables, representing the R, G, B and A color elements.
-  //   *
-  //   * \param name          Name of the parameter in the rosparam server.
-  //   * \param default_value This value will be used if the parameter name is not found in the rosparam server.
-  //   * \return              The loaded parameter value.
-  //   */
-  // std_msgs::msg::ColorRGBA loadParam2(const std::string& name, const std_msgs::msg::ColorRGBA& default_value = {})
-  // {
-  //   std_msgs::msg::ColorRGBA ret;
-  //   loadParam(name, ret, default_value);
-  //   return ret;
-  // }
-
-  //}
-
-  /* loadParam specializations for XmlRpc::Value type //{ */
+  bool loadParam(const std::string& name, std_msgs::msg::ColorRGBA& out, const std_msgs::msg::ColorRGBA& default_value = {})
+  {
+    std_msgs::msg::ColorRGBA res;
+    bool ret = true;
+    ret = ret & loadParam(name+"/r", res.r, default_value.r);
+    ret = ret & loadParam(name+"/g", res.g, default_value.g);
+    ret = ret & loadParam(name+"/b", res.b, default_value.b);
+    ret = ret & loadParam(name+"/a", res.a, default_value.a);
+    if (ret)
+      out = res;
+    return ret;
+  }
 
   /*!
-    * \brief An overload for loading an optional rclcpp::Parameter.
+    * \brief An overload for loading std_msgs::msg::ColorRGBA.
     *
-    * This can be used if you want to manually parse some more complex parameter but still take advantage of ParamLoader.
-    * \warning  rclcpp::Parameter must be loaded from a rosparam server and not directly from a YAML file
-    * (i.e. you cannot use it to load parameters from a file added using the addYamlFile() or addYamlFileFromParam() methods).
-    *
-    * \param name          Name of the parameter in the rosparam server.
-    * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
-    * \param default_value This value will be used if the parameter name is not found in the rosparam server.
-    * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
-    */
-  // bool loadParam(const std::string& name, rclcpp::Parameter& out, const rclcpp::Parameter& default_value)
-  // {
-  //   return loadParam<rclcpp::Parameter>(name, out, default_value);
-  // }
-
-  /*!
-    * \brief An overload for loading a compulsory rclcpp::Parameter.
-    *
-    * This can be used if you want to manually parse some more complex parameter but still take advantage of ParamLoader.
-    * \warning  rclcpp::Parameter must be loaded from a rosparam server and not directly from a YAML file
-    * (i.e. you cannot use it to load parameters from a file added using the addYamlFile() or addYamlFileFromParam() methods).
-    *
-    * \param name          Name of the parameter in the rosparam server.
-    * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
-    * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
-    */
-  // bool loadParam(const std::string& name, rclcpp::Parameter& out)
-  // {
-  //   return loadParam<rclcpp::Parameter>(name, out);
-  // }
-
-  /*!
-    * \brief An overload for loading an optional rclcpp::Parameter.
-    *
-    * This can be used if you want to manually parse some more complex parameter but still take advantage of ParamLoader.
-    * \warning  rclcpp::Parameter must be loaded from a rosparam server and not directly from a YAML file
-    * (i.e. you cannot use it to load parameters from a file added using the addYamlFile() or addYamlFileFromParam() methods).
+    * The color will be loaded as several \p double -typed variables, representing the R, G, B and A color elements.
     *
     * \param name          Name of the parameter in the rosparam server.
     * \param default_value This value will be used if the parameter name is not found in the rosparam server.
-    * \return              the loaded parameter.
+    * \return              The loaded parameter value.
     */
-  // rclcpp::Parameter loadParam2(const std::string& name, const rclcpp::Parameter& default_value)
-  // {
-  //   return loadParam2<rclcpp::Parameter>(name, default_value);
-  // }
+  std_msgs::msg::ColorRGBA loadParam2(const std::string& name, const std_msgs::msg::ColorRGBA& default_value = {})
+  {
+    std_msgs::msg::ColorRGBA ret;
+    loadParam(name, ret, default_value);
+    return ret;
+  }
 
   //}
 
