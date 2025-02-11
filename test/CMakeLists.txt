@@ -32,3 +32,5 @@ add_subdirectory(./scope_timer)
 add_subdirectory(./lkf)
 
 add_subdirectory(./ukf)
+
+add_subdirectory(./dkf)
