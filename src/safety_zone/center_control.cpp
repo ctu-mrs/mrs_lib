@@ -28,7 +28,6 @@ namespace mrs_lib
       : id_(id_generator_++), prism_(safety_zone->getObstacle(obstacle_id)), obstacle_id_(obstacle_id), uav_name_(uav_name), frame_id_(frame_id), nh_(nh), safety_zone_(safety_zone)
   {
     init();
-    std::cout << "Center vis of obstacle inited\n";
   }
 
   //}
@@ -101,7 +100,6 @@ namespace mrs_lib
 
   void CenterControl::cleanup()
   {
-    std::cout << "center cleanup called " << id_ << std::endl;
     server_->clear();
     server_->applyChanges();
     is_active_ = false;
