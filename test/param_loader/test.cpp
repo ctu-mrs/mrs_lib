@@ -107,7 +107,7 @@ TEST_F(Test, param_provider_load) {
   int test_int = 42;
   EXPECT_TRUE(param_provider.getParam("param_provider/test_int", test_int));
   EXPECT_EQ(test_int, 666);
-  
+
   double test_double = 42.424242;
   EXPECT_TRUE(param_provider.getParam("param_provider/test_double", test_double));
   EXPECT_DOUBLE_EQ(test_double, 666.666);
@@ -157,18 +157,15 @@ TEST_F(Test, param_loader_load_from_file) {
   std::vector<Eigen::MatrixXd> loaded_nd_matrix = pl.loadMatrixArray2("test_param_nd_matrix");
   EXPECT_TRUE(pl.loadedSuccessfully());
 
-  if (pl.loadedSuccessfully())
-  {
+  if (pl.loadedSuccessfully()) {
     RCLCPP_INFO(node_->get_logger(), "[%s]: parameter loaded OK", node_->get_name());
     int it = 0;
-    for (const auto& mat : loaded_nd_matrix)
-    {
+    for (const auto& mat : loaded_nd_matrix) {
       std::cout << "matrix #" << it << std::endl;
       std::cout << mat << std::endl;
       it++;
     }
-  } else
-  {
+  } else {
     RCLCPP_ERROR(node_->get_logger(), "[%s]: parameter loading failure", node_->get_name());
   }
 
@@ -212,20 +209,20 @@ TEST_F(Test, param_loader_load_from_file) {
     EXPECT_LT(fabs(mat3d(1, 2) - (1.2)), 1e-6);
     EXPECT_LT(fabs(mat3d(2, 0) - (2.0)), 1e-6);
     EXPECT_LT(fabs(mat3d(2, 2) - (2.2)), 1e-6);
-    
+
     pl.resetUniques();
     EXPECT_TRUE(pl.loadMatrixStatic("test_param_matrix_3x3", mat3d, Eigen::Matrix3d::Identity()));
     pl.resetUniques();
     mat3d = pl.loadMatrixStatic2<3, 3, double>("test_param_matrix_3x3");
     pl.resetUniques();
-    mat3d = pl.loadMatrixStatic2<3, 3, double>("test_param_matrix_nonexistent", Eigen::Matrix3d::Identity()*Eigen::Matrix3d::Ones());
+    mat3d = pl.loadMatrixStatic2<3, 3, double>("test_param_matrix_nonexistent", Eigen::Matrix3d::Identity() * Eigen::Matrix3d::Ones());
     EXPECT_TRUE(pl.loadedSuccessfully());
-    
+
     // with optional parameters, it should return false if failed to load, but not set the loadedSuccessfully flag
     pl.resetUniques();
     EXPECT_FALSE(pl.loadMatrixStatic("test_param_matrix_nonexistent", mat3d, Eigen::Matrix3d::Identity()));
     EXPECT_TRUE(pl.loadedSuccessfully());
-    
+
     pl.resetUniques();
     EXPECT_FALSE(pl.loadMatrixStatic("test_param_matrix_empty", mat3d));
     EXPECT_FALSE(pl.loadedSuccessfully());
@@ -244,7 +241,7 @@ TEST_F(Test, param_loader_load_from_file) {
     EXPECT_LT(fabs(matxd(0, 1) - (0.1)), 1e-6);
     EXPECT_LT(fabs(matxd(2, 0) - (2.0)), 1e-6);
     EXPECT_LT(fabs(matxd(3, 1) - (3.1)), 1e-6);
-    
+
     // with optional parameters, it should return false if failed to load, but not set the loadedSuccessfully flag
     pl.resetUniques();
     EXPECT_FALSE(pl.loadMatrixKnown("test_param_matrix_nonexistent", matxd, Eigen::MatrixXd::Identity(15, 16), 15, 16));
@@ -273,7 +270,7 @@ TEST_F(Test, param_loader_load_from_file) {
     EXPECT_LT(fabs(matxd(1, 0) - (1.0)), 1e-6);
     EXPECT_LT(fabs(matxd(1, 1) - (1.1)), 1e-6);
     EXPECT_LT(fabs(matxd(2, 0) - (2.0)), 1e-6);
-    
+
     pl.resetUniques();
     EXPECT_TRUE(pl.loadMatrixDynamic("test_param_matrix_3x3", matxd, -1, 3));
     EXPECT_TRUE(pl.loadedSuccessfully());
@@ -284,13 +281,13 @@ TEST_F(Test, param_loader_load_from_file) {
     EXPECT_LT(fabs(matxd(1, 0) - (1.0)), 1e-6);
     EXPECT_LT(fabs(matxd(1, 1) - (1.1)), 1e-6);
     EXPECT_LT(fabs(matxd(2, 0) - (2.0)), 1e-6);
-    
+
     // with optional parameters, it should return false if failed to load, but not set the loadedSuccessfully flag
     pl.resetUniques();
     EXPECT_FALSE(pl.loadMatrixDynamic("test_param_matrix_nonexistent", matxd, Eigen::MatrixXd::Zero(1, 2), 1, 2));
     EXPECT_TRUE(pl.loadedSuccessfully());
     pl.resetUniques();
-    matxd = pl.loadMatrixDynamic2<double>("test_param_matrix_nonexistent", 16*Eigen::MatrixXd::Ones(5, 5), 5, 5);
+    matxd = pl.loadMatrixDynamic2<double>("test_param_matrix_nonexistent", 16 * Eigen::MatrixXd::Ones(5, 5), 5, 5);
     EXPECT_TRUE(pl.loadedSuccessfully());
     pl.resetUniques();
     matxd = pl.loadMatrixDynamic2("test_param_matrix_nonexistent", 5, 6);
@@ -329,18 +326,15 @@ TEST_F(Test, param_loader_load_from_file2) {
   std::vector<Eigen::MatrixXd> loaded_nd_matrix = pl.loadMatrixArray2("test_namespace/test_param_nd_matrix");
   EXPECT_TRUE(pl.loadedSuccessfully());
 
-  if (pl.loadedSuccessfully())
-  {
+  if (pl.loadedSuccessfully()) {
     RCLCPP_INFO(node_->get_logger(), "[%s]: parameter loaded OK", node_->get_name());
     int it = 0;
-    for (const auto& mat : loaded_nd_matrix)
-    {
+    for (const auto& mat : loaded_nd_matrix) {
       std::cout << "matrix #" << it << std::endl;
       std::cout << mat << std::endl;
       it++;
     }
-  } else
-  {
+  } else {
     RCLCPP_ERROR(node_->get_logger(), "[%s]: parameter loading failure", node_->get_name());
   }
 
@@ -384,20 +378,20 @@ TEST_F(Test, param_loader_load_from_file2) {
     EXPECT_LT(fabs(mat3d(1, 2) - (1.2)), 1e-6);
     EXPECT_LT(fabs(mat3d(2, 0) - (2.0)), 1e-6);
     EXPECT_LT(fabs(mat3d(2, 2) - (2.2)), 1e-6);
-    
+
     pl.resetUniques();
     EXPECT_TRUE(pl.loadMatrixStatic("test_namespace/test_param_matrix_3x3", mat3d, Eigen::Matrix3d::Identity()));
     pl.resetUniques();
     mat3d = pl.loadMatrixStatic2<3, 3, double>("test_namespace/test_param_matrix_3x3");
     pl.resetUniques();
-    mat3d = pl.loadMatrixStatic2<3, 3, double>("test_namespace/test_param_matrix_nonexistent", Eigen::Matrix3d::Identity()*Eigen::Matrix3d::Ones());
+    mat3d = pl.loadMatrixStatic2<3, 3, double>("test_namespace/test_param_matrix_nonexistent", Eigen::Matrix3d::Identity() * Eigen::Matrix3d::Ones());
     EXPECT_TRUE(pl.loadedSuccessfully());
-    
+
     // with optional parameters, it should return false if failed to load, but not set the loadedSuccessfully flag
     pl.resetUniques();
     EXPECT_FALSE(pl.loadMatrixStatic("test_namespace/test_param_matrix_nonexistent", mat3d, Eigen::Matrix3d::Identity()));
     EXPECT_TRUE(pl.loadedSuccessfully());
-    
+
     pl.resetUniques();
     EXPECT_FALSE(pl.loadMatrixStatic("test_namespace/test_param_matrix_empty", mat3d));
     EXPECT_FALSE(pl.loadedSuccessfully());
@@ -416,7 +410,7 @@ TEST_F(Test, param_loader_load_from_file2) {
     EXPECT_LT(fabs(matxd(0, 1) - (0.1)), 1e-6);
     EXPECT_LT(fabs(matxd(2, 0) - (2.0)), 1e-6);
     EXPECT_LT(fabs(matxd(3, 1) - (3.1)), 1e-6);
-    
+
     // with optional parameters, it should return false if failed to load, but not set the loadedSuccessfully flag
     pl.resetUniques();
     EXPECT_FALSE(pl.loadMatrixKnown("test_namespace/test_param_matrix_nonexistent", matxd, Eigen::MatrixXd::Identity(15, 16), 15, 16));
@@ -445,7 +439,7 @@ TEST_F(Test, param_loader_load_from_file2) {
     EXPECT_LT(fabs(matxd(1, 0) - (1.0)), 1e-6);
     EXPECT_LT(fabs(matxd(1, 1) - (1.1)), 1e-6);
     EXPECT_LT(fabs(matxd(2, 0) - (2.0)), 1e-6);
-    
+
     pl.resetUniques();
     EXPECT_TRUE(pl.loadMatrixDynamic("test_namespace/test_param_matrix_3x3", matxd, -1, 3));
     EXPECT_TRUE(pl.loadedSuccessfully());
@@ -456,13 +450,13 @@ TEST_F(Test, param_loader_load_from_file2) {
     EXPECT_LT(fabs(matxd(1, 0) - (1.0)), 1e-6);
     EXPECT_LT(fabs(matxd(1, 1) - (1.1)), 1e-6);
     EXPECT_LT(fabs(matxd(2, 0) - (2.0)), 1e-6);
-    
+
     // with optional parameters, it should return false if failed to load, but not set the loadedSuccessfully flag
     pl.resetUniques();
     EXPECT_FALSE(pl.loadMatrixDynamic("test_namespace/test_param_matrix_nonexistent", matxd, Eigen::MatrixXd::Zero(1, 2), 1, 2));
     EXPECT_TRUE(pl.loadedSuccessfully());
     pl.resetUniques();
-    matxd = pl.loadMatrixDynamic2<double>("test_namespace/test_param_matrix_nonexistent", 16*Eigen::MatrixXd::Ones(5, 5), 5, 5);
+    matxd = pl.loadMatrixDynamic2<double>("test_namespace/test_param_matrix_nonexistent", 16 * Eigen::MatrixXd::Ones(5, 5), 5, 5);
     EXPECT_TRUE(pl.loadedSuccessfully());
     pl.resetUniques();
     matxd = pl.loadMatrixDynamic2("test_namespace/test_param_matrix_nonexistent", 5, 6);
