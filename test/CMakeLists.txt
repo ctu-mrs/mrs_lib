@@ -35,4 +35,6 @@ add_subdirectory(./ukf)
 
 add_subdirectory(./dkf)
 
+add_subdirectory(./transform_broadcaster)
+
 # add_subdirectory(./msg_extractor)
