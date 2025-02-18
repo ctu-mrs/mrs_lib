@@ -15,6 +15,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(mrs_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
@@ -55,6 +56,7 @@ set(LIBRARIES
   MrsLib_ScopeTimer
   MrsLib_TransformBroadcaster
   MrsLib_Profiler
+  MrsLib_MsgExtractor
   )
 
 ## Geometry
@@ -222,6 +224,25 @@ target_link_libraries(MrsLib_Profiler
 ament_target_dependencies(MrsLib_Profiler
   rclcpp
   mrs_msgs
+  ${Eigen_LIBRARIES}
+  )
+
+# msg_extractor
+
+add_library(MrsLib_MsgExtractor SHARED
+  src/msg_extractor/msg_extractor.cpp
+  )
+
+target_link_libraries(MrsLib_MsgExtractor
+  MrsLib_AttitudeConverter
+  )
+
+ament_target_dependencies(MrsLib_MsgExtractor
+  rclcpp
+  mrs_msgs
+  geometry_msgs
+  nav_msgs
+  tf2_geometry_msgs
   ${Eigen_LIBRARIES}
   )
 
