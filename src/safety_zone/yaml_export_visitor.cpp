@@ -13,7 +13,7 @@ namespace mrs_lib
 
   /* YamlExportVisitor() //{ */
 
-  YamlExportVisitor::YamlExportVisitor(const std::string& prefix, const std::string& source_frame, const std::string& horizontal_frame,
+  YamlExportVisitor::YamlExportVisitor([[maybe_unused]] const std::string& prefix, const std::string& source_frame, const std::string& horizontal_frame,
                                        const std::string& vertical_frame, const std::string& units, const double origin_x, const double origin_y, std::shared_ptr<mrs_lib::Transformer> transformer)
       : source_frame_(source_frame),
         horizontal_frame_(horizontal_frame),
