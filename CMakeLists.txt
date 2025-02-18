@@ -54,7 +54,7 @@ set(LIBRARIES
   MrsLib_Math
   MrsLib_ScopeTimer
   MrsLib_TransformBroadcaster
-  # MrsLib_Profiler
+  MrsLib_Profiler
   )
 
 ## Geometry
@@ -212,17 +212,18 @@ ament_target_dependencies(MrsLib_TransformBroadcaster
 
 # profiler
 
-# add_library(MrsLib_Profiler SHARED
-#   src/profiler/profiler.cpp
-#   )
+add_library(MrsLib_Profiler SHARED
+  src/profiler/profiler.cpp
+  )
 
-# target_link_libraries(MrsLib_Profiler
-#   )
+target_link_libraries(MrsLib_Profiler
+  )
 
-# ament_target_dependencies(MrsLib_Profiler
-#   rclcpp
-#   ${Eigen_LIBRARIES}
-#   )
+ament_target_dependencies(MrsLib_Profiler
+  rclcpp
+  mrs_msgs
+  ${Eigen_LIBRARIES}
+  )
 
 ## --------------------------------------------------------------
 ## |                           Testing                          |

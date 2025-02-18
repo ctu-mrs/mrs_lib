@@ -11,6 +11,6 @@ done
 
 colcon test-result --delete-yes
 
-colcon test --packages-select mrs_lib --ctest-args -R 'transform_broadcaster'
+colcon test --packages-select mrs_lib --ctest-args -R 'profiler'
 
 colcon test-result --all --verbose

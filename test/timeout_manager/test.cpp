@@ -101,6 +101,8 @@ protected:
   std::shared_ptr<std::atomic<bool>> test_stop_from_cbk;
 };
 
+/* obj_t //{ */
+
 struct obj_t
 {
   // error flags
@@ -183,7 +185,9 @@ struct obj_t
   }
 };
 
-/* TEST_F(TimeoutManager, test_timeout_manager) //{ */
+//}
+
+/* TEST_F(Test, test_timeout_manager) //{ */
 
 TEST_F(Test, test_timeout_manager) {
 

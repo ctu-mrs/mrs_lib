@@ -6,10 +6,10 @@ ament_add_gtest(test_${TEST_NAME}
   )
 
 target_link_libraries(test_${TEST_NAME}
-  MrsLib_ScopeTimer
+  MrsLib_Profiler
   )
 
 ament_target_dependencies(test_${TEST_NAME}
   rclcpp
-  std_msgs
+  mrs_msgs
   )

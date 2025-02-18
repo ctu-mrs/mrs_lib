@@ -6,8 +6,8 @@
 #define PROFILER_H
 
 #include <rclcpp/rclcpp.hpp>
-#include <mrs_msgs/ProfilerUpdate.h>
-#include <mutex>
+#include <mrs_msgs/msg/profiler_update.hpp>
+#include <mrs_lib/publisher_handler.h>
 
 namespace mrs_lib
 {
@@ -15,32 +15,27 @@ namespace mrs_lib
 class Routine {
 
 public:
-  Routine(std::string name, std::string node_name, std::shared_ptr<ros::Publisher> publisher, std::shared_ptr<std::mutex> mutex_publisher,
-          bool profiler_enabled);
-  Routine(std::string name, std::string node_name, double expected_rate, double threshold, std::shared_ptr<ros::Publisher> publisher,
-          std::shared_ptr<std::mutex> mutex_publisher, bool profiler_enabled, ros::TimerEvent event);
+  Routine(const rclcpp::Node::SharedPtr& node, const std::string& name, const std::string& node_name,
+          const std::shared_ptr<mrs_lib::PublisherHandler<mrs_msgs::msg::ProfilerUpdate>>& publisher, bool profiler_enabled);
   ~Routine();
 
   void end(void);
 
 private:
+  rclcpp::Node::SharedPtr node_;
+
   std::string _routine_name_;
   std::string _node_name_;
 
-  std::shared_ptr<ros::Publisher> publisher_;
-  std::shared_ptr<std::mutex>     mutex_publisher_;
-
-  // if periodic, those are the stats from the trigger event
-  double _threshold_;
-  long   iteration_ = 0;
+  std::shared_ptr<mrs_lib::PublisherHandler<mrs_msgs::msg::ProfilerUpdate>> publisher_;
 
   bool _profiler_enabled_ = false;
 
   // those are the stats from the execution of the routine
-  ros::Time execution_start_;
+  rclcpp::Time execution_start_;
 
   // this will be published
-  mrs_msgs::ProfilerUpdate msg_out_;
+  mrs_msgs::msg::ProfilerUpdate msg_out_;
 };
 
 class Profiler {
@@ -54,11 +49,11 @@ public:
   /**
    * @brief the full constructor
    *
-   * @param nh node handle
+   * @param node node handle
    * @param node_name the node name
    * @param profiler_enabled if profiling is enabled
    */
-  Profiler(ros::NodeHandle& nh, std::string node_name, bool profiler_enabled);
+  Profiler(const rclcpp::Node::SharedPtr& node, const std::string& node_name, const bool profiler_enabled);
 
   /**
    * @brief the copy constructor
@@ -77,33 +72,20 @@ public:
   Profiler& operator=(const Profiler& other);
 
   /**
-   * @brief create a routine for a periodic function
-   *
-   * @param name the function name
-   * @param expected_rate the expected rate in Hz
-   * @param threshold the delay threshold to mark it as "late" in s
-   * @param event the ros Timer event
-   *
-   * @return the Routine
-   */
-  Routine createRoutine(std::string name, double expected_rate, double threshold, ros::TimerEvent event);
-
-  /**
    * @brief create a routine for an aperiodic function
    *
    * @param name the function name
    *
    * @return the Routine
    */
-  Routine createRoutine(std::string name);
+  Routine createRoutine(const std::string& name);
 
 private:
-  std::shared_ptr<ros::Publisher> publisher_;
-  std::shared_ptr<std::mutex>     mutex_publisher_;
-  std::string                     _node_name_;
-  bool                            _profiler_enabled_ = false;
+  std::shared_ptr<mrs_lib::PublisherHandler<mrs_msgs::msg::ProfilerUpdate>> publisher_;
+  std::string                                                               _node_name_;
+  bool                                                                      _profiler_enabled_ = false;
 
-  std::shared_ptr<ros::NodeHandle> nh_;
+  rclcpp::Node::SharedPtr node_;
 
   bool is_initialized_ = false;
 };

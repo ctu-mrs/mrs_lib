@@ -11,6 +11,28 @@ using namespace std::chrono_literals;
 class Test : public ::testing::Test {
 
 public:
+  /* callback1() //{ */
+
+  void callback1(mrs_msgs::msg::ProfilerUpdate::ConstSharedPtr msg) {
+
+    RCLCPP_INFO(node_->get_logger(), "message received");
+
+    received_ = true;
+
+    if (msg->duration > 0.5 && msg->duration < 1.5) {
+      received_ = false;
+    }
+
+    if (msg->node_name != "Test") {
+      received_ = false;
+    }
+
+    if (msg->routine_name != "test_routine") {
+      received_ = false;
+    }
+  }
+
+  //}
 
 protected:
   /* SetUpTestCase() //{ */
@@ -73,15 +95,15 @@ protected:
 
   std::thread main_thread_;
 
-  int num_received = 0;
-
-  int num_to_send = 1234;
+  std::atomic<bool> received_ = false;
 
   std::promise<bool> finished_promise_;
   std::future<bool>  finished_future_;
+
+  mrs_lib::Profiler profiler_;
 };
 
-/* TEST_F(TimeoutManager, test_timeout_manager) //{ */
+/* TEST_F(Test, test_basic) //{ */
 
 TEST_F(Test, test_basic) {
 
@@ -89,21 +111,74 @@ TEST_F(Test, test_basic) {
 
   auto clock = node_->get_clock();
 
-  {
-    std::shared_ptr<mrs_lib::ScopeTimerLogger> scope_timer_logger_ = std::make_shared<mrs_lib::ScopeTimerLogger>(node_, "", false);
+  profiler_ = mrs_lib::Profiler(node_, "Test", true);
 
-    mrs_lib::ScopeTimer timer = mrs_lib::ScopeTimer(node_, "test_basic", scope_timer_logger_, true);
+  clock->sleep_for(0.1s);
+
+  // | ------------------- create a subscriber ------------------ |
+
+  const std::function<void(const mrs_msgs::msg::ProfilerUpdate::SharedPtr)> callback1_ptr = std::bind(&Test::callback1, this, std::placeholders::_1);
+
+  auto sub1 = node_->create_subscription<mrs_msgs::msg::ProfilerUpdate>("profiler", 100, callback1_ptr);
+
+  // | -------------------------- wait -------------------------- |
+
+  clock->sleep_for(0.1s);
+
+  // | -------------------------- test -------------------------- |
+
+  {
+    profiler_.createRoutine("test_routine");
 
     clock->sleep_for(1s);
-
-    timer.checkpoint("check1");
-
-    clock->sleep_for(1.1s);
-
-    double lifetime = timer.getLifetime();
-
-    ASSERT_GT(lifetime, 2000);
   }
+
+  clock->sleep_for(0.1s);
+
+  EXPECT_TRUE(received_);
+
+  std::cout << "Done" << std::endl;
+
+  despin();
+
+  clock->sleep_for(1s);
+}
+
+//}
+//
+/* TEST_F(Test, test_not_active) //{ */
+
+TEST_F(Test, test_not_active) {
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  auto clock = node_->get_clock();
+
+  profiler_ = mrs_lib::Profiler(node_, "Test", false);
+
+  clock->sleep_for(0.1s);
+
+  // | ------------------- create a subscriber ------------------ |
+
+  const std::function<void(const mrs_msgs::msg::ProfilerUpdate::SharedPtr)> callback1_ptr = std::bind(&Test::callback1, this, std::placeholders::_1);
+
+  auto sub1 = node_->create_subscription<mrs_msgs::msg::ProfilerUpdate>("profiler", 100, callback1_ptr);
+
+  // | -------------------------- wait -------------------------- |
+
+  clock->sleep_for(0.1s);
+
+  // | -------------------------- test -------------------------- |
+
+  {
+    profiler_.createRoutine("test_routine");
+
+    clock->sleep_for(1s);
+  }
+
+  clock->sleep_for(0.1s);
+
+  EXPECT_FALSE(received_);
 
   std::cout << "Done" << std::endl;
 
