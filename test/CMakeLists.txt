@@ -15,6 +15,8 @@ add_subdirectory(./attitude_converter)
 
 add_subdirectory(./publisher_handler)
 
+add_subdirectory(./subscriber_handler)
+
 add_subdirectory(./timeout_manager)
 
 add_subdirectory(./timer_handler)

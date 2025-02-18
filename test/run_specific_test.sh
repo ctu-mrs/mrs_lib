@@ -11,6 +11,6 @@ done
 
 colcon test-result --delete-yes
 
-colcon test --packages-select mrs_lib --ctest-args -R 'msg_extractor'
+colcon test --packages-select mrs_lib --ctest-args -R 'subscriber_handler'
 
 colcon test-result --all --verbose
