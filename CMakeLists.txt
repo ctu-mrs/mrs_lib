@@ -11,15 +11,24 @@ add_definitions("-Wpedantic")
 
 find_package(ament_cmake REQUIRED)
 
-find_package(rclcpp REQUIRED)
-find_package(rclcpp_components REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(geometry_msgs REQUIRED)
-find_package(nav_msgs REQUIRED)
-find_package(mrs_msgs REQUIRED)
-find_package(tf2_ros REQUIRED)
-find_package(tf2_geometry_msgs REQUIRED)
-# find_package(Threads REQUIRED)
+set(DEPENDENCIES
+  geometry_msgs
+  mrs_msgs
+  nav_msgs
+  pcl_conversions
+  pcl_msgs
+  pcl_ros
+  rclcpp
+  rclcpp_components
+  std_msgs
+  tf2_geometry_msgs
+  tf2_ros
+  yaml-cpp
+)
+
+foreach(DEP IN LISTS DEPENDENCIES)
+  find_package(${DEP} REQUIRED)
+endforeach()
 
 # include Eigen3
 find_package(Eigen3 REQUIRED)
@@ -28,21 +37,18 @@ set(Eigen_LIBRARIES ${EIGEN3_LIBRARIES})
 
 find_package(yaml-cpp REQUIRED)
 
+find_package(OpenCV REQUIRED HINTS /usr/local/lib)
+
 include_directories(
   include
   # ${rclcpp_INCLUDE_DIRS}
   ${Eigen_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 ## --------------------------------------------------------------
 ## |                       compile                              |
 ## --------------------------------------------------------------
-
-set(DEPENDENCIES
-  rclcpp
-  geometry_msgs
-  yaml-cpp
-)
 
 set(LIBRARIES
   MrsLib_Geometry
@@ -57,6 +63,7 @@ set(LIBRARIES
   MrsLib_TransformBroadcaster
   MrsLib_Profiler
   MrsLib_MsgExtractor
+  MrsLib_Transformer
   )
 
 ## Geometry
@@ -66,6 +73,10 @@ add_library(MrsLib_Geometry SHARED
   src/geometry/cyclic.cpp
   src/geometry/shapes.cpp
   src/geometry/conversions.cpp
+  )
+
+target_link_libraries(MrsLib_Geometry
+  ${Eigen_LIBRARIES}
   )
 
 ament_target_dependencies(MrsLib_Geometry
@@ -80,8 +91,11 @@ add_library(MrsLib_Utils SHARED
   src/utils/utils.cpp
   )
 
-ament_target_dependencies(MrsLib_Utils
+target_link_libraries(MrsLib_Utils
   ${Eigen_LIBRARIES}
+  )
+
+ament_target_dependencies(MrsLib_Utils
   )
 
 # Attitude converter
@@ -90,10 +104,13 @@ add_library(MrsLib_AttitudeConverter SHARED
   src/attitude_converter/attitude_converter.cpp
   )
 
+target_link_libraries(MrsLib_AttitudeConverter
+  ${Eigen_LIBRARIES}
+  )
+
 ament_target_dependencies(MrsLib_AttitudeConverter
   tf2_ros
   tf2_geometry_msgs
-  ${Eigen_LIBRARIES}
   )
 
 # Timeout manager
@@ -104,11 +121,11 @@ add_library(MrsLib_TimeoutManager SHARED
 
 target_link_libraries(MrsLib_TimeoutManager
   MrsLib_Utils
+  ${Eigen_LIBRARIES}
   )
 
 ament_target_dependencies(MrsLib_TimeoutManager
   rclcpp
-  ${Eigen_LIBRARIES}
   )
 
 # Timer handler
@@ -118,13 +135,12 @@ add_library(MrsLib_TimerHandler SHARED
   )
 
 target_link_libraries(MrsLib_TimerHandler
-
   MrsLib_Utils
+  ${Eigen_LIBRARIES}
   )
 
 ament_target_dependencies(MrsLib_TimerHandler
   rclcpp
-  ${Eigen_LIBRARIES}
   )
 
 # Param provider
@@ -136,11 +152,11 @@ add_library(MrsLib_ParamProvider SHARED
 # yaml-cpp does not use standart naming conventions which create issues with ament_target_dependencies()
 target_link_libraries(MrsLib_ParamProvider
   yaml-cpp
+  ${Eigen_LIBRARIES}
   )
 
 ament_target_dependencies(MrsLib_ParamProvider
   rclcpp
-  ${Eigen_LIBRARIES}
   )
 
 # Param loader
@@ -149,10 +165,13 @@ add_library(MrsLib_ParamLoader SHARED
   src/param_loader/param_loader.cpp
   )
 
+target_link_libraries(MrsLib_ParamLoader
+  ${Eigen_LIBRARIES}
+  )
+
 ament_target_dependencies(MrsLib_ParamLoader
   rclcpp
   std_msgs
-  ${Eigen_LIBRARIES}
   )
 
 # service client handler
@@ -162,11 +181,11 @@ add_library(MrsLib_ServiceClientHandler SHARED
   )
 
 target_link_libraries(MrsLib_ServiceClientHandler
+  ${Eigen_LIBRARIES}
   )
 
 ament_target_dependencies(MrsLib_ServiceClientHandler
   rclcpp
-  ${Eigen_LIBRARIES}
   )
 
 # scope timer
@@ -176,11 +195,11 @@ add_library(MrsLib_ScopeTimer SHARED
   )
 
 target_link_libraries(MrsLib_ScopeTimer
+  ${Eigen_LIBRARIES}
   )
 
 ament_target_dependencies(MrsLib_ScopeTimer
   rclcpp
-  ${Eigen_LIBRARIES}
   )
 
 # math
@@ -190,11 +209,11 @@ add_library(MrsLib_Math SHARED
   )
 
 target_link_libraries(MrsLib_Math
+  ${Eigen_LIBRARIES}
   )
 
 ament_target_dependencies(MrsLib_Math
   rclcpp
-  ${Eigen_LIBRARIES}
   )
 
 # transform broadcaster
@@ -224,7 +243,6 @@ target_link_libraries(MrsLib_Profiler
 ament_target_dependencies(MrsLib_Profiler
   rclcpp
   mrs_msgs
-  ${Eigen_LIBRARIES}
   )
 
 # msg_extractor
@@ -235,6 +253,7 @@ add_library(MrsLib_MsgExtractor SHARED
 
 target_link_libraries(MrsLib_MsgExtractor
   MrsLib_AttitudeConverter
+  ${Eigen_LIBRARIES}
   )
 
 ament_target_dependencies(MrsLib_MsgExtractor
@@ -243,6 +262,28 @@ ament_target_dependencies(MrsLib_MsgExtractor
   geometry_msgs
   nav_msgs
   tf2_geometry_msgs
+  )
+
+# transformer
+
+add_library(MrsLib_Transformer SHARED
+  src/transformer/transformer.cpp
+  )
+
+target_link_libraries(MrsLib_Transformer
+  MrsLib_Geometry
+  ${OpenCV_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+ament_target_dependencies(MrsLib_Transformer
+  rclcpp
+  geometry_msgs
+  tf2_geometry_msgs
+  mrs_msgs
+  # pcl_ros
+  # pcl_conversions
+  # pcl_msgs
   ${Eigen_LIBRARIES}
   )
 
@@ -267,7 +308,7 @@ ament_export_libraries(
 )
 
 install(TARGETS
-  MrsLib_Geometry
+  ${LIBRARIES}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
