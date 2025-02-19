@@ -1,13 +1,15 @@
 #include <cmath>
 
+#include <cstddef>
 #include <gtest/gtest.h>
 
 #include <mrs_lib/geometry/shapes.h>
 #include <mrs_lib/geometry/misc.h>
 #include <mrs_lib/batch_visualizer.h>
 
+#include <string>
 #include <thread>
-#include <vector>
+#include <random>
 
 using namespace std::chrono_literals;
 using namespace mrs_lib;
@@ -16,6 +18,19 @@ using namespace mrs_lib::geometry;
 class Test : public ::testing::Test {
 
 public:
+  /* callback1() //{ */
+
+  void callback1(visualization_msgs::msg::MarkerArray::SharedPtr msg) {
+    if (msg.get() != nullptr) {
+      RCLCPP_INFO(node_->get_logger(), "Message received");
+      received_msg_ = msg;
+    }
+    else {
+      RCLCPP_WARN(node_->get_logger(), "Message empty");
+    }
+  }
+
+  //}
 protected:
   /* SetUpTestCase() //{ */
 
@@ -72,6 +87,31 @@ protected:
 
   //}
 
+  void test_batch_visualizer_init(const std::string& topic_name, const std::string& ns_name, const double point_scale = 0.02, const double line_scale = 0.04) {
+    EXPECT_EQ(received_msg_->markers.size(), 3);
+
+    EXPECT_EQ(received_msg_->markers[0].header.frame_id, ns_name);
+    EXPECT_EQ(received_msg_->markers[0].ns, topic_name);
+    EXPECT_EQ(received_msg_->markers[0].id, 8);
+    EXPECT_EQ(received_msg_->markers[0].points.size(), 0);
+    EXPECT_EQ(received_msg_->markers[0].colors.size(), 0);
+    EXPECT_DOUBLE_EQ(received_msg_->markers[0].scale.x, point_scale);
+    EXPECT_DOUBLE_EQ(received_msg_->markers[0].scale.y, point_scale);
+
+    EXPECT_EQ(received_msg_->markers[1].header.frame_id, ns_name);
+    EXPECT_EQ(received_msg_->markers[1].ns, topic_name);
+    EXPECT_EQ(received_msg_->markers[1].id, 5);
+    EXPECT_EQ(received_msg_->markers[1].points.size(), 0);
+    EXPECT_EQ(received_msg_->markers[1].colors.size(), 0);
+    EXPECT_DOUBLE_EQ(received_msg_->markers[1].scale.x, line_scale);
+
+    EXPECT_EQ(received_msg_->markers[2].header.frame_id, ns_name);
+    EXPECT_EQ(received_msg_->markers[2].ns, topic_name);
+    EXPECT_EQ(received_msg_->markers[2].id, 11);
+    EXPECT_EQ(received_msg_->markers[2].points.size(), 0);
+    EXPECT_EQ(received_msg_->markers[2].colors.size(), 0);
+  }
+
   rclcpp::Node::SharedPtr                              node_;
   rclcpp::executors::SingleThreadedExecutor::SharedPtr executor_;
 
@@ -83,396 +123,93 @@ protected:
   double range_min_ = -20;
   double range_max_ = 20;
 
-  std::mt19937                           generator_(time(0));
-  std::uniform_real_distribution<double> rand_dbl_(range_min, range_max);
-  std::uniform_real_distribution<double> rand_percent_(0, 1);
+  // std::mt19937                           generator_(0);
+  // std::uniform_real_distribution<double> rand_dbl_(range_min_, range_max_);
+  // std::uniform_real_distribution<double> rand_percent_(0.0, 1.0);
+
+  visualization_msgs::msg::MarkerArray::ConstSharedPtr received_msg_;
 };
 
-/* TEST_F(Test, param_provider_load) //{ */
+/* TEST_F(Test, batch_visualize_init) //{ */
 
-TEST_F(Test, param_provider_load) {
+TEST_F(Test, batch_visualize_init) {
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
   auto clock = node_->get_clock();
 
-  auto param_provider = mrs_lib::ParamProvider(node_, node_->get_name(), false);
+  // | ------------------- create a subscriber ------------------ |
 
-  bool test_bool = false;
-  EXPECT_FALSE(param_provider.getParam("test_bool", test_bool));
+  RCLCPP_INFO(node_->get_logger(), "Creating subscriber");
+  const std::string topic_name = "batch_points";
 
-  EXPECT_FALSE(param_provider.addYamlFile(""));
-  EXPECT_FALSE(param_provider.addYamlFile("./custom_test_config.yaml"));
-  EXPECT_TRUE(param_provider.addYamlFile("/tmp/mrs_lib/test/param_loader/test_config.yaml"));
+  const std::function<void(visualization_msgs::msg::MarkerArray::SharedPtr)> callback1_ptr = std::bind(&Test::callback1, this, std::placeholders::_1);
 
-  EXPECT_TRUE(param_provider.getParam("param_provider/test_bool", test_bool));
-  EXPECT_EQ(test_bool, true);
+  auto sub = node_->create_subscription<visualization_msgs::msg::MarkerArray>(topic_name, 10, callback1_ptr);
 
-  std::string test_str = "none";
-  EXPECT_TRUE(param_provider.getParam("param_provider/test_str", test_str));
-  EXPECT_EQ(test_str, "some_str");
+  // | ---------------------- start testing --------------------- |
 
-  int test_int = 42;
-  EXPECT_TRUE(param_provider.getParam("param_provider/test_int", test_int));
-  EXPECT_EQ(test_int, 666);
+  // test if the object is clean just after init
+  BatchVisualizer bv;
+  std::string ns_name = "map";
+  bv = BatchVisualizer(node_, topic_name, ns_name);
 
-  double test_double = 42.424242;
-  EXPECT_TRUE(param_provider.getParam("param_provider/test_double", test_double));
-  EXPECT_DOUBLE_EQ(test_double, 666.666);
+  {
+    for (int i = 0; i < 10; i++) {
 
-  std::vector<bool> test_bool_array;
-  EXPECT_TRUE(param_provider.getParam("param_provider/test_bool_array", test_bool_array));
+      if (sub->get_publisher_count() > 0) {
+        RCLCPP_INFO(node_->get_logger(), "Connected publisher and subscriber");
+        break;
+      }
 
-  std::vector<std::string> test_str_array;
-  EXPECT_TRUE(param_provider.getParam("param_provider/test_str_array", test_str_array));
-
-  std::vector<long int> test_int_array;
-  EXPECT_TRUE(param_provider.getParam("param_provider/test_int_array", test_int_array));
-
-  std::vector<double> test_double_array;
-  EXPECT_TRUE(param_provider.getParam("param_provider/test_double_array", test_double_array));
-
-  despin();
-
-  clock->sleep_for(1s);
-}
-
-//}
-
-/* TEST_F(Test, param_loader_load_from_file) //{ */
-
-TEST_F(Test, param_loader_load_from_file) {
-
-  initialize(rclcpp::NodeOptions().use_intra_process_comms(false).allow_undeclared_parameters(true));
-
-  auto clock = node_->get_clock();
-
-  RCLCPP_INFO(node_->get_logger(), "[%s]: initializing ParamLoader", node_->get_name());
-  auto pl = mrs_lib::ParamLoader(node_, node_->get_name());
-
-  RCLCPP_INFO(node_->get_logger(), "[%s]: testing ParamLoader", node_->get_name());
-
-  bool test_bool = false;
-  EXPECT_FALSE(pl.loadParam("test_bool", test_bool));
-  pl.resetLoadedSuccessfully();
-
-  EXPECT_FALSE(pl.addYamlFile(""));
-  EXPECT_FALSE(pl.addYamlFile("./custom_test_config.yaml"));
-  pl.resetLoadedSuccessfully();
-
-  EXPECT_TRUE(pl.addYamlFile("/tmp/mrs_lib/test/param_loader/test_config.yaml"));
-
-  std::vector<Eigen::MatrixXd> loaded_nd_matrix = pl.loadMatrixArray2("test_param_nd_matrix");
-  EXPECT_TRUE(pl.loadedSuccessfully());
-
-  if (pl.loadedSuccessfully()) {
-    RCLCPP_INFO(node_->get_logger(), "[%s]: parameter loaded OK", node_->get_name());
-    int it = 0;
-    for (const auto& mat : loaded_nd_matrix) {
-      std::cout << "matrix #" << it << std::endl;
-      std::cout << mat << std::endl;
-      it++;
+      clock->sleep_for(1s);
     }
-  } else {
-    RCLCPP_ERROR(node_->get_logger(), "[%s]: parameter loading failure", node_->get_name());
   }
 
-  std::vector<Eigen::MatrixXd> vec;
-  pl.resetUniques();
-  pl.loadMatrixArray("test_param_nd_matrix", vec);
-  EXPECT_TRUE(pl.loadedSuccessfully());
-
-  pl.resetUniques();
-  pl.loadMatrixArray("test_param_nd_matrix", vec, vec);
-  EXPECT_TRUE(pl.loadedSuccessfully());
-
-  pl.resetUniques();
-  vec = pl.loadMatrixArray2("test_param_nd_matrix");
-  EXPECT_TRUE(pl.loadedSuccessfully());
-
-  pl.resetUniques();
-  vec = pl.loadMatrixArray2("test_param_nd_matrix", vec);
-  EXPECT_TRUE(pl.loadedSuccessfully());
-
-  EXPECT_LT(fabs(loaded_nd_matrix.at(0)(0, 0) - (-5)), 1e-6);
-  EXPECT_LT(fabs(loaded_nd_matrix.at(1)(2, 0) - (4)), 1e-6);
-
-  std::cout << "Loading empty matrix" << std::endl;
-  pl.resetUniques();
-  Eigen::Matrix<double, 0, 0> mat = pl.loadMatrixStatic2<0, 0>("test_param_matrix_empty");
-  std::cout << "Empty matrix:" << std::endl << mat;
-
-  std::cout << "Testing different matrix loading" << std::endl;
-
-  // | -------------------- loadMatrixStatic -------------------- |
-  // reset the loadedSuccessfully flag back to true
-  pl.resetLoadedSuccessfully();
-
-  {
-    Eigen::Matrix3d mat3d;
-    pl.resetUniques();
-    EXPECT_TRUE(pl.loadMatrixStatic("test_param_matrix_3x3", mat3d));
-    // check that the values are ordered properly
-    EXPECT_LT(fabs(mat3d(0, 1) - (0.1)), 1e-6);
-    EXPECT_LT(fabs(mat3d(1, 2) - (1.2)), 1e-6);
-    EXPECT_LT(fabs(mat3d(2, 0) - (2.0)), 1e-6);
-    EXPECT_LT(fabs(mat3d(2, 2) - (2.2)), 1e-6);
-
-    pl.resetUniques();
-    EXPECT_TRUE(pl.loadMatrixStatic("test_param_matrix_3x3", mat3d, Eigen::Matrix3d::Identity()));
-    pl.resetUniques();
-    mat3d = pl.loadMatrixStatic2<3, 3, double>("test_param_matrix_3x3");
-    pl.resetUniques();
-    mat3d = pl.loadMatrixStatic2<3, 3, double>("test_param_matrix_nonexistent", Eigen::Matrix3d::Identity() * Eigen::Matrix3d::Ones());
-    EXPECT_TRUE(pl.loadedSuccessfully());
-
-    // with optional parameters, it should return false if failed to load, but not set the loadedSuccessfully flag
-    pl.resetUniques();
-    EXPECT_FALSE(pl.loadMatrixStatic("test_param_matrix_nonexistent", mat3d, Eigen::Matrix3d::Identity()));
-    EXPECT_TRUE(pl.loadedSuccessfully());
-
-    pl.resetUniques();
-    EXPECT_FALSE(pl.loadMatrixStatic("test_param_matrix_empty", mat3d));
-    EXPECT_FALSE(pl.loadedSuccessfully());
+  if (sub->get_publisher_count() == 0) {
+    RCLCPP_ERROR(node_->get_logger(), "Failed to connect publisher and subscriber");
+    despin();
+    return;
   }
 
-  // | --------------------- loadMatrixKnown -------------------- |
-  // reset the loadedSuccessfully flag back to true
-  pl.resetLoadedSuccessfully();
+  bv.publish();
+  // RCLCPP_INFO(node_->get_logger(), "Received msg cjk")
+  EXPECT_TRUE(received_msg_.get() != nullptr);
+  // EXPECT_TRUE(received_msg_);
+  // test_batch_visualizer_init(topic_name, ns_name);
+  // EXPECT_EQ(received_msg_->markers.size(), 3);
 
-  {
-    Eigen::MatrixXd matxd;
-    pl.resetUniques();
-    EXPECT_TRUE(pl.loadMatrixKnown("test_param_matrix_4x2", matxd, 4, 2));
-    EXPECT_TRUE(pl.loadedSuccessfully());
-    // check that the values are ordered properly
-    EXPECT_LT(fabs(matxd(0, 1) - (0.1)), 1e-6);
-    EXPECT_LT(fabs(matxd(2, 0) - (2.0)), 1e-6);
-    EXPECT_LT(fabs(matxd(3, 1) - (3.1)), 1e-6);
+  // EXPECT_EQ(received_msg_->markers[0].header.frame_id, ns_name);
+  // EXPECT_EQ(received_msg_->markers[0].ns, topic_name);
+  // EXPECT_EQ(received_msg_->markers[0].id, 8);
+  // EXPECT_EQ(received_msg_->markers[0].points.size(), 0);
+  // EXPECT_EQ(received_msg_->markers[0].colors.size(), 0);
+  // EXPECT_DOUBLE_EQ(received_msg_->markers[0].scale.x, 0.02);
+  // EXPECT_DOUBLE_EQ(received_msg_->markers[0].scale.y, 0.02);
 
-    // with optional parameters, it should return false if failed to load, but not set the loadedSuccessfully flag
-    pl.resetUniques();
-    EXPECT_FALSE(pl.loadMatrixKnown("test_param_matrix_nonexistent", matxd, Eigen::MatrixXd::Identity(15, 16), 15, 16));
-    EXPECT_TRUE(pl.loadedSuccessfully());
-    pl.resetUniques();
-    matxd = pl.loadMatrixKnown2<double>("test_param_matrix_nonexistent", Eigen::MatrixXd::Identity(15, 16), 15, 16);
-    EXPECT_TRUE(pl.loadedSuccessfully());
-    pl.resetUniques();
-    matxd = pl.loadMatrixKnown2<double>("test_param_matrix_nonexistent", 15, 16);
-    EXPECT_FALSE(pl.loadedSuccessfully());
-  }
+  // EXPECT_EQ(received_msg_->markers[1].header.frame_id, ns_name);
+  // EXPECT_EQ(received_msg_->markers[1].ns, topic_name);
+  // EXPECT_EQ(received_msg_->markers[1].id, 5);
+  // EXPECT_EQ(received_msg_->markers[1].points.size(), 0);
+  // EXPECT_EQ(received_msg_->markers[1].colors.size(), 0);
+  // EXPECT_DOUBLE_EQ(received_msg_->markers[1].scale.x, 0.04);
 
-  // | -------------------- loadMatrixDynamic ------------------- |
-  // reset the loadedSuccessfully flag back to true
-  pl.resetLoadedSuccessfully();
+  // EXPECT_EQ(received_msg_->markers[2].header.frame_id, ns_name);
+  // EXPECT_EQ(received_msg_->markers[2].ns, topic_name);
+  // EXPECT_EQ(received_msg_->markers[2].id, 11);
+  // EXPECT_EQ(received_msg_->markers[2].points.size(), 0);
+  // EXPECT_EQ(received_msg_->markers[2].colors.size(), 0);
 
-  {
-    Eigen::MatrixXd matxd;
-    pl.resetUniques();
-    EXPECT_TRUE(pl.loadMatrixDynamic("test_param_matrix_3x3", matxd, 3, -1));
-    EXPECT_TRUE(pl.loadedSuccessfully());
-    EXPECT_EQ(matxd.rows(), 3);
-    EXPECT_EQ(matxd.cols(), 3);
-    // check that the values are ordered properly
-    EXPECT_LT(fabs(matxd(0, 2) - (0.2)), 1e-6);
-    EXPECT_LT(fabs(matxd(1, 0) - (1.0)), 1e-6);
-    EXPECT_LT(fabs(matxd(1, 1) - (1.1)), 1e-6);
-    EXPECT_LT(fabs(matxd(2, 0) - (2.0)), 1e-6);
-
-    pl.resetUniques();
-    EXPECT_TRUE(pl.loadMatrixDynamic("test_param_matrix_3x3", matxd, -1, 3));
-    EXPECT_TRUE(pl.loadedSuccessfully());
-    EXPECT_EQ(matxd.rows(), 3);
-    EXPECT_EQ(matxd.cols(), 3);
-    // check that the values are ordered properly
-    EXPECT_LT(fabs(matxd(0, 2) - (0.2)), 1e-6);
-    EXPECT_LT(fabs(matxd(1, 0) - (1.0)), 1e-6);
-    EXPECT_LT(fabs(matxd(1, 1) - (1.1)), 1e-6);
-    EXPECT_LT(fabs(matxd(2, 0) - (2.0)), 1e-6);
-
-    // with optional parameters, it should return false if failed to load, but not set the loadedSuccessfully flag
-    pl.resetUniques();
-    EXPECT_FALSE(pl.loadMatrixDynamic("test_param_matrix_nonexistent", matxd, Eigen::MatrixXd::Zero(1, 2), 1, 2));
-    EXPECT_TRUE(pl.loadedSuccessfully());
-    pl.resetUniques();
-    matxd = pl.loadMatrixDynamic2<double>("test_param_matrix_nonexistent", 16 * Eigen::MatrixXd::Ones(5, 5), 5, 5);
-    EXPECT_TRUE(pl.loadedSuccessfully());
-    pl.resetUniques();
-    matxd = pl.loadMatrixDynamic2("test_param_matrix_nonexistent", 5, 6);
-    EXPECT_FALSE(pl.loadedSuccessfully());
-  }
+  // bv.setPointsScale(0.5);
+  // bv.setParentFrame("cat");
+  // bv.setLinesScale(10.0);
+  // bv.publish();
+  // // EXPECT_TRUE(received_msg_);
+  // test_batch_visualizer_init(topic_name, "cat", 0.5, 10.0);
 
   despin();
 
   clock->sleep_for(1s);
 }
 
-/* TEST_F(Test, param_loader_load_from_file2) //{ */
-
-TEST_F(Test, param_loader_load_from_file2) {
-
-  initialize(rclcpp::NodeOptions().use_intra_process_comms(false).allow_undeclared_parameters(true));
-
-  auto clock = node_->get_clock();
-
-  RCLCPP_INFO(node_->get_logger(), "[%s]: initializing ParamLoader", node_->get_name());
-  auto pl = mrs_lib::ParamLoader(node_, node_->get_name());
-
-  RCLCPP_INFO(node_->get_logger(), "[%s]: testing ParamLoader", node_->get_name());
-
-  bool test_bool = false;
-  EXPECT_FALSE(pl.loadParam("test_bool", test_bool));
-  pl.resetLoadedSuccessfully();
-
-  EXPECT_FALSE(pl.addYamlFile(""));
-  EXPECT_FALSE(pl.addYamlFile("./custom_test_config.yaml"));
-  pl.resetLoadedSuccessfully();
-
-  EXPECT_TRUE(pl.addYamlFile("/tmp/mrs_lib/test/param_loader/test_config.yaml"));
-  EXPECT_TRUE(pl.addYamlFileFromParam("file_name"));
-
-  std::vector<Eigen::MatrixXd> loaded_nd_matrix = pl.loadMatrixArray2("test_namespace/test_param_nd_matrix");
-  EXPECT_TRUE(pl.loadedSuccessfully());
-
-  if (pl.loadedSuccessfully()) {
-    RCLCPP_INFO(node_->get_logger(), "[%s]: parameter loaded OK", node_->get_name());
-    int it = 0;
-    for (const auto& mat : loaded_nd_matrix) {
-      std::cout << "matrix #" << it << std::endl;
-      std::cout << mat << std::endl;
-      it++;
-    }
-  } else {
-    RCLCPP_ERROR(node_->get_logger(), "[%s]: parameter loading failure", node_->get_name());
-  }
-
-  std::vector<Eigen::MatrixXd> vec;
-  pl.resetUniques();
-  pl.loadMatrixArray("test_namespace/test_param_nd_matrix", vec);
-  EXPECT_TRUE(pl.loadedSuccessfully());
-
-  pl.resetUniques();
-  pl.loadMatrixArray("test_namespace/test_param_nd_matrix", vec, vec);
-  EXPECT_TRUE(pl.loadedSuccessfully());
-
-  pl.resetUniques();
-  vec = pl.loadMatrixArray2("test_namespace/test_param_nd_matrix");
-  EXPECT_TRUE(pl.loadedSuccessfully());
-
-  pl.resetUniques();
-  vec = pl.loadMatrixArray2("test_namespace/test_param_nd_matrix", vec);
-  EXPECT_TRUE(pl.loadedSuccessfully());
-
-  EXPECT_LT(fabs(loaded_nd_matrix.at(0)(0, 0) - (-5)), 1e-6);
-  EXPECT_LT(fabs(loaded_nd_matrix.at(1)(2, 0) - (4)), 1e-6);
-
-  std::cout << "Loading empty matrix" << std::endl;
-  pl.resetUniques();
-  Eigen::Matrix<double, 0, 0> mat = pl.loadMatrixStatic2<0, 0>("test_param_matrix_empty");
-  std::cout << "Empty matrix:" << std::endl << mat;
-
-  std::cout << "Testing different matrix loading" << std::endl;
-
-  // | -------------------- loadMatrixStatic -------------------- |
-  // reset the loadedSuccessfully flag back to true
-  pl.resetLoadedSuccessfully();
-
-  {
-    Eigen::Matrix3d mat3d;
-    pl.resetUniques();
-    EXPECT_TRUE(pl.loadMatrixStatic("test_namespace/test_param_matrix_3x3", mat3d));
-    // check that the values are ordered properly
-    EXPECT_LT(fabs(mat3d(0, 1) - (0.1)), 1e-6);
-    EXPECT_LT(fabs(mat3d(1, 2) - (1.2)), 1e-6);
-    EXPECT_LT(fabs(mat3d(2, 0) - (2.0)), 1e-6);
-    EXPECT_LT(fabs(mat3d(2, 2) - (2.2)), 1e-6);
-
-    pl.resetUniques();
-    EXPECT_TRUE(pl.loadMatrixStatic("test_namespace/test_param_matrix_3x3", mat3d, Eigen::Matrix3d::Identity()));
-    pl.resetUniques();
-    mat3d = pl.loadMatrixStatic2<3, 3, double>("test_namespace/test_param_matrix_3x3");
-    pl.resetUniques();
-    mat3d = pl.loadMatrixStatic2<3, 3, double>("test_namespace/test_param_matrix_nonexistent", Eigen::Matrix3d::Identity() * Eigen::Matrix3d::Ones());
-    EXPECT_TRUE(pl.loadedSuccessfully());
-
-    // with optional parameters, it should return false if failed to load, but not set the loadedSuccessfully flag
-    pl.resetUniques();
-    EXPECT_FALSE(pl.loadMatrixStatic("test_namespace/test_param_matrix_nonexistent", mat3d, Eigen::Matrix3d::Identity()));
-    EXPECT_TRUE(pl.loadedSuccessfully());
-
-    pl.resetUniques();
-    EXPECT_FALSE(pl.loadMatrixStatic("test_namespace/test_param_matrix_empty", mat3d));
-    EXPECT_FALSE(pl.loadedSuccessfully());
-  }
-
-  // | --------------------- loadMatrixKnown -------------------- |
-  // reset the loadedSuccessfully flag back to true
-  pl.resetLoadedSuccessfully();
-
-  {
-    Eigen::MatrixXd matxd;
-    pl.resetUniques();
-    EXPECT_TRUE(pl.loadMatrixKnown("test_namespace/test_param_matrix_4x2", matxd, 4, 2));
-    EXPECT_TRUE(pl.loadedSuccessfully());
-    // check that the values are ordered properly
-    EXPECT_LT(fabs(matxd(0, 1) - (0.1)), 1e-6);
-    EXPECT_LT(fabs(matxd(2, 0) - (2.0)), 1e-6);
-    EXPECT_LT(fabs(matxd(3, 1) - (3.1)), 1e-6);
-
-    // with optional parameters, it should return false if failed to load, but not set the loadedSuccessfully flag
-    pl.resetUniques();
-    EXPECT_FALSE(pl.loadMatrixKnown("test_namespace/test_param_matrix_nonexistent", matxd, Eigen::MatrixXd::Identity(15, 16), 15, 16));
-    EXPECT_TRUE(pl.loadedSuccessfully());
-    pl.resetUniques();
-    matxd = pl.loadMatrixKnown2<double>("test_namespace/test_param_matrix_nonexistent", Eigen::MatrixXd::Identity(15, 16), 15, 16);
-    EXPECT_TRUE(pl.loadedSuccessfully());
-    pl.resetUniques();
-    matxd = pl.loadMatrixKnown2<double>("test_namespace/test_param_matrix_nonexistent", 15, 16);
-    EXPECT_FALSE(pl.loadedSuccessfully());
-  }
-
-  // | -------------------- loadMatrixDynamic ------------------- |
-  // reset the loadedSuccessfully flag back to true
-  pl.resetLoadedSuccessfully();
-
-  {
-    Eigen::MatrixXd matxd;
-    pl.resetUniques();
-    EXPECT_TRUE(pl.loadMatrixDynamic("test_namespace/test_param_matrix_3x3", matxd, 3, -1));
-    EXPECT_TRUE(pl.loadedSuccessfully());
-    EXPECT_EQ(matxd.rows(), 3);
-    EXPECT_EQ(matxd.cols(), 3);
-    // check that the values are ordered properly
-    EXPECT_LT(fabs(matxd(0, 2) - (0.2)), 1e-6);
-    EXPECT_LT(fabs(matxd(1, 0) - (1.0)), 1e-6);
-    EXPECT_LT(fabs(matxd(1, 1) - (1.1)), 1e-6);
-    EXPECT_LT(fabs(matxd(2, 0) - (2.0)), 1e-6);
-
-    pl.resetUniques();
-    EXPECT_TRUE(pl.loadMatrixDynamic("test_namespace/test_param_matrix_3x3", matxd, -1, 3));
-    EXPECT_TRUE(pl.loadedSuccessfully());
-    EXPECT_EQ(matxd.rows(), 3);
-    EXPECT_EQ(matxd.cols(), 3);
-    // check that the values are ordered properly
-    EXPECT_LT(fabs(matxd(0, 2) - (0.2)), 1e-6);
-    EXPECT_LT(fabs(matxd(1, 0) - (1.0)), 1e-6);
-    EXPECT_LT(fabs(matxd(1, 1) - (1.1)), 1e-6);
-    EXPECT_LT(fabs(matxd(2, 0) - (2.0)), 1e-6);
-
-    // with optional parameters, it should return false if failed to load, but not set the loadedSuccessfully flag
-    pl.resetUniques();
-    EXPECT_FALSE(pl.loadMatrixDynamic("test_namespace/test_param_matrix_nonexistent", matxd, Eigen::MatrixXd::Zero(1, 2), 1, 2));
-    EXPECT_TRUE(pl.loadedSuccessfully());
-    pl.resetUniques();
-    matxd = pl.loadMatrixDynamic2<double>("test_namespace/test_param_matrix_nonexistent", 16 * Eigen::MatrixXd::Ones(5, 5), 5, 5);
-    EXPECT_TRUE(pl.loadedSuccessfully());
-    pl.resetUniques();
-    matxd = pl.loadMatrixDynamic2("test_namespace/test_param_matrix_nonexistent", 5, 6);
-    EXPECT_FALSE(pl.loadedSuccessfully());
-  }
-
-  despin();
-
-  clock->sleep_for(1s);
-}
 //}
