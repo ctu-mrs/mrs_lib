@@ -50,6 +50,7 @@ Transformer::Transformer() {
 
 Transformer::Transformer(const rclcpp::Node::SharedPtr& node) : initialized_(true) {
 
+  node_            = node;
   tf_buffer_       = std::make_unique<tf2_ros::Buffer>(node->get_clock());
   tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, node, true);
 }
@@ -57,6 +58,7 @@ Transformer::Transformer(const rclcpp::Node::SharedPtr& node) : initialized_(tru
 Transformer::Transformer(const rclcpp::Node::SharedPtr& node, const rclcpp::Clock::SharedPtr& clock, const rclcpp::Duration& cache_time, const rclcpp::QoS& qos)
     : initialized_(true) {
 
+  node_            = node;
   tf_buffer_       = std::make_unique<tf2_ros::Buffer>(clock, tf2::Duration(cache_time.nanoseconds()), node, qos);
   tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, node, true);
 }

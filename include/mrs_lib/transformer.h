@@ -102,7 +102,7 @@ public:
    * \param node        the node handle to be used for subscribing to the transformations.
    * \param cache_time  duration of the transformation buffer's cache into the past that will be kept.
    */
-  Transformer(const rclcpp::Node::SharedPtr& node, const rclcpp::Duration& cache_time = rclcpp::Duration(tf2::BUFFER_CORE_DEFAULT_CACHE_TIME));
+  /* Transformer(const rclcpp::Node::SharedPtr& node, const rclcpp::Duration& cache_time = rclcpp::Duration(tf2::BUFFER_CORE_DEFAULT_CACHE_TIME)); */
 
   /**
    * \brief The main constructor that actually initializes stuff.

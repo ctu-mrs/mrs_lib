@@ -8,6 +8,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_definitions("-Wall")
 add_definitions("-Wextra")
 add_definitions("-Wpedantic")
+# add_definitions("-O0")
+# add_definitions("-g")
 
 find_package(ament_cmake REQUIRED)
 
@@ -15,14 +17,15 @@ set(DEPENDENCIES
   geometry_msgs
   mrs_msgs
   nav_msgs
-  pcl_conversions
-  pcl_msgs
-  pcl_ros
+  # pcl_conversions
+  # pcl_msgs
+  # pcl_ros
   rclcpp
   rclcpp_components
   std_msgs
   tf2_geometry_msgs
   tf2_ros
+  tf2_eigen
   yaml-cpp
 )
 
@@ -281,6 +284,7 @@ ament_target_dependencies(MrsLib_Transformer
   geometry_msgs
   tf2_geometry_msgs
   mrs_msgs
+  tf2_eigen
   # pcl_ros
   # pcl_conversions
   # pcl_msgs

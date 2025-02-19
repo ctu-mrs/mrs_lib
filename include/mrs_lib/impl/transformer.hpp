@@ -155,6 +155,7 @@ std::optional<T> Transformer::transformSingle(const std::string& from_frame_raw,
 
   // do the transformation
   const geometry_msgs::msg::TransformStamped tf_resolved = create_transform(from_frame, to_frame, tf.header.stamp, tf.transform);
+
   return transformImpl(tf_resolved, what);
 }
 
