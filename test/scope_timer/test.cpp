@@ -11,7 +11,6 @@ using namespace std::chrono_literals;
 class Test : public ::testing::Test {
 
 public:
-
 protected:
   /* SetUpTestCase() //{ */
 

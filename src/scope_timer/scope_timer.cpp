@@ -83,7 +83,7 @@ std::unordered_map<std::string, rclcpp::Time> ScopeTimer::last_print_times;
 
 /* ScopeTimer constructor //{ */
 
-ScopeTimer::ScopeTimer(const rclcpp::Node::SharedPtr& node, const std::string& label, const double& throttle_period, const bool enable,
+ScopeTimer::ScopeTimer(const rclcpp::Node::SharedPtr& node, const std::string& label, const rclcpp::Duration& throttle_period, const bool enable,
                        const std::shared_ptr<ScopeTimerLogger> scope_timer_logger)
     : _timer_label_(label), _enable_print_or_log(enable), _throttle_period_(throttle_period), _logger_(scope_timer_logger) {
 
@@ -94,8 +94,8 @@ ScopeTimer::ScopeTimer(const rclcpp::Node::SharedPtr& node, const std::string& l
   RCLCPP_DEBUG(node_->get_logger(), "Scope timer started, label: %s", label.c_str());
 }
 
-ScopeTimer::ScopeTimer(const rclcpp::Node::SharedPtr& node, const std::string& label, const time_point& tp0, const double& throttle_period, const bool enable,
-                       const std::shared_ptr<ScopeTimerLogger> scope_timer_logger)
+ScopeTimer::ScopeTimer(const rclcpp::Node::SharedPtr& node, const std::string& label, const time_point& tp0, const rclcpp::Duration& throttle_period,
+                       const bool enable, const std::shared_ptr<ScopeTimerLogger> scope_timer_logger)
     : _timer_label_(label), _enable_print_or_log(enable), _throttle_period_(throttle_period), _logger_(scope_timer_logger) {
 
   node_ = node;
@@ -108,7 +108,7 @@ ScopeTimer::ScopeTimer(const rclcpp::Node::SharedPtr& node, const std::string& l
 
 ScopeTimer::ScopeTimer(const rclcpp::Node::SharedPtr& node, const std::string& label, const std::shared_ptr<ScopeTimerLogger> scope_timer_logger,
                        const bool enable)
-    : _timer_label_(label), _enable_print_or_log(enable), _throttle_period_(0.0), _logger_(scope_timer_logger) {
+    : _timer_label_(label), _enable_print_or_log(enable), _throttle_period_(0, 0), _logger_(scope_timer_logger) {
 
   node_ = node;
 
@@ -151,7 +151,7 @@ ScopeTimer::~ScopeTimer() {
   const auto ros_end_time    = node_->get_clock()->now();
 
   // if throttling is enabled, check time of last print and only print if applicable
-  if (_throttle_period_ >= 1e-6) {
+  if (_throttle_period_.seconds() >= 1e-6) {
 
     bool       do_print = false;
     const auto last_it  = last_print_times.find(_timer_label_);
@@ -163,7 +163,7 @@ ScopeTimer::~ScopeTimer() {
     } else {
       // if this ScopeTimer was already printed, check how long ago
       rclcpp::Time& last_print_time = last_it->second;
-      if ((ros_end_time - last_print_time).seconds() > _throttle_period_) {
+      if (ros_end_time - last_print_time > _throttle_period_) {
         // if it was long ago enough, print again and update the last print time
         do_print        = true;
         last_print_time = ros_end_time;

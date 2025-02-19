@@ -22,9 +22,9 @@ namespace mrs_lib
   public:
     // | --------------------- public methods --------------------- |
 
-    TimeoutManager(const std::shared_ptr<rclcpp::Node>& node, const double& update_rate);
+    TimeoutManager(const std::shared_ptr<rclcpp::Node>& node, const rclcpp::Rate& update_rate);
 
-    timeout_id_t registerNew(const double& timeout, const callback_t& callback, const rclcpp::Time& last_reset, const bool oneshot = false,
+    timeout_id_t registerNew(const rclcpp::Duration& timeout, const callback_t& callback, const rclcpp::Time& last_reset, const bool oneshot = false,
                              const bool autostart = true);
 
     void reset(const timeout_id_t id, const rclcpp::Time& time);
@@ -37,7 +37,7 @@ namespace mrs_lib
 
     void startAll();
 
-    void change(const timeout_id_t id, const double& timeout, const callback_t& callback, const rclcpp::Time& last_reset, const bool oneshot = false,
+    void change(const timeout_id_t id, const rclcpp::Duration& timeout, const callback_t& callback, const rclcpp::Time& last_reset, const bool oneshot = false,
                 const bool autostart = true);
 
     rclcpp::Time lastReset(const timeout_id_t id);
@@ -53,7 +53,7 @@ namespace mrs_lib
       bool oneshot;
       bool started;
       callback_t callback;
-      double timeout;
+      rclcpp::Duration timeout;
       rclcpp::Time last_reset;
       rclcpp::Time last_callback;
     };

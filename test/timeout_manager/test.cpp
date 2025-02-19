@@ -1,3 +1,5 @@
+// clang: TomasFormat
+
 #include <cmath>
 #include <chrono>
 
@@ -206,7 +208,7 @@ TEST_F(Test, test_timeout_manager) {
 
   std::array<double, 4> tos = {0.1, 0.01, 0.001, 0.001};
 
-  tom_ = std::make_unique<mrs_lib::TimeoutManager>(node_, 1.0 / update_period);
+  tom_ = std::make_unique<mrs_lib::TimeoutManager>(node_, rclcpp::Rate(1.0 / update_period, clock));
 
   std::array<obj_t, 4> objs = {
       obj_t(node_, tom_, test_stop_from_cbk, tos[0], max_expected_delay), obj_t(node_, tom_, test_stop_from_cbk, tos[1], max_expected_delay),
@@ -218,7 +220,7 @@ TEST_F(Test, test_timeout_manager) {
 
     mrs_lib::TimeoutManager::callback_t cbk = std::bind(&obj_t::callback, &objs[it], std::placeholders::_1);
 
-    objs[it].set_timeout_id(tom_->registerNew(tos[it], cbk, now, false, false));
+    objs[it].set_timeout_id(tom_->registerNew(rclcpp::Duration(std::chrono::duration<double>(tos[it])), cbk, now, false, false));
   }
 
   {

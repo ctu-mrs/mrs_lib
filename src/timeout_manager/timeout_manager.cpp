@@ -5,18 +5,18 @@
 namespace mrs_lib
 {
 
-  TimeoutManager::TimeoutManager(const std::shared_ptr<rclcpp::Node>& node, const double& update_rate) : m_last_id(0)
+  TimeoutManager::TimeoutManager(const std::shared_ptr<rclcpp::Node>& node, const rclcpp::Rate& update_rate) : m_last_id(0)
   {
 
     node_ = node;
 
     cb_grp_ = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 
-    m_main_timer = node_->create_timer(std::chrono::duration<double>(1.0 / update_rate), std::bind(&TimeoutManager::main_timer_callback, this), cb_grp_);
+    m_main_timer = node_->create_timer(std::chrono::nanoseconds(update_rate.period()), std::bind(&TimeoutManager::main_timer_callback, this), cb_grp_);
   }
 
 
-  TimeoutManager::timeout_id_t TimeoutManager::registerNew(const double& timeout, const callback_t& callback, const rclcpp::Time& last_reset,
+  TimeoutManager::timeout_id_t TimeoutManager::registerNew(const rclcpp::Duration& timeout, const callback_t& callback, const rclcpp::Time& last_reset,
                                                            const bool oneshot, const bool autostart)
   {
     std::scoped_lock lck(m_mtx);
@@ -61,8 +61,8 @@ namespace mrs_lib
     }
   }
 
-  void TimeoutManager::change(const timeout_id_t id, const double& timeout, const callback_t& callback, const rclcpp::Time& last_reset, const bool oneshot,
-                              const bool autostart)
+  void TimeoutManager::change(const timeout_id_t id, const rclcpp::Duration& timeout, const callback_t& callback, const rclcpp::Time& last_reset,
+                              const bool oneshot, const bool autostart)
   {
     std::scoped_lock lck(m_mtx);
     auto& timeout_info = m_timeouts.at(id);
@@ -95,8 +95,8 @@ namespace mrs_lib
     {
       // don't worry, these variables will get optimized out by the compiler
       const bool started = timeout_info.started;
-      const bool last_reset_timeout = (now - timeout_info.last_reset).seconds() >= timeout_info.timeout;
-      const bool last_callback_timeout = (now - timeout_info.last_callback).seconds() >= timeout_info.timeout;
+      const bool last_reset_timeout = (now - timeout_info.last_reset) >= timeout_info.timeout;
+      const bool last_callback_timeout = (now - timeout_info.last_callback) >= timeout_info.timeout;
 
       if (started && last_reset_timeout && last_callback_timeout)
       {

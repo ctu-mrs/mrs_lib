@@ -67,11 +67,11 @@ public:
   void log(const std::string& scope, const std::string& label_from, const std::string& label_to, const chrono_tp& time_start, const chrono_tp& time_end);
 
 private:
-  bool          _logging_enabled_ = false;
-  bool          _should_log_      = false;
-  std::string   _log_filepath_;
-  std::ofstream _logstream_;
-  std::mutex    _mutex_logstream_;
+  bool                    _logging_enabled_ = false;
+  bool                    _should_log_      = false;
+  std::string             _log_filepath_;
+  std::ofstream           _logstream_;
+  std::mutex              _mutex_logstream_;
   rclcpp::Node::SharedPtr node_;
 };
 
@@ -123,13 +123,14 @@ public:
   /**
    * @brief The basic constructor with a user-defined label of the timer, throttled period and file logger.
    */
-  ScopeTimer(const rclcpp::Node::SharedPtr& node, const std::string& label, const double& throttle_period = 0, const bool enable = true,
-             const std::shared_ptr<ScopeTimerLogger> scope_timer_logger = nullptr);
+  ScopeTimer(const rclcpp::Node::SharedPtr& node, const std::string& label, const rclcpp::Duration& throttle_period = rclcpp::Duration(0, 0),
+             const bool enable = true, const std::shared_ptr<ScopeTimerLogger> scope_timer_logger = nullptr);
 
   /**
    * @brief The basic constructor with a user-defined label of the timer and a pre-start time, which will also be measured.
    */
-  ScopeTimer(const rclcpp::Node::SharedPtr& node, const std::string& label, const time_point& tp0, const double& throttle_period = 0, const bool enable = true,
+  ScopeTimer(const rclcpp::Node::SharedPtr& node, const std::string& label, const time_point& tp0,
+             const rclcpp::Duration& throttle_period = rclcpp::Duration(0, 0), const bool enable = true,
              const std::shared_ptr<ScopeTimerLogger> scope_timer_logger = nullptr);
 
   /**
@@ -160,7 +161,7 @@ private:
 
   std::string             _timer_label_;
   bool                    _enable_print_or_log;
-  double                  _throttle_period_;
+  rclcpp::Duration        _throttle_period_;
   std::vector<time_point> checkpoints;
 
   std::shared_ptr<ScopeTimerLogger> _logger_ = nullptr;

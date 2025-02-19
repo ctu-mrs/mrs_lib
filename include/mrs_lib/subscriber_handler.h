@@ -16,7 +16,7 @@
 namespace mrs_lib
 {
 
-  static const double no_timeout = -1;
+  static const rclcpp::Duration no_timeout = rclcpp::Duration(0, 0);
 
   /* struct SubscriberHandlerOptions //{ */
 
@@ -45,8 +45,9 @@ namespace mrs_lib
     std::shared_ptr<mrs_lib::TimeoutManager> timeout_manager = nullptr; /*!< \brief Will be used for handling message timouts if necessary. If no manager is
                                                                            specified, it will be created with rate equal to half of \p no_message_timeout. */
 
-    double no_message_timeout = mrs_lib::no_timeout; /*!< \brief If no new message is received for this duration, the \p timeout_callback function will
-                                                               be called. If \p timeout_callback is empty, an error message will be printed to the console. */
+    rclcpp::Duration no_message_timeout =
+        mrs_lib::no_timeout; /*!< \brief If no new message is received for this duration, the \p timeout_callback function will
+                             be called. If \p timeout_callback is empty, an error message will be printed to the console. */
 
     std::function<void(const std::string& topic_name, const rclcpp::Time& last_msg)> timeout_callback =
         {}; /*!< \brief This function will be called if no new message is received for the \p no_message_timeout duration. If this variable is empty, an error
@@ -169,7 +170,7 @@ namespace mrs_lib
      * \param timeout    after this duration, this method will return a nullptr if no new data becomes available.
      * \return           the message if a new message is available after waking up, \p nullptr otherwise.
      */
-    virtual typename MessageType::ConstSharedPtr waitForNew(const double& timeout)
+    virtual typename MessageType::ConstSharedPtr waitForNew(const rclcpp::Duration& timeout)
     {
       assert(m_pimpl);
       return m_pimpl->waitForNew(timeout);
@@ -224,7 +225,7 @@ namespace mrs_lib
      *
      * \param timeout    The new timeout for no received messages.
      */
-    virtual void setNoMessageTimeout(const double& timeout)
+    virtual void setNoMessageTimeout(const rclcpp::Duration& timeout)
     {
       assert(m_pimpl);
       return m_pimpl->setNoMessageTimeout(timeout);
@@ -399,7 +400,7 @@ namespace mrs_lib
      *
      */
     template <class... Types>
-    SubscriberHandler(const SubscriberHandlerOptions& options, const double& no_message_timeout, Types... args)
+    SubscriberHandler(const SubscriberHandlerOptions& options, const rclcpp::Duration& no_message_timeout, Types... args)
         : SubscriberHandler(
               [options, no_message_timeout]() {
                 SubscriberHandlerOptions opts = options;

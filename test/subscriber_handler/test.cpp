@@ -266,7 +266,7 @@ TEST_F(Test, timeout) {
   mrs_lib::SubscriberHandlerOptions sh_opts(node_);
 
   sh_opts.autostart          = true;
-  sh_opts.no_message_timeout = 0.5;
+  sh_opts.no_message_timeout = rclcpp::Duration(std::chrono::duration<double>(0.5));
 
   mrs_lib::SubscriberHandler<std_msgs::msg::Int64> sh_int_;
 

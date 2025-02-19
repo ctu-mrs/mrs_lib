@@ -81,7 +81,7 @@ protected:
 
   void timerCallback(void);
 
-  double            rate_         = 50.0;
+  double            rate_         = 50;
   int               n_cbks_       = 0;
   bool              cbks_in_time_ = true;
   bool              null_cbk_     = false;
@@ -109,7 +109,7 @@ void Test::timerCallback(void) {
 
   if (last_time_callback_) {
 
-    double expected_time = (last_time_callback_.value() + rclcpp::Duration(std::chrono::duration<double>(1 / rate_))).seconds();
+    double expected_time = (last_time_callback_.value() + rclcpp::Duration(std::chrono::duration<double>(1.0 / rate_))).seconds();
     double now           = node_->get_clock()->now().seconds();
 
     double dt = now - expected_time;
@@ -159,9 +159,9 @@ void Test::do_test(const bool use_threadtimer) {
   std::function<void()> callback_fcn = std::bind(&Test::timerCallback, this);
 
   if (use_threadtimer) {
-    timer_ = std::make_shared<mrs_lib::ThreadTimer>(opts, rate_, callback_fcn);
+    timer_ = std::make_shared<mrs_lib::ThreadTimer>(opts, rclcpp::Rate(rate_, node_->get_clock()), callback_fcn);
   } else {
-    timer_ = std::make_shared<mrs_lib::ROSTimer>(opts, rate_, callback_fcn);
+    timer_ = std::make_shared<mrs_lib::ROSTimer>(opts, rclcpp::Rate(rate_, node_->get_clock()), callback_fcn);
   }
 
   {
@@ -213,7 +213,7 @@ void Test::do_test(const bool use_threadtimer) {
       EXPECT_TRUE(timer_stopped_from_callback);
     }
 
-    rclcpp::sleep_for(std::chrono::milliseconds(int(1000 * (1.0 / rate_) * 2)));
+    node_->get_clock()->sleep_for(std::chrono::duration<double>(double(2.0 / rate_)));
 
     const bool no_callbacks_after_stopped = n_cbks_ == 0;
     EXPECT_TRUE(no_callbacks_after_stopped);
@@ -226,9 +226,7 @@ void Test::do_test(const bool use_threadtimer) {
 
     const rclcpp::Time start = node_->get_clock()->now();
 
-    const double period = 1.0 / 50;
-
-    timer_->setPeriod(period);
+    timer_->setPeriod(rclcpp::Duration(std::chrono::duration<double>(0.025)));
     timer_->start();
     timer_ = nullptr;
 

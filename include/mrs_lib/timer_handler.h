@@ -54,7 +54,7 @@ public:
    * @param duration
    * @param reset
    */
-  virtual void setPeriod(const double& duration) = 0;
+  virtual void setPeriod(const rclcpp::Duration& duration) = 0;
 
   /**
    * @brief change the callback method
@@ -95,9 +95,9 @@ class ROSTimer : public MRSTimer {
 public:
   ROSTimer();
 
-  ROSTimer(const rclcpp::Node::SharedPtr& node, const double& rate, const std::function<void()>& callback);
+  ROSTimer(const rclcpp::Node::SharedPtr& node, const rclcpp::Rate& rate, const std::function<void()>& callback);
 
-  ROSTimer(const mrs_lib::TimerHandlerOptions& opts, const double& rate, const std::function<void()>& callback);
+  ROSTimer(const mrs_lib::TimerHandlerOptions& opts, const rclcpp::Rate& rate, const std::function<void()>& callback);
 
   /**
    * @brief stop the timer
@@ -115,7 +115,7 @@ public:
    * @param duration
    * @param reset
    */
-  virtual void setPeriod(const double& duration) override;
+  virtual void setPeriod(const rclcpp::Duration& duration) override;
 
   /**
    * @brief change the callback method
@@ -169,9 +169,9 @@ class ThreadTimer : public MRSTimer {
 public:
   ThreadTimer();
 
-  ThreadTimer(const rclcpp::Node::SharedPtr& node, const double& rate, const std::function<void()>& callback);
+  ThreadTimer(const rclcpp::Node::SharedPtr& node, const rclcpp::Rate& rate, const std::function<void()>& callback);
 
-  ThreadTimer(const mrs_lib::TimerHandlerOptions& opts, const double& rate, const std::function<void()>& callback);
+  ThreadTimer(const mrs_lib::TimerHandlerOptions& opts, const rclcpp::Rate& rate, const std::function<void()>& callback);
 
   /**
    * @brief stop the timer
@@ -196,7 +196,7 @@ public:
    *
    * @param duration the new desired callback period.
    */
-  virtual void setPeriod(const double& duration) override;
+  virtual void setPeriod(const rclcpp::Duration& duration) override;
 
   /**
    * @brief change the callback method

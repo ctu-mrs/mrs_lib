@@ -53,13 +53,14 @@ namespace mrs_lib
         m_timeout_mgr_callback = std::bind(&Impl::default_timeout_callback, this, m_topic_name, std::placeholders::_1);
       }
 
-      if (options.no_message_timeout > 0)
+      if (options.no_message_timeout != mrs_lib::no_timeout)
       {
 
         // initialize a new TimeoutManager if not provided by the user
         if (!m_timeout_manager)
         {
-          m_timeout_manager = std::make_shared<mrs_lib::TimeoutManager>(m_node, 1.0 / (options.no_message_timeout * 0.5));
+          m_timeout_manager =
+              std::make_shared<mrs_lib::TimeoutManager>(m_node, rclcpp::Rate(1.0 / (options.no_message_timeout.seconds() * 0.5), m_node->get_clock()));
         }
 
         // register the timeout callback with the TimeoutManager
@@ -117,10 +118,10 @@ namespace mrs_lib
     //}
 
     /* waitForNew() method //{ */
-    virtual typename MessageType::ConstSharedPtr waitForNew(const double& timeout)
+    virtual typename MessageType::ConstSharedPtr waitForNew(const rclcpp::Duration& timeout)
     {
       // convert the ros type to chrono type
-      const std::chrono::duration<float> chrono_timeout(timeout);
+      const std::chrono::duration<float> chrono_timeout(timeout.seconds());
       // lock the mutex guarding the m_new_data flag
       std::unique_lock lock(m_new_data_mtx);
       // if new data is available, return immediately, otherwise attempt to wait for new data using the respective condition variable
@@ -167,9 +168,9 @@ namespace mrs_lib
     //}
 
     /* setNoMessageTimeout() method //{ */
-    virtual void setNoMessageTimeout(const double& timeout)
+    virtual void setNoMessageTimeout(const rclcpp::Duration& timeout)
     {
-      if (timeout < 0)
+      if (timeout == mrs_lib::no_timeout)
       {
         // if there is a timeout callback already registered but the user wants to disable it, pause it
         if (m_timeout_manager != nullptr && m_timeout_id.has_value())
@@ -179,7 +180,7 @@ namespace mrs_lib
       {
         // if there is no callback manager, create it
         if (m_timeout_manager == nullptr)
-          m_timeout_manager = std::make_shared<mrs_lib::TimeoutManager>(m_node, 1.0 / (timeout * 0.5));
+          m_timeout_manager = std::make_shared<mrs_lib::TimeoutManager>(m_node, rclcpp::Rate(1.0 / (timeout.seconds() * 0.5), m_node->get_clock()));
 
         // if there is an existing timeout callback registered, change its timeout
         if (m_timeout_id.has_value())
