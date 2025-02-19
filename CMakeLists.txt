@@ -19,6 +19,7 @@ find_package(nav_msgs REQUIRED)
 find_package(mrs_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 # find_package(Threads REQUIRED)
 
 # include Eigen3
@@ -57,6 +58,7 @@ set(LIBRARIES
   MrsLib_TransformBroadcaster
   MrsLib_Profiler
   MrsLib_MsgExtractor
+  MrsLib_BatchVisualizer 
   )
 
 ## Geometry
@@ -243,6 +245,24 @@ ament_target_dependencies(MrsLib_MsgExtractor
   geometry_msgs
   nav_msgs
   tf2_geometry_msgs
+  ${Eigen_LIBRARIES}
+  )
+
+# batch_visualizer
+
+add_library(MrsLib_BatchVisualizer SHARED
+  src/batch_visualizer/visual_object.cpp
+  src/batch_visualizer/batch_visualizer.cpp
+  )
+
+target_link_libraries(MrsLib_BatchVisualizer 
+  MrsLib_Geometry
+  )
+
+ament_target_dependencies(MrsLib_BatchVisualizer
+  rclcpp
+  mrs_msgs
+  visualization_msgs
   ${Eigen_LIBRARIES}
   )
 
