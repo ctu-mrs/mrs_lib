@@ -1,0 +1,5 @@
+<map id="include/mrs_lib/publisher_handler.h" name="include/mrs_lib/publisher_handler.h">
+<area shape="rect" id="node1" title="Defines PublisherHandler and related convenience classes for upgrading the ROS publisher." alt="" coords="5,5,191,47"/>
+<area shape="rect" id="node2" href="$dynamic__publisher_8h.html" title="Defines DynamicPublisher for easy debug publishing of ROS messages." alt="" coords="7,95,189,136"/>
+<area shape="rect" id="node3" href="$dynamic__publisher_2example_8cpp.html" title="Example file for the DynamicPublisher convenience class." alt="" coords="14,184,182,225"/>
+</map>
