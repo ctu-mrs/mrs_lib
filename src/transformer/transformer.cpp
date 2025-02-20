@@ -92,7 +92,7 @@ std::optional<geometry_msgs::msg::TransformStamped> Transformer::getTransform(co
   std::scoped_lock lck(mutex_);
 
   if (!initialized_) {
-    RCLCPP_ERROR_THROTTLE(node_->get_logger(), *node_->get_clock(), 1e9, "Transformer: cannot transform, not initialized");
+    std::cout << "Transformer: cannot transform, not initialized" << std::endl;
     return std::nullopt;
   }
 
@@ -110,7 +110,7 @@ std::optional<geometry_msgs::msg::TransformStamped> Transformer::getTransform(co
   std::scoped_lock lck(mutex_);
 
   if (!initialized_) {
-    RCLCPP_ERROR_THROTTLE(node_->get_logger(), *node_->get_clock(), 1e9, "Transformer: cannot transform, not initialized");
+    std::cout << "Transformer: cannot transform, not initialized" << std::endl;
     return std::nullopt;
   }
 
@@ -141,7 +141,7 @@ void Transformer::setLatLon(const double lat, const double lon) {
   std::scoped_lock lck(mutex_);
 
   if (!initialized_) {
-    RCLCPP_ERROR_THROTTLE(node_->get_logger(), *node_->get_clock(), 1e9, "Transformer: cannot transform, not initialized");
+    std::cout << "Transformer: cannot transform, not initialized" << std::endl;
     return std::nullopt;
   }
 
@@ -162,7 +162,7 @@ void Transformer::setLatLon(const double lat, const double lon) {
   std::scoped_lock lck(mutex_);
 
   if (!initialized_) {
-    RCLCPP_ERROR_THROTTLE(node_->get_logger(), *node_->get_clock(), 1e9, "Transformer: cannot transform, not initialized");
+    std::cout << "Transformer: cannot transform, not initialized" << std::endl;
     return std::nullopt;
   }
 
@@ -194,7 +194,7 @@ void Transformer::setLatLon(const double lat, const double lon) {
   std::scoped_lock lck(mutex_);
 
   if (!initialized_) {
-    RCLCPP_ERROR_THROTTLE(node_->get_logger(), *node_->get_clock(), 1e9, "Transformer: cannot transform, not initialized");
+    std::cout << "Transformer: cannot transform, not initialized" << std::endl;
     return std::nullopt;
   }
 
@@ -218,7 +218,7 @@ void Transformer::setLatLon(const double lat, const double lon) {
   std::scoped_lock lck(mutex_);
 
   if (!initialized_) {
-    RCLCPP_ERROR_THROTTLE(node_->get_logger(), *node_->get_clock(), 1e9, "Transformer: cannot transform, not initialized");
+    std::cout << "Transformer: cannot transform, not initialized" << std::endl;
     return std::nullopt;
   }
 
@@ -309,13 +309,13 @@ std::optional<Eigen::Vector3d> Transformer::transformImpl(const geometry_msgs::m
 std::optional<geometry_msgs::msg::TransformStamped> Transformer::getTransformImpl(const std::string& from_frame, const std::string& to_frame,
                                                                                   const rclcpp::Time& time_stamp, const std::string& latlon_frame) {
   if (!initialized_) {
-    RCLCPP_ERROR_THROTTLE(node_->get_logger(), *node_->get_clock(), 1e9, "Transformer: cannot transform, not initialized");
+    std::cout << "Transformer: cannot transform, not initialized" << std::endl;
     return std::nullopt;
   }
 
   // if any of the frames is empty, then the query is invalid, return nullopt
   if (from_frame.empty() || to_frame.empty()) {
-    RCLCPP_ERROR_THROTTLE(node_->get_logger(), *node_->get_clock(), 1e9, "Transformer: cannot transform, not initialized");
+    RCLCPP_ERROR_THROTTLE(node_->get_logger(), *node_->get_clock(), 1e9, "Transformer: cannot transform, not from_frame or to_frame are empty");
     return std::nullopt;
   }
 
@@ -380,7 +380,7 @@ std::optional<geometry_msgs::msg::TransformStamped> Transformer::getTransformImp
                                                                                   const std::string& to_frame, const rclcpp::Time& to_stamp,
                                                                                   const std::string& fixed_frame, const std::string& latlon_frame) {
   if (!initialized_) {
-    RCLCPP_ERROR_THROTTLE(node_->get_logger(), *node_->get_clock(), 1e9, "Transformer: cannot provide transform, not initialized");
+    std::cout << "Transformer: cannot provide transform, not initialized" << std::endl;
     return std::nullopt;
   }
 
