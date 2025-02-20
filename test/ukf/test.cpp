@@ -151,7 +151,7 @@ TEST(TESTSuite, set_mutexed_single)
     std::cout << "Current UKF estimated state is: " << sc_est.x.transpose() << std::endl;
     std::cout << "Current UKF state covariance is:" << std::endl << sc_est.P << std::endl;
 
-    ASSERT_LE(error, 0.5);
+    EXPECT_LE(error, 0.5);
   }
 }
 

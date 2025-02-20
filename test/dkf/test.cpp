@@ -161,7 +161,7 @@ TEST(TESTSuite, set_mutexed_single) {
   std::cout << "Current KF estimated state is: " << sc_est.x.transpose() << std::endl;
   std::cout << "Current KF state covariance is:" << std::endl << sc_est.P << std::endl;
 
-  ASSERT_LE(error.norm(), 0.5);
+  EXPECT_LE(error.norm(), 0.5);
 }
 
 //}

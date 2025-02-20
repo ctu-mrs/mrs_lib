@@ -146,7 +146,7 @@ TEST(TESTSuite, set_mutexed_single) {
 
     const auto error = (x_gt - sc_est.x).norm();
 
-    ASSERT_LT(error, 0.5);
+    EXPECT_LE(error, 0.5);
 
     std::cout << "Current LKF estimation error is: " << error << std::endl;
     std::cout << "Current ground-truth state is:  " << x_gt.transpose() << std::endl;
