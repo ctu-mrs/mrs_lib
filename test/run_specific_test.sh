@@ -11,6 +11,6 @@ done
 
 colcon test-result --delete-yes
 
-colcon test --packages-select mrs_lib --ctest-args -R 'repredictor'
+colcon test --packages-select mrs_lib --ctest-args -R 'median_filter'
 
 colcon test-result --all --verbose

@@ -67,6 +67,7 @@ set(LIBRARIES
   MrsLib_Profiler
   MrsLib_MsgExtractor
   MrsLib_Transformer
+  MrsLib_MedianFilter
   )
 
 ## Geometry
@@ -289,6 +290,18 @@ ament_target_dependencies(MrsLib_Transformer
   # pcl_conversions
   # pcl_msgs
   ${Eigen_LIBRARIES}
+  )
+
+# Median filter
+
+add_library(MrsLib_MedianFilter SHARED
+  src/median_filter/median_filter.cpp
+  )
+
+target_link_libraries(MrsLib_MedianFilter
+  )
+
+ament_target_dependencies(MrsLib_MedianFilter
   )
 
 ## --------------------------------------------------------------

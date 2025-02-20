@@ -46,3 +46,5 @@ add_subdirectory(./msg_extractor)
 add_subdirectory(./transformer)
 
 add_subdirectory(./repredictor)
+
+add_subdirectory(./median_filter)
