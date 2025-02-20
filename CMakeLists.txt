@@ -69,6 +69,7 @@ set(LIBRARIES
   MrsLib_Transformer
   MrsLib_MedianFilter
   MrsLib_SafetyZone
+  MrsLib_IIRFilter
   )
 
 ## Geometry
@@ -314,13 +315,25 @@ add_library(MrsLib_SafetyZone
   )
 
 target_link_libraries(MrsLib_SafetyZone
-  ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   )
 
 ament_target_dependencies(MrsLib_SafetyZone
   rclcpp
   geometry_msgs
+  )
+
+# IIR filter
+
+add_library(MrsLib_IIRFilter
+  src/iir_filter/iir_filter.cpp
+  )
+
+target_link_libraries(MrsLib_IIRFilter
+  ${Eigen_LIBRARIES}
+  )
+
+ament_target_dependencies(MrsLib_IIRFilter
   )
 
 ## --------------------------------------------------------------
