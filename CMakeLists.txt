@@ -68,6 +68,7 @@ set(LIBRARIES
   MrsLib_MsgExtractor
   MrsLib_Transformer
   MrsLib_MedianFilter
+  MrsLib_SafetyZone
   )
 
 ## Geometry
@@ -302,6 +303,24 @@ target_link_libraries(MrsLib_MedianFilter
   )
 
 ament_target_dependencies(MrsLib_MedianFilter
+  )
+
+# safety zone
+
+add_library(MrsLib_SafetyZone
+  src/safety_zone/safety_zone.cpp
+  src/safety_zone/line_operations.cpp
+  src/safety_zone/polygon/polygon.cpp
+  )
+
+target_link_libraries(MrsLib_SafetyZone
+  ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
+  )
+
+ament_target_dependencies(MrsLib_SafetyZone
+  rclcpp
+  geometry_msgs
   )
 
 ## --------------------------------------------------------------
