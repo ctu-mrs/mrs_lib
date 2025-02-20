@@ -11,6 +11,6 @@ done
 
 colcon test-result --delete-yes
 
-colcon test --packages-select mrs_lib --ctest-args -R 'transformer'
+colcon test --packages-select mrs_lib --ctest-args -R 'repredictor'
 
 colcon test-result --all --verbose

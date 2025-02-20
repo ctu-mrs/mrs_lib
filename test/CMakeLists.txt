@@ -44,3 +44,5 @@ add_subdirectory(./profiler)
 add_subdirectory(./msg_extractor)
 
 add_subdirectory(./transformer)
+
+add_subdirectory(./repredictor)
