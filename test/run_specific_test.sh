@@ -11,6 +11,6 @@ done
 
 colcon test-result --delete-yes
 
-colcon test --packages-select mrs_lib --ctest-args -R 'nckf'
+colcon test --packages-select mrs_lib --ctest-args -R 'service_client_handler'
 
 colcon test-result --all --verbose

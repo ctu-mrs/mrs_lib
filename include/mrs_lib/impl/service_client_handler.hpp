@@ -25,18 +25,58 @@ ServiceClientHandler_impl<ServiceType>::ServiceClientHandler_impl(void) : servic
 template <class ServiceType>
 ServiceClientHandler_impl<ServiceType>::ServiceClientHandler_impl(rclcpp::Node::SharedPtr& node, const std::string& address) {
 
-
   node_ = node;
+
+  callback_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 
   {
     std::scoped_lock lock(mutex_service_client_);
 
-    service_client_ = node->create_client<ServiceType>(address);
+    service_client_ = node->create_client<ServiceType>(address, qos_, callback_group_);
   }
 
   _address_ = address;
 
   service_initialized_ = true;
+}
+
+//}
+
+/* ServiceClientHandler_impl(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos) //{ */
+
+template <class ServiceType>
+ServiceClientHandler_impl<ServiceType>::ServiceClientHandler_impl(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos) {
+
+  qos_ = qos;
+
+  ServiceClientHandler_impl(node, address);
+}
+
+//}
+
+/* ServiceClientHandler_impl(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::CallbackGroup::SharedPtr& callback_group) //{ */
+
+template <class ServiceType>
+ServiceClientHandler_impl<ServiceType>::ServiceClientHandler_impl(rclcpp::Node::SharedPtr& node, const std::string& address,
+                                                                  const rclcpp::CallbackGroup::SharedPtr& callback_group) {
+
+  callback_group_ = callback_group;
+
+  ServiceClientHandler_impl(node, address);
+}
+
+//}
+
+/* ServiceClientHandler_impl(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::CallbackGroup::SharedPtr& callback_group) //{ */
+
+template <class ServiceType>
+ServiceClientHandler_impl<ServiceType>::ServiceClientHandler_impl(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos,
+                                                                  const rclcpp::CallbackGroup::SharedPtr& callback_group) {
+
+  qos_            = qos;
+  callback_group_ = callback_group;
+
+  ServiceClientHandler_impl(node, address);
 }
 
 //}
@@ -146,12 +186,34 @@ ServiceClientHandler<ServiceType>::ServiceClientHandler(rclcpp::Node::SharedPtr&
 
 //}
 
-/* initialize(rclcpp::Node::SharedPtr& node, const std::string& address) //{ */
+/* ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos) //{ */
 
 template <class ServiceType>
-void ServiceClientHandler<ServiceType>::initialize(rclcpp::Node::SharedPtr& node, const std::string& address) {
+ServiceClientHandler<ServiceType>::ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos) {
 
-  impl_ = std::make_shared<ServiceClientHandler_impl<ServiceType>>(node, address);
+  impl_ = std::make_shared<ServiceClientHandler_impl<ServiceType>>(node, address, qos);
+}
+
+//}
+
+/* ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::CallbackGroup::SharedPtr& callback_group) //{ */
+
+template <class ServiceType>
+ServiceClientHandler<ServiceType>::ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address,
+                                                        const rclcpp::CallbackGroup::SharedPtr& callback_group) {
+
+  impl_ = std::make_shared<ServiceClientHandler_impl<ServiceType>>(node, address, callback_group);
+}
+
+//}
+
+/* ServiceClientHandler(node, address, qos, callback_group) //{ */
+
+template <class ServiceType>
+ServiceClientHandler<ServiceType>::ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos,
+                                                        const rclcpp::CallbackGroup::SharedPtr& callback_group) {
+
+  impl_ = std::make_shared<ServiceClientHandler_impl<ServiceType>>(node, address, qos, callback_group);
 }
 
 //}

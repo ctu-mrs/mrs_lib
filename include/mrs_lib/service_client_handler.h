@@ -41,6 +41,36 @@ public:
    */
   ServiceClientHandler_impl(rclcpp::Node::SharedPtr& node, const std::string& address);
 
+
+  /**
+   * @brief constructor
+   *
+   * @param node ROS node handler
+   * @param address service address
+   * @param qos QOS
+   */
+  ServiceClientHandler_impl(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos);
+
+  /**
+   * @brief constructor
+   *
+   * @param node ROS node handler
+   * @param address service address
+   * @param callback_group callback group
+   */
+  ServiceClientHandler_impl(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::CallbackGroup::SharedPtr& callback_group);
+
+  /**
+   * @brief constructor
+   *
+   * @param node ROS node handler
+   * @param address service address
+   * @param qos QOS
+   * @param callback_group callback group
+   */
+  ServiceClientHandler_impl(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos,
+                            const rclcpp::CallbackGroup::SharedPtr& callback_group);
+
   /**
    * @brief "classic" synchronous service call
    *
@@ -61,6 +91,9 @@ public:
 
 private:
   rclcpp::Node::SharedPtr node_;
+
+  rclcpp::CallbackGroup::SharedPtr callback_group_;
+  rclcpp::QoS                      qos_ = rclcpp::ServicesQoS();
 
   rclcpp::Client<ServiceType>::SharedPtr service_client_;
   std::mutex                             mutex_service_client_;
@@ -107,7 +140,7 @@ public:
   ServiceClientHandler(const ServiceClientHandler& other);
 
   /**
-   * @brief constructor
+   * @brief basic constructor
    *
    * @param node ROS node handler
    * @param address service address
@@ -115,12 +148,33 @@ public:
   ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address);
 
   /**
-   * @brief initializer
+   * @brief basic constructor
    *
    * @param node ROS node handler
    * @param address service address
+   * @param qos QOS
    */
-  void initialize(rclcpp::Node::SharedPtr& node, const std::string& address);
+  ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos);
+
+  /**
+   * @brief basic constructor
+   *
+   * @param node ROS node handler
+   * @param address service address
+   * @param callback_group callback group
+   */
+  ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::CallbackGroup::SharedPtr& callback_group);
+
+  /**
+   * @brief basic constructor
+   *
+   * @param node ROS node handler
+   * @param address service address
+   * @param callback_group callback group
+   * @param qos QOS
+   */
+  ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos,
+                       const rclcpp::CallbackGroup::SharedPtr& callback_group);
 
   /**
    * @brief synchronous call

@@ -9,4 +9,4 @@ while [ ! -e "build/COLCON_IGNORE" ]; do
   fi
 done
 
-gdb -ex run ./build/mrs_lib/test/transformer/test_transformer
+gdb -ex run ./build/mrs_lib/test/service_client_handler/test_service_client_handler
