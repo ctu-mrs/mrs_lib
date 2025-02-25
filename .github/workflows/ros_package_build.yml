@@ -3,7 +3,7 @@ name: ros_package_build
 on:
 
   push:
-    branches: [ master ]
+    branches: [ containerized_actions_test ]
 
     paths-ignore:
       - '**/README.md'
@@ -17,6 +17,6 @@ concurrency:
 jobs:
 
   build:
-    uses: ctu-mrs/ci_scripts/.github/workflows/ros_package_build.yml@master
+    uses: ctu-mrs/ci_scripts/.github/workflows/ros_package_build.yml@containerized
     secrets:
       PUSH_TOKEN: ${{ secrets.PUSH_TOKEN }}
