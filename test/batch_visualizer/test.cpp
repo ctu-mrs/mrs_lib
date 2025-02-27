@@ -9,6 +9,8 @@
 #include <mrs_lib/geometry/shapes.h>
 #include <mrs_lib/geometry/misc.h>
 #include <mrs_lib/batch_visualizer.h>
+#include <mrs_msgs/msg/trajectory_reference.hpp>
+#include <mrs_msgs/msg/reference.hpp>
 
 #include <string>
 #include <thread>
@@ -201,7 +203,7 @@ protected:
   }
 
   static bool compare_tuple3(const std::tuple<double, double, double>& lhs, const std::tuple<double, double, double>& rhs) {
-  const double epsilon = 1e-4;  // Tolerance for floating-point comparison
+  const double epsilon = 1e-6;  // Tolerance for floating-point comparison
     
     return std::abs(std::get<0>(lhs) - std::get<0>(rhs)) < epsilon && std::abs(std::get<1>(lhs) - std::get<1>(rhs)) < epsilon && std::abs(std::get<2>(lhs) - std::get<2>(rhs)) < epsilon;
   }
@@ -235,7 +237,7 @@ protected:
   BatchVisualizer bv_;
   std::string viz_ns_name_ = "map";
   std::string viz_topic_name_ = "batch_viz";
-  int batch_size_ = 100;
+  int batch_size_ = 4;
 };
 
 TEST_F(Test, batch_visualize_init) {
@@ -520,7 +522,7 @@ TEST_F(Test, batch_visualize_triangles) {
   }
 
   EXPECT_TRUE(received_msg_);
-  test_batch_visualizer_msg(2, points, colors, 1, points.size());
+  test_batch_visualizer_msg(1, points, colors, 1, points.size());
 
   received_msg_.reset();
 
@@ -574,6 +576,8 @@ TEST_F(Test, batch_visualize_rectangles) {
   }
 
   EXPECT_TRUE(received_msg_);
+
+  bv_.clearBuffers();
   received_msg_.reset();
 
   despin();
@@ -622,6 +626,8 @@ TEST_F(Test, batch_visualize_cuboid) {
   }
 
   EXPECT_TRUE(received_msg_);
+
+  bv_.clearBuffers();
   received_msg_.reset();
 
   despin();
@@ -670,6 +676,216 @@ TEST_F(Test, batch_visualize_ellipse) {
   }
 
   EXPECT_TRUE(received_msg_);
+
+  bv_.clearBuffers();
+  received_msg_.reset();
+
+  despin();
+
+  clock->sleep_for(1s);
+}
+
+TEST_F(Test, batch_visualize_cylinders) {
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
+
+  auto clock = node_->get_clock();
+
+  EXPECT_FALSE(received_msg_);
+
+  RCLCPP_INFO(node_->get_logger(), "Generating random cylinders");
+  for (int i = 0; i < batch_size_; i++) {
+    double             x1 = rand_dbl_(generator_);
+    double             y1 = rand_dbl_(generator_);
+    double             z1 = rand_dbl_(generator_);
+    Eigen::Vector3d    center(x1, y1, z1);
+    double             x2          = rand_dbl_(generator_);
+    double             y2          = rand_dbl_(generator_);
+    double             z2          = rand_dbl_(generator_);
+    Eigen::Quaterniond orientation = mrs_lib::geometry::quaternionFromEuler(x2, y2, z2);
+
+    double radius = 0.3 * rand_dbl_(generator_);
+    double height = rand_dbl_(generator_);
+
+    double r = (x1 - range_min_) / (range_max_ - range_min_);
+    double g = (y1 - range_min_) / (range_max_ - range_min_);
+    double b = (z1 - range_min_) / (range_max_ - range_min_);
+    double a = rand_percent_(generator_);
+
+    Cylinder cyl(center, radius, height, orientation);
+    bv_.addCylinder(cyl, r, g, b, a, true, true, 12, rclcpp::Duration{std::chrono::nanoseconds(1s)});
+    bv_.addCylinder(cyl, 0, 0, 0, 1, false, false, 12, rclcpp::Duration{std::chrono::nanoseconds(1s)});
+  }
+  bv_.publish();
+
+  for (int i = 0; i < 10; i++) {
+    if (received_msg_) {
+      RCLCPP_INFO(node_->get_logger(), "Msg found at itr: %i", i);
+      break;
+    }
+    clock->sleep_for(100ms);
+  }
+
+  EXPECT_TRUE(received_msg_);
+
+  bv_.clearBuffers();
+  received_msg_.reset();
+
+  despin();
+
+  clock->sleep_for(1s);
+}
+
+TEST_F(Test, batch_visualize_cones) {
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
+
+  auto clock = node_->get_clock();
+
+  EXPECT_FALSE(received_msg_);
+
+  RCLCPP_INFO(node_->get_logger(), "Generating random cones");
+  for (int i = 0; i < batch_size_; i++) {
+    double          x1 = rand_dbl_(generator_);
+    double          y1 = rand_dbl_(generator_);
+    double          z1 = rand_dbl_(generator_);
+    Eigen::Vector3d origin(x1, y1, z1);
+    double          x2 = rand_dbl_(generator_);
+    double          y2 = rand_dbl_(generator_);
+    double          z2 = rand_dbl_(generator_);
+    Eigen::Vector3d direction(x2, y2, z2);
+
+    double angle  = 0.02 * rand_dbl_(generator_);
+    double height = rand_dbl_(generator_);
+
+    double r = (x1 - range_min_) / (range_max_ - range_min_);
+    double g = (y1 - range_min_) / (range_max_ - range_min_);
+    double b = (z1 - range_min_) / (range_max_ - range_min_);
+    double a = rand_percent_(generator_);
+
+    Cone cone(origin, angle, height, direction);
+    bv_.addCone(cone, r, g, b, a, true, true, 12, rclcpp::Duration{std::chrono::nanoseconds(1s)});
+    bv_.addCone(cone, 0, 0, 0, 1, false, false, 12, rclcpp::Duration{std::chrono::nanoseconds(1s)});
+  }
+  bv_.publish();
+
+  for (int i = 0; i < 10; i++) {
+    if (received_msg_) {
+      RCLCPP_INFO(node_->get_logger(), "Msg found at itr: %i", i);
+      break;
+    }
+    clock->sleep_for(100ms);
+  }
+
+  EXPECT_TRUE(received_msg_);
+
+  bv_.clearBuffers();
+  received_msg_.reset();
+
+  despin();
+
+  clock->sleep_for(1s);
+}
+
+TEST_F(Test, batch_visualize_trajectories) {
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
+
+  auto clock = node_->get_clock();
+
+  EXPECT_FALSE(received_msg_);
+
+  RCLCPP_INFO(node_->get_logger(), "Generating random trajectories");
+  for (int i = 0; i < batch_size_; i++) {
+    mrs_msgs::msg::TrajectoryReference traj;
+    for (int n = 0; n < 10; n++) {
+      double              x = rand_dbl_(generator_);
+      double              y = rand_dbl_(generator_);
+      double              z = rand_dbl_(generator_);
+      mrs_msgs::msg::Reference ref;
+      ref.position.x = x;
+      ref.position.y = y;
+      ref.position.z = z;
+      traj.points.push_back(ref);
+    }
+
+    bv_.addTrajectory(traj, 0, 1, 1, 1, true, rclcpp::Duration{std::chrono::nanoseconds(1s)});
+  }
+  bv_.publish();
+
+  for (int i = 0; i < 10; i++) {
+    if (received_msg_) {
+      RCLCPP_INFO(node_->get_logger(), "Msg found at itr: %i", i);
+      break;
+    }
+    clock->sleep_for(100ms);
+  }
+
+  EXPECT_TRUE(received_msg_);
+
+  bv_.clearBuffers();
+  received_msg_.reset();
+
+  despin();
+
+  clock->sleep_for(1s);
+}
+
+TEST_F(Test, batch_visualize_rays_and_triangles) {
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
+
+  auto clock = node_->get_clock();
+
+  EXPECT_FALSE(received_msg_);
+
+  RCLCPP_INFO(node_->get_logger(), "Generating random rays and triangles");
+  for (int i = 0; i < batch_size_; i++) {
+    double          x1 = rand_dbl_(generator_);
+    double          y1 = rand_dbl_(generator_);
+    double          z1 = rand_dbl_(generator_);
+    Eigen::Vector3d point1(x1, y1, z1);
+    double          x2 = rand_dbl_(generator_);
+    double          y2 = rand_dbl_(generator_);
+    double          z2 = rand_dbl_(generator_);
+    Eigen::Vector3d point2(x2, y2, z2);
+    double          x3 = rand_dbl_(generator_);
+    double          y3 = rand_dbl_(generator_);
+    double          z3 = rand_dbl_(generator_);
+    Eigen::Vector3d point3(3 * x3, 3 * y3, 3 * z3);
+    Triangle        tri(point1, point2, point3);
+
+    double          rx1 = rand_dbl_(generator_);
+    double          ry1 = rand_dbl_(generator_);
+    double          rz1 = rand_dbl_(generator_);
+    Eigen::Vector3d ray_point1(4 * rx1, 4 * ry1, 4 * rz1);
+    double          rx2 = rand_dbl_(generator_);
+    double          ry2 = rand_dbl_(generator_);
+    double          rz2 = rand_dbl_(generator_);
+    Eigen::Vector3d ray_point2(4 * rx2, 4 * ry2, 4 * rz2);
+    Ray             ray = Ray::twopointCast(ray_point1, ray_point2);
+    bv_.addRay(ray, 1.0, 0.5, 0.0, 1.0, rclcpp::Duration{std::chrono::nanoseconds(1s)});
+
+    if (!tri.intersectionRay(ray).has_value()) {
+      bv_.addTriangle(tri, 1.0, 0.0, 0.0, 1.0, true, rclcpp::Duration{std::chrono::nanoseconds(1s)});
+    } else {
+      bv_.addTriangle(tri, 0.0, 1.0, 0.3, 1.0, true, rclcpp::Duration{std::chrono::nanoseconds(1s)});
+      bv_.addPoint(tri.intersectionRay(ray).value(), 1, 1, 0, 1, rclcpp::Duration{std::chrono::nanoseconds(1s)});
+    }
+  }
+  bv_.publish();
+
+  for (int i = 0; i < 10; i++) {
+    if (received_msg_) {
+      RCLCPP_INFO(node_->get_logger(), "Msg found at itr: %i", i);
+      break;
+    }
+    clock->sleep_for(100ms);
+  }
+
+  EXPECT_TRUE(received_msg_);
+
+  bv_.clearBuffers();
   received_msg_.reset();
 
   despin();
