@@ -52,3 +52,5 @@ add_subdirectory(./repredictor)
 add_subdirectory(./median_filter)
 
 add_subdirectory(./safety_zone)
+
+add_subdirectory(./batch_visualizer)
