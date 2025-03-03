@@ -21,6 +21,7 @@
   <depend>tf2_geometry_msgs</depend>
   <depend>pcl_ros</depend>
   <depend>libopencv-dev</depend>
+  <depend>visualization_msgs</depend>
 
   <test_depend>ament_cmake_ros</test_depend>
   <test_depend>launch</test_depend>

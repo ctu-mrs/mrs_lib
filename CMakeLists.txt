@@ -27,6 +27,7 @@ set(DEPENDENCIES
   tf2_ros
   tf2_eigen
   yaml-cpp
+  visualization_msgs 
 )
 
 foreach(DEP IN LISTS DEPENDENCIES)
@@ -66,6 +67,7 @@ set(LIBRARIES
   MrsLib_TransformBroadcaster
   MrsLib_Profiler
   MrsLib_MsgExtractor
+  MrsLib_BatchVisualizer 
   MrsLib_Transformer
   MrsLib_MedianFilter
   MrsLib_SafetyZone
@@ -334,6 +336,24 @@ target_link_libraries(MrsLib_IIRFilter
   )
 
 ament_target_dependencies(MrsLib_IIRFilter
+  )
+
+# batch_visualizer
+
+add_library(MrsLib_BatchVisualizer SHARED
+  src/batch_visualizer/visual_object.cpp
+  src/batch_visualizer/batch_visualizer.cpp
+  )
+
+target_link_libraries(MrsLib_BatchVisualizer 
+  MrsLib_Geometry
+  )
+
+ament_target_dependencies(MrsLib_BatchVisualizer
+  rclcpp
+  mrs_msgs
+  visualization_msgs
+  ${Eigen_LIBRARIES}
   )
 
 ## --------------------------------------------------------------
