@@ -1,209 +1,84 @@
 /**  \file
      \brief Defines ServiceClientHandler and related convenience classes for upgrading the ROS service client
      \author Tomas Baca - tomas.baca@fel.cvut.cz
+     \author Matouš Vrba - matous.vrba@fel.cvut.cz
  */
-#ifndef SERVICE_CLIENT_HANDLER_H
-#define SERVICE_CLIENT_HANDLER_H
+#pragma once
 
 #include <rclcpp/rclcpp.hpp>
 
 #include <string>
 #include <future>
-#include <mutex>
 
 namespace mrs_lib
 {
 
-/* class ServiceClientHandler_impl //{ */
-
-/**
- * @brief implementation of the service client handler
- */
-template <class ServiceType>
-class ServiceClientHandler_impl {
-
-public:
-  /**
-   * @brief default constructor
-   */
-  ServiceClientHandler_impl(void);
+  /* class ServiceClientHandler //{ */
 
   /**
-   * @brief default destructor
+   * @brief user wrapper of the service client handler implementation
    */
-  ~ServiceClientHandler_impl(void){};
+  template <class ServiceType>
+  class ServiceClientHandler {
 
-  /**
-   * @brief constructor
-   *
-   * @param node ROS node handler
-   * @param address service address
-   */
-  ServiceClientHandler_impl(rclcpp::Node::SharedPtr& node, const std::string& address);
+  public:
 
+    /**
+     * @brief The main constructor with all the options.
+     *
+     * For a more detailed explanation of the parameters, see the documentation of rclcpp::Node::create_client.
+     *
+     * @param node            ROS node handler
+     * @param address         Name of the service
+     * @param callback_group  Callback group used internally by the node for the response callback
+     * @param qos QOS         Communication quality of service profile
+     */
+    ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos = rclcpp::ServicesQoS(), const rclcpp::CallbackGroup::SharedPtr& callback_group = nullptr);
 
-  /**
-   * @brief constructor
-   *
-   * @param node ROS node handler
-   * @param address service address
-   * @param qos QOS
-   */
-  ServiceClientHandler_impl(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos);
+    /*!
+     * @brief Default constructor to avoid having to use pointers.
+     *
+     * It does nothing and the object it constructs will also do nothing.
+     * Use some of the other constructors for a construction of an actually usable object.
+     */
+    ServiceClientHandler();
 
-  /**
-   * @brief constructor
-   *
-   * @param node ROS node handler
-   * @param address service address
-   * @param callback_group callback group
-   */
-  ServiceClientHandler_impl(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::CallbackGroup::SharedPtr& callback_group);
+    /**
+     * @brief A convenience constructor.
+     *
+     * This is just for convenience when you want to specify the callback group but don't care about QoS.
+     *
+     * @param node            ROS node handler
+     * @param address         Name of the service
+     * @param callback_group  Callback group used internally by the node for the response callback
+     */
+    ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::CallbackGroup::SharedPtr& callback_group);
 
-  /**
-   * @brief constructor
-   *
-   * @param node ROS node handler
-   * @param address service address
-   * @param qos QOS
-   * @param callback_group callback group
-   */
-  ServiceClientHandler_impl(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos,
-                            const rclcpp::CallbackGroup::SharedPtr& callback_group);
+    /**
+     * @brief synchronous call
+     *
+     * @param request The service request to be sent with the call
+     *
+     * @return Optional shared pointer to the result or std::nullopt if the call failed
+     */
+    std::optional<std::shared_ptr<typename ServiceType::Response>> callSync(const std::shared_ptr<typename ServiceType::Request>& request);
 
-  /**
-   * @brief "classic" synchronous service call
-   *
-   * @param request request
-   *
-   * @return optional shared pointer to the response
-   */
-  std::optional<std::shared_ptr<typename ServiceType::Response>> callSync(const std::shared_ptr<typename ServiceType::Request>& request);
+    /**
+     * @brief asynchronous call
+     *
+     * @param request The service request to be sent with the call
+     *
+     * @return Optional shared pointer to the result or std::nullopt if the call failed
+     */
+    std::optional<std::shared_future<std::shared_ptr<typename ServiceType::Response>>> callAsync(const std::shared_ptr<typename ServiceType::Request>& request);
 
-  /**
-   * @brief asynchronous service call
-   *
-   * @param request request
-   *
-   * @return optional shared future to the result
-   */
-  std::optional<std::shared_future<std::shared_ptr<typename ServiceType::Response>>> callAsync(const std::shared_ptr<typename ServiceType::Request>& request);
+  private:
+    class Impl;
+    std::shared_ptr<Impl> impl_;
+  };
 
-private:
-  rclcpp::Node::SharedPtr node_;
-
-  rclcpp::CallbackGroup::SharedPtr callback_group_;
-  rclcpp::QoS                      qos_ = rclcpp::ServicesQoS();
-
-  rclcpp::Client<ServiceType>::SharedPtr service_client_;
-  std::mutex                             mutex_service_client_;
-  std::atomic<bool>                      service_initialized_;
-
-  std::string _address_;
-};
-
-//}
-
-/* class ServiceClientHandler //{ */
-
-/**
- * @brief user wrapper of the service client handler implementation
- */
-template <class ServiceType>
-class ServiceClientHandler {
-
-public:
-  /**
-   * @brief generic constructor
-   */
-  ServiceClientHandler(void){};
-
-  /**
-   * @brief generic destructor
-   */
-  ~ServiceClientHandler(void){};
-
-  /**
-   * @brief operator=
-   *
-   * @param other
-   *
-   * @return itself
-   */
-  ServiceClientHandler& operator=(const ServiceClientHandler& other);
-
-  /**
-   * @brief copy constructor
-   *
-   * @param other
-   */
-  ServiceClientHandler(const ServiceClientHandler& other);
-
-  /**
-   * @brief basic constructor
-   *
-   * @param node ROS node handler
-   * @param address service address
-   */
-  ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address);
-
-  /**
-   * @brief basic constructor
-   *
-   * @param node ROS node handler
-   * @param address service address
-   * @param qos QOS
-   */
-  ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos);
-
-  /**
-   * @brief basic constructor
-   *
-   * @param node ROS node handler
-   * @param address service address
-   * @param callback_group callback group
-   */
-  ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::CallbackGroup::SharedPtr& callback_group);
-
-  /**
-   * @brief basic constructor
-   *
-   * @param node ROS node handler
-   * @param address service address
-   * @param callback_group callback group
-   * @param qos QOS
-   */
-  ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos,
-                       const rclcpp::CallbackGroup::SharedPtr& callback_group);
-
-  /**
-   * @brief synchronous call
-   *
-   * @param request request
-   *
-   * @return optional shared pointer to the result
-   */
-  std::optional<std::shared_ptr<typename ServiceType::Response>> callSync(const std::shared_ptr<typename ServiceType::Request>& request);
-
-  /**
-   * @brief asynchronous call
-   *
-   * @param request request
-   *
-   * @return optional shared future to the result
-   */
-  std::optional<std::shared_future<std::shared_ptr<typename ServiceType::Response>>> callAsync(const std::shared_ptr<typename ServiceType::Request>& request);
-
-private:
-  std::shared_ptr<ServiceClientHandler_impl<ServiceType>> impl_;
-};
-
-//}
+  //}
 
 }  // namespace mrs_lib
 
-#ifndef SERVICE_CLIENT_HANDLER_HPP
 #include <mrs_lib/impl/service_client_handler.hpp>
-#endif
-
-#endif
