@@ -55,16 +55,22 @@ namespace mrs_lib
     ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::CallbackGroup::SharedPtr& callback_group);
 
     /**
-     * @brief synchronous call
+     * @brief Synchronous (blocking) call of the service.
+     *
+     * This method will block until the service call returns.
      *
      * @param request The service request to be sent with the call
      *
      * @return Optional shared pointer to the result or std::nullopt if the call failed
+     *
+     * @warning Take care when using this method! Make sure that the thread and callback group that you're calling it from
+     * is not the same as the thread/callback group of the service client or the service server being called! This can typically
+     * happen if you call this from another callback or if you're using the SingleThreadedExecutor, and will lead to a deadlock.
      */
     std::optional<std::shared_ptr<typename ServiceType::Response>> callSync(const std::shared_ptr<typename ServiceType::Request>& request);
 
     /**
-     * @brief asynchronous call
+     * @brief Asynchronous (non-blocking) call of the service.
      *
      * @param request The service request to be sent with the call
      *
