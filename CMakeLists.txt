@@ -61,7 +61,6 @@ set(LIBRARIES
   MrsLib_TimerHandler
   MrsLib_ParamProvider
   MrsLib_ParamLoader
-  MrsLib_ServiceClientHandler
   MrsLib_Math
   MrsLib_ScopeTimer
   MrsLib_TransformBroadcaster
@@ -180,20 +179,6 @@ target_link_libraries(MrsLib_ParamLoader
 ament_target_dependencies(MrsLib_ParamLoader
   rclcpp
   std_msgs
-  )
-
-# service client handler
-
-add_library(MrsLib_ServiceClientHandler SHARED
-  src/timer_handler/timer_handler.cpp
-  )
-
-target_link_libraries(MrsLib_ServiceClientHandler
-  ${Eigen_LIBRARIES}
-  )
-
-ament_target_dependencies(MrsLib_ServiceClientHandler
-  rclcpp
   )
 
 # scope timer
