@@ -48,6 +48,7 @@ bool ParamProvider::getParamImpl(const std::string& param_name, T& value_out) co
 
         // loading as a rclcpp::ParameterValue() allows for dynamic typing (may need removal if this leads to higher memory/computation load)
         m_node->declare_parameter(reformated_name, rclcpp::ParameterValue(), descriptor);
+        std::cout << "dec papram: " << reformated_name << std::endl;
       }
       catch (const std::exception& e) {
         // this can happen if (see
@@ -56,12 +57,32 @@ bool ParamProvider::getParamImpl(const std::string& param_name, T& value_out) co
         // * parameter name is invalid                        (rclcpp::exceptions::InvalidParametersException)
         // * initial value fails to be set                    (rclcpp::exceptions::InvalidParameterValueException, not sure what exactly this means)
         // * type of the default value or override is wrong   (rclcpp::exceptions::InvalidParameterTypeException, the most common one)
-        RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not load param '" << reformated_name << "': " << e.what());
+        RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not declare param '" << reformated_name << "': " << e.what());
 
         return false;
       }
     }
-    return m_node->get_parameter(reformated_name, value_out);
+
+    if (m_node->has_parameter(reformated_name)) {
+      std::cout << "has param: " << reformated_name << std::endl;
+    }
+
+    try {
+      m_node->get_parameter(reformated_name, value_out);
+    }
+    catch (const std::exception& e) {
+      // this can happen if (see
+      // http://docs.ros.org/en/humble/p/rclcpp/generated/classrclcpp_1_1Node.html#_CPPv4N6rclcpp4Node17declare_parameterERKNSt6stringERKN6rclcpp14ParameterValueERKN14rcl_interfaces3msg19ParameterDescriptorEb):
+      // * parameter has already been declared              (rclcpp::exceptions::ParameterAlreadyDeclaredException)
+      // * parameter name is invalid                        (rclcpp::exceptions::InvalidParametersException)
+      // * initial value fails to be set                    (rclcpp::exceptions::InvalidParameterValueException, not sure what exactly this means)
+      // * type of the default value or override is wrong   (rclcpp::exceptions::InvalidParameterTypeException, the most common one)
+      RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not load param '" << reformated_name << "': " << e.what());
+
+      return false;
+    }
+    
+    return false;
   }
 
   return false;
