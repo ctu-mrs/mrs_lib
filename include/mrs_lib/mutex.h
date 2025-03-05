@@ -5,7 +5,6 @@
 #ifndef MUTEX_H
 #define MUTEX_H
 
-#include <iostream>
 #include <mutex>
 #include <tuple>
 
@@ -83,8 +82,6 @@ template <class T>
 void set_mutexed_impl(const T what, T& where) {
 
   where = what;
-
-  std::cout << "recursion ending, setting to " << what << std::endl;
 }
 
 /**
@@ -100,8 +97,6 @@ template <class T, class... Args>
 void set_mutexed_impl(const T what, T& where, Args&... args) {
 
   where = what;
-
-  std::cout << "recursion middle, setting to " << what << std::endl;
 
   set_mutexed_impl(args...);
 }
@@ -122,8 +117,6 @@ auto set_mutexed(std::mutex& mut, const T what, T& where) {
   std::scoped_lock lock(mut);
 
   where = what;
-
-  std::cout << "single shit (with return)" << std::endl;
 
   return where;
 }
@@ -146,8 +139,6 @@ template <class... Args>
 auto set_mutexed(std::mutex& mut, Args&... args) {
 
   std::scoped_lock lock(mut);
-
-  std::cout << "before starting" << std::endl;
 
   set_mutexed_impl(args...);
 
