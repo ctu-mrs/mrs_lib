@@ -87,7 +87,7 @@ private:
     if (m_node_name.empty())
       std::cout << "\t" << name << ":\t" << value << std::endl;
     else
-      RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << name << "':\t" << value);
+      RCLCPP_INFO_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << name << "':\t" << value);
   }
 
   template <typename T>
@@ -106,7 +106,7 @@ private:
     if (m_node_name.empty())
       std::cout << strstr.str() << std::endl;
     else
-      RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << strstr.str());
+      RCLCPP_INFO_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << strstr.str());
   }
 
   template <typename T1, typename T2>
@@ -125,7 +125,7 @@ private:
     if (m_node_name.empty())
       std::cout << strstr.str() << std::endl;
     else
-      RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << strstr.str());
+      RCLCPP_INFO_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << strstr.str());
   }
 
   template <typename T>
@@ -138,7 +138,7 @@ private:
     if (m_node_name.empty())
       std::cout << "\t" << name << ":\t" << std::endl << strstr.str() << std::endl;
     else
-      RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << name << "':" << std::endl << strstr.str());
+      RCLCPP_INFO_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << name << "':" << std::endl << strstr.str());
   }
 
   std::string resolved(const std::string& param_name) {
