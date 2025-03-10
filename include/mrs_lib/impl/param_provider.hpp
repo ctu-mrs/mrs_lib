@@ -45,6 +45,7 @@ bool ParamProvider::getParamImpl(const std::string& param_name, T& value_out) co
       try {
         rcl_interfaces::msg::ParameterDescriptor descriptor;
         descriptor.dynamic_typing = true;
+        descriptor.read_only      = true;
 
         // loading as a rclcpp::ParameterValue() allows for dynamic typing (may need removal if this leads to higher memory/computation load)
         m_node->declare_parameter(reformated_name, rclcpp::ParameterValue(), descriptor);
