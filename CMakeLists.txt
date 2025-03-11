@@ -9,9 +9,19 @@ add_definitions("-Wall")
 add_definitions("-Wextra")
 add_definitions("-Wpedantic")
 
-add_definitions("-O2")
-# add_definitions("-O0")
-# add_definitions("-g")
+if(BUILD_TESTING)
+  message(WARNING "Setting optimizaton levels for tests")
+  add_definitions("-O0")
+  add_definitions("-g")
+else()
+  add_definitions("-O2")
+endif()
+
+if(COVERAGE)
+  message(WARNING "building with --coverage, the performance might be limited")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+endif()
 
 find_package(ament_cmake REQUIRED)
 
@@ -29,7 +39,7 @@ set(DEPENDENCIES
   tf2_ros
   tf2_eigen
   yaml-cpp
-  visualization_msgs 
+  visualization_msgs
 )
 
 foreach(DEP IN LISTS DEPENDENCIES)
@@ -68,7 +78,7 @@ set(LIBRARIES
   MrsLib_TransformBroadcaster
   MrsLib_Profiler
   MrsLib_MsgExtractor
-  MrsLib_BatchVisualizer 
+  MrsLib_BatchVisualizer
   MrsLib_Transformer
   MrsLib_MedianFilter
   MrsLib_SafetyZone
@@ -332,7 +342,7 @@ add_library(MrsLib_BatchVisualizer SHARED
   src/batch_visualizer/batch_visualizer.cpp
   )
 
-target_link_libraries(MrsLib_BatchVisualizer 
+target_link_libraries(MrsLib_BatchVisualizer
   MrsLib_Geometry
   )
 
@@ -349,7 +359,7 @@ ament_target_dependencies(MrsLib_BatchVisualizer
 
 if(BUILD_TESTING)
 
-  message(WARNING "Testing enabled.")
+  message(WARNING "Building tests")
 
   add_subdirectory(test)
 

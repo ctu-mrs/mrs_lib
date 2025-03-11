@@ -19,3 +19,5 @@ act.sh
 
 # test result logs
 log
+
+ci_scripts
