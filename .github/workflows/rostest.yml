@@ -1,4 +1,4 @@
-name: ros_build_test
+name: rostest
 
 on:
 
@@ -20,6 +20,6 @@ concurrency:
 jobs:
 
   build:
-    uses: ctu-mrs/ci_scripts/.github/workflows/ros_build_test.yml@ros2
+    uses: ctu-mrs/ci_scripts/.github/workflows/rostest.yml@ros2
     secrets:
       PUSH_TOKEN: ${{ secrets.PUSH_TOKEN }}
