@@ -9,7 +9,7 @@ add_definitions("-Wall")
 add_definitions("-Wextra")
 add_definitions("-Wpedantic")
 
-if(BUILD_TESTING)
+if(MRS_ENABLE_TESTING)
   message(WARNING "Setting optimizaton levels for tests")
   add_definitions("-O0")
   add_definitions("-g")
@@ -358,8 +358,6 @@ ament_target_dependencies(MrsLib_BatchVisualizer
 ## --------------------------------------------------------------
 
 if(BUILD_TESTING)
-
-  message(WARNING "Building tests")
 
   add_subdirectory(test)
 
