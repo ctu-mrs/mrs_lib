@@ -16,5 +16,7 @@ ament_target_dependencies(test_${TEST_NAME}
   Eigen3
   )
 
-file(COPY test_config.yaml DESTINATION /tmp/mrs_lib/test/param_loader/)
-file(COPY test_config2.yaml DESTINATION /tmp/mrs_lib/test/param_loader/)
+add_definitions(-DTEST_RESOURCES_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}")
+
+# file(COPY test_config.yaml DESTINATION /tmp/mrs_lib/test/param_loader/)
+# file(COPY test_config2.yaml DESTINATION /tmp/mrs_lib/test/param_loader/)

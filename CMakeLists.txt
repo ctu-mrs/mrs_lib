@@ -158,6 +158,7 @@ target_link_libraries(MrsLib_ParamProvider
 
 ament_target_dependencies(MrsLib_ParamProvider
   rclcpp
+  Eigen3
   )
 
 # Param loader

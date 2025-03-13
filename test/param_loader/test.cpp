@@ -7,6 +7,8 @@
 #include <mrs_lib/param_provider.h>
 #include <mrs_lib/param_loader.h>
 
+#include <rcpputils/filesystem_helper.hpp>
+
 #include <thread>
 #include <vector>
 
@@ -78,6 +80,8 @@ protected:
 
   std::promise<bool> finished_promise_;
   std::future<bool>  finished_future_;
+
+  rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
 };
 
 /* TEST_F(Test, param_provider_load) //{ */
@@ -94,8 +98,8 @@ TEST_F(Test, param_provider_load) {
   EXPECT_FALSE(param_provider.getParam("test_bool", test_bool));
 
   EXPECT_FALSE(param_provider.addYamlFile(""));
-  EXPECT_FALSE(param_provider.addYamlFile("./custom_test_config.yaml"));
-  EXPECT_TRUE(param_provider.addYamlFile("/tmp/mrs_lib/test/param_loader/test_config.yaml"));
+  EXPECT_FALSE(param_provider.addYamlFile(test_resources_path.string() + "/custom_test_config.yaml"));
+  EXPECT_TRUE(param_provider.addYamlFile(test_resources_path.string() + "/test_config.yaml"));
 
   EXPECT_TRUE(param_provider.getParam("param_provider/test_bool", test_bool));
   EXPECT_EQ(test_bool, true);
@@ -149,10 +153,10 @@ TEST_F(Test, param_loader_load_from_file) {
   pl.resetLoadedSuccessfully();
 
   EXPECT_FALSE(pl.addYamlFile(""));
-  EXPECT_FALSE(pl.addYamlFile("./custom_test_config.yaml"));
+  EXPECT_FALSE(pl.addYamlFile(test_resources_path.string() + "/custom_test_config.yaml"));
   pl.resetLoadedSuccessfully();
 
-  EXPECT_TRUE(pl.addYamlFile("/tmp/mrs_lib/test/param_loader/test_config.yaml"));
+  EXPECT_TRUE(pl.addYamlFile(test_resources_path.string() + "/test_config.yaml"));
 
   std::vector<Eigen::MatrixXd> loaded_nd_matrix = pl.loadMatrixArray2("test_param_nd_matrix");
   EXPECT_TRUE(pl.loadedSuccessfully());
@@ -303,7 +307,12 @@ TEST_F(Test, param_loader_load_from_file) {
 
 TEST_F(Test, param_loader_load_from_file2) {
 
-  initialize(rclcpp::NodeOptions().use_intra_process_comms(false).allow_undeclared_parameters(true));
+  rclcpp::NodeOptions options;
+  options.parameter_overrides({
+      {"file_name", test_resources_path.string() + "/test_config2.yaml"},
+  });
+
+  initialize(options.use_intra_process_comms(false).allow_undeclared_parameters(true));
 
   auto clock = node_->get_clock();
 
@@ -317,10 +326,10 @@ TEST_F(Test, param_loader_load_from_file2) {
   pl.resetLoadedSuccessfully();
 
   EXPECT_FALSE(pl.addYamlFile(""));
-  EXPECT_FALSE(pl.addYamlFile("./custom_test_config.yaml"));
+  EXPECT_FALSE(pl.addYamlFile(test_resources_path.string() + "/custom_test_config.yaml"));
   pl.resetLoadedSuccessfully();
 
-  EXPECT_TRUE(pl.addYamlFile("/tmp/mrs_lib/test/param_loader/test_config.yaml"));
+  EXPECT_TRUE(pl.addYamlFile(test_resources_path.string() + "/test_config.yaml"));
   EXPECT_TRUE(pl.addYamlFileFromParam("file_name"));
 
   std::vector<Eigen::MatrixXd> loaded_nd_matrix = pl.loadMatrixArray2("test_namespace/test_param_nd_matrix");
