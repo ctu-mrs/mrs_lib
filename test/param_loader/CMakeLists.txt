@@ -13,6 +13,7 @@ target_link_libraries(test_${TEST_NAME}
 ament_target_dependencies(test_${TEST_NAME}
   rclcpp
   std_msgs
+  Eigen3
   )
 
 file(COPY test_config.yaml DESTINATION /tmp/mrs_lib/test/param_loader/)

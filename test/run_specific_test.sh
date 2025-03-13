@@ -11,6 +11,6 @@ done
 
 colcon test-result --delete-yes
 
-colcon test --packages-select mrs_lib --ctest-args -R 'batch_visualizer'
+colcon test --packages-select mrs_lib --ctest-args -R 'param_loader'
 
 colcon test-result --all --verbose
