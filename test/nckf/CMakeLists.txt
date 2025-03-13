@@ -10,4 +10,5 @@ target_link_libraries(test_${TEST_NAME}
 
 ament_target_dependencies(test_${TEST_NAME}
   rclcpp
+  Eigen3
   )

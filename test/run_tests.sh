@@ -11,8 +11,6 @@ done
 
 colcon test-result --delete-yes
 
-# colcon test --packages-select mrs_lib
-
-colcon test --base-paths ./
+colcon test --packages-select mrs_lib
 
 colcon test-result --all --verbose

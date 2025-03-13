@@ -97,10 +97,35 @@ void PublisherHandler_impl<TopicType>::publish(const std::shared_ptr<TopicType>&
 
 //}
 
-/* publish(const std::shared_ptr<TopicType const>& msg) //{ */
+/* /1* publish(const std::shared_ptr<TopicType const>& msg) //{ *1/ */
+
+/* template <class TopicType> */
+/* void PublisherHandler_impl<TopicType>::publish(const std::shared_ptr<TopicType const>& msg) { */
+
+/*   if (!publisher_initialized_) { */
+/*     return; */
+/*   } */
+
+/*   { */
+/*     std::scoped_lock lock(mutex_publisher_); */
+
+/*     rclcpp::Time now = node_->get_clock()->now(); */
+
+/*     double passed = (now - last_time_published_).seconds(); */
+
+/*     if (passed > throttle_min_dt_) { */
+/*       publisher_->publish(msg); */
+/*       last_time_published_ = now; */
+/*     } */
+/*   } */
+/* } */
+
+/* //} */
+
+/* publish(TopicType::ConstSharedPtr& msg) //{ */
 
 template <class TopicType>
-void PublisherHandler_impl<TopicType>::publish(const std::shared_ptr<TopicType const>& msg) {
+void PublisherHandler_impl<TopicType>::publish(TopicType::ConstSharedPtr msg) {
 
   if (!publisher_initialized_) {
     return;
@@ -214,10 +239,20 @@ void PublisherHandler<TopicType>::publish(const std::shared_ptr<TopicType>& msg)
 
 //}
 
-/* publish(const std::shared_ptr<TopicType const>& msg) //{ */
+/* /1* publish(const std::shared_ptr<TopicType const>& msg) //{ *1/ */
+
+/* template <class TopicType> */
+/* void PublisherHandler<TopicType>::publish(const std::shared_ptr<TopicType const>& msg) { */
+
+/*   impl_->publish(msg); */
+/* } */
+
+/* //} */
+
+/* publish(const TopicType::ConstSharedPtr& msg) //{ */
 
 template <class TopicType>
-void PublisherHandler<TopicType>::publish(const std::shared_ptr<TopicType const>& msg) {
+void PublisherHandler<TopicType>::publish(TopicType::ConstSharedPtr msg) {
 
   impl_->publish(msg);
 }

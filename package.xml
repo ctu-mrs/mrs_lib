@@ -22,6 +22,8 @@
   <depend>pcl_ros</depend>
   <depend>libopencv-dev</depend>
   <depend>visualization_msgs</depend>
+  <depend>eigen3</depend>
+  <depend>yaml-cpp</depend>
 
   <test_depend>ament_cmake_ros</test_depend>
   <test_depend>launch</test_depend>
