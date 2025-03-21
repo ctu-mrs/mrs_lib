@@ -44,22 +44,6 @@ set(DEPENDENCIES
   yaml-cpp
 )
 
-foreach(DEP IN LISTS DEPENDENCIES)
-  find_package(${DEP} REQUIRED)
-endforeach()
-
-find_package(OpenCV REQUIRED HINTS /usr/local/lib)
-
-include_directories(
-  include
-  ${rclcpp_INCLUDE_DIRS}
-  ${OpenCV_INCLUDE_DIRS}
-)
-
-## --------------------------------------------------------------
-## |                       compile                              |
-## --------------------------------------------------------------
-
 set(LIBRARIES
   MrsLib_Geometry
   MrsLib_AttitudeConverter
@@ -77,7 +61,24 @@ set(LIBRARIES
   MrsLib_MedianFilter
   MrsLib_SafetyZone
   MrsLib_IIRFilter
+  MrsLib_Utils
   )
+
+foreach(DEP IN LISTS DEPENDENCIES)
+  find_package(${DEP} REQUIRED)
+endforeach()
+
+find_package(OpenCV REQUIRED HINTS /usr/local/lib)
+
+include_directories(
+  include
+  ${rclcpp_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
+)
+
+## --------------------------------------------------------------
+## |                       compile                              |
+## --------------------------------------------------------------
 
 ## Geometry
 
@@ -336,17 +337,27 @@ ament_export_libraries(
 
 install(TARGETS
   ${LIBRARIES}
+  EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
 
-install(DIRECTORY include
+install(
+  DIRECTORY include
   DESTINATION .
 )
 
-ament_export_include_directories(include)
+ament_export_include_directories(
+  include
+)
 
-ament_export_dependencies(${DEPENDENCIES})
+ament_export_targets(
+  export_${PROJECT_NAME} HAS_LIBRARY_TARGET
+)
+
+ament_export_dependencies(
+  ${DEPENDENCIES}
+)
 
 ament_package()
