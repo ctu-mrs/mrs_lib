@@ -331,29 +331,33 @@ endif()
 ## |                           install                          |
 ## --------------------------------------------------------------
 
-ament_export_libraries(
-  ${LIBRARIES}
+install(
+  DIRECTORY include
+  DESTINATION .
 )
 
-install(TARGETS
-  ${LIBRARIES}
+install(
+  TARGETS ${LIBRARIES}
   EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
 
-install(
-  DIRECTORY include
-  DESTINATION .
-)
+# use both becasue the downstream library may use "classic"/"modern" cmake
+
+# "modern" cmake approach to export pkgs
+# ament_export_targets(
+#   export_${PROJECT_NAME} HAS_LIBRARY_TARGET
+# )
 
 ament_export_include_directories(
   include
 )
 
-ament_export_targets(
-  export_${PROJECT_NAME} HAS_LIBRARY_TARGET
+# "classic" cmake approach to export pkgs
+ament_export_libraries(
+  ${LIBRARIES}
 )
 
 ament_export_dependencies(

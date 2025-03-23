@@ -35,9 +35,9 @@ bool ParamProvider::getParamImpl(const std::string& param_name, T& value_out) co
 
   if (m_use_rosparam) {
 
-    auto reformated_name = param_name;
+    auto reformated_name = std::string(m_node->get_sub_namespace()) + "/" + param_name;
     // reformat all '/' to '.' which is the new ROS2 delimeter
-    std::replace(reformated_name.begin(), reformated_name.end(), '/', '.');
+    std::replace(reformated_name.begin() + 1, reformated_name.end(), '/', '.');
 
     // firstly, the parameter has to be declared
     // see https://docs.ros.org/en/jazzy/Concepts/Basic/About-Parameters.html#parameters
