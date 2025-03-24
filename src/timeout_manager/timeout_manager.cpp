@@ -5,16 +5,24 @@
 namespace mrs_lib
 {
 
-  TimeoutManager::TimeoutManager(const std::shared_ptr<rclcpp::Node>& node, const rclcpp::Rate& update_rate) : m_last_id(0)
+  TimeoutManager::TimeoutManager(const rclcpp::Node::SharedPtr& node, const rclcpp::Rate& update_rate) : m_last_id(0)
   {
 
     node_ = node;
 
     cb_grp_ = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 
-    m_main_timer = node_->create_timer(std::chrono::nanoseconds(update_rate.period()), std::bind(&TimeoutManager::main_timer_callback, this), cb_grp_);
-  }
+    mrs_lib::TimerHandlerOptions opts;
 
+    opts.node = node_;
+    opts.autostart = true;
+
+    {
+      std::function<void()> callback_fcn = std::bind(&TimeoutManager::main_timer_callback, this);
+
+      m_main_timer = std::make_shared<TimerType>(opts, update_rate, callback_fcn);
+    }
+  }
 
   TimeoutManager::timeout_id_t TimeoutManager::registerNew(const rclcpp::Duration& timeout, const callback_t& callback, const rclcpp::Time& last_reset,
                                                            const bool oneshot, const bool autostart)

@@ -10,6 +10,14 @@
 
 #include <rclcpp/rclcpp.hpp>
 
+#include <mrs_lib/timer_handler.h>
+
+#if USE_ROS_TIMER == 1
+typedef mrs_lib::ROSTimer TimerType;
+#else
+typedef mrs_lib::ThreadTimer TimerType;
+#endif
+
 namespace mrs_lib
 {
   class TimeoutManager
@@ -72,7 +80,7 @@ namespace mrs_lib
 
     rclcpp::CallbackGroup::SharedPtr cb_grp_;
 
-    rclcpp::TimerBase::SharedPtr m_main_timer;
+    std::shared_ptr<TimerType> m_main_timer;
 
     //}
   };

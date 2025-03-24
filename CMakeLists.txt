@@ -3,7 +3,6 @@ project(mrs_lib)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_definitions("-Wall")
 add_definitions("-Wextra")
@@ -13,14 +12,20 @@ if(MRS_ENABLE_TESTING)
   message(WARNING "Setting optimizaton levels for tests")
   add_definitions("-O0")
   add_definitions("-g")
-else()
-  add_definitions("-O2")
 endif()
 
 if(COVERAGE)
   message(WARNING "building with --coverage, the performance might be limited")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+endif()
+
+# 1 == use rclcpp::Timer implementation
+# 0 == use MRS's thread timer implementation
+set(USE_ROS_TIMER 0)
+
+if(${USE_ROS_TIMER})
+  MESSAGE(WARNING "[mrs_uav_managers]: Compiling with ROS Timers. This can cause high CPU load in runtime.")
 endif()
 
 find_package(ament_cmake REQUIRED)
@@ -124,6 +129,7 @@ add_library(MrsLib_TimeoutManager SHARED
   )
 
 target_link_libraries(MrsLib_TimeoutManager
+  MrsLib_TimerHandler
   MrsLib_Utils
   )
 
