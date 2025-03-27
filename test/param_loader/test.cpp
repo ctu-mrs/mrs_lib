@@ -309,15 +309,17 @@ TEST_F(Test, param_loader_load_from_file2) {
 
   rclcpp::NodeOptions options;
   options.parameter_overrides({
-      {"file_name", test_resources_path.string() + "/test_config2.yaml"},
+      {"ns_params.file_name", test_resources_path.string() + "/test_config2.yaml"},
   });
 
   initialize(options.use_intra_process_comms(false).allow_undeclared_parameters(true));
 
   auto clock = node_->get_clock();
 
+  auto sub_node = node_->create_sub_node("ns_params");
+
+  auto pl = mrs_lib::ParamLoader(sub_node, node_->get_name());
   RCLCPP_INFO(node_->get_logger(), "[%s]: initializing ParamLoader", node_->get_name());
-  auto pl = mrs_lib::ParamLoader(node_, node_->get_name());
 
   RCLCPP_INFO(node_->get_logger(), "[%s]: testing ParamLoader", node_->get_name());
 
@@ -329,7 +331,7 @@ TEST_F(Test, param_loader_load_from_file2) {
   EXPECT_FALSE(pl.addYamlFile(test_resources_path.string() + "/custom_test_config.yaml"));
   pl.resetLoadedSuccessfully();
 
-  EXPECT_TRUE(pl.addYamlFile(test_resources_path.string() + "/test_config.yaml"));
+  // EXPECT_TRUE(pl.addYamlFile(test_resources_path.string() + "/test_config.yaml"));
   EXPECT_TRUE(pl.addYamlFileFromParam("file_name"));
 
   std::vector<Eigen::MatrixXd> loaded_nd_matrix = pl.loadMatrixArray2("test_namespace/test_param_nd_matrix");

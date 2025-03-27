@@ -142,7 +142,7 @@ private:
   }
 
   std::string resolved(const std::string& param_name) {
-    return std::string(m_node->get_fully_qualified_name()) + "/" + param_name;
+    return std::string(m_node->get_sub_namespace()) + "/" + param_name;
   }
   //}
 
