@@ -350,12 +350,9 @@ install(
   RUNTIME DESTINATION bin
 )
 
-# use both becasue the downstream library may use "classic"/"modern" cmake
-
-# "modern" cmake approach to export pkgs
-# ament_export_targets(
-#   export_${PROJECT_NAME} HAS_LIBRARY_TARGET
-# )
+ament_export_targets(
+  export_${PROJECT_NAME} HAS_LIBRARY_TARGET
+)
 
 ament_export_include_directories(
   include
