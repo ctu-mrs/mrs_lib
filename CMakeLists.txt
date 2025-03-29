@@ -283,10 +283,10 @@ ament_target_dependencies(MrsLib_MedianFilter
 
 # safety zone
 
-add_library(MrsLib_SafetyZone
+add_library(MrsLib_SafetyZone SHARED
   src/safety_zone/safety_zone.cpp
   src/safety_zone/line_operations.cpp
-  src/safety_zone/polygon/polygon.cpp
+  src/safety_zone/polygon.cpp
   )
 
 ament_target_dependencies(MrsLib_SafetyZone
@@ -297,7 +297,7 @@ ament_target_dependencies(MrsLib_SafetyZone
 
 # IIR filter
 
-add_library(MrsLib_IIRFilter
+add_library(MrsLib_IIRFilter SHARED
   src/iir_filter/iir_filter.cpp
   )
 

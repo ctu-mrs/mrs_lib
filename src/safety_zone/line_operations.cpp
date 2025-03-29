@@ -1,5 +1,14 @@
 #include <mrs_lib/safety_zone/line_operations.h>
 
+namespace mrs_lib
+{
+
+namespace safety_zone
+{
+
+Intersection::Intersection(bool intersect, bool parallel, Eigen::RowVector2d point) : point(std::move(point)), parallel(parallel), intersect(intersect) {
+}
+
 /* getScale() //{ */
 
 static double getScale(Eigen::RowVector2d start, Eigen::RowVector2d vector, Eigen::RowVector2d point) {
@@ -10,14 +19,10 @@ static double getScale(Eigen::RowVector2d start, Eigen::RowVector2d vector, Eige
 
 //}
 
-namespace mrs_lib
-{
-Intersection::Intersection(bool intersect, bool parallel, Eigen::RowVector2d point) : point(std::move(point)), parallel(parallel), intersect(intersect) {
-}
-
 /* sectionIntersect() //{ */
 
 Intersection sectionIntersect(Eigen::RowVector2d start1, Eigen::RowVector2d end1, Eigen::RowVector2d start2, Eigen::RowVector2d end2) {
+
   Eigen::RowVector2d vector1 = end1 - start1;
   Eigen::RowVector2d vector2 = end2 - start2;
 
@@ -56,5 +61,7 @@ Intersection sectionIntersect(Eigen::RowVector2d start1, Eigen::RowVector2d end1
 }
 
 //}
+
+}  // namespace safety_zone
 
 }  // namespace mrs_lib
