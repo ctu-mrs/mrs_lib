@@ -27,6 +27,8 @@ add_subdirectory(./math)
 
 add_subdirectory(./param_loader)
 
+add_subdirectory(./dynparam_mgr)
+
 add_subdirectory(./mutex)
 
 add_subdirectory(./scope_timer)

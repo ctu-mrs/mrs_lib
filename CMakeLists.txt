@@ -8,7 +8,7 @@ add_definitions("-Wall")
 add_definitions("-Wextra")
 add_definitions("-Wpedantic")
 
-if(MRS_ENABLE_TESTING)
+if(BUILD_TESTING)
   message(WARNING "Setting optimizaton levels for tests")
   add_definitions("-O0")
   add_definitions("-g")
@@ -56,6 +56,7 @@ set(LIBRARIES
   MrsLib_TimerHandler
   MrsLib_ParamProvider
   MrsLib_ParamLoader
+  MrsLib_DynparamMgr
   MrsLib_Math
   MrsLib_ScopeTimer
   MrsLib_TransformBroadcaster
@@ -67,6 +68,10 @@ set(LIBRARIES
   MrsLib_SafetyZone
   MrsLib_IIRFilter
   MrsLib_Utils
+  )
+
+set(EXECUTABLES
+  dynparam_tests
   )
 
 foreach(DEP IN LISTS DEPENDENCIES)
@@ -178,6 +183,30 @@ ament_target_dependencies(MrsLib_ParamLoader
   rclcpp
   std_msgs
   Eigen3
+  )
+
+# Dynamic param manager
+
+add_library(MrsLib_DynparamMgr SHARED
+  src/dynparam_mgr/dynparam_mgr.cpp
+  src/param_loader/param_provider.cpp
+  )
+
+ament_target_dependencies(MrsLib_DynparamMgr
+  rclcpp
+  )
+
+add_executable(dynparam_tests
+  src/dynparam_mgr/dynparam_tests.cpp
+  )
+
+target_link_libraries(dynparam_tests
+  MrsLib_ParamProvider
+  MrsLib_DynparamMgr
+  )
+
+ament_target_dependencies(dynparam_tests
+  rclcpp
   )
 
 # scope timer
@@ -343,7 +372,7 @@ install(
 )
 
 install(
-  TARGETS ${LIBRARIES}
+  TARGETS ${LIBRARIES} ${EXECUTABLES}
   EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib

@@ -68,6 +68,7 @@ private:
   std::optional<YAML::Node> findYamlNode(const std::string& param_name) const;
 };
 //}
+
 }  // namespace mrs_lib
 
 #ifndef PARAM_PROVIDER_HPP
