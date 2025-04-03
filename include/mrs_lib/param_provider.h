@@ -1,5 +1,9 @@
-#ifndef PARAM_PROVIDER_H
-#define PARAM_PROVIDER_H
+/**  \file
+     \brief Defines ParamProvider - a convenience class for seamlessly loading parameters from YAML or ROS.
+     \author Matouš Vrba - vrbamato@fel.cvut.cz
+     \author Afzal Ahmad
+ */
+#pragma once
 
 #include <memory>
 #include <optional>
@@ -47,14 +51,40 @@ public:
    *
    * Firstly, the parameter is attempted to be loaded from the YAML files added by the addYamlFile() method
    * in the same order that they were added. If the parameter is not found in any YAML file, and the use_rosparam
-   * flag of the constructor is true, the ParamProvider will attempt to load it from the ROS parameter server.
+   * flag of the constructor is true, the ParamProvider will declare it in ROS and attempt to load it from ROS.
    *
-   * \param param_name   Name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
-   * \param value_out    Output argument that will hold the value of the loaded parameter, if successfull. Not modified otherwise.
-   * \return             Returns true iff the parameter was successfully loaded.
+   * \param param_name      Name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
+   * \param value_out       Output argument that will hold the value of the loaded parameter, if successfull. Not modified otherwise.
+   * \param reconfigurable  If true, the paramter will be declared as dynamically reconfigurable (unless it was already defined as read-only).
+   * \return                Returns true iff the parameter was successfully loaded.
    */
   template <typename T>
-  bool getParam(const std::string& param_name, T& value_out) const;
+  bool getParam(const std::string& param_name, T& value_out, const bool reconfigurable = false) const;
+
+  /*!
+   * \brief Defines a parameter.
+   *
+   * This method only declares the parameter in ROS.
+   *
+   * \param param_name      Name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
+   * \param reconfigurable  If true, the paramter will be declared as dynamically reconfigurable (unless it was already defined as read-only).
+   * \return                Returns true iff the parameter was successfully declared.
+   */
+  template <typename T>
+  bool declareParam(const std::string& param_name, const bool reconfigurable = false) const;
+
+  /*!
+   * \brief Defines a parameter with a default value.
+   *
+   * This method declares the parameter in ROS and sets the default value if there is no value in ROS.
+   *
+   * \param param_name      Name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
+   * \param default_value   The default value to be set if there is no value of the parameter.
+   * \param reconfigurable  If true, the paramter will be declared as dynamically reconfigurable (unless it was already defined as read-only).
+   * \return                Returns true iff the parameter was successfully declared.
+   */
+  template <typename T>
+  bool declareParamDefault(const std::string& param_name, const T& default_value, const bool reconfigurable) const;
 
 private:
   std::vector<YAML::Node>       m_yamls;
@@ -62,9 +92,7 @@ private:
   std::string                   m_node_name;
   bool                          m_use_rosparam;
 
-  template <typename T>
-  bool getParamImpl(const std::string& param_name, T& value_out) const;
-
+  std::string resolveName(const std::string& param_name) const;
   std::optional<YAML::Node> findYamlNode(const std::string& param_name) const;
 };
 //}
@@ -74,5 +102,3 @@ private:
 #ifndef PARAM_PROVIDER_HPP
 #include <mrs_lib/impl/param_provider.hpp>
 #endif
-
-#endif  // PARAM_PROVIDER_H

@@ -1,0 +1,8 @@
+test_int: 666
+test_double: 666.666
+test_bool: true
+test_str: "some_str"
+test_int_array: [0, 1, 2, 3]
+test_double_array: [0.0, 1.1, 2.2, 3.3]
+test_bool_array: [true, false]
+test_str_array: ["this", "should", "load"]

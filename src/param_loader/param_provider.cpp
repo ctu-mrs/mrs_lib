@@ -6,10 +6,10 @@ namespace mrs_lib
   // Explicit instantiation of the tepmplated functions to precompile them into mrs_lib and speed up compilation of user program.
   // Instantiating these functions should be sufficient to invoke precompilation of all templated ParamLoader functions.
 
-  template bool ParamProvider::getParam<bool>(const std::string& name, bool& out_value) const;
-  template bool ParamProvider::getParam<int>(const std::string& name, int& out_value) const;
-  template bool ParamProvider::getParam<double>(const std::string& name, double& out_value) const;
-  template bool ParamProvider::getParam<std::string>(const std::string& name, std::string& out_value) const;
+  template bool ParamProvider::getParam<bool>(const std::string& name, bool& out_value, const bool reconfigurable) const;
+  template bool ParamProvider::getParam<int>(const std::string& name, int& out_value, const bool reconfigurable) const;
+  template bool ParamProvider::getParam<double>(const std::string& name, double& out_value, const bool reconfigurable) const;
+  template bool ParamProvider::getParam<std::string>(const std::string& name, std::string& out_value, const bool reconfigurable) const;
 
   ParamProvider::ParamProvider(const std::shared_ptr<rclcpp::Node>& sub_node, std::string node_name, const bool use_rosparam)
   : m_node(sub_node), m_node_name(std::move(node_name)), m_use_rosparam(use_rosparam)
@@ -42,6 +42,14 @@ namespace mrs_lib
       return false;
     }
     return false;
+  }
+
+  std::string ParamProvider::resolveName(const std::string& param_name) const
+  {
+    auto resolved_name = std::string(m_node->get_sub_namespace()) + "/" + param_name;
+    // reformat all '/' to '.' which is the new ROS2 delimeter
+    std::replace(resolved_name.begin() + 1, resolved_name.end(), '/', '.');
+    return resolved_name;
   }
 
   std::optional<YAML::Node> ParamProvider::findYamlNode(const std::string& param_name) const

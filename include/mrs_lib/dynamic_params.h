@@ -23,7 +23,7 @@ namespace mrs_lib
     template <typename MemT>
     bool register_param(const std::string& name, MemT& param_var)
     {
-      const bool success = m_pp.getParam(name, param_var);
+      const bool success = m_pp.getParam(name, param_var, true);
       if (!success)
         return false;
 
