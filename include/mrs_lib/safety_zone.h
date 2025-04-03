@@ -7,10 +7,20 @@
 
 namespace mrs_lib
 {
+
+namespace safety_zone
+{
+
+struct BorderError : public std::exception
+{
+  const char* what() const throw() {
+    return "SafeZone: Wrong configuration for the border";
+  }
+};
+
 class SafetyZone {
 public:
-  SafetyZone(Polygon outerBorder);
-  ~SafetyZone();
+  SafetyZone(std::shared_ptr<Polygon> outerBorder);
 
   SafetyZone(const Eigen::MatrixXd& outerBorderMatrix);
 
@@ -20,16 +30,11 @@ public:
   Polygon getBorder();
 
 private:
-  Polygon* outerBorder;
-
-public:
-  struct BorderError : public std::exception
-  {
-    const char* what() const throw() {
-      return "SafeZone: Wrong configuration for the border";
-    }
-  };
+  std::shared_ptr<Polygon> outerBorder;
 };
+
+}  // namespace safety_zone
+   //
 }  // namespace mrs_lib
 
 #endif  // MRS_LIB_SAFETYZONE_H

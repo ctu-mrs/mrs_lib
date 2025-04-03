@@ -283,10 +283,10 @@ ament_target_dependencies(MrsLib_MedianFilter
 
 # safety zone
 
-add_library(MrsLib_SafetyZone
+add_library(MrsLib_SafetyZone SHARED
   src/safety_zone/safety_zone.cpp
   src/safety_zone/line_operations.cpp
-  src/safety_zone/polygon/polygon.cpp
+  src/safety_zone/polygon.cpp
   )
 
 ament_target_dependencies(MrsLib_SafetyZone
@@ -297,7 +297,7 @@ ament_target_dependencies(MrsLib_SafetyZone
 
 # IIR filter
 
-add_library(MrsLib_IIRFilter
+add_library(MrsLib_IIRFilter SHARED
   src/iir_filter/iir_filter.cpp
   )
 
@@ -337,33 +337,29 @@ endif()
 ## |                           install                          |
 ## --------------------------------------------------------------
 
-install(
-  DIRECTORY include
-  DESTINATION .
+ament_export_libraries(
+  ${LIBRARIES}
 )
 
-install(
-  TARGETS ${LIBRARIES}
+install(TARGETS
+  ${LIBRARIES}
   EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
 
-# use both becasue the downstream library may use "classic"/"modern" cmake
-
-# "modern" cmake approach to export pkgs
-# ament_export_targets(
-#   export_${PROJECT_NAME} HAS_LIBRARY_TARGET
-# )
+install(
+  DIRECTORY include
+  DESTINATION .
+)
 
 ament_export_include_directories(
   include
 )
 
-# "classic" cmake approach to export pkgs
-ament_export_libraries(
-  ${LIBRARIES}
+ament_export_targets(
+  export_${PROJECT_NAME} HAS_LIBRARY_TARGET
 )
 
 ament_export_dependencies(

@@ -6,6 +6,10 @@
 
 namespace mrs_lib
 {
+
+namespace safety_zone
+{
+
 struct Intersection
 {
   Eigen::RowVector2d point;
@@ -16,6 +20,8 @@ struct Intersection
 };
 
 Intersection sectionIntersect(Eigen::RowVector2d start1, Eigen::RowVector2d end1, Eigen::RowVector2d start2, Eigen::RowVector2d end2);
+
+}  // namespace safety_zone
 
 }  // namespace mrs_lib
 

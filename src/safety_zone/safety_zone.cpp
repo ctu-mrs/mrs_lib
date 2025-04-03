@@ -2,18 +2,14 @@
 
 namespace mrs_lib
 {
-/* SafetyZone() //{ */
 
-SafetyZone::SafetyZone(mrs_lib::Polygon border) {
-  outerBorder = new Polygon(border);
-}
-
-//}
+namespace safety_zone
+{
 
 /* SafetyZone() //{ */
 
-SafetyZone::~SafetyZone() {
-  delete outerBorder;
+SafetyZone::SafetyZone(std::shared_ptr<Polygon> border) {
+  outerBorder = border;
 }
 
 //}
@@ -23,15 +19,15 @@ SafetyZone::~SafetyZone() {
 SafetyZone::SafetyZone(const Eigen::MatrixXd& outerBorderMatrix) {
 
   try {
-    outerBorder = new Polygon(outerBorderMatrix);
+    outerBorder = std::make_shared<Polygon>(outerBorderMatrix);
   }
-  catch (const Polygon::WrongNumberOfVertices&) {
+  catch (const WrongNumberOfVertices&) {
     throw BorderError();
   }
-  catch (const Polygon::WrongNumberOfColumns&) {
+  catch (const WrongNumberOfColumns&) {
     throw BorderError();
   }
-  catch (const Polygon::ExtraVertices&) {
+  catch (const ExtraVertices&) {
     throw BorderError();
   }
 }
@@ -71,5 +67,7 @@ Polygon SafetyZone::getBorder() {
 }
 
 //}
+
+}  // namespace safety_zone
 
 }  // namespace mrs_lib

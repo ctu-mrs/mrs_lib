@@ -19,6 +19,11 @@ std::tuple<double, double, double> getXYZ(const geometry_msgs::msg::Point::Share
   return getXYZ(*data);
 }
 
+std::tuple<double, double, double> getXYZ(const geometry_msgs::msg::Point::ConstSharedPtr& data) {
+
+  return getXYZ(*data);
+}
+
 //}
 
 /* geometry_msgs::msg::Vector3 //{ */
@@ -37,6 +42,11 @@ std::tuple<double, double, double> getXYZ(const geometry_msgs::msg::Vector3::Sha
   return getXYZ(*data);
 }
 
+std::tuple<double, double, double> getXYZ(const geometry_msgs::msg::Vector3::ConstSharedPtr& data) {
+
+  return getXYZ(*data);
+}
+
 //}
 
 /* geometry_msgs::msg::Pose //{ */
@@ -51,6 +61,11 @@ std::tuple<double, double, double> getPosition(const geometry_msgs::msg::Pose::S
   return getPosition(*data);
 }
 
+std::tuple<double, double, double> getPosition(const geometry_msgs::msg::Pose::ConstSharedPtr& data) {
+
+  return getPosition(*data);
+}
+
 double getHeading(const geometry_msgs::msg::Pose& data) {
 
   return mrs_lib::AttitudeConverter(data.orientation).getHeading();
@@ -61,12 +76,22 @@ double getHeading(const geometry_msgs::msg::Pose::SharedPtr& data) {
   return getHeading(*data);
 }
 
+double getHeading(const geometry_msgs::msg::Pose::ConstSharedPtr& data) {
+
+  return getHeading(*data);
+}
+
 double getYaw(const geometry_msgs::msg::Pose& data) {
 
   return mrs_lib::AttitudeConverter(data.orientation).getYaw();
 }
 
 double getYaw(const geometry_msgs::msg::Pose::SharedPtr& data) {
+
+  return getYaw(*data);
+}
+
+double getYaw(const geometry_msgs::msg::Pose::ConstSharedPtr& data) {
 
   return getYaw(*data);
 }
@@ -85,6 +110,11 @@ std::tuple<double, double, double> getPosition(const geometry_msgs::msg::PoseWit
   return getPosition(*data);
 }
 
+std::tuple<double, double, double> getPosition(const geometry_msgs::msg::PoseWithCovariance::ConstSharedPtr& data) {
+
+  return getPosition(*data);
+}
+
 double getHeading(const geometry_msgs::msg::PoseWithCovariance& data) {
 
   return getHeading(data.pose);
@@ -95,12 +125,22 @@ double getHeading(const geometry_msgs::msg::PoseWithCovariance::SharedPtr& data)
   return getHeading(*data);
 }
 
+double getHeading(const geometry_msgs::msg::PoseWithCovariance::ConstSharedPtr& data) {
+
+  return getHeading(*data);
+}
+
 double getYaw(const geometry_msgs::msg::PoseWithCovariance& data) {
 
   return getYaw(data.pose);
 }
 
 double getYaw(const geometry_msgs::msg::PoseWithCovariance::SharedPtr& data) {
+
+  return getYaw(*data);
+}
+
+double getYaw(const geometry_msgs::msg::PoseWithCovariance::ConstSharedPtr& data) {
 
   return getYaw(*data);
 }
@@ -119,6 +159,11 @@ std::tuple<double, double, double> getVelocity(const geometry_msgs::msg::Twist::
   return getVelocity(*data);
 }
 
+std::tuple<double, double, double> getVelocity(const geometry_msgs::msg::Twist::ConstSharedPtr& data) {
+
+  return getVelocity(*data);
+}
+
 //}
 
 /* geometry_msgs::msg::TwistWithCovariance //{ */
@@ -129,6 +174,11 @@ std::tuple<double, double, double> getVelocity(const geometry_msgs::msg::TwistWi
 }
 
 std::tuple<double, double, double> getVelocity(const geometry_msgs::msg::TwistWithCovariance::SharedPtr& data) {
+
+  return getVelocity(*data);
+}
+
+std::tuple<double, double, double> getVelocity(const geometry_msgs::msg::TwistWithCovariance::ConstSharedPtr& data) {
 
   return getVelocity(*data);
 }
@@ -147,12 +197,22 @@ std::tuple<double, double, double> getPosition(const nav_msgs::msg::Odometry::Sh
   return getPosition(*data);
 }
 
+std::tuple<double, double, double> getPosition(const nav_msgs::msg::Odometry::ConstSharedPtr& data) {
+
+  return getPosition(*data);
+}
+
 std::tuple<double, double, double> getVelocity(const nav_msgs::msg::Odometry& data) {
 
   return getVelocity(data.twist);
 }
 
 std::tuple<double, double, double> getVelocity(const nav_msgs::msg::Odometry::SharedPtr& data) {
+
+  return getVelocity(*data);
+}
+
+std::tuple<double, double, double> getVelocity(const nav_msgs::msg::Odometry::ConstSharedPtr& data) {
 
   return getVelocity(*data);
 }
@@ -167,6 +227,11 @@ double getHeading(const nav_msgs::msg::Odometry::SharedPtr& data) {
   return getHeading(*data);
 }
 
+double getHeading(const nav_msgs::msg::Odometry::ConstSharedPtr& data) {
+
+  return getHeading(*data);
+}
+
 double getYaw(const nav_msgs::msg::Odometry& data) {
 
   return getYaw(data.pose);
@@ -177,12 +242,22 @@ double getYaw(const nav_msgs::msg::Odometry::SharedPtr& data) {
   return getYaw(*data);
 }
 
+double getYaw(const nav_msgs::msg::Odometry::ConstSharedPtr& data) {
+
+  return getYaw(*data);
+}
+
 geometry_msgs::msg::Pose getPose(const nav_msgs::msg::Odometry& data) {
 
   return data.pose.pose;
 }
 
 geometry_msgs::msg::Pose getPose(const nav_msgs::msg::Odometry::SharedPtr& data) {
+
+  return getPose(*data);
+}
+
+geometry_msgs::msg::Pose getPose(const nav_msgs::msg::Odometry::ConstSharedPtr& data) {
 
   return getPose(*data);
 }
@@ -201,12 +276,22 @@ std::tuple<double, double, double> getPosition(const mrs_msgs::msg::TrackerComma
   return getPosition(*data);
 }
 
+std::tuple<double, double, double> getPosition(const mrs_msgs::msg::TrackerCommand::ConstSharedPtr& data) {
+
+  return getPosition(*data);
+}
+
 std::tuple<double, double, double> getVelocity(const mrs_msgs::msg::TrackerCommand& data) {
 
   return getXYZ(data.velocity);
 }
 
 std::tuple<double, double, double> getVelocity(const mrs_msgs::msg::TrackerCommand::SharedPtr& data) {
+
+  return getVelocity(*data);
+}
+
+std::tuple<double, double, double> getVelocity(const mrs_msgs::msg::TrackerCommand::ConstSharedPtr& data) {
 
   return getVelocity(*data);
 }
@@ -232,6 +317,11 @@ double getHeading(const mrs_msgs::msg::TrackerCommand::SharedPtr& data) {
   return getHeading(*data);
 }
 
+double getHeading(const mrs_msgs::msg::TrackerCommand::ConstSharedPtr& data) {
+
+  return getHeading(*data);
+}
+
 //}
 
 /* mrs_msgs::msg::Reference //{ */
@@ -246,12 +336,22 @@ std::tuple<double, double, double> getPosition(const mrs_msgs::msg::Reference::S
   return getPosition(*data);
 }
 
+std::tuple<double, double, double> getPosition(const mrs_msgs::msg::Reference::ConstSharedPtr& data) {
+
+  return getPosition(*data);
+}
+
 double getHeading(const mrs_msgs::msg::Reference& data) {
 
   return data.heading;
 }
 
 double getHeading(const mrs_msgs::msg::Reference::SharedPtr& data) {
+
+  return getHeading(*data);
+}
+
+double getHeading(const mrs_msgs::msg::Reference::ConstSharedPtr& data) {
 
   return getHeading(*data);
 }
@@ -270,12 +370,22 @@ std::tuple<double, double, double> getPosition(const mrs_msgs::msg::ReferenceSta
   return getPosition(*data);
 }
 
+std::tuple<double, double, double> getPosition(const mrs_msgs::msg::ReferenceStamped::ConstSharedPtr& data) {
+
+  return getPosition(*data);
+}
+
 double getHeading(const mrs_msgs::msg::ReferenceStamped& data) {
 
   return getHeading(data.reference);
 }
 
 double getHeading(const mrs_msgs::msg::ReferenceStamped::SharedPtr& data) {
+
+  return getHeading(*data);
+}
+
+double getHeading(const mrs_msgs::msg::ReferenceStamped::ConstSharedPtr& data) {
 
   return getHeading(*data);
 }

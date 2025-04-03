@@ -9,6 +9,32 @@
 
 namespace mrs_lib
 {
+
+namespace safety_zone
+{
+
+// exceptions
+struct WrongNumberOfVertices : public std::exception
+{
+  const char* what() const throw() {
+    return "Polygon: wrong number of vertices was supplied!";
+  }
+};
+
+struct WrongNumberOfColumns : public std::exception
+{
+  const char* what() const throw() {
+    return "Polygon: wrong number of colums, it should be =2!";
+  }
+};
+
+struct ExtraVertices : public std::exception
+{
+  const char* what() const throw() {
+    return "Polygon: useless vertices detected, polygon methods may break!";
+  }
+};
+
 class Polygon {
 public:
   Polygon(const Eigen::MatrixXd vertices);
@@ -22,30 +48,10 @@ public:
 
 private:
   Eigen::MatrixXd vertices;
-
-public:
-  // exceptions
-  struct WrongNumberOfVertices : public std::exception
-  {
-    const char* what() const throw() {
-      return "Polygon: wrong number of vertices was supplied!";
-    }
-  };
-
-  struct WrongNumberOfColumns : public std::exception
-  {
-    const char* what() const throw() {
-      return "Polygon: wrong number of colums, it should be =2!";
-    }
-  };
-
-  struct ExtraVertices : public std::exception
-  {
-    const char* what() const throw() {
-      return "Polygon: useless vertices detected, polygon methods may break!";
-    }
-  };
 };
+
+}  // namespace safety_zone
+
 }  // namespace mrs_lib
 
 #endif  // MRS_LIB_POLYGON_H
