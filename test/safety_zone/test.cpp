@@ -17,7 +17,7 @@ TEST(TESTSuite, point_valid_check) {
                    0, 10;
   // clang-format on
 
-  mrs_lib::SafetyZone safety_zone(border_points);
+  mrs_lib::safety_zone::SafetyZone safety_zone(border_points);
 
   EXPECT_TRUE(safety_zone.isPointValid(1, 1));
   EXPECT_TRUE(safety_zone.isPointValid(9, 9));

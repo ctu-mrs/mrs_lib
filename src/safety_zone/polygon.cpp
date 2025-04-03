@@ -4,6 +4,9 @@
 namespace mrs_lib
 {
 
+namespace safety_zone
+{
+
 /* Polygon() //{ */
 
 Polygon::Polygon(const Eigen::MatrixXd vertices) : vertices(vertices) {
@@ -203,5 +206,7 @@ std::vector<geometry_msgs::msg::Point> Polygon::getPointMessageVector(const doub
 }
 
 //}
+
+}  // namespace safety_zone
 
 }  // namespace mrs_lib
