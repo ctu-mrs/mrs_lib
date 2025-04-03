@@ -6,8 +6,6 @@
 
 #include <std_srvs/srv/set_bool.hpp>
 
-#include <thread>
-
 using namespace std::chrono_literals;
 
 class Test : public ::testing::Test {
@@ -42,8 +40,6 @@ class Test : public ::testing::Test {
 
       executor_ = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
       executor_->add_node(node_);
-
-      finished_future_ = finished_promise_.get_future();
     }
 
     //}
@@ -58,15 +54,6 @@ class Test : public ::testing::Test {
 
     rclcpp::Node::SharedPtr node_;
     rclcpp::Executor::SharedPtr executor_;
-
-    std::thread main_thread_;
-
-    std::promise<bool> finished_promise_;
-    std::future<bool>  finished_future_;
-
-    rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr service_server_1_;
-
-    int repeated_call = 0;
 };
 
 /* callbackService() //{ */
@@ -115,7 +102,7 @@ TEST_F(Test, test_call) {
   // otherwise, the callback will never be called, because the default callback
   // group is MutuallyExclusive
   const auto svr_grp = node_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  service_server_1_ =
+  const auto service_server =
     node_->create_service<std_srvs::srv::SetBool>("/service1", std::bind(&Test::callbackService, this, std::placeholders::_1, std::placeholders::_2), rclcpp::ServicesQoS(), svr_grp);
 
   // | ----------------- create a service client ---------------- |
@@ -179,7 +166,7 @@ TEST_F(Test, asynctest_call) {
   // otherwise, the callback will never be called, because the default callback
   // group is MutuallyExclusive
   const auto svr_grp = node_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  service_server_1_ =
+  const auto service_server =
     node_->create_service<std_srvs::srv::SetBool>("/service1", std::bind(&Test::callbackService, this, std::placeholders::_1, std::placeholders::_2), rclcpp::ServicesQoS(), svr_grp);
 
   // | ----------------- create a service client ---------------- |
@@ -213,6 +200,7 @@ TEST_F(Test, asynctest_call) {
           break;
       }
 
+      EXPECT_TRUE(response.valid());
       EXPECT_TRUE(response.get()->success);
       EXPECT_EQ(response.get()->message, "set");
     }

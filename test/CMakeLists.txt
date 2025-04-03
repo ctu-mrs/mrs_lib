@@ -23,6 +23,8 @@ add_subdirectory(./timer_handler)
 
 add_subdirectory(./service_client_handler)
 
+add_subdirectory(./service_server_handler)
+
 add_subdirectory(./math)
 
 add_subdirectory(./param_loader)

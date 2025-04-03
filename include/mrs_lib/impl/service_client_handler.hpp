@@ -1,3 +1,8 @@
+/**  \file
+     \brief Implements ServiceClientHandler and related convenience classes for upgrading the ROS service client
+     \author Tomas Baca - tomas.baca@fel.cvut.cz
+     \author Matouš Vrba - matous.vrba@fel.cvut.cz
+ */
 #pragma once
 
 #include <mrs_lib/service_client_handler.h>
