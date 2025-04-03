@@ -12,14 +12,20 @@ namespace mrs_lib
   /* ServiceClientHandler() constructors //{ */
 
   template <class ServiceType>
-  ServiceClientHandler<ServiceType>::ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos, const rclcpp::CallbackGroup::SharedPtr& callback_group)
-    : impl_(std::make_shared<Impl>(node, address, qos, callback_group))
+  ServiceClientHandler<ServiceType>::ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos)
+    : impl_(std::make_shared<Impl>(node, address, qos, node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive)))
   {
   }
 
   template <class ServiceType>
   ServiceClientHandler<ServiceType>::ServiceClientHandler()
     : impl_(nullptr)
+  {
+  }
+
+  template <class ServiceType>
+  ServiceClientHandler<ServiceType>::ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos, const rclcpp::CallbackGroup::SharedPtr& callback_group)
+    : impl_(std::make_shared<Impl>(node, address, qos, callback_group))
   {
   }
 
@@ -74,6 +80,7 @@ namespace mrs_lib
   class ServiceClientHandler<ServiceType>::Impl {
 
   public:
+
     /**
      * @brief constructor
      *
@@ -83,8 +90,9 @@ namespace mrs_lib
      * @param callback_group callback group
      */
     Impl(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos, const rclcpp::CallbackGroup::SharedPtr& callback_group)
+      : callback_group_(callback_group),
+        service_client_(node->create_client<ServiceType>(address, qos, callback_group))
     {
-      service_client_ = node->create_client<ServiceType>(address, qos, callback_group);
     }
 
     /**
@@ -136,6 +144,7 @@ namespace mrs_lib
     }
 
   private:
+    rclcpp::CallbackGroup::SharedPtr callback_group_;
     typename rclcpp::Client<ServiceType>::SharedPtr service_client_;
   };
 

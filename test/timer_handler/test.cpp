@@ -102,8 +102,6 @@ void Test::timerCallback(void) {
 
   std::scoped_lock lck(cbk_running_mtx_);
 
-  std::cout << "callback called" << std::endl;
-
   mrs_lib::AtomicScopeFlag running(cbk_running_);
   n_cbks_++;
 

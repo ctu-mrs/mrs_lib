@@ -26,14 +26,15 @@ namespace mrs_lib
     /**
      * @brief The main constructor with all the options.
      *
+     * This variant initializes a new MutuallyExclusive callback group for the service client, which is the
+     * intended default behavior to avoid deadlocks when using the callSync() method.
      * For a more detailed explanation of the parameters, see the documentation of rclcpp::Node::create_client.
      *
-     * @param node            ROS node handler
-     * @param address         Name of the service
-     * @param callback_group  Callback group used internally by the node for the response callback
-     * @param qos QOS         Communication quality of service profile
+     * @param node            ROS node handler.
+     * @param address         Name of the service.
+     * @param qos QOS         Communication quality of service profile.
      */
-    ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos = rclcpp::ServicesQoS(), const rclcpp::CallbackGroup::SharedPtr& callback_group = nullptr);
+    ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos = rclcpp::ServicesQoS());
 
     /*!
      * @brief Default constructor to avoid having to use pointers.
@@ -46,11 +47,23 @@ namespace mrs_lib
     /**
      * @brief A convenience constructor.
      *
+     * This is just for convenience when you want to specify the callback group.
+     *
+     * @param node            ROS node handler.
+     * @param address         Name of the service.
+     * @param qos QOS         Communication quality of service profile.
+     * @param callback_group  Callback group used internally by the node for the response callback. Set to nullptr to use the default one.
+     */
+    ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos, const rclcpp::CallbackGroup::SharedPtr& callback_group);
+
+    /**
+     * @brief A convenience constructor.
+     *
      * This is just for convenience when you want to specify the callback group but don't care about QoS.
      *
-     * @param node            ROS node handler
-     * @param address         Name of the service
-     * @param callback_group  Callback group used internally by the node for the response callback
+     * @param node            ROS node handler.
+     * @param address         Name of the service.
+     * @param callback_group  Callback group used internally by the node for the response callback. Set to nullptr to use the default one.
      */
     ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::CallbackGroup::SharedPtr& callback_group);
 
