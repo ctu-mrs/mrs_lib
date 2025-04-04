@@ -6,8 +6,6 @@
 
 #include <std_srvs/srv/set_bool.hpp>
 
-#include <thread>
-
 using namespace std::chrono_literals;
 
 class Test : public ::testing::Test {
@@ -40,25 +38,8 @@ class Test : public ::testing::Test {
 
       node_ = std::make_shared<rclcpp::Node>("test_service_client_handler", node_options);
 
-      executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+      executor_ = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
       executor_->add_node(node_);
-
-      finished_future_ = finished_promise_.get_future();
-
-      main_thread_ = std::thread(&Test::spin, this);
-    }
-
-    //}
-
-    /* spin() //{ */
-
-    void spin() {
-
-      RCLCPP_INFO(node_->get_logger(), "starting spinning");
-
-      executor_->spin();
-
-      RCLCPP_INFO(node_->get_logger(), "stopped spinning");
     }
 
     //}
@@ -67,23 +48,12 @@ class Test : public ::testing::Test {
 
     void despin() {
       executor_->cancel();
-
-      main_thread_.join();
     }
 
     //}
 
-    rclcpp::Node::SharedPtr                              node_;
-    rclcpp::executors::SingleThreadedExecutor::SharedPtr executor_;
-
-    std::thread main_thread_;
-
-    std::promise<bool> finished_promise_;
-    std::future<bool>  finished_future_;
-
-    rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr service_server_1_;
-
-    int repeated_call = 0;
+    rclcpp::Node::SharedPtr node_;
+    rclcpp::Executor::SharedPtr executor_;
 };
 
 /* callbackService() //{ */
@@ -128,45 +98,56 @@ TEST_F(Test, test_call) {
 
   // | ----------------- create a service server ---------------- |
 
-  service_server_1_ =
-    node_->create_service<std_srvs::srv::SetBool>("/service1", std::bind(&Test::callbackService, this, std::placeholders::_1, std::placeholders::_2));
+  // the service server has to be in a different callback group than the timer!
+  // otherwise, the callback will never be called, because the default callback
+  // group is MutuallyExclusive
+  const auto svr_grp = node_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  const auto service_server =
+    node_->create_service<std_srvs::srv::SetBool>("/service1", std::bind(&Test::callbackService, this, std::placeholders::_1, std::placeholders::_2), rclcpp::ServicesQoS(), svr_grp);
 
   // | ----------------- create a service client ---------------- |
 
+  // the ServiceClientHandler by default creates its own MutuallyExclusive callback group
   mrs_lib::ServiceClientHandler<std_srvs::srv::SetBool> client1 = mrs_lib::ServiceClientHandler<std_srvs::srv::SetBool>(node_, "service1");
 
   RCLCPP_INFO(node_->get_logger(), "initialized");
 
+  rclcpp::TimerBase::SharedPtr tim;
+
+  const auto test_fun = [&]()
   {
+    tim->cancel(); // just a one-shot timer
 
-    auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
+    {
 
-    request->data = true;
+      auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
 
-    auto response = client1.callSync(request);
+      request->data = true;
 
-    EXPECT_TRUE(response.has_value());
-    EXPECT_TRUE(response.value()->success);
-    EXPECT_EQ(response.value()->message, "set");
-  }
+      auto response = client1.callSync(request);
 
-  {
-    auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
+      EXPECT_TRUE(response.has_value());
+      EXPECT_TRUE(response.value()->success);
+      EXPECT_EQ(response.value()->message, "set");
+    }
 
-    request->data = false;
+    {
+      auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
 
-    auto response = client1.callSync(request);
+      request->data = false;
 
-    EXPECT_TRUE(response.has_value());
-    EXPECT_TRUE(response.value()->success);
-    EXPECT_EQ(response.value()->message, "unset");
-  }
+      auto response = client1.callSync(request);
 
-  RCLCPP_INFO(node_->get_logger(), "finished");
+      EXPECT_TRUE(response.has_value());
+      EXPECT_TRUE(response.value()->success);
+      EXPECT_EQ(response.value()->message, "unset");
+    }
 
-  despin();
+    despin();
+  };
 
-  clock->sleep_for(1s);
+  tim = node_->create_timer(0s, test_fun);
+  executor_->spin();
 }
 
 //}
@@ -181,8 +162,12 @@ TEST_F(Test, asynctest_call) {
 
   // | ----------------- create a service server ---------------- |
 
-  service_server_1_ =
-    node_->create_service<std_srvs::srv::SetBool>("/service1", std::bind(&Test::callbackService, this, std::placeholders::_1, std::placeholders::_2));
+  // the service server has to be in a different callback group than the timer!
+  // otherwise, the callback will never be called, because the default callback
+  // group is MutuallyExclusive
+  const auto svr_grp = node_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  const auto service_server =
+    node_->create_service<std_srvs::srv::SetBool>("/service1", std::bind(&Test::callbackService, this, std::placeholders::_1, std::placeholders::_2), rclcpp::ServicesQoS(), svr_grp);
 
   // | ----------------- create a service client ---------------- |
 
@@ -190,38 +175,43 @@ TEST_F(Test, asynctest_call) {
 
   RCLCPP_INFO(node_->get_logger(), "initialized");
 
-  auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
+  rclcpp::TimerBase::SharedPtr tim;
 
+  const auto test_fun = [&]()
   {
-    request->data = true;
+    tim->cancel(); // just a one-shot timer
 
-    auto opt_response = client1.callAsync(request);
+    auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
 
-    ASSERT_TRUE(opt_response.has_value());
+    {
+      request->data = true;
 
-    auto response = opt_response.value();
+      auto opt_response = client1.callAsync(request);
 
-    while (rclcpp::ok()) {
+      ASSERT_TRUE(opt_response.has_value());
 
-      RCLCPP_INFO(node_->get_logger(), "waiting for the future response");
+      auto response = opt_response.value();
 
-      if (response.valid()) {
-        RCLCPP_INFO(node_->get_logger(), "future ready");
-        break;
+      while (rclcpp::ok()) {
+
+        RCLCPP_INFO(node_->get_logger(), "waiting for the future response");
+
+        if (response.wait_for(1s) == std::future_status::ready)
+          break;
       }
 
-      clock->sleep_for(0.1s);
+      EXPECT_TRUE(response.valid());
+      EXPECT_TRUE(response.get()->success);
+      EXPECT_EQ(response.get()->message, "set");
     }
 
-    EXPECT_TRUE(response.get()->success);
-    EXPECT_EQ(response.get()->message, "set");
-  }
+    RCLCPP_INFO(node_->get_logger(), "finished");
 
-  RCLCPP_INFO(node_->get_logger(), "finished");
+    despin();
+  };
 
-  despin();
-
-  clock->sleep_for(1s);
+  tim = node_->create_timer(0s, test_fun);
+  executor_->spin();
 }
 
 //}
@@ -240,33 +230,39 @@ TEST_F(Test, test_bad_address) {
 
   RCLCPP_INFO(node_->get_logger(), "initialized");
 
+  rclcpp::TimerBase::SharedPtr tim;
+
+  const auto test_fun = [&]()
   {
-    auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
+    {
+      auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
 
-    request->data = true;
+      request->data = true;
 
-    auto response = client1.callSync(request);
+      auto response = client1.callSync(request);
 
-    EXPECT_FALSE(response.has_value());
-  }
+      EXPECT_FALSE(response.has_value());
+    }
 
-  {
-    auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
+    {
+      auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
 
-    request->data = true;
+      request->data = true;
 
-    auto response = client1.callAsync(request);
+      auto response = client1.callAsync(request);
 
-    clock->sleep_for(2s);
+      clock->sleep_for(2s);
 
-    EXPECT_FALSE(response.has_value());
-  }
+      EXPECT_FALSE(response.has_value());
+    }
 
-  RCLCPP_INFO(node_->get_logger(), "finished");
+    RCLCPP_INFO(node_->get_logger(), "finished");
 
-  despin();
+    despin();
+  };
 
-  clock->sleep_for(1s);
+  tim = node_->create_timer(0s, test_fun);
+  executor_->spin();
 }
 
 //}

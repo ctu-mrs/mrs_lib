@@ -26,9 +26,41 @@ namespace mrs_lib
       catch (const YAML::BadConversion& e)
       {
       }
+<<<<<<< HEAD
       catch (const YAML::Exception& e)
       {
         RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node_name << "]: YAML-CPP threw an unknown exception: " << e.what());
+=======
+    }
+  }
+
+  if (m_use_rosparam) {
+
+    auto reformated_name = param_name;
+    // reformat all '/' to '.' which is the new ROS2 delimeter
+    std::replace(reformated_name.begin(), reformated_name.end(), '/', '.');
+
+    // firstly, the parameter has to be declared
+    // see https://docs.ros.org/en/jazzy/Concepts/Basic/About-Parameters.html#parameters
+    if (!m_node->has_parameter(reformated_name)) {
+      try {
+        rcl_interfaces::msg::ParameterDescriptor descriptor;
+        descriptor.dynamic_typing = true;
+        descriptor.read_only      = true;
+
+        // loading as a rclcpp::ParameterValue() allows for dynamic typing (may need removal if this leads to higher memory/computation load)
+        m_node->declare_parameter(reformated_name, rclcpp::ParameterValue(), descriptor);
+      }
+      catch (const std::exception& e) {
+        // this can happen if (see
+        // http://docs.ros.org/en/humble/p/rclcpp/generated/classrclcpp_1_1Node.html#_CPPv4N6rclcpp4Node17declare_parameterERKNSt6stringERKN6rclcpp14ParameterValueERKN14rcl_interfaces3msg19ParameterDescriptorEb):
+        // * parameter has already been declared              (rclcpp::exceptions::ParameterAlreadyDeclaredException)
+        // * parameter name is invalid                        (rclcpp::exceptions::InvalidParametersException)
+        // * initial value fails to be set                    (rclcpp::exceptions::InvalidParameterValueException, not sure what exactly this means)
+        // * type of the default value or override is wrong   (rclcpp::exceptions::InvalidParameterTypeException, the most common one)
+        RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not declare param '" << reformated_name << "': " << e.what());
+
+>>>>>>> ros2_devel
         return false;
       }
     }
