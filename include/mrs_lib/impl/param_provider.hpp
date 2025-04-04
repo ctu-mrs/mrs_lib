@@ -12,6 +12,12 @@ namespace mrs_lib
 {
 
   template <typename T>
+  rclcpp::ParameterType to_param_type()
+  {
+    return rclcpp::ParameterValue{T{}}.get_type();
+  }
+
+  template <typename T>
   bool ParamProvider::getParam(const std::string& param_name, T& value_out, const bool reconfigurable) const
   {
     const auto found_node = findYamlNode(param_name);
@@ -41,22 +47,18 @@ namespace mrs_lib
       if (!m_node->has_parameter(resolved_name) && declareParam<T>(param_name, reconfigurable))
         return false;
 
-      rclcpp::Parameter tmp{};
-      bool success = m_node->get_parameter(resolved_name, tmp);
-      if (success)
+      try
       {
-        try
-        {
-          value_out = tmp.get_value<T>();
-        }
-        // if the parameter has a wrong value, return failure
-        catch (const rclcpp::exceptions::InvalidParameterTypeException& e)
-        {
+        if (!m_node->get_parameter(resolved_name, value_out))
           return false;
-        }
+      }
+      // if the parameter has a wrong value, return failure
+      catch (const rclcpp::exceptions::InvalidParameterTypeException& e)
+      {
+        return false;
       }
 
-      return success;
+      return true;
     }
 
     return false;
@@ -71,7 +73,7 @@ namespace mrs_lib
       // a hack to allow declaring a strong-typed parameter without a default value
       // because ROS2 apparently fell on its head when it was a litle baby
       // this is actually not documented in the API documentation, so see https://github.com/ros2/rclcpp/issues/1691
-      const rclcpp::ParameterType type = rclcpp::ParameterValue{T{}}.get_type();
+      const rclcpp::ParameterType type = to_param_type<T>();
       rcl_interfaces::msg::ParameterDescriptor descriptor;
       descriptor.read_only = !reconfigurable;
       descriptor.type = type;

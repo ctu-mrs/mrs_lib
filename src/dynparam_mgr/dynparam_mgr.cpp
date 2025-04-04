@@ -16,24 +16,19 @@ namespace mrs_lib
 
   }
 
-  template <typename T>
-  bool update_value(std::any& value_ptr, const T& new_value)
+  void DynparamMgr::update_to_ros()
   {
-    try
-    {
-      T* cast_value = std::any_cast<T*>(value_ptr);
-      *cast_value = new_value;
-      return true;
-    }
-    catch (const std::bad_any_cast& e)
-    {
-      return false;
-    }
+    std::vector<rclcpp::Parameter> parameters;
+    std::scoped_lock lck(m_mtx);
+
+    for (const auto& reg_param : m_registered_params)
+      parameters.emplace_back(reg_param.name, reg_param.to_param_val());
+
+    m_node->set_parameters(parameters);
   }
 
   rcl_interfaces::msg::SetParametersResult DynparamMgr::cbk_param_update(const std::vector<rclcpp::Parameter>& parameters)
   {
-    RCLCPP_INFO(m_node->get_logger(), "CALLBACK CALLED");
     rcl_interfaces::msg::SetParametersResult result;
     result.successful = true;
     std::stringstream reason;
@@ -43,7 +38,6 @@ namespace mrs_lib
     {
       // try to find the parameter by name
       const auto& param_name = new_param.get_name();
-      RCLCPP_INFO_STREAM(m_node->get_logger(), "checking parameter " << param_name);
       const auto found_it = std::find_if(
             std::begin(m_registered_params), std::end(m_registered_params),
             [&param_name](const auto& registered_param)
@@ -56,30 +50,29 @@ namespace mrs_lib
       if (found_it == std::end(m_registered_params))
         continue;
 
-      RCLCPP_INFO_STREAM(m_node->get_logger(), "parameter " << param_name << " found");
       // update the parameter value
       auto& found_el = *found_it;
       using type_enum = rclcpp::ParameterType;
       switch (new_param.get_type())
       {
         case type_enum::PARAMETER_BOOL:
-          result.successful = update_value(found_el.param_ptr, new_param.as_bool()); break;
+          result.successful = found_el.update_value(new_param.as_bool()); break;
         case type_enum::PARAMETER_INTEGER:
-          result.successful = update_value(found_el.param_ptr, new_param.as_int()); break;
+          result.successful = found_el.update_value(new_param.as_int()); break;
         case type_enum::PARAMETER_DOUBLE:
-          result.successful = update_value(found_el.param_ptr, new_param.as_double()); break;
+          result.successful = found_el.update_value(new_param.as_double()); break;
         case type_enum::PARAMETER_STRING:
-          result.successful = update_value(found_el.param_ptr, new_param.as_string()); break;
+          result.successful = found_el.update_value(new_param.as_string()); break;
         case type_enum::PARAMETER_BOOL_ARRAY:
-          result.successful = update_value(found_el.param_ptr, new_param.as_bool_array()); break;
+          result.successful = found_el.update_value(new_param.as_bool_array()); break;
         case type_enum::PARAMETER_BYTE_ARRAY:
-          result.successful = update_value(found_el.param_ptr, new_param.as_byte_array()); break;
+          result.successful = found_el.update_value(new_param.as_byte_array()); break;
         case type_enum::PARAMETER_INTEGER_ARRAY:
-          result.successful = update_value(found_el.param_ptr, new_param.as_integer_array()); break;
+          result.successful = found_el.update_value(new_param.as_integer_array()); break;
         case type_enum::PARAMETER_DOUBLE_ARRAY:
-          result.successful = update_value(found_el.param_ptr, new_param.as_double_array()); break;
+          result.successful = found_el.update_value(new_param.as_double_array()); break;
         case type_enum::PARAMETER_STRING_ARRAY:
-          result.successful = update_value(found_el.param_ptr, new_param.as_string_array()); break;
+          result.successful = found_el.update_value(new_param.as_string_array()); break;
         case type_enum::PARAMETER_NOT_SET:
           result.successful = false; break;
       }
@@ -98,6 +91,42 @@ namespace mrs_lib
     if (!result.reason.empty())
       result.reason.pop_back();
     return result;
+  }
+
+  rclcpp::ParameterValue DynparamMgr::registered_param_t::to_param_val() const
+  {
+    try
+    {
+      using type_enum = rclcpp::ParameterType;
+      switch (type)
+      {
+        case type_enum::PARAMETER_BOOL:
+          return rclcpp::ParameterValue{*std::any_cast<bool*>(param_ptr)}; break;
+        case type_enum::PARAMETER_INTEGER:
+          return rclcpp::ParameterValue{*std::any_cast<int64_t*>(param_ptr)}; break;
+        case type_enum::PARAMETER_DOUBLE:
+          return rclcpp::ParameterValue{*std::any_cast<double*>(param_ptr)}; break;
+        case type_enum::PARAMETER_STRING:
+          return rclcpp::ParameterValue{*std::any_cast<std::string*>(param_ptr)}; break;
+        case type_enum::PARAMETER_BOOL_ARRAY:
+          return rclcpp::ParameterValue{*std::any_cast<std::vector<bool>*>(param_ptr)}; break;
+        case type_enum::PARAMETER_BYTE_ARRAY:
+          return rclcpp::ParameterValue{*std::any_cast<std::vector<uint8_t>*>(param_ptr)}; break;
+        case type_enum::PARAMETER_INTEGER_ARRAY:
+          return rclcpp::ParameterValue{*std::any_cast<std::vector<int64_t>*>(param_ptr)}; break;
+        case type_enum::PARAMETER_DOUBLE_ARRAY:
+          return rclcpp::ParameterValue{*std::any_cast<std::vector<double>*>(param_ptr)}; break;
+        case type_enum::PARAMETER_STRING_ARRAY:
+          return rclcpp::ParameterValue{*std::any_cast<std::vector<std::string>*>(param_ptr)}; break;
+        case type_enum::PARAMETER_NOT_SET:
+          return rclcpp::ParameterValue{}; break;
+      }
+      return rclcpp::ParameterValue{}; // should never reach this point
+    }
+    catch (const std::bad_any_cast& e)
+    {
+      return rclcpp::ParameterValue{};
+    }
   }
 
 }  // namespace mrs_lib

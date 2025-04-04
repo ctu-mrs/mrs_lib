@@ -14,6 +14,9 @@
 namespace mrs_lib
 {
 
+  template <typename T>
+  rclcpp::ParameterType to_param_type();
+
 /*** ParamProvider CLASS //{ **/
 
 /**
