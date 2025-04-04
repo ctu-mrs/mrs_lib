@@ -127,7 +127,7 @@ TEST_F(Test, dynparam_mgr_init) {
 
   test_with_type<int64_t>(dynparam_mgr, "test_int64", 0, {-1, 1, 666});
 
-  /* test_with_type<float>(dynparam_mgr, "test_float", 0.0f, {-1.0f, 1.0f, 666.0f, 1e-3f, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()}); */
+  test_with_type<float>(dynparam_mgr, "test_float", 0.0f, {-1.0f, 1.0f, 666.0f, 1e-3f, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()});
 
   test_with_type<double>(dynparam_mgr, "test_double", 0.0, {-1.0, 1.0, 666.0, 1e-3, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()});
 
