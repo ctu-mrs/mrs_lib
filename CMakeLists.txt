@@ -8,6 +8,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_definitions("-Wall")
 add_definitions("-Wextra")
 add_definitions("-Wpedantic")
+add_definitions("-O0")
+add_definitions("-g")
 
 if(MRS_ENABLE_TESTING)
   message(WARNING "Setting optimizaton levels for tests")

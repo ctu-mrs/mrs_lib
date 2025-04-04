@@ -97,30 +97,10 @@ namespace mrs_lib
   {
     try
     {
-      using type_enum = rclcpp::ParameterType;
-      switch (type)
-      {
-        case type_enum::PARAMETER_BOOL:
-          return rclcpp::ParameterValue{*std::any_cast<bool*>(param_ptr)}; break;
-        case type_enum::PARAMETER_INTEGER:
-          return rclcpp::ParameterValue{*std::any_cast<int64_t*>(param_ptr)}; break;
-        case type_enum::PARAMETER_DOUBLE:
-          return rclcpp::ParameterValue{*std::any_cast<double*>(param_ptr)}; break;
-        case type_enum::PARAMETER_STRING:
-          return rclcpp::ParameterValue{*std::any_cast<std::string*>(param_ptr)}; break;
-        case type_enum::PARAMETER_BOOL_ARRAY:
-          return rclcpp::ParameterValue{*std::any_cast<std::vector<bool>*>(param_ptr)}; break;
-        case type_enum::PARAMETER_BYTE_ARRAY:
-          return rclcpp::ParameterValue{*std::any_cast<std::vector<uint8_t>*>(param_ptr)}; break;
-        case type_enum::PARAMETER_INTEGER_ARRAY:
-          return rclcpp::ParameterValue{*std::any_cast<std::vector<int64_t>*>(param_ptr)}; break;
-        case type_enum::PARAMETER_DOUBLE_ARRAY:
-          return rclcpp::ParameterValue{*std::any_cast<std::vector<double>*>(param_ptr)}; break;
-        case type_enum::PARAMETER_STRING_ARRAY:
-          return rclcpp::ParameterValue{*std::any_cast<std::vector<std::string>*>(param_ptr)}; break;
-        case type_enum::PARAMETER_NOT_SET:
-          return rclcpp::ParameterValue{}; break;
-      }
+      std::visit([](auto&& arg)
+        {
+          return rclcpp::ParameterValue(arg);
+        }, param_ptr);
       return rclcpp::ParameterValue{}; // should never reach this point
     }
     catch (const std::bad_any_cast& e)

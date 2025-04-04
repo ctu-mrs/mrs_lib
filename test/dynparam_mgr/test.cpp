@@ -123,7 +123,7 @@ TEST_F(Test, dynparam_mgr_init) {
 
   test_with_type<bool>(dynparam_mgr, "test_bool", false, {true, false});
 
-  /* test_with_type<int>(dynparam_mgr, "test_int", 0, {-1, 1, 666}); */
+  test_with_type<int>(dynparam_mgr, "test_int", 0, {-1, 1, 666});
 
   test_with_type<int64_t>(dynparam_mgr, "test_int64", 0, {-1, 1, 666});
 

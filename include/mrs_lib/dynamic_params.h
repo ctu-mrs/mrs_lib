@@ -16,6 +16,20 @@ namespace mrs_lib
   {
 
   public:
+    using param_type_variant_t = std::variant<
+        int*,
+        int64_t*,
+        float*,
+        double*,
+        bool*,
+        std::string*,
+        std::vector<uint8_t>*,
+        std::vector<int64_t>*,
+        std::vector<double>*,
+        std::vector<bool>*,
+        std::vector<std::string>*
+        >;
+
     DynparamMgr(const std::shared_ptr<rclcpp::Node>& node, std::mutex& mtx, const std::string& node_name = std::string());
 
     void update_to_ros();
@@ -30,7 +44,7 @@ namespace mrs_lib
       m_registered_params.emplace_back(
             name,
             to_param_type<MemT>(),
-            std::any{param_var}
+            param_var
           );
       return true;
     }
@@ -46,14 +60,14 @@ namespace mrs_lib
     {
       std::string name;
       rclcpp::ParameterType type;
-      std::any param_ptr;
+      param_type_variant_t param_ptr;
 
       template <typename T>
       bool try_cast(T& out)
       {
         try
         {
-          out = std::any_cast<T>(param_ptr);
+          out = std::get<T>(param_ptr);
           return true;
         }
         catch (const std::bad_any_cast& e)
@@ -62,15 +76,20 @@ namespace mrs_lib
         }
       }
 
-      template <typename T>
-      bool update_value(const T& new_value)
+      template <typename NewValueT>
+      bool update_value(const NewValueT& new_value)
       {
-        T* cast_ptr;
-        if (!try_cast(cast_ptr))
-          return false;
-
-        *cast_ptr = new_value;
-        return true;
+        return std::visit([&new_value](auto arg)
+          {
+            using ParamT = std::remove_pointer_t<decltype(arg)>;
+            if constexpr (std::is_convertible_v<NewValueT, ParamT>)
+            {
+              *arg = new_value;
+              return true;
+            }
+            else
+              return false;
+          }, param_ptr);
       }
 
       rclcpp::ParameterValue to_param_val() const;
