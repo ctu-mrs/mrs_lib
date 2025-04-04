@@ -46,9 +46,13 @@ namespace mrs_lib
 
   std::string ParamProvider::resolveName(const std::string& param_name) const
   {
-    auto resolved_name = std::string(m_node->get_sub_namespace()) + "/" + param_name;
+    /* auto resolved_name = std::string(m_node->get_sub_namespace()) + "/" + param_name; */
+    /* // reformat all '/' to '.' which is the new ROS2 delimeter */
+    /* std::replace(resolved_name.begin() + 1, resolved_name.end(), '/', '.'); */
+    /* return resolved_name; */
+    auto resolved_name = param_name;
     // reformat all '/' to '.' which is the new ROS2 delimeter
-    std::replace(resolved_name.begin() + 1, resolved_name.end(), '/', '.');
+    std::replace(resolved_name.begin(), resolved_name.end(), '/', '.');
     return resolved_name;
   }
 

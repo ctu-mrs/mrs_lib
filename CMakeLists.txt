@@ -70,10 +70,6 @@ set(LIBRARIES
   MrsLib_Utils
   )
 
-set(EXECUTABLES
-  dynparam_tests
-  )
-
 foreach(DEP IN LISTS DEPENDENCIES)
   find_package(${DEP} REQUIRED)
 endforeach()
@@ -193,19 +189,6 @@ add_library(MrsLib_DynparamMgr SHARED
   )
 
 ament_target_dependencies(MrsLib_DynparamMgr
-  rclcpp
-  )
-
-add_executable(dynparam_tests
-  src/dynparam_mgr/dynparam_tests.cpp
-  )
-
-target_link_libraries(dynparam_tests
-  MrsLib_ParamProvider
-  MrsLib_DynparamMgr
-  )
-
-ament_target_dependencies(dynparam_tests
   rclcpp
   )
 

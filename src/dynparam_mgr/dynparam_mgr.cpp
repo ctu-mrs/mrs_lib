@@ -11,8 +11,8 @@ namespace mrs_lib
   DynparamMgr::DynparamMgr(const std::shared_ptr<rclcpp::Node>& node, std::mutex& mtx, const std::string& node_name)
     : m_node(node), m_pp(node, node_name), m_mtx(mtx)
   {
-    /* decltype(decltype(m_param_cbk)::element_type::callback) cbk = std::bind(&DynparamMgr::cbk_param_update, this, std::placeholders::_1); */
-    /* m_param_cbk = m_node->add_on_set_parameters_callback(cbk); */
+    decltype(decltype(m_param_cbk)::element_type::callback) cbk = std::bind(&DynparamMgr::cbk_param_update, this, std::placeholders::_1);
+    m_param_cbk = m_node->add_on_set_parameters_callback(cbk);
 
   }
 
@@ -33,6 +33,7 @@ namespace mrs_lib
 
   rcl_interfaces::msg::SetParametersResult DynparamMgr::cbk_param_update(const std::vector<rclcpp::Parameter>& parameters)
   {
+    RCLCPP_INFO(m_node->get_logger(), "CALLBACK CALLED");
     rcl_interfaces::msg::SetParametersResult result;
     result.successful = true;
     std::stringstream reason;

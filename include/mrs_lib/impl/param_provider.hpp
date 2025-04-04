@@ -26,41 +26,9 @@ namespace mrs_lib
       catch (const YAML::BadConversion& e)
       {
       }
-<<<<<<< HEAD
       catch (const YAML::Exception& e)
       {
         RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node_name << "]: YAML-CPP threw an unknown exception: " << e.what());
-=======
-    }
-  }
-
-  if (m_use_rosparam) {
-
-    auto reformated_name = param_name;
-    // reformat all '/' to '.' which is the new ROS2 delimeter
-    std::replace(reformated_name.begin(), reformated_name.end(), '/', '.');
-
-    // firstly, the parameter has to be declared
-    // see https://docs.ros.org/en/jazzy/Concepts/Basic/About-Parameters.html#parameters
-    if (!m_node->has_parameter(reformated_name)) {
-      try {
-        rcl_interfaces::msg::ParameterDescriptor descriptor;
-        descriptor.dynamic_typing = true;
-        descriptor.read_only      = true;
-
-        // loading as a rclcpp::ParameterValue() allows for dynamic typing (may need removal if this leads to higher memory/computation load)
-        m_node->declare_parameter(reformated_name, rclcpp::ParameterValue(), descriptor);
-      }
-      catch (const std::exception& e) {
-        // this can happen if (see
-        // http://docs.ros.org/en/humble/p/rclcpp/generated/classrclcpp_1_1Node.html#_CPPv4N6rclcpp4Node17declare_parameterERKNSt6stringERKN6rclcpp14ParameterValueERKN14rcl_interfaces3msg19ParameterDescriptorEb):
-        // * parameter has already been declared              (rclcpp::exceptions::ParameterAlreadyDeclaredException)
-        // * parameter name is invalid                        (rclcpp::exceptions::InvalidParametersException)
-        // * initial value fails to be set                    (rclcpp::exceptions::InvalidParameterValueException, not sure what exactly this means)
-        // * type of the default value or override is wrong   (rclcpp::exceptions::InvalidParameterTypeException, the most common one)
-        RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not declare param '" << reformated_name << "': " << e.what());
-
->>>>>>> ros2_devel
         return false;
       }
     }
@@ -100,10 +68,14 @@ namespace mrs_lib
     const auto resolved_name = resolveName(param_name);
     try
     {
+      // a hack to allow declaring a strong-typed parameter without a default value
+      // because ROS2 apparently fell on its head when it was a litle baby
+      // this is actually not documented in the API documentation, so see https://github.com/ros2/rclcpp/issues/1691
+      const rclcpp::ParameterType type = rclcpp::ParameterValue{T{}}.get_type();
       rcl_interfaces::msg::ParameterDescriptor descriptor;
       descriptor.read_only = !reconfigurable;
-      descriptor.dynamic_typing = true; // this is necessary because new ROS2 does not allow statically typed parameters without a default value... why???
-      m_node->declare_parameter(resolved_name, rclcpp::ParameterValue{}, descriptor);
+      descriptor.type = type;
+      m_node->declare_parameter(resolved_name, type, descriptor);
     }
     catch (const std::exception& e)
     {
@@ -128,7 +100,6 @@ namespace mrs_lib
     {
       rcl_interfaces::msg::ParameterDescriptor descriptor;
       descriptor.read_only = !reconfigurable;
-      descriptor.dynamic_typing = false;
       m_node->declare_parameter(resolved_name, default_value, descriptor);
     }
     catch (const std::exception& e)

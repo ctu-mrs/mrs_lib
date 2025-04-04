@@ -77,17 +77,28 @@ TEST_F(Test, dynparam_mgr_init) {
 
   auto clock = node_->get_clock();
 
+  RCLCPP_INFO(node_->get_logger(), "defining ParamProvider");
   mrs_lib::ParamProvider pp(node_, node_->get_name());
 
   std::mutex mtx;
+  RCLCPP_INFO(node_->get_logger(), "defining DynparamMgr");
   auto dynparam_mgr = mrs_lib::DynparamMgr(node_, mtx, node_->get_name());
 
   bool test_bool;
+  RCLCPP_INFO(node_->get_logger(), "trying to register test_bool");
   EXPECT_FALSE(dynparam_mgr.register_param("test_bool", test_bool));
 
-  node_->set_parameter(rclcpp::Parameter("/test_bool", true));
+  RCLCPP_INFO(node_->get_logger(), "setting test_bool");
+  const rcl_interfaces::msg::SetParametersResult result = node_->set_parameter(rclcpp::Parameter("test_bool", true));
+  RCLCPP_INFO_STREAM(node_->get_logger(), result.reason);
+  EXPECT_TRUE(result.successful);
+  RCLCPP_INFO(node_->get_logger(), "trying to register test_bool");
   EXPECT_TRUE(dynparam_mgr.register_param("test_bool", test_bool));
+  EXPECT_TRUE(test_bool);
 
+  EXPECT_FALSE(test_bool);
+
+  RCLCPP_INFO(node_->get_logger(), "finished");
   despin();
 }
 
