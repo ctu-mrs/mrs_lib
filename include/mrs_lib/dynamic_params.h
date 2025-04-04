@@ -21,15 +21,15 @@ namespace mrs_lib
     rcl_interfaces::msg::SetParametersResult cbk_param_update(const std::vector<rclcpp::Parameter>& parameters);
 
     template <typename MemT>
-    bool register_param(const std::string& name, MemT& param_var)
+    bool register_param(const std::string& name, MemT* param_var)
     {
-      const bool success = m_pp.getParam(name, param_var, true);
+      const bool success = m_pp.getParam(name, *param_var, true);
       if (!success)
         return false;
 
       m_registered_params.emplace_back(
             name,
-            std::any{std::reference_wrapper(param_var)}
+            std::any{param_var}
           );
       return true;
     }
@@ -42,7 +42,7 @@ namespace mrs_lib
     struct registered_param_t
     {
       std::string name;
-      std::any param_ref;
+      std::any param_ptr;
     };
     std::mutex& m_mtx;
     std::vector<registered_param_t> m_registered_params;

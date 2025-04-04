@@ -17,13 +17,13 @@ namespace mrs_lib
   }
 
   template <typename T>
-  bool update_value(std::any& value_ref, const T& new_value)
+  bool update_value(std::any& value_ptr, const T& new_value)
   {
     try
     {
-     T& cast_value = std::any_cast<T&>(value_ref);
-     cast_value = new_value;
-     return true;
+      T* cast_value = std::any_cast<T*>(value_ptr);
+      *cast_value = new_value;
+      return true;
     }
     catch (const std::bad_any_cast& e)
     {
@@ -43,6 +43,7 @@ namespace mrs_lib
     {
       // try to find the parameter by name
       const auto& param_name = new_param.get_name();
+      RCLCPP_INFO_STREAM(m_node->get_logger(), "checking parameter " << param_name);
       const auto found_it = std::find_if(
             std::begin(m_registered_params), std::end(m_registered_params),
             [&param_name](const auto& registered_param)
@@ -55,29 +56,30 @@ namespace mrs_lib
       if (found_it == std::end(m_registered_params))
         continue;
 
+      RCLCPP_INFO_STREAM(m_node->get_logger(), "parameter " << param_name << " found");
       // update the parameter value
       auto& found_el = *found_it;
       using type_enum = rclcpp::ParameterType;
       switch (new_param.get_type())
       {
         case type_enum::PARAMETER_BOOL:
-          result.successful = update_value(found_el.param_ref, new_param.as_bool()); break;
+          result.successful = update_value(found_el.param_ptr, new_param.as_bool()); break;
         case type_enum::PARAMETER_INTEGER:
-          result.successful = update_value(found_el.param_ref, new_param.as_int()); break;
+          result.successful = update_value(found_el.param_ptr, new_param.as_int()); break;
         case type_enum::PARAMETER_DOUBLE:
-          result.successful = update_value(found_el.param_ref, new_param.as_double()); break;
+          result.successful = update_value(found_el.param_ptr, new_param.as_double()); break;
         case type_enum::PARAMETER_STRING:
-          result.successful = update_value(found_el.param_ref, new_param.as_string()); break;
+          result.successful = update_value(found_el.param_ptr, new_param.as_string()); break;
         case type_enum::PARAMETER_BOOL_ARRAY:
-          result.successful = update_value(found_el.param_ref, new_param.as_bool_array()); break;
+          result.successful = update_value(found_el.param_ptr, new_param.as_bool_array()); break;
         case type_enum::PARAMETER_BYTE_ARRAY:
-          result.successful = update_value(found_el.param_ref, new_param.as_byte_array()); break;
+          result.successful = update_value(found_el.param_ptr, new_param.as_byte_array()); break;
         case type_enum::PARAMETER_INTEGER_ARRAY:
-          result.successful = update_value(found_el.param_ref, new_param.as_integer_array()); break;
+          result.successful = update_value(found_el.param_ptr, new_param.as_integer_array()); break;
         case type_enum::PARAMETER_DOUBLE_ARRAY:
-          result.successful = update_value(found_el.param_ref, new_param.as_double_array()); break;
+          result.successful = update_value(found_el.param_ptr, new_param.as_double_array()); break;
         case type_enum::PARAMETER_STRING_ARRAY:
-          result.successful = update_value(found_el.param_ref, new_param.as_string_array()); break;
+          result.successful = update_value(found_el.param_ptr, new_param.as_string_array()); break;
         case type_enum::PARAMETER_NOT_SET:
           result.successful = false; break;
       }
