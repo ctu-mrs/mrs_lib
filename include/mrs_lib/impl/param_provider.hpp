@@ -50,11 +50,13 @@ namespace mrs_lib
       try
       {
         /* RCLCPP_INFO_STREAM(m_node->get_logger(), "Getting param '" << resolved_name << "'"); */
-        if (!m_node->get_parameter(resolved_name, value_out))
+        rclcpp::Parameter param;
+        if (!m_node->get_parameter(resolved_name, param))
         {
-          RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not get param '" << resolved_name << "' (not set)");
+          RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not get param '" << resolved_name << "' (not declared)");
           return false;
         }
+        value_out = param.get_value<T>();
       }
       // if the parameter has a wrong value, return failure
       catch (const rclcpp::exceptions::InvalidParameterTypeException& e)
