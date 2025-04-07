@@ -16,15 +16,19 @@ namespace mrs_lib
 
   }
 
-  void DynparamMgr::update_to_ros()
+  rcl_interfaces::msg::SetParametersResult DynparamMgr::update_to_ros()
   {
     std::vector<rclcpp::Parameter> parameters;
-    std::scoped_lock lck(m_mtx);
 
-    for (const auto& reg_param : m_registered_params)
-      parameters.emplace_back(reg_param.name, reg_param.to_param_val());
+    {
+      std::scoped_lock lck(m_mtx);
 
-    m_node->set_parameters(parameters);
+      for (const auto& reg_param : m_registered_params)
+        parameters.emplace_back(reg_param.name, reg_param.to_param_val());
+    }
+
+    const auto result = m_node->set_parameters_atomically(parameters);
+    return result;
   }
 
   rcl_interfaces::msg::SetParametersResult DynparamMgr::cbk_param_update(const std::vector<rclcpp::Parameter>& parameters)
@@ -97,11 +101,10 @@ namespace mrs_lib
   {
     try
     {
-      std::visit([](auto&& arg)
+      return std::visit([](auto arg)
         {
-          return rclcpp::ParameterValue(arg);
+          return rclcpp::ParameterValue(*arg);
         }, param_ptr);
-      return rclcpp::ParameterValue{}; // should never reach this point
     }
     catch (const std::bad_any_cast& e)
     {

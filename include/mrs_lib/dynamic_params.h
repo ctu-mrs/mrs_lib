@@ -32,7 +32,7 @@ namespace mrs_lib
 
     DynparamMgr(const std::shared_ptr<rclcpp::Node>& node, std::mutex& mtx, const std::string& node_name = std::string());
 
-    void update_to_ros();
+    rcl_interfaces::msg::SetParametersResult update_to_ros();
 
     template <typename MemT>
     bool register_param(const std::string& name, MemT* param_var)
@@ -84,7 +84,7 @@ namespace mrs_lib
             using ParamT = std::remove_pointer_t<decltype(arg)>;
             if constexpr (std::is_convertible_v<NewValueT, ParamT>)
             {
-              *arg = new_value;
+              *arg = static_cast<ParamT>(new_value);
               return true;
             }
             else
