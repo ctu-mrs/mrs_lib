@@ -71,7 +71,7 @@ protected:
   void set_param_type(mrs_lib::DynparamMgr& dynparam_mgr, const std::string& param_name, const T& init_value, const std::vector<T>& test_values);
 
   template <typename T>
-  void update_params_type(mrs_lib::DynparamMgr& dynparam_mgr, T& test_var, const std::string& param_name, const T& init_value, const std::vector<T>& test_values);
+  void update_params_type(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynparam_mgr, T& test_var, const std::string& param_name, const T& init_value, const std::vector<T>& test_values) const;
 
   rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
 };
@@ -88,8 +88,8 @@ void Test::set_param_type(mrs_lib::DynparamMgr& dynparam_mgr, const std::string&
   // set the value of the test_var parameter
   {
     RCLCPP_INFO_STREAM(node_->get_logger(), "setting " << param_name);
-    const rcl_interfaces::msg::SetParametersResult result = node_->set_parameter(rclcpp::Parameter(param_name, test_values.front()));
-    EXPECT_TRUE(result.successful);
+    const auto result = dynparam_mgr.get_param_provider().setParam(param_name, test_values.front(), true);
+    EXPECT_TRUE(result);
   }
 
   // because the registering above failed, the value of the test_var variable should remain unchanged even though the parameter is now defined and is true
@@ -105,9 +105,9 @@ void Test::set_param_type(mrs_lib::DynparamMgr& dynparam_mgr, const std::string&
   for (const auto& test_val : test_values)
   {
     // change the value of the test_var parameter
-    const rcl_interfaces::msg::SetParametersResult result = node_->set_parameter(rclcpp::Parameter(param_name, test_val));
+    const auto result = dynparam_mgr.get_param_provider().setParam(param_name, test_val, true);
     // check that the setting was successful
-    EXPECT_TRUE(result.successful);
+    EXPECT_TRUE(result);
     // now the variable should be changed
     EXPECT_EQ(test_var, test_val);
   }
@@ -164,24 +164,24 @@ TEST_F(Test, dynparam_mgr_set_param) {
 /* update_params_type(mrs_lib::DynparamMgr& dynparam_mgr, const std::string& param_name, const T& init_value, const std::vector<T>& test_values) //{ */
 
 template <typename T>
-void Test::update_params_type(mrs_lib::DynparamMgr& dynparam_mgr, T& test_var, const std::string& param_name, const T& init_value, const std::vector<T>& test_values)
+void Test::update_params_type(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynparam_mgr, T& test_var, const std::string& param_name, const T& init_value, const std::vector<T>& test_values) const
 {
   test_var = init_value;
-  RCLCPP_INFO_STREAM(node_->get_logger(), "trying to register " << param_name << " without default value");
+  RCLCPP_INFO_STREAM(node->get_logger(), "trying to register " << param_name << " without default value");
   EXPECT_FALSE(dynparam_mgr.register_param(param_name, &test_var));
 
   // set the value of the test_var parameter
   {
-    RCLCPP_INFO_STREAM(node_->get_logger(), "setting " << param_name);
-    const rcl_interfaces::msg::SetParametersResult result = node_->set_parameter(rclcpp::Parameter(param_name, test_values.front()));
-    EXPECT_TRUE(result.successful);
+    RCLCPP_INFO_STREAM(node->get_logger(), "setting " << param_name);
+    const auto result = dynparam_mgr.get_param_provider().setParam(param_name, test_values.front(), true);
+    EXPECT_TRUE(result);
   }
 
   // because the registering above failed, the value of the test_var variable should remain unchanged even though the parameter is now defined and is true
   EXPECT_EQ(test_var, init_value);
 
   // register test_var again - this time successfully because the parameter already has a value
-  RCLCPP_INFO_STREAM(node_->get_logger(), "registering " << param_name);
+  RCLCPP_INFO_STREAM(node->get_logger(), "registering " << param_name);
   EXPECT_TRUE(dynparam_mgr.register_param(param_name, &test_var));
   // now the value should be loaded from ROS, so the value of the test_var variable should be the same as that of the ROS parameter - true
   EXPECT_EQ(test_var, test_values.front());
@@ -192,16 +192,17 @@ void Test::update_params_type(mrs_lib::DynparamMgr& dynparam_mgr, T& test_var, c
     // change the value of the variable
     test_var = test_val;
     // update the value to ROS
-    RCLCPP_INFO_STREAM(node_->get_logger(), "updating parameters to ROS");
+    RCLCPP_INFO_STREAM(node->get_logger(), "updating parameters to ROS");
     const auto result = dynparam_mgr.update_to_ros();
     EXPECT_TRUE(result.successful);
     if (!result.successful)
-      RCLCPP_ERROR_STREAM(node_->get_logger(), result.reason);
+      RCLCPP_ERROR_STREAM(node->get_logger(), result.reason);
 
     // value of the ROS parameter should now be changed
-    RCLCPP_INFO_STREAM(node_->get_logger(), "getting the ROS value");
-    const rclcpp::Parameter ros_param_val = node_->get_parameter(param_name);
-    EXPECT_EQ(ros_param_val.get_value<T>(), test_val);
+    RCLCPP_INFO_STREAM(node->get_logger(), "getting the ROS value");
+    T ros_param_val;
+    dynparam_mgr.get_param_provider().getParam(param_name, ros_param_val);
+    EXPECT_EQ(ros_param_val, test_val);
     // value of the variable should be what it was set to
     EXPECT_EQ(test_var, test_val);
   }
@@ -237,22 +238,81 @@ TEST_F(Test, dynparam_mgr_update_params) {
   std::vector<double> test_doublearr;
   std::vector<std::string> test_stringarr;
 
-  update_params_type(dynparam_mgr, test_bool, "test_bool", false, {true, false});
-  update_params_type(dynparam_mgr, test_int, "test_int", 0, {-1, 1, 666});
-  update_params_type(dynparam_mgr, test_int64, "test_int64", 0l, {-1l, 1l, 666l});
-  update_params_type(dynparam_mgr, test_float, "test_float", 0.0f, {-1.0f, 1.0f, 666.0f, 1e-3f, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()});
-  update_params_type(dynparam_mgr, test_double, "test_double", 0.0, {-1.0, 1.0, 666.0, 1e-3, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()});
-  update_params_type(dynparam_mgr, test_string, "test_string", ""s, {"asdf"s, "gbleasdgelasdagdds"s, "554"s});
-  update_params_type(dynparam_mgr, test_bytearr, "test_bytearr", {}, {{123, 1, 2}, {255}, {}});
-  update_params_type(dynparam_mgr, test_boolarr, "test_boolarr", {}, {{true, false, true}, {false}, {}});
-  /* update_params_type(dynparam_mgr, test_intarr, "test_intarr", {}, {{1, 2, 3}, {-1}, {}}); */
-  update_params_type(dynparam_mgr, test_int64arr, "test_int64arr", {}, {{1, 2, 3}, {-1}, {}});
-  /* update_params_type(dynparam_mgr, test_floatarr, "test_floatarr", {}, {{1.0f, 2.0f, 3.0f}, {-1.0f}, {-1.0f, 1.0f, 666.0f, 1e-3f, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()}, {}}); */
-  update_params_type(dynparam_mgr, test_doublearr, "test_doublearr", {}, {{1.0, 2.0, 3.0}, {-1.0}, {-1.0, 1.0, 666.0, 1e-3, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()}, {}});
-  update_params_type(dynparam_mgr, test_stringarr, "test_stringarr", {}, {{"asdf", "gbleasdgelasdagdds", "554"}, {}, {"blebleble"}});
+  update_params_type(node_, dynparam_mgr, test_bool, "test_bool", false, {true, false});
+  update_params_type(node_, dynparam_mgr, test_int, "test_int", 0, {-1, 1, 666});
+  update_params_type(node_, dynparam_mgr, test_int64, "test_int64", 0l, {-1l, 1l, 666l});
+  update_params_type(node_, dynparam_mgr, test_float, "test_float", 0.0f, {-1.0f, 1.0f, 666.0f, 1e-3f, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()});
+  update_params_type(node_, dynparam_mgr, test_double, "test_double", 0.0, {-1.0, 1.0, 666.0, 1e-3, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()});
+  update_params_type(node_, dynparam_mgr, test_string, "test_string", ""s, {"asdf"s, "gbleasdgelasdagdds"s, "554"s});
+  update_params_type(node_, dynparam_mgr, test_bytearr, "test_bytearr", {}, {{123, 1, 2}, {255}, {}});
+  update_params_type(node_, dynparam_mgr, test_boolarr, "test_boolarr", {}, {{true, false, true}, {false}, {}});
+  /* update_params_type(node_, dynparam_mgr, test_intarr, "test_intarr", {}, {{1, 2, 3}, {-1}, {}}); */
+  update_params_type(node_, dynparam_mgr, test_int64arr, "test_int64arr", {}, {{1, 2, 3}, {-1}, {}});
+  /* update_params_type(node_, dynparam_mgr, test_floatarr, "test_floatarr", {}, {{1.0f, 2.0f, 3.0f}, {-1.0f}, {-1.0f, 1.0f, 666.0f, 1e-3f, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()}, {}}); */
+  update_params_type(node_, dynparam_mgr, test_doublearr, "test_doublearr", {}, {{1.0, 2.0, 3.0}, {-1.0}, {-1.0, 1.0, 666.0, 1e-3, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()}, {}});
+  update_params_type(node_, dynparam_mgr, test_stringarr, "test_stringarr", {}, {{"asdf", "gbleasdgelasdagdds", "554"}, {}, {"blebleble"}});
 
   RCLCPP_INFO(node_->get_logger(), "finished");
   despin();
+}
+
+//}
+
+/* TEST_F(Test, dynparam_mgr_subnode) //{ */
+
+TEST_F(Test, dynparam_mgr_subnode) {
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+  auto subnode = node_->create_sub_node("subnode");
+
+  auto clock = subnode->get_clock();
+
+  RCLCPP_INFO(subnode->get_logger(), "defining ParamProvider");
+
+  std::mutex mtx;
+  RCLCPP_INFO(subnode->get_logger(), "defining DynparamMgr");
+  auto dynparam_mgr = mrs_lib::DynparamMgr(subnode, mtx, subnode->get_name());
+
+  /* int declared_int_param; */
+  /* EXPECT_TRUE(dynparam_mgr.get_param_provider().setParam("test_param", 666, true)); */
+  /* dynparam_mgr.register_param("test_param", &declared_int_param); */
+  /* RCLCPP_INFO_STREAM(subnode->get_logger(), "declared_param: " << declared_int_param); */
+  /* int param_val; */
+  /* dynparam_mgr.get_param_provider().getParam("test_param", param_val); */
+  /* RCLCPP_INFO_STREAM(subnode->get_logger(), "param_val: " << param_val); */
+
+  /* rclcpp::sleep_for(10000s); */
+
+  bool test_bool;
+  int test_int;
+  int64_t test_int64;
+  float test_float;
+  double test_double;
+  std::string test_string;
+  std::vector<uint8_t> test_bytearr;
+  std::vector<bool> test_boolarr;
+  /* std::vector<int> test_intarr; */
+  std::vector<int64_t> test_int64arr;
+  /* std::vector<float> test_floatarr; */
+  std::vector<double> test_doublearr;
+  std::vector<std::string> test_stringarr;
+
+  update_params_type(subnode, dynparam_mgr, test_bool, "test_bool", false, {true, false});
+  update_params_type(subnode, dynparam_mgr, test_int, "test_int", 0, {-1, 1, 666});
+  update_params_type(subnode, dynparam_mgr, test_int64, "test_int64", 0l, {-1l, 1l, 666l});
+  update_params_type(subnode, dynparam_mgr, test_float, "test_float", 0.0f, {-1.0f, 1.0f, 666.0f, 1e-3f, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()});
+  update_params_type(subnode, dynparam_mgr, test_double, "test_double", 0.0, {-1.0, 1.0, 666.0, 1e-3, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()});
+  update_params_type(subnode, dynparam_mgr, test_string, "test_string", ""s, {"asdf"s, "gbleasdgelasdagdds"s, "554"s});
+  update_params_type(subnode, dynparam_mgr, test_bytearr, "test_bytearr", {}, {{123, 1, 2}, {255}, {}});
+  update_params_type(subnode, dynparam_mgr, test_boolarr, "test_boolarr", {}, {{true, false, true}, {false}, {}});
+  /* update_params_type(subnode, dynparam_mgr, test_intarr, "test_intarr", {}, {{1, 2, 3}, {-1}, {}}); */
+  update_params_type(subnode, dynparam_mgr, test_int64arr, "test_int64arr", {}, {{1, 2, 3}, {-1}, {}});
+  /* update_params_type(subnode, dynparam_mgr, test_floatarr, "test_floatarr", {}, {{1.0f, 2.0f, 3.0f}, {-1.0f}, {-1.0f, 1.0f, 666.0f, 1e-3f, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()}, {}}); */
+  update_params_type(subnode, dynparam_mgr, test_doublearr, "test_doublearr", {}, {{1.0, 2.0, 3.0}, {-1.0}, {-1.0, 1.0, 666.0, 1e-3, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()}, {}});
+  update_params_type(subnode, dynparam_mgr, test_stringarr, "test_stringarr", {}, {{"asdf", "gbleasdgelasdagdds", "554"}, {}, {"blebleble"}});
+
+  RCLCPP_INFO(subnode->get_logger(), "finished");
+  /* despin(); */
 }
 
 //}

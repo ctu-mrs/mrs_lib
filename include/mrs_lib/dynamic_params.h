@@ -49,6 +49,11 @@ namespace mrs_lib
       return true;
     }
 
+    mrs_lib::ParamProvider& get_param_provider()
+    {
+      return m_pp;
+    };
+
   private:
     std::shared_ptr<rclcpp::Node> m_node;
     mrs_lib::ParamProvider m_pp;

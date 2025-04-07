@@ -65,6 +65,17 @@ public:
   bool getParam(const std::string& param_name, T& value_out, const bool reconfigurable = false) const;
 
   /*!
+   * \brief Sets the value of a parameter.
+   *
+   * \param param_name      Name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
+   * \param value_out       Output argument that will hold the value of the loaded parameter, if successfull. Not modified otherwise.
+   * \param reconfigurable  If true, the paramter will be declared as dynamically reconfigurable (unless it was already defined as read-only).
+   * \return                Returns true iff the parameter was successfully loaded.
+   */
+  template <typename T>
+  bool setParam(const std::string& param_name, const T& value, const bool reconfigurable = false) const;
+
+  /*!
    * \brief Defines a parameter.
    *
    * This method only declares the parameter in ROS.
@@ -89,13 +100,13 @@ public:
   template <typename T>
   bool declareParamDefault(const std::string& param_name, const T& default_value, const bool reconfigurable) const;
 
+  std::string resolveName(const std::string& param_name) const;
 private:
   std::vector<YAML::Node>       m_yamls;
   std::shared_ptr<rclcpp::Node> m_node;
   std::string                   m_node_name;
   bool                          m_use_rosparam;
 
-  std::string resolveName(const std::string& param_name) const;
   std::optional<YAML::Node> findYamlNode(const std::string& param_name) const;
 };
 //}

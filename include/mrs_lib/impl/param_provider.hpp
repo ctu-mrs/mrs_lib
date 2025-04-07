@@ -44,23 +44,64 @@ namespace mrs_lib
       const auto resolved_name = resolveName(param_name);
       // firstly, the parameter has to be declared
       // see https://docs.ros.org/en/jazzy/Concepts/Basic/About-Parameters.html#parameters
-      if (!m_node->has_parameter(resolved_name) && declareParam<T>(param_name, reconfigurable))
+      if (!m_node->has_parameter(resolved_name) && !declareParam<T>(param_name, reconfigurable))
         return false;
 
       try
       {
+        /* RCLCPP_INFO_STREAM(m_node->get_logger(), "Getting param '" << resolved_name << "'"); */
         if (!m_node->get_parameter(resolved_name, value_out))
+        {
+          RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not get param '" << resolved_name << "' (not set)");
           return false;
+        }
       }
       // if the parameter has a wrong value, return failure
       catch (const rclcpp::exceptions::InvalidParameterTypeException& e)
       {
+        RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not get param '" << resolved_name << "': " << e.what());
         return false;
       }
 
       return true;
     }
 
+    RCLCPP_ERROR_STREAM(m_node->get_logger(), "Param '" << param_name << "' not found in YAML files");
+    return false;
+  }
+
+  template <typename T>
+  bool ParamProvider::setParam(const std::string& param_name, const T& value, const bool reconfigurable) const
+  {
+    if (m_use_rosparam)
+    {
+      const auto resolved_name = resolveName(param_name);
+      // firstly, the parameter has to be declared
+      // see https://docs.ros.org/en/jazzy/Concepts/Basic/About-Parameters.html#parameters
+      if (!m_node->has_parameter(resolved_name) && !declareParam<T>(param_name, reconfigurable))
+        return false;
+
+      try
+      {
+        /* RCLCPP_INFO_STREAM(m_node->get_logger(), "Setting param '" << resolved_name << "'"); */
+        rcl_interfaces::msg::SetParametersResult res = m_node->set_parameter({resolved_name, value});
+        if (!res.successful)
+        {
+          RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not set param '" << resolved_name << "': " << res.reason);
+          return false;
+        }
+      }
+      // if the parameter has a wrong value, return failure
+      catch (const rclcpp::exceptions::ParameterNotDeclaredException& e)
+      {
+        RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not set param '" << resolved_name << "': " << e.what());
+        return false;
+      }
+
+      return true;
+    }
+
+    RCLCPP_ERROR_STREAM(m_node->get_logger(), "use_rosparam is false - cannot set YAML parameter value!");
     return false;
   }
 
@@ -77,7 +118,8 @@ namespace mrs_lib
       rcl_interfaces::msg::ParameterDescriptor descriptor;
       descriptor.read_only = !reconfigurable;
       descriptor.type = type;
-      m_node->declare_parameter(resolved_name, type, descriptor);
+      /* RCLCPP_INFO_STREAM(m_node->get_logger(), "Declaring param '" << resolved_name << "' of type " << type); */
+      const rclcpp::ParameterValue ret = m_node->declare_parameter(resolved_name, type, descriptor);
     }
     catch (const std::exception& e)
     {

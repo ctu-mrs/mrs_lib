@@ -50,9 +50,22 @@ namespace mrs_lib
     /* // reformat all '/' to '.' which is the new ROS2 delimeter */
     /* std::replace(resolved_name.begin() + 1, resolved_name.end(), '/', '.'); */
     /* return resolved_name; */
-    auto resolved_name = param_name;
-    // reformat all '/' to '.' which is the new ROS2 delimeter
-    std::replace(resolved_name.begin(), resolved_name.end(), '/', '.');
+    /* const std::string node_name = m_node->get_fully_qualified_name(); */
+    const std::string sub_namespace = m_node->get_sub_namespace();
+    std::string resolved_name;
+    if (sub_namespace.empty())
+      resolved_name = param_name;
+    else if (sub_namespace == "/")
+    {
+      resolved_name = sub_namespace + param_name;
+    }
+    else
+    {
+      resolved_name = sub_namespace + "." + param_name;
+      // reformat all '/' to '.' which is the new ROS2 delimeter
+      std::replace(resolved_name.begin(), resolved_name.end(), '/', '.');
+    }
+    resolved_name = "/" + resolved_name;
     return resolved_name;
   }
 
