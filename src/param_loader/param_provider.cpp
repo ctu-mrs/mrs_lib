@@ -61,11 +61,10 @@ namespace mrs_lib
     }
     else
     {
-      resolved_name = sub_namespace + "." + param_name;
+      resolved_name = "/" + sub_namespace + "." + param_name;
       // reformat all '/' to '.' which is the new ROS2 delimeter
-      std::replace(resolved_name.begin(), resolved_name.end(), '/', '.');
+      std::replace(resolved_name.begin()+1, resolved_name.end(), '/', '.');
     }
-    resolved_name = "/" + resolved_name;
     return resolved_name;
   }
 

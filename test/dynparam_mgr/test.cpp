@@ -312,7 +312,7 @@ TEST_F(Test, dynparam_mgr_subnode) {
   update_params_type(subnode, dynparam_mgr, test_stringarr, "test_stringarr", {}, {{"asdf", "gbleasdgelasdagdds", "554"}, {}, {"blebleble"}});
 
   RCLCPP_INFO(subnode->get_logger(), "finished");
-  /* despin(); */
+  despin();
 }
 
 //}
