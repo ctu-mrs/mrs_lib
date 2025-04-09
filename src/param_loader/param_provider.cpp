@@ -11,8 +11,8 @@ namespace mrs_lib
   template bool ParamProvider::getParam<double>(const std::string& name, double& out_value, const bool reconfigurable) const;
   template bool ParamProvider::getParam<std::string>(const std::string& name, std::string& out_value, const bool reconfigurable) const;
 
-  ParamProvider::ParamProvider(const std::shared_ptr<rclcpp::Node>& sub_node, std::string node_name, const bool use_rosparam)
-  : m_node(sub_node), m_node_name(std::move(node_name)), m_use_rosparam(use_rosparam)
+  ParamProvider::ParamProvider(const std::shared_ptr<rclcpp::Node>& node, const bool use_rosparam)
+  : m_node(node), m_node_name(m_node->get_name()), m_use_rosparam(use_rosparam)
   {
   }
 

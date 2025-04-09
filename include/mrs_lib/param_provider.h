@@ -35,10 +35,9 @@ public:
    * \brief Main constructor.
    *
    * \param nh            The parameters will be loaded from rosparam using this node handle.
-   * \param node_name     Optional node name used when printing the loaded values or loading errors.
    * \param use_rosparam  If true, parameters that weren't found in the YAML files will be attempted to be loaded from ROS.
    */
-  ParamProvider(const std::shared_ptr<rclcpp::Node>& node, std::string node_name, const bool use_rosparam = true);
+  ParamProvider(const std::shared_ptr<rclcpp::Node>& node, const bool use_rosparam = true);
 
   /*!
    * \brief Add a YAML file to be parsed and used for loading parameters.

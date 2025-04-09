@@ -3,13 +3,13 @@
      \brief Implements DynparamMgr - a convenience class for managing dynamic ROS parameters.
      \author Matouš Vrba - vrbamato@fel.cvut.cz
  */
-#include <mrs_lib/dynamic_params.h>
+#include <mrs_lib/dynparam_mgr.h>
 
 namespace mrs_lib
 {
 
-  DynparamMgr::DynparamMgr(const std::shared_ptr<rclcpp::Node>& node, std::mutex& mtx, const std::string& node_name)
-    : m_node(node), m_pp(node, node_name), m_mtx(mtx)
+  DynparamMgr::DynparamMgr(const std::shared_ptr<rclcpp::Node>& node, std::mutex& mtx)
+    : m_node(node), m_pp(node), m_mtx(mtx)
   {
     decltype(decltype(m_param_cbk)::element_type::callback) cbk = std::bind(&DynparamMgr::cbk_param_update, this, std::placeholders::_1);
     m_param_cbk = m_node->add_on_set_parameters_callback(cbk);

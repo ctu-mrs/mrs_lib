@@ -92,7 +92,7 @@ TEST_F(Test, param_provider_load) {
 
   auto clock = node_->get_clock();
 
-  auto param_provider = mrs_lib::ParamProvider(node_, node_->get_name(), false);
+  auto param_provider = mrs_lib::ParamProvider(node_, false);
 
   bool test_bool = false;
   EXPECT_FALSE(param_provider.getParam("test_bool", test_bool));
