@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <mrs_lib/dynamic_params.h>
+#include <mrs_lib/dynparam_mgr.h>
 
 using namespace std::chrono_literals;
 using namespace std::string_literals;
@@ -127,7 +127,7 @@ TEST_F(Test, dynparam_mgr_set_param) {
 
   std::mutex mtx;
   RCLCPP_INFO(node_->get_logger(), "defining DynparamMgr");
-  auto dynparam_mgr = mrs_lib::DynparamMgr(node_, mtx, node_->get_name());
+  auto dynparam_mgr = mrs_lib::DynparamMgr(node_, mtx);
 
   set_param_type<bool>(dynparam_mgr, "test_bool", false, {true, false});
 
@@ -222,7 +222,7 @@ TEST_F(Test, dynparam_mgr_update_params) {
 
   std::mutex mtx;
   RCLCPP_INFO(node_->get_logger(), "defining DynparamMgr");
-  auto dynparam_mgr = mrs_lib::DynparamMgr(node_, mtx, node_->get_name());
+  auto dynparam_mgr = mrs_lib::DynparamMgr(node_, mtx);
 
   bool test_bool;
   int test_int;
@@ -271,7 +271,7 @@ TEST_F(Test, dynparam_mgr_subnode) {
 
   std::mutex mtx;
   RCLCPP_INFO(subnode->get_logger(), "defining DynparamMgr");
-  auto dynparam_mgr = mrs_lib::DynparamMgr(subnode, mtx, subnode->get_name());
+  auto dynparam_mgr = mrs_lib::DynparamMgr(subnode, mtx);
 
   /* int declared_int_param; */
   /* EXPECT_TRUE(dynparam_mgr.get_param_provider().setParam("test_param", 666, true)); */

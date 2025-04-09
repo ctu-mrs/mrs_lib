@@ -408,7 +408,7 @@ public:
    * \param node_name     Optional node name used when printing the loaded values or loading errors.
    */
   ParamLoader(const std::shared_ptr<rclcpp::Node>& node, bool printValues = true, std::string_view node_name = std::string())
-      : m_load_successful(true), m_print_values(printValues), m_node_name(node_name), m_node(node), m_pp(node, static_cast<std::string>(node_name)) {
+      : m_load_successful(true), m_print_values(printValues), m_node_name(node_name), m_node(node), m_pp(node) {
     // std::cout << "Initialized1 ParamLoader for node " << node_name << std::endl;
   }
 
