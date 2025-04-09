@@ -44,6 +44,11 @@ namespace mrs_lib
     return false;
   }
 
+  void ParamProvider::copyYamls(const ParamProvider& param_provider)
+  {
+    m_yamls.insert(std::end(m_yamls), std::begin(param_provider.m_yamls), std::end(param_provider.m_yamls));
+  }
+
   std::string ParamProvider::resolveName(const std::string& param_name) const
   {
     /* auto resolved_name = std::string(m_node->get_sub_namespace()) + "/" + param_name; */
@@ -61,9 +66,9 @@ namespace mrs_lib
     }
     else
     {
-      resolved_name = sub_namespace + "." + param_name;
+      resolved_name = sub_namespace + "/" + param_name;
       // reformat all '/' to '.' which is the new ROS2 delimeter
-      std::replace(resolved_name.begin()+1, resolved_name.end(), '/', '.');
+      /* std::replace(resolved_name.begin()+1, resolved_name.end(), '/', '.'); */
     }
     return resolved_name;
   }

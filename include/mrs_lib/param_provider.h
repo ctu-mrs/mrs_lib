@@ -50,6 +50,13 @@ public:
   bool addYamlFile(const std::string& filepath);
 
   /*!
+   * \brief Copy parsed YAMLs from another ParamProvider.
+   *
+   * \param param_provider  The ParamProvider object to copy the YAMLs from.
+   */
+  void copyYamls(const ParamProvider& param_provider);
+
+  /*!
    * \brief Gets the value of a parameter.
    *
    * Firstly, the parameter is attempted to be loaded from the YAML files added by the addYamlFile() method

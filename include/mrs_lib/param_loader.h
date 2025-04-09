@@ -142,14 +142,14 @@ private:
   }
 
   std::string resolved(const std::string& param_name) {
-    return std::string(m_node->get_fully_qualified_name()) + "/" + param_name;
+    return std::string(m_node->get_fully_qualified_name()) + "/" + m_pp.resolveName(param_name);
   }
   //}
 
   /* check_duplicit_loading checks whether the parameter was already loaded - returns true if yes //{ */
   bool check_duplicit_loading(const std::string& name) {
     if (m_loaded_params.count(name)) {
-      printError(std::string("Tried to load parameter ") + name + std::string(" twice"));
+      printError(std::string("Tried to load parameter \"") + name + std::string("\" twice"));
       m_load_successful = false;
       return true;
     } else {
@@ -468,9 +468,7 @@ public:
    * \param filepath The full path to the yaml file to be loaded.
    * \return true if loading and parsing the file was successful, false otherwise.
    */
-  bool addYamlFile(const std::string& filepath) {
-    return m_pp.addYamlFile(filepath);
-  }
+  bool addYamlFile(const std::string& filepath);
   //}
 
   /* addYamlFileFromParam() function //{ */
@@ -481,13 +479,15 @@ public:
    * \param param_name Name of the parameter from which to load the YAML filename to be loaded.
    * \return true      if loading and parsing the file was successful, false otherwise.
    */
-  bool addYamlFileFromParam(const std::string& param_name) {
-    std::string filepath;
-    if (!loadParam(param_name, filepath))
-      return false;
-    return m_pp.addYamlFile(filepath);
-  }
+  bool addYamlFileFromParam(const std::string& param_name);
   //}
+
+  /*!
+   * \brief Copies parsed YAMLs from another ParamLoader.
+   *
+   * \param param_loader The ParamLoader object to copy the YAML files from.
+   */
+  void copyYamls(const ParamLoader& param_loader);
 
   /* loadedSuccessfully function //{ */
   /*!

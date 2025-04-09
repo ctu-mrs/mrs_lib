@@ -20,7 +20,8 @@ namespace mrs_lib
   template <typename T>
   bool ParamProvider::getParam(const std::string& param_name, T& value_out, const bool reconfigurable) const
   {
-    const auto found_node = findYamlNode(param_name);
+    const auto resolved_name = resolveName(param_name);
+    const auto found_node = findYamlNode(resolved_name);
     if (found_node.has_value())
     {
       try
@@ -41,7 +42,6 @@ namespace mrs_lib
 
     if (m_use_rosparam)
     {
-      const auto resolved_name = resolveName(param_name);
       // firstly, the parameter has to be declared
       // see https://docs.ros.org/en/jazzy/Concepts/Basic/About-Parameters.html#parameters
       if (!m_node->has_parameter(resolved_name) && !declareParam<T>(param_name, reconfigurable))
@@ -68,7 +68,7 @@ namespace mrs_lib
       return true;
     }
 
-    RCLCPP_ERROR_STREAM(m_node->get_logger(), "Param '" << param_name << "' not found in YAML files");
+    RCLCPP_ERROR_STREAM(m_node->get_logger(), "Param '" << resolved_name << "' not found in YAML files");
     return false;
   }
 
