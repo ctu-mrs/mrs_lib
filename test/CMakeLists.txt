@@ -27,6 +27,8 @@ add_subdirectory(./service_server_handler)
 
 add_subdirectory(./math)
 
+add_subdirectory(./lockable)
+
 add_subdirectory(./param_loader)
 
 add_subdirectory(./dynparam_mgr)
