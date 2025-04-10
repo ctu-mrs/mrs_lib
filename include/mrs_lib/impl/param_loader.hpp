@@ -1,128 +1,270 @@
 // clang: MatousFormat
 #pragma once
 
-#include <rclcpp/rclcpp.hpp>
-#include <string>
-#include <map>
-#include <unordered_set>
-#include <Eigen/Dense>
-#include <std_msgs/msg/color_rgba.hpp>
-#include <mrs_lib/param_provider.h>
+#include <mrs_lib/param_loader.h>
 
 namespace mrs_lib
 {
 
-/*** ParamLoader CLASS //{ **/
-
-/**
- * \brief Convenience class for loading parameters from rosparam server.
- *
- * The parameters can be loaded as compulsory. If a compulsory parameter is not found
- * on the rosparam server (e.g. because it is missing in the launchfile or the yaml config file),
- * an internal flag is set to false, indicating that the parameter loading procedure failed.
- * This flag can be checked using the loaded_successfully() method after all parameters were
- * attempted to be loaded (see usage example usage below).
- *
- * The loaded parameter names and corresponding values are printed to stdout by default
- * for user convenience. Special cases such as loading of Eigen matrices or loading
- * of std::vectors of various values are also provided.
- *
- * To load parameters into the `rosparam` server, use a launchfile prefferably.
- * See documentation of ROS launchfiles here: http://wiki.rclcpp.org/roslaunch/XML.
- * Specifically, the `param` XML tag is used for loading parameters directly from the launchfile: http://wiki.rclcpp.org/roslaunch/XML/param,
- * and the `rosparam` XML tag tag is used for loading parameters from a `yaml` file: http://wiki.rclcpp.org/roslaunch/XML/rosparam.
- *
- */
-class ParamLoader {
-
-private:
-  enum unique_t
-  {
-    UNIQUE   = true,
-    REUSABLE = false
-  };
-  enum optional_t
-  {
-    OPTIONAL   = true,
-    COMPULSORY = false
-  };
-  enum swap_t
-  {
-    SWAP    = true,
-    NO_SWAP = false
-  };
-
-  template <typename T>
-  using MatrixX = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
-
-private:
-  bool                            m_load_successful, m_print_values;
-  std::string                     m_node_name;
-  std::shared_ptr<rclcpp::Node>   m_node;
-  mrs_lib::ParamProvider          m_pp;
-  std::unordered_set<std::string> m_loaded_params;
-
-  /* printing helper functions //{ */
-
-  /* printError and printWarning functions //{*/
-
-  void printError(const std::string& str);
-  void printWarning(const std::string& str);
-
-  //}
-
   /* printValue function and overloads //{ */
 
   template <typename T>
-  void printValue(const std::string& name, const T& value) const;
+  void ParamLoader::printValue(const std::string& name, const T& value) const
+  {
+    if (m_node_name.empty())
+      std::cout << "\t" << name << ":\t" << value << std::endl;
+    else
+      RCLCPP_INFO_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << name << "':\t" << value);
+  }
 
   template <typename T>
-  void printValue(const std::string& name, const std::vector<T>& value) const;
+  void ParamLoader::printValue(const std::string& name, const std::vector<T>& value) const
+  {
+    std::stringstream strstr;
+    if (m_node_name.empty())
+      strstr << "\t";
+    strstr << name << ":\t";
+    size_t it = 0;
+    for (const auto& elem : value) {
+      strstr << elem;
+      if (it < value.size() - 1)
+        strstr << ", ";
+      it++;
+    }
+    if (m_node_name.empty())
+      std::cout << strstr.str() << std::endl;
+    else
+      RCLCPP_INFO_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << strstr.str());
+  }
 
   template <typename T1, typename T2>
-  void printValue(const std::string& name, const std::map<T1, T2>& value) const;
+  void ParamLoader::printValue(const std::string& name, const std::map<T1, T2>& value) const
+  {
+    std::stringstream strstr;
+    if (m_node_name.empty())
+      strstr << "\t";
+    strstr << name << ":" << std::endl;
+    size_t it = 0;
+    for (const auto& pair : value) {
+      strstr << pair.first << " = " << pair.second;
+      if (it < value.size() - 1)
+        strstr << std::endl;
+      it++;
+    }
+    if (m_node_name.empty())
+      std::cout << strstr.str() << std::endl;
+    else
+      RCLCPP_INFO_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << strstr.str());
+  }
 
   template <typename T>
-  void printValue(const std::string& name, const MatrixX<T>& value) const;
-  
-  //}
-
-  std::string prepend_node_name(const std::string& resolved_name) const;
-
+  void ParamLoader::printValue(const std::string& name, const MatrixX<T>& value) const
+  {
+    std::stringstream strstr;
+    /* const Eigen::IOFormat fmt(4, 0, ", ", "\n", "\t\t[", "]"); */
+    /* strstr << value.format(fmt); */
+    const Eigen::IOFormat fmt;
+    strstr << value.format(fmt);
+    if (m_node_name.empty())
+      std::cout << "\t" << name << ":\t" << std::endl << strstr.str() << std::endl;
+    else
+      RCLCPP_INFO_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << name << "':" << std::endl << strstr.str());
+  }
   //}
 
   /* loading helper functions //{ */
 
-  /* check_duplicit_loading checks whether the parameter was already loaded - returns true if yes //{ */
-
-  bool check_duplicit_loading(const std::string& name);
-  
-  //}
-
   /* helper functions for loading dynamic Eigen matrices //{ */
   // loadMatrixX helper function for loading dynamic Eigen matrices //{
   template <typename T>
-  std::pair<MatrixX<T>, bool> loadMatrixX(const std::string& name, const MatrixX<T>& default_value, int rows, int cols = Eigen::Dynamic, optional_t optional = OPTIONAL, unique_t unique = UNIQUE, swap_t swap = NO_SWAP, bool printValues = true);
+  std::pair<ParamLoader::MatrixX<T>, bool> ParamLoader::loadMatrixX(const std::string& name, const MatrixX<T>& default_value, int rows, int cols, optional_t optional, unique_t unique, swap_t swap, bool printValues)
+  {
+    const auto resolved_name = m_pp.resolveName(name);
+    MatrixX<T> loaded = default_value;
+    bool used_rosparam_value = false;
+    // first, check if the user already tried to load this parameter
+    if (unique && check_duplicit_loading(resolved_name))
+      return {loaded, used_rosparam_value};
+
+    // this function only accepts dynamic columns (you can always transpose the matrix afterward)
+    if (rows < 0) {
+      // if the parameter was compulsory, alert the user and set the flag
+      printError(std::string("Invalid expected matrix dimensions for parameter ") + prepend_node_name(resolved_name));
+      m_load_successful = false;
+      return {loaded, used_rosparam_value};
+    }
+    const bool expect_zero_matrix = rows == 0;
+    if (expect_zero_matrix) {
+      if (cols > 0) {
+        printError(std::string("Invalid expected matrix dimensions for parameter ") + prepend_node_name(resolved_name) +
+                   ". One dimension indicates zero matrix, but other expects non-zero.");
+        m_load_successful = false;
+        return {loaded, used_rosparam_value};
+      }
+    }
+
+    bool cur_load_successful = true;
+    bool check_size_exact    = true;
+    if (cols <= 0)  // this means that the cols dimension is dynamic or a zero matrix is expected
+      check_size_exact = false;
+
+    std::vector<T> tmp_vec;
+    // try to load the parameter
+    const bool success = m_pp.getParam(resolved_name, tmp_vec);
+    // check if the loaded vector has correct length
+    bool correct_size = (int)tmp_vec.size() == rows * cols;
+    if (!check_size_exact && !expect_zero_matrix)
+      correct_size = (int)tmp_vec.size() % rows == 0;  // if the cols dimension is dynamic, the size just has to be divisable by rows
+
+    if (success && correct_size) {
+      // if successfully loaded, everything is in order
+      // transform the vector to the matrix
+      if (cols <= 0 && rows > 0)
+        cols = tmp_vec.size() / rows;
+      if (swap)
+        std::swap(rows, cols);
+      loaded              = Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Unaligned>(tmp_vec.data(), rows, cols);
+      used_rosparam_value = true;
+    } else {
+      if (success && !correct_size) {
+        // warn the user that this parameter was not successfully loaded because of wrong vector length (might be an oversight)
+        std::string warning =
+            std::string("Matrix parameter ") + resolved_name +
+            std::string(" could not be loaded because the vector has a wrong length " + std::to_string(tmp_vec.size()) + " instead of expected ");
+        // process the message correctly based on whether the loaded matrix should be dynamic or static
+        if (cols <= 0)  // for dynamic matrices
+          warning = warning + std::string("number divisible by ") + std::to_string(rows);
+        else  // for static matrices
+          warning = warning + std::to_string(rows * cols);
+        printWarning(warning);
+      }
+      // if it was not loaded, the default value is used (set at the beginning of the function)
+      if (!optional) {
+        // if the parameter was compulsory, alert the user and set the flag
+        printError(std::string("Could not load non-optional parameter ") + prepend_node_name(resolved_name));
+        cur_load_successful = false;
+      }
+    }
+
+    // check if load was a success
+    if (cur_load_successful) {
+      if (m_print_values && printValues)
+        printValue(resolved_name, loaded);
+      m_loaded_params.insert(resolved_name);
+    } else {
+      m_load_successful = false;
+    }
+    // finally, return the resulting value
+    return {loaded, used_rosparam_value};
+  }
   //}
 
   /* loadMatrixStatic_internal helper function for loading static Eigen matrices //{ */
   template <int rows, int cols, typename T>
-  std::pair<Eigen::Matrix<T, rows, cols>, bool> loadMatrixStatic_internal(const std::string& name, const Eigen::Matrix<T, rows, cols>& default_value, optional_t optional, unique_t unique);
+  std::pair<Eigen::Matrix<T, rows, cols>, bool> ParamLoader::loadMatrixStatic_internal(const std::string& name, const Eigen::Matrix<T, rows, cols>& default_value, optional_t optional, unique_t unique)
+  {
+    const auto [dynamic, loaded_ok] = loadMatrixX(name, MatrixX<T>(default_value), rows, cols, optional, unique, NO_SWAP);
+    return {dynamic, loaded_ok};
+  }
   //}
 
   /* loadMatrixKnown_internal helper function for loading EigenXd matrices with known dimensions //{ */
   template <typename T>
-  std::pair<MatrixX<T>, bool> loadMatrixKnown_internal(const std::string& name, const MatrixX<T>& default_value, int rows, int cols, optional_t optional, unique_t unique);
+  std::pair<ParamLoader::MatrixX<T>, bool> ParamLoader::loadMatrixKnown_internal(const std::string& name, const MatrixX<T>& default_value, int rows, int cols, optional_t optional, unique_t unique)
+  {
+    MatrixX<T> loaded = default_value;
+    // first, check that at least one dimension is set
+    if (rows <= 0 || cols <= 0) {
+      printError(std::string("Invalid expected matrix dimensions for parameter ") + prepend_node_name(m_pp.resolveName(name)) + std::string(" (use loadMatrixDynamic?)"));
+      m_load_successful = false;
+      return {loaded, false};
+    }
+
+    return loadMatrixX(name, default_value, rows, cols, optional, unique, NO_SWAP);
+  }
   //}
 
   /* loadMatrixDynamic_internal helper function for loading Eigen matrices with one dynamic (unspecified) dimension //{ */
   template <typename T>
-  std::pair<MatrixX<T>, bool> loadMatrixDynamic_internal(const std::string& name, const MatrixX<T>& default_value, int rows, int cols, optional_t optional, unique_t unique);
+  std::pair<ParamLoader::MatrixX<T>, bool> ParamLoader::loadMatrixDynamic_internal(const std::string& name, const MatrixX<T>& default_value, int rows, int cols, optional_t optional, unique_t unique)
+  {
+    MatrixX<T> loaded = default_value;
+
+    // next, check that at least one dimension is set
+    if (rows <= 0 && cols <= 0) {
+      printError(std::string("Invalid expected matrix dimensions for parameter ") + prepend_node_name(m_pp.resolveName(name)) +
+                 std::string(" (at least one dimension must be specified)"));
+      m_load_successful = false;
+      return {loaded, false};
+    }
+
+    swap_t swap = NO_SWAP;
+    if (rows <= 0) {
+      std::swap(rows, cols);
+      swap = SWAP;
+    }
+    return loadMatrixX(name, default_value, rows, cols, optional, unique, swap);
+  }
   //}
 
   /* loadMatrixArray_internal helper function for loading an array of EigenXd matrices with known dimensions //{ */
   template <typename T>
-  std::vector<MatrixX<T>> loadMatrixArray_internal(const std::string& name, const std::vector<MatrixX<T>>& default_value, optional_t optional, unique_t unique);
+  std::vector<ParamLoader::MatrixX<T>> ParamLoader::loadMatrixArray_internal(const std::string& name, const std::vector<MatrixX<T>>& default_value, optional_t optional, unique_t unique)
+  {
+    const auto resolved_name = m_pp.resolveName(name);
+    int rows;
+    std::vector<long int> cols;
+    bool success = true;
+    success = success && m_pp.getParam(resolved_name + "/rows", rows);
+    success = success && m_pp.getParam(resolved_name + "/cols", cols);
+
+    std::vector<MatrixX<T>> loaded;
+    loaded.reserve(cols.size());
+
+    int total_cols = 0;
+    /* check correctness of loaded parameters so far calculate the total dimension //{ */
+
+    if (!success) {
+      printError(std::string("Failed to load ") + prepend_node_name(resolved_name) + std::string("/rows or ") + prepend_node_name(resolved_name) + std::string("/cols"));
+      m_load_successful = false;
+      return default_value;
+    }
+    if (rows < 0) {
+      printError(std::string("Invalid expected matrix dimensions for parameter ") + prepend_node_name(resolved_name) + std::string(" (rows and cols must be >= 0)"));
+      m_load_successful = false;
+      return default_value;
+    }
+    for (const auto& col : cols) {
+      if (col < 0) {
+        printError(std::string("Invalid expected matrix dimensions for parameter ") + prepend_node_name(resolved_name) + std::string(" (rows and cols must be >= 0)"));
+        m_load_successful = false;
+        return default_value;
+      }
+      total_cols += col;
+    }
+
+    //}
+
+    const auto [loaded_matrix, loaded_ok] = loadMatrixX(name + "/data", MatrixX<T>(), rows, total_cols, optional, unique, NO_SWAP, false);
+    /* std::cout << "loaded_matrix: " << loaded_matrix << std::endl; */
+    /* std::cout << "loaded_matrix: " << loaded_matrix.rows() << "x" << loaded_matrix.cols() << std::endl; */
+    /* std::cout << "expected dims: " << rows << "x" << total_cols << std::endl; */
+    if (loaded_matrix.rows() != rows || loaded_matrix.cols() != total_cols) {
+      m_load_successful = false;
+      return default_value;
+    }
+
+    int cols_loaded = 0;
+    for (unsigned it = 0; it < cols.size(); it++) {
+      const int        cur_cols = cols.at(it);
+      const MatrixX<T> cur_mat  = loaded_matrix.block(0, cols_loaded, rows, cur_cols);
+      /* std::cout << "cur_mat: " << cur_mat << std::endl; */
+      loaded.push_back(cur_mat);
+      cols_loaded += cur_cols;
+      printValue(resolved_name + "/matrix#" + std::to_string(it), cur_mat);
+    }
+    return loaded;
+  }
   //}
 
   //}
@@ -140,124 +282,49 @@ private:
   // Returns a tuple, containing either the loaded or the default value and a bool,
   // indicating if the value was loaded (true) or the default value was used (false).
   template <typename T>
-  std::pair<T, bool> load(const std::string& name, const T& default_value, optional_t optional = OPTIONAL, unique_t unique = UNIQUE);
+  std::pair<T, bool> ParamLoader::load(const std::string& name, const T& default_value, optional_t optional, unique_t unique)
+  {
+    const auto resolved_name = m_pp.resolveName(name);
+    T loaded = default_value;
+    if (unique && check_duplicit_loading(resolved_name))
+      return {loaded, false};
+
+    bool cur_load_successful = true;
+    // try to load the parameter
+    const bool success = m_pp.getParam(resolved_name, loaded);
+    if (!success) {
+      // if it was not loaded, set the default value
+      loaded = default_value;
+      if (!optional) {
+        // if the parameter was compulsory, alert the user and set the flag
+        printError(std::string("Could not load non-optional parameter ") + prepend_node_name(resolved_name));
+        cur_load_successful = false;
+      }
+    }
+
+    if (cur_load_successful) {
+      // everything is fine and just print the resolved_name and value if required
+      if (m_print_values)
+        printValue(resolved_name, loaded);
+      // mark the param resolved_name as successfully loaded
+      m_loaded_params.insert(resolved_name);
+    } else {
+      m_load_successful = false;
+    }
+    // finally, return the resulting value
+    return {loaded, success};
+  }
   //}
-  //}
-
-public:
-  /*!
-   * \brief Main constructor.
-   *
-   * \param nh            The parameters will be loaded from rosparam using this node handle.
-   * \param printValues  If true, the loaded values will be printed to stdout using std::cout or ROS_INFO if node_name is not empty.
-   * \param node_name     Optional node name used when printing the loaded values or loading errors.
-   */
-  ParamLoader(const std::shared_ptr<rclcpp::Node>& node, bool printValues = true, std::string_view node_name = std::string());
-
-  /* Constructor overloads //{ */
-  /*!
-   * \brief Convenience overload to enable writing ParamLoader pl(nh, node_name);
-   *
-   * \param nh            The parameters will be loaded from rosparam using this node handle.
-   * \param node_name     Optional node name used when printing the loaded values or loading errors.
-   */
-  ParamLoader(const std::shared_ptr<rclcpp::Node>& node, std::string node_name);
-
-  //}
-
-  /* setPrefix function //{ */
-
-  /*!
-   * \brief Sets a prefix that will be applied to parameter names before subnode namespaces.
-   *
-   * The prefix will be applied as-is, so if you need to separate it from the parameter name
-   * e.g. using a forward slash '/', you must include it in the prefix.
-   *
-   * \param prefix      The prefix to be applied to all parameter names.
-   */
-  void setPrefix(const std::string& prefix);
-
-  //}
-
-  /* getPrefix function //{ */
-
-  /*!
-   * \brief Returns the current parameter name prefix.
-   *
-   * \return the current prefix to be applied to the loaded parameters.
-   */
-  std::string getPrefix();
-
-  //}
-
-  /* addYamlFile() function //{ */
-
-  /*!
-   * \brief Adds the specified file as a source of static parameters.
-   *
-   * \param filepath The full path to the yaml file to be loaded.
-   * \return true if loading and parsing the file was successful, false otherwise.
-   */
-  bool addYamlFile(const std::string& filepath);
-  //}
-
-  /* addYamlFileFromParam() function //{ */
-
-  /*!
-   * \brief Loads a filepath from a parameter loads that file as a YAML.
-   *
-   * \param param_name Name of the parameter from which to load the YAML filename to be loaded.
-   * \return true      if loading and parsing the file was successful, false otherwise.
-   */
-  bool addYamlFileFromParam(const std::string& param_name);
-  //}
-
-  /*!
-   * \brief Copies parsed YAMLs from another ParamLoader.
-   *
-   * \param param_loader The ParamLoader object to copy the YAML files from.
-   */
-  void copyYamls(const ParamLoader& param_loader);
-
-  /* loadedSuccessfully function //{ */
-  /*!
-   * \brief Indicates whether all compulsory parameters were successfully loaded.
-   *
-   * \return false if any compulsory parameter was not loaded (is not present at rosparam server). Otherwise returns true.
-   */
-  bool loadedSuccessfully() const;
-  //}
-
-  /* resetLoadedSuccessfully function //{ */
-  /*!
-   * \brief Resets the loadedSuccessfully flag back to true.
-   */
-  void resetLoadedSuccessfully();
-  //}
-
-  /* resetUniques function //{ */
-  /*!
-   * \brief Resets the list of already loaded parameter names used when checking for uniqueness.
-   */
-  void resetUniques();
   //}
 
   /* loadParam function for optional parameters //{ */
-  /*!
-   * \brief Loads a parameter from the rosparam server with a default value.
-   *
-   * If the parameter with the specified name is not found on the rosparam server (e.g. because it is not specified in the launchfile or yaml config file),
-   * the default value is used.
-   * Using this method, the parameter can only be loaded once using the same ParamLoader instance without error.
-   *
-   * \param name          Name of the parameter in the rosparam server.
-   * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
-   * \param default_value This value will be used if the parameter name is not found in the rosparam server.
-   * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
-   */
   template <typename T>
-  bool loadParam(const std::string& name, T& out_value, const T& default_value);
-
+  bool ParamLoader::loadParam(const std::string& name, T& out_value, const T& default_value)
+  {
+    const auto [ret, success] = load<T>(name, default_value, OPTIONAL, UNIQUE);
+    out_value                 = ret;
+    return success;
+  }
   /*!
    * \brief Loads a parameter from the rosparam server with a default value.
    *
@@ -270,8 +337,11 @@ public:
    * \return              The loaded parameter value.
    */
   template <typename T>
-  T loadParam2(const std::string& name, const T& default_value);
-
+  T ParamLoader::loadParam2(const std::string& name, const T& default_value)
+  {
+    const auto loaded = load<T>(name, default_value, OPTIONAL, UNIQUE);
+    return loaded.first;
+  }
   /*!
    * \brief Loads a parameter from the rosparam server with a default value.
    *
@@ -285,8 +355,12 @@ public:
    * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
    */
   template <typename T>
-  bool loadParamReusable(const std::string& name, T& out_value, const T& default_value);
-
+  bool ParamLoader::loadParamReusable(const std::string& name, T& out_value, const T& default_value)
+  {
+    const auto [ret, success] = load<T>(name, default_value, OPTIONAL, REUSABLE);
+    out_value                 = ret;
+    return success;
+  }
   /*!
    * \brief Loads an optional reusable parameter from the rosparam server.
    *
@@ -299,8 +373,11 @@ public:
    * \return              The loaded parameter value.
    */
   template <typename T>
-  T loadParamReusable2(const std::string& name, const T& default_value);
-
+  T ParamLoader::loadParamReusable2(const std::string& name, const T& default_value)
+  {
+    const auto [ret, success] = load<T>(name, default_value, OPTIONAL, REUSABLE);
+    return ret;
+  }
   //}
 
   /* loadParam function for compulsory parameters //{ */
@@ -316,8 +393,12 @@ public:
    * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
    */
   template <typename T>
-  bool loadParam(const std::string& name, T& out_value); 
-
+  bool ParamLoader::loadParam(const std::string& name, T& out_value)
+  {
+    const auto [ret, success] = load<T>(name, T(), COMPULSORY, UNIQUE);
+    out_value                 = ret;
+    return success;
+  }
   /*!
    * \brief Loads a compulsory parameter from the rosparam server.
    *
@@ -329,8 +410,11 @@ public:
    * \return              The loaded parameter value.
    */
   template <typename T>
-  T loadParam2(const std::string& name);
-
+  T ParamLoader::loadParam2(const std::string& name)
+  {
+    const auto [ret, success] = load<T>(name, T(), COMPULSORY, UNIQUE);
+    return ret;
+  }
   /*!
    * \brief Loads a compulsory parameter from the rosparam server.
    *
@@ -343,8 +427,12 @@ public:
    * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
    */
   template <typename T>
-  bool loadParamReusable(const std::string& name, T& out_value);
-
+  bool ParamLoader::loadParamReusable(const std::string& name, T& out_value)
+  {
+    const auto [ret, success] = load<T>(name, T(), COMPULSORY, REUSABLE);
+    out_value                 = ret;
+    return success;
+  }
   /*!
    * \brief Loads a compulsory parameter from the rosparam server.
    *
@@ -356,62 +444,11 @@ public:
    * \return              The loaded parameter value.
    */
   template <typename T>
-  T loadParamReusable2(const std::string& name);
-
-  //}
-
-  /* loadParam specializations for rclcpp::Duration type //{ */
-
-  /*!
-   * \brief An overload for loading rclcpp::Duration.
-   *
-   * The duration will be loaded as a \p double, representing a number of seconds, and then converted to rclcpp::Duration.
-   *
-   * \param name          Name of the parameter in the rosparam server.
-   * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
-   * \param default_value This value will be used if the parameter name is not found in the rosparam server.
-   * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
-   */
-  bool loadParam(const std::string& name, rclcpp::Duration& out, const rclcpp::Duration& default_value);
-
-  /*!
-   * \brief An overload for loading rclcpp::Duration.
-   *
-   * The duration will be loaded as a \p double, representing a number of seconds, and then converted to rclcpp::Duration.
-   *
-   * \param name          Name of the parameter in the rosparam server.
-   * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
-   * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
-   */
-  bool loadParam(const std::string& name, rclcpp::Duration& out);
-
-  //}
-
-  /* loadParam specializations for std_msgs::msg::ColorRGBA type //{ */
-
-  /*!
-   * \brief An overload for loading std_msgs::msg::ColorRGBA.
-   *
-   * The color will be loaded as several \p double -typed variables, representing the R, G, B and A color elements.
-   *
-   * \param name          Name of the parameter in the rosparam server.
-   * \param out_value     Reference to the variable to which the parameter value will be stored (such as a class member variable).
-   * \param default_value This value will be used if the parameter name is not found in the rosparam server.
-   * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
-   */
-  bool loadParam(const std::string& name, std_msgs::msg::ColorRGBA& out, const std_msgs::msg::ColorRGBA& default_value = std_msgs::msg::ColorRGBA());
-
-  /*!
-   * \brief An overload for loading std_msgs::msg::ColorRGBA.
-   *
-   * The color will be loaded as several \p double -typed variables, representing the R, G, B and A color elements.
-   *
-   * \param name          Name of the parameter in the rosparam server.
-   * \param default_value This value will be used if the parameter name is not found in the rosparam server.
-   * \return              The loaded parameter value.
-   */
-  std_msgs::msg::ColorRGBA loadParam2(const std::string& name, const std_msgs::msg::ColorRGBA& default_value = std_msgs::msg::ColorRGBA());
-
+  T ParamLoader::loadParamReusable2(const std::string& name)
+  {
+    const auto [ret, success] = load<T>(name, T(), COMPULSORY, REUSABLE);
+    return ret;
+  }
   //}
 
   /* loadParam specializations and convenience functions for Eigen dynamic matrix type //{ */
@@ -431,7 +468,13 @@ public:
    * \return              True if loaded successfully, false otherwise.
    */
   template <typename T>
-  bool loadParam(const std::string& name, MatrixX<T>& mat, const MatrixX<T>& default_value);
+  bool ParamLoader::loadParam(const std::string& name, MatrixX<T>& mat, const MatrixX<T>& default_value)
+  {
+    const int  rows      = default_value.rows();
+    const int  cols      = default_value.cols();
+    const bool loaded_ok = loadMatrixDynamic(name, mat, default_value, rows, cols);
+    return loaded_ok;
+  }
 
   /*!
    * \brief An overload for loading Eigen matrices.
@@ -447,7 +490,12 @@ public:
    * \return              The loaded parameter value.
    */
   template <typename T>
-  MatrixX<T> loadParam2(const std::string& name, const MatrixX<T>& default_value);
+  ParamLoader::MatrixX<T> ParamLoader::loadParam2(const std::string& name, const MatrixX<T>& default_value)
+  {
+    MatrixX<T> ret;
+    loadParam(name, ret, default_value);
+    return ret;
+  }
 
   //}
 
@@ -471,7 +519,12 @@ public:
    *
    */
   template <int rows, int cols, typename T>
-  bool loadMatrixStatic(const std::string& name, Eigen::Matrix<T, rows, cols>& mat);
+  bool ParamLoader::loadMatrixStatic(const std::string& name, Eigen::Matrix<T, rows, cols>& mat)
+  {
+    const auto [ret, loaded_ok] = loadMatrixStatic_internal<rows, cols, T>(name, Eigen::Matrix<T, rows, cols>::Zero(), COMPULSORY, UNIQUE);
+    mat                         = ret;
+    return loaded_ok;
+  }
 
   /*!
    * \brief Specialized method for loading Eigen matrix parameters with default value.
@@ -491,7 +544,12 @@ public:
    *
    */
   template <int rows, int cols, typename T, typename Derived>
-  bool loadMatrixStatic(const std::string& name, Eigen::Matrix<T, rows, cols>& mat, const Eigen::MatrixBase<Derived>& default_value);
+  bool ParamLoader::loadMatrixStatic(const std::string& name, Eigen::Matrix<T, rows, cols>& mat, const Eigen::MatrixBase<Derived>& default_value)
+  {
+    const auto [ret, loaded_ok] = loadMatrixStatic_internal<rows, cols, T>(name, Eigen::Matrix<T, rows, cols>(default_value), OPTIONAL, UNIQUE);
+    mat                         = ret;
+    return loaded_ok;
+  }
 
   /*!
    * \brief Specialized method for loading compulsory Eigen matrix parameters.
@@ -509,8 +567,13 @@ public:
    * \return      The loaded parameter value.
    *
    */
-  template <int rows, int cols, typename T = double>
-  Eigen::Matrix<T, rows, cols> loadMatrixStatic2(const std::string& name);
+  template <int rows, int cols, typename T>
+  Eigen::Matrix<T, rows, cols> ParamLoader::loadMatrixStatic2(const std::string& name)
+  {
+    Eigen::Matrix<T, rows, cols> ret;
+    loadMatrixStatic(name, ret);
+    return ret;
+  }
 
   /*!
    * \brief Specialized method for loading Eigen matrix parameters with default value.
@@ -529,8 +592,12 @@ public:
    *
    */
   template <int rows, int cols, typename T, typename Derived>
-  Eigen::Matrix<T, rows, cols> loadMatrixStatic2(const std::string& name, const Eigen::MatrixBase<Derived>& default_value);
-
+  Eigen::Matrix<T, rows, cols> ParamLoader::loadMatrixStatic2(const std::string& name, const Eigen::MatrixBase<Derived>& default_value)
+  {
+    Eigen::Matrix<T, rows, cols> ret;
+    loadMatrixStatic(name, ret, default_value);
+    return ret;
+  }
   //}
 
   // loadMatrixKnown function for loading of Eigen matrices with known dimensions //{
@@ -551,7 +618,12 @@ public:
    * \return      true if loaded successfully, false otherwise.
    */
   template <typename T>
-  bool loadMatrixKnown(const std::string& name, MatrixX<T>& mat, int rows, int cols);
+  bool ParamLoader::loadMatrixKnown(const std::string& name, MatrixX<T>& mat, int rows, int cols)
+  {
+    const auto [ret, loaded_ok] = loadMatrixKnown_internal(name, MatrixX<T>(), rows, cols, COMPULSORY, UNIQUE);
+    mat                         = ret;
+    return loaded_ok;
+  }
 
   /*!
    * \brief Specialized method for loading Eigen matrix parameters with default value.
@@ -569,7 +641,12 @@ public:
    * \return              true if the parameter was loaded from \p rosparam, false if the default value was used.
    */
   template <typename T, typename Derived>
-  bool loadMatrixKnown(const std::string& name, MatrixX<T>& mat, const Eigen::MatrixBase<Derived>& default_value, int rows, int cols);
+  bool ParamLoader::loadMatrixKnown(const std::string& name, MatrixX<T>& mat, const Eigen::MatrixBase<Derived>& default_value, int rows, int cols)
+  {
+    const auto [ret, loaded_ok] = loadMatrixKnown_internal(name, MatrixX<T>(default_value), rows, cols, OPTIONAL, UNIQUE);
+    mat                         = ret;
+    return loaded_ok;
+  }
 
   /*!
    * \brief Specialized method for loading compulsory Eigen matrix parameters.
@@ -585,8 +662,13 @@ public:
    * \param cols  Expected number of columns of the matrix.
    * \return      The loaded parameter value.
    */
-  template <typename T = double>
-  MatrixX<T> loadMatrixKnown2(const std::string& name, int rows, int cols);
+  template <typename T>
+  ParamLoader::MatrixX<T> ParamLoader::loadMatrixKnown2(const std::string& name, int rows, int cols)
+  {
+    MatrixX<T> ret;
+    loadMatrixKnown(name, ret, rows, cols);
+    return ret;
+  }
 
   /*!
    * \brief Specialized method for loading Eigen matrix parameters with default value.
@@ -603,8 +685,12 @@ public:
    * \return              The loaded parameter value.
    */
   template <typename T, typename Derived>
-  MatrixX<T> loadMatrixKnown2(const std::string& name, const Eigen::MatrixBase<Derived>& default_value, int rows, int cols);
-
+  ParamLoader::MatrixX<T> ParamLoader::loadMatrixKnown2(const std::string& name, const Eigen::MatrixBase<Derived>& default_value, int rows, int cols)
+  {
+    MatrixX<T> ret;
+    loadMatrixKnown(name, ret, default_value, rows, cols);
+    return ret;
+  }
   //}
 
   // loadMatrixDynamic function for half-dynamic loading of MatrixX<T> //{
@@ -625,7 +711,12 @@ public:
    * deduced from the specified number of rows and the size of the loaded array). \return      true if loaded successfully, false otherwise.
    */
   template <typename T>
-  bool loadMatrixDynamic(const std::string& name, MatrixX<T>& mat, int rows, int cols);
+  bool ParamLoader::loadMatrixDynamic(const std::string& name, MatrixX<T>& mat, int rows, int cols)
+  {
+    const auto [ret, loaded_ok] = loadMatrixDynamic_internal(name, MatrixX<T>(), rows, cols, COMPULSORY, UNIQUE);
+    mat                         = ret;
+    return loaded_ok;
+  }
 
   /*!
    * \brief Specialized method for loading compulsory dynamic Eigen matrix parameters.
@@ -644,7 +735,12 @@ public:
    * rosparam, false if the default value was used.
    */
   template <typename T, typename Derived>
-  bool loadMatrixDynamic(const std::string& name, MatrixX<T>& mat, const Eigen::MatrixBase<Derived>& default_value, int rows, int cols);
+  bool ParamLoader::loadMatrixDynamic(const std::string& name, MatrixX<T>& mat, const Eigen::MatrixBase<Derived>& default_value, int rows, int cols)
+  {
+    const auto [ret, loaded_ok] = loadMatrixDynamic_internal(name, MatrixX<T>(default_value), rows, cols, OPTIONAL, UNIQUE);
+    mat                         = ret;
+    return loaded_ok;
+  }
 
   /*!
    * \brief Specialized method for loading compulsory dynamic Eigen matrix parameters.
@@ -660,8 +756,13 @@ public:
    * and the size of the loaded array). \param cols  Expected number of columns of the matrix (negative value indicates that the number of columns is to be
    * deduced from the specified number of rows and the size of the loaded array). \return      The loaded parameter value.
    */
-  template <typename T = double>
-  MatrixX<T> loadMatrixDynamic2(const std::string& name, int rows, int cols);
+  template <typename T>
+  ParamLoader::MatrixX<T> ParamLoader::loadMatrixDynamic2(const std::string& name, int rows, int cols)
+  {
+    MatrixX<T> ret;
+    loadMatrixDynamic(name, ret, rows, cols);
+    return ret;
+  }
 
   /*!
    * \brief Specialized method for loading compulsory dynamic Eigen matrix parameters.
@@ -678,7 +779,12 @@ public:
    * columns is to be deduced from the specified number of rows and the size of the loaded array). \return              The loaded parameter value.
    */
   template <typename T, typename Derived>
-  MatrixX<T> loadMatrixDynamic2(const std::string& name, const Eigen::MatrixBase<Derived>& default_value, int rows, int cols);
+  ParamLoader::MatrixX<T> ParamLoader::loadMatrixDynamic2(const std::string& name, const Eigen::MatrixBase<Derived>& default_value, int rows, int cols)
+  {
+    MatrixX<T> ret;
+    loadMatrixDynamic(name, ret, default_value, rows, cols);
+    return ret;
+  }
 
   //}
 
@@ -716,7 +822,10 @@ public:
    *
    */
   template <typename T>
-  void loadMatrixArray(const std::string& name, std::vector<MatrixX<T>>& mat);
+  void ParamLoader::loadMatrixArray(const std::string& name, std::vector<MatrixX<T>>& mat)
+  {
+    mat = loadMatrixArray2<double>(name);
+  }
 
   /*!
    * \brief Specialized method for loading compulsory parameters, interpreted as an array of dynamic Eigen matrices.
@@ -730,7 +839,10 @@ public:
    *
    */
   template <typename T>
-  void loadMatrixArray(const std::string& name, std::vector<MatrixX<T>>& mat, const std::vector<MatrixX<T>>& default_value);
+  void ParamLoader::loadMatrixArray(const std::string& name, std::vector<MatrixX<T>>& mat, const std::vector<MatrixX<T>>& default_value)
+  {
+    mat = loadMatrixArray2(name, default_value);
+  }
 
   /*!
    * \brief Specialized method for loading compulsory parameters, interpreted as an array of dynamic Eigen matrices.
@@ -742,8 +854,11 @@ public:
    * \returns              The loaded parameter or a default constructed object of the respective type.
    *
    */
-  template <typename T = double>
-  std::vector<MatrixX<T>> loadMatrixArray2(const std::string& name);
+  template <typename T>
+  std::vector<ParamLoader::MatrixX<T>> ParamLoader::loadMatrixArray2(const std::string& name)
+  {
+    return loadMatrixArray_internal(name, std::vector<MatrixX<T>>(), COMPULSORY, UNIQUE);
+  }
 
   /*!
    * \brief Specialized method for loading compulsory parameters, interpreted as an array of dynamic Eigen matrices.
@@ -757,36 +872,10 @@ public:
    *
    */
   template <typename T>
-  std::vector<MatrixX<T>> loadMatrixArray2(const std::string& name, const std::vector<MatrixX<T>>& default_value);
-  
+  std::vector<ParamLoader::MatrixX<T>> ParamLoader::loadMatrixArray2(const std::string& name, const std::vector<MatrixX<T>>& default_value)
+  {
+    return loadMatrixArray_internal(name, default_value, OPTIONAL, UNIQUE);
+  }
   //}
 
-};
-//}
-
-/*!
- * \brief An overload for loading rclcpp::Duration.
- *
- * The duration will be loaded as a \p double, representing a number of seconds, and then converted to rclcpp::Duration.
- *
- * \param name          Name of the parameter in the rosparam server.
- * \param default_value This value will be used if the parameter name is not found in the rosparam server.
- * \return              The loaded parameter value.
- */
-template <>
-rclcpp::Duration ParamLoader::loadParam2<rclcpp::Duration>(const std::string& name, const rclcpp::Duration& default_value);
-
-/*!
- * \brief An overload for loading rclcpp::Duration.
- *
- * The duration will be loaded as a \p double, representing a number of seconds, and then converted to rclcpp::Duration.
- *
- * \param name          Name of the parameter in the rosparam server.
- * \return              The loaded parameter value.
- */
-template <>
-rclcpp::Duration ParamLoader::loadParam2<rclcpp::Duration>(const std::string& name);
-
 }  // namespace mrs_lib
-
-#include <mrs_lib/impl/param_loader.hpp>
