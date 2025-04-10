@@ -1,5 +1,5 @@
-#ifndef PARAM_LOADER_H
-#define PARAM_LOADER_H
+// clang: MatousFormat
+#pragma once
 
 #include <rclcpp/rclcpp.hpp>
 #include <string>
@@ -59,7 +59,6 @@ private:
 private:
   bool                            m_load_successful, m_print_values;
   std::string                     m_node_name;
-  std::string                     m_prefix;
   std::shared_ptr<rclcpp::Node>   m_node;
   mrs_lib::ParamProvider          m_pp;
   std::unordered_set<std::string> m_loaded_params;
@@ -141,11 +140,15 @@ private:
       RCLCPP_INFO_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << name << "':" << std::endl << strstr.str());
   }
 
-  std::string resolved(const std::string& param_name) {
-    return std::string(m_node->get_fully_qualified_name()) + "/" + m_pp.resolveName(param_name);
+  std::string prepend_node_name(const std::string& resolved_name)
+  {
+    return std::string(m_node->get_fully_qualified_name()) + " " + resolved_name;
   }
   //}
 
+  //}
+
+  /* loading helper functions //{ */
   /* check_duplicit_loading checks whether the parameter was already loaded - returns true if yes //{ */
   bool check_duplicit_loading(const std::string& name) {
     if (m_loaded_params.count(name)) {
@@ -163,24 +166,24 @@ private:
   template <typename T>
   std::pair<MatrixX<T>, bool> loadMatrixX(const std::string& name, const MatrixX<T>& default_value, int rows, int cols = Eigen::Dynamic,
                                           optional_t optional = OPTIONAL, unique_t unique = UNIQUE, swap_t swap = NO_SWAP, bool printValues = true) {
-    const std::string name_prefixed       = m_prefix + name;
-    MatrixX<T>        loaded              = default_value;
-    bool              used_rosparam_value = false;
+    const auto resolved_name = m_pp.resolveName(name);
+    MatrixX<T> loaded = default_value;
+    bool used_rosparam_value = false;
     // first, check if the user already tried to load this parameter
-    if (unique && check_duplicit_loading(name_prefixed))
+    if (unique && check_duplicit_loading(resolved_name))
       return {loaded, used_rosparam_value};
 
     // this function only accepts dynamic columns (you can always transpose the matrix afterward)
     if (rows < 0) {
       // if the parameter was compulsory, alert the user and set the flag
-      printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name_prefixed));
+      printError(std::string("Invalid expected matrix dimensions for parameter ") + prepend_node_name(resolved_name));
       m_load_successful = false;
       return {loaded, used_rosparam_value};
     }
     const bool expect_zero_matrix = rows == 0;
     if (expect_zero_matrix) {
       if (cols > 0) {
-        printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name_prefixed) +
+        printError(std::string("Invalid expected matrix dimensions for parameter ") + prepend_node_name(resolved_name) +
                    ". One dimension indicates zero matrix, but other expects non-zero.");
         m_load_successful = false;
         return {loaded, used_rosparam_value};
@@ -194,7 +197,7 @@ private:
 
     std::vector<T> tmp_vec;
     // try to load the parameter
-    const bool success = m_pp.getParam(name_prefixed, tmp_vec);
+    const bool success = m_pp.getParam(resolved_name, tmp_vec);
     // check if the loaded vector has correct length
     bool correct_size = (int)tmp_vec.size() == rows * cols;
     if (!check_size_exact && !expect_zero_matrix)
@@ -213,7 +216,7 @@ private:
       if (success && !correct_size) {
         // warn the user that this parameter was not successfully loaded because of wrong vector length (might be an oversight)
         std::string warning =
-            std::string("Matrix parameter ") + name_prefixed +
+            std::string("Matrix parameter ") + resolved_name +
             std::string(" could not be loaded because the vector has a wrong length " + std::to_string(tmp_vec.size()) + " instead of expected ");
         // process the message correctly based on whether the loaded matrix should be dynamic or static
         if (cols <= 0)  // for dynamic matrices
@@ -225,7 +228,7 @@ private:
       // if it was not loaded, the default value is used (set at the beginning of the function)
       if (!optional) {
         // if the parameter was compulsory, alert the user and set the flag
-        printError(std::string("Could not load non-optional parameter ") + resolved(name_prefixed));
+        printError(std::string("Could not load non-optional parameter ") + prepend_node_name(resolved_name));
         cur_load_successful = false;
       }
     }
@@ -233,8 +236,8 @@ private:
     // check if load was a success
     if (cur_load_successful) {
       if (m_print_values && printValues)
-        printValue(name_prefixed, loaded);
-      m_loaded_params.insert(name_prefixed);
+        printValue(resolved_name, loaded);
+      m_loaded_params.insert(resolved_name);
     } else {
       m_load_successful = false;
     }
@@ -259,7 +262,7 @@ private:
     MatrixX<T> loaded = default_value;
     // first, check that at least one dimension is set
     if (rows <= 0 || cols <= 0) {
-      printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name) + std::string(" (use loadMatrixDynamic?)"));
+      printError(std::string("Invalid expected matrix dimensions for parameter ") + prepend_node_name(m_pp.resolveName(name)) + std::string(" (use loadMatrixDynamic?)"));
       m_load_successful = false;
       return {loaded, false};
     }
@@ -276,7 +279,7 @@ private:
 
     // next, check that at least one dimension is set
     if (rows <= 0 && cols <= 0) {
-      printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name) +
+      printError(std::string("Invalid expected matrix dimensions for parameter ") + prepend_node_name(m_pp.resolveName(name)) +
                  std::string(" (at least one dimension must be specified)"));
       m_load_successful = false;
       return {loaded, false};
@@ -296,12 +299,12 @@ private:
   template <typename T>
   std::vector<MatrixX<T>> loadMatrixArray_internal(const std::string& name, const std::vector<MatrixX<T>>& default_value, optional_t optional,
                                                    unique_t unique) {
-    const std::string     name_prefixed = m_prefix + name;
-    int                   rows;
+    const auto resolved_name = m_pp.resolveName(name);
+    int rows;
     std::vector<long int> cols;
-    bool                  success = true;
-    success                       = success && m_pp.getParam(name_prefixed + "/rows", rows);
-    success                       = success && m_pp.getParam(name_prefixed + "/cols", cols);
+    bool success = true;
+    success = success && m_pp.getParam(resolved_name + "/rows", rows);
+    success = success && m_pp.getParam(resolved_name + "/cols", cols);
 
     std::vector<MatrixX<T>> loaded;
     loaded.reserve(cols.size());
@@ -310,18 +313,18 @@ private:
     /* check correctness of loaded parameters so far calculate the total dimension //{ */
 
     if (!success) {
-      printError(std::string("Failed to load ") + resolved(name_prefixed) + std::string("/rows or ") + resolved(name_prefixed) + std::string("/cols"));
+      printError(std::string("Failed to load ") + prepend_node_name(resolved_name) + std::string("/rows or ") + prepend_node_name(resolved_name) + std::string("/cols"));
       m_load_successful = false;
       return default_value;
     }
     if (rows < 0) {
-      printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name_prefixed) + std::string(" (rows and cols must be >= 0)"));
+      printError(std::string("Invalid expected matrix dimensions for parameter ") + prepend_node_name(resolved_name) + std::string(" (rows and cols must be >= 0)"));
       m_load_successful = false;
       return default_value;
     }
     for (const auto& col : cols) {
       if (col < 0) {
-        printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved(name_prefixed) + std::string(" (rows and cols must be >= 0)"));
+        printError(std::string("Invalid expected matrix dimensions for parameter ") + prepend_node_name(resolved_name) + std::string(" (rows and cols must be >= 0)"));
         m_load_successful = false;
         return default_value;
       }
@@ -346,7 +349,7 @@ private:
       /* std::cout << "cur_mat: " << cur_mat << std::endl; */
       loaded.push_back(cur_mat);
       cols_loaded += cur_cols;
-      printValue(name_prefixed + "/matrix#" + std::to_string(it), cur_mat);
+      printValue(resolved_name + "/matrix#" + std::to_string(it), cur_mat);
     }
     return loaded;
   }
@@ -366,30 +369,30 @@ private:
   // indicating if the value was loaded (true) or the default value was used (false).
   template <typename T>
   std::pair<T, bool> load(const std::string& name, const T& default_value, optional_t optional = OPTIONAL, unique_t unique = UNIQUE) {
-    const std::string name_prefixed = m_prefix + name;
-    T                 loaded        = default_value;
-    if (unique && check_duplicit_loading(name_prefixed))
+    const auto resolved_name = m_pp.resolveName(name);
+    T loaded = default_value;
+    if (unique && check_duplicit_loading(resolved_name))
       return {loaded, false};
 
     bool cur_load_successful = true;
     // try to load the parameter
-    const bool success = m_pp.getParam(name_prefixed, loaded);
+    const bool success = m_pp.getParam(resolved_name, loaded);
     if (!success) {
       // if it was not loaded, set the default value
       loaded = default_value;
       if (!optional) {
         // if the parameter was compulsory, alert the user and set the flag
-        printError(std::string("Could not load non-optional parameter ") + resolved(name_prefixed));
+        printError(std::string("Could not load non-optional parameter ") + prepend_node_name(resolved_name));
         cur_load_successful = false;
       }
     }
 
     if (cur_load_successful) {
-      // everything is fine and just print the name_prefixed and value if required
+      // everything is fine and just print the resolved_name and value if required
       if (m_print_values)
-        printValue(name_prefixed, loaded);
-      // mark the param name_prefixed as successfully loaded
-      m_loaded_params.insert(name_prefixed);
+        printValue(resolved_name, loaded);
+      // mark the param resolved_name as successfully loaded
+      m_loaded_params.insert(resolved_name);
     } else {
       m_load_successful = false;
     }
@@ -437,12 +440,16 @@ public:
   /* setPrefix function //{ */
 
   /*!
-   * \brief All loaded parameters will be prefixed with this string.
+   * \brief Sets a prefix that will be applied to parameter names before subnode namespaces.
    *
-   * \param prefix  the prefix to be applied to all loaded parameters from now on.
+   * The prefix will be applied as-is, so if you need to separate it from the parameter name
+   * e.g. using a forward slash '/', you must include it in the prefix.
+   *
+   * \param prefix      The prefix to be applied to all parameter names.
    */
-  void setPrefix(const std::string& prefix) {
-    m_prefix = prefix;
+  void setPrefix(const std::string& prefix)
+  {
+    m_pp.setPrefix(prefix);
   }
 
   //}
@@ -454,8 +461,9 @@ public:
    *
    * \return the current prefix to be applied to the loaded parameters.
    */
-  std::string getPrefix() {
-    return m_prefix;
+  std::string getPrefix()
+  {
+    return m_pp.getPrefix();
   }
 
   //}
@@ -1170,5 +1178,3 @@ template <>
 rclcpp::Duration ParamLoader::loadParam2<rclcpp::Duration>(const std::string& name);
 
 }  // namespace mrs_lib
-
-#endif  // PARAM_LOADER_H

@@ -20,7 +20,12 @@ namespace mrs_lib
   template <typename T>
   bool ParamProvider::getParam(const std::string& param_name, T& value_out, const bool reconfigurable) const
   {
-    const auto resolved_name = resolveName(param_name);
+    return getParam(resolveName(param_name), value_out, reconfigurable);
+  }
+
+  template <typename T>
+  bool ParamProvider::getParam(const resolved_name_t& resolved_name, T& value_out, const bool reconfigurable) const
+  {
     const auto found_node = findYamlNode(resolved_name);
     if (found_node.has_value())
     {
@@ -44,7 +49,7 @@ namespace mrs_lib
     {
       // firstly, the parameter has to be declared
       // see https://docs.ros.org/en/jazzy/Concepts/Basic/About-Parameters.html#parameters
-      if (!m_node->has_parameter(resolved_name) && !declareParam<T>(param_name, reconfigurable))
+      if (!m_node->has_parameter(resolved_name) && !declareParam<T>(resolved_name, reconfigurable))
         return false;
 
       try
@@ -53,7 +58,8 @@ namespace mrs_lib
         rclcpp::Parameter param;
         if (!m_node->get_parameter(resolved_name, param))
         {
-          RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not get param '" << resolved_name << "' (not declared)");
+          // do not print an error as the parameter may have been optional - it is therefore OK if it is not declared
+          /* RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not get param '" << resolved_name << "' (not declared)"); */
           return false;
         }
         value_out = param.get_value<T>();
@@ -110,7 +116,12 @@ namespace mrs_lib
   template <typename T>
   bool ParamProvider::declareParam(const std::string& param_name, const bool reconfigurable) const
   {
-    const auto resolved_name = resolveName(param_name);
+    return declareParam<T>(resolveName(param_name), reconfigurable);
+  }
+
+  template <typename T>
+  bool ParamProvider::declareParam(const ParamProvider::resolved_name_t& resolved_name, const bool reconfigurable) const
+  {
     try
     {
       // a hack to allow declaring a strong-typed parameter without a default value
