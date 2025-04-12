@@ -48,7 +48,7 @@ set(DEPENDENCIES
   visualization_msgs
   Eigen3
   yaml-cpp
-)
+  )
 
 set(LIBRARIES
   MrsLib_Geometry
@@ -81,7 +81,7 @@ include_directories(
   include
   ${rclcpp_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
-)
+  )
 
 ## --------------------------------------------------------------
 ## |                       compile                              |
@@ -174,6 +174,10 @@ ament_target_dependencies(MrsLib_ParamProvider
 
 add_library(MrsLib_ParamLoader SHARED
   src/param_loader/param_loader.cpp
+  )
+
+target_link_libraries(MrsLib_ParamLoader
+  MrsLib_ParamProvider
   )
 
 ament_target_dependencies(MrsLib_ParamLoader
@@ -352,7 +356,7 @@ endif()
 
 ament_export_libraries(
   ${LIBRARIES}
-)
+  )
 
 install(TARGETS
   ${LIBRARIES} ${EXECUTABLES}
@@ -360,23 +364,23 @@ install(TARGETS
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
-)
+  )
 
 install(
   DIRECTORY include
   DESTINATION .
-)
+  )
 
 ament_export_include_directories(
   include
-)
+  )
 
 ament_export_targets(
   export_${PROJECT_NAME} HAS_LIBRARY_TARGET
-)
+  )
 
 ament_export_dependencies(
   ${DEPENDENCIES}
-)
+  )
 
 ament_package()
