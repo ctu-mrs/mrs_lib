@@ -232,6 +232,11 @@ public:
    */
   void publish();
 
+  /**
+   * @brief publish the visual markers rclcpp message with desired stamp and populates it with buffer content
+   */
+  void publish(const rclcpp::Time stamp);
+
 private:
   std::shared_ptr<rclcpp::Node>   node;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr                  visual_pub;

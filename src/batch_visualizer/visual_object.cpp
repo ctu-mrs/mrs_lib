@@ -88,8 +88,7 @@ void VisualObject::addTriangle(const mrs_lib::geometry::Triangle& triangle, cons
 //}
 
 /* addEllipse //{ */
-void VisualObject::addEllipse(const mrs_lib::geometry::Ellipse& ellipse, const double r, const double g, const double b, const double a, const bool filled,
-                              const int num_points) {
+void VisualObject::addEllipse(const mrs_lib::geometry::Ellipse& ellipse, const double r, const double g, const double b, const double a, const bool filled, const int num_points) {
 
   std::vector<Eigen::Vector3d> points = buildEllipse(ellipse, num_points);
   if (filled) {
@@ -112,28 +111,27 @@ void VisualObject::addEllipse(const mrs_lib::geometry::Ellipse& ellipse, const d
 //}
 
 /* Eigen::Vector3d //{ */
-VisualObject::VisualObject(const Eigen::Vector3d& point, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout,
-                           const unsigned long& id, const rclcpp::Node::SharedPtr& node)
-    : id_(id), node_(node) {
+VisualObject::VisualObject(const Eigen::Vector3d& point, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout, const unsigned long& id, const rclcpp::Node::SharedPtr& node) : id_(id), node_(node) {
+
   type_ = MarkerType::POINT;
   points_.push_back(eigenToMsg(point));
   colors_.push_back(generateColor(r, g, b, a));
+
   if (timeout.seconds() <= 0) {
-    timeout_time_ = rclcpp::Time(0);
+    timeout_time_ = rclcpp::Time(0, 0, node_->get_clock()->get_clock_type());
   } else {
     timeout_time_ = node_->now() + timeout;
   }
 }
+
 //}
 
 /* mrs_lib::geometry::Ray //{ */
-VisualObject::VisualObject(const mrs_lib::geometry::Ray& ray, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout,
-                           const unsigned long& id, const rclcpp::Node::SharedPtr& node)
-    : id_(id), node_(node) {
+VisualObject::VisualObject(const mrs_lib::geometry::Ray& ray, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout, const unsigned long& id, const rclcpp::Node::SharedPtr& node) : id_(id), node_(node) {
   type_ = MarkerType::LINE;
   addRay(ray, r, g, b, a);
   if (timeout.seconds() <= 0) {
-    timeout_time_ = rclcpp::Time(0);
+    timeout_time_ = rclcpp::Time(0, 0, node_->get_clock()->get_clock_type());
   } else {
     timeout_time_ = node_->now() + timeout;
   }
@@ -141,12 +139,10 @@ VisualObject::VisualObject(const mrs_lib::geometry::Ray& ray, const double r, co
 //}
 
 /* mrs_lib::geometry::Triangle //{ */
-VisualObject::VisualObject(const mrs_lib::geometry::Triangle& triangle, const double r, const double g, const double b, const double a,
-                           const rclcpp::Duration& timeout, const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node)
-    : id_(id), node_(node) {
+VisualObject::VisualObject(const mrs_lib::geometry::Triangle& triangle, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout, const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node) : id_(id), node_(node) {
   addTriangle(triangle, r, g, b, a, filled);
   if (timeout.seconds() <= 0) {
-    timeout_time_ = rclcpp::Time(0);
+    timeout_time_ = rclcpp::Time(0, 0, node_->get_clock()->get_clock_type());
   } else {
     timeout_time_ = node_->now() + timeout;
   }
@@ -154,14 +150,12 @@ VisualObject::VisualObject(const mrs_lib::geometry::Triangle& triangle, const do
 //}
 
 /* mrs_lib::geometry::Rectangle //{ */
-VisualObject::VisualObject(const mrs_lib::geometry::Rectangle& rectangle, const double r, const double g, const double b, const double a,
-                           const rclcpp::Duration& timeout, const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node)
-    : id_(id), node_(node) {
+VisualObject::VisualObject(const mrs_lib::geometry::Rectangle& rectangle, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout, const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node) : id_(id), node_(node) {
   for (const auto& t : rectangle.triangles()) {
     addTriangle(t, r, g, b, a, filled);
   }
   if (timeout.seconds() <= 0) {
-    timeout_time_ = rclcpp::Time(0);
+    timeout_time_ = rclcpp::Time(0, 0, node_->get_clock()->get_clock_type());
   } else {
     timeout_time_ = node_->now() + timeout;
   }
@@ -169,9 +163,7 @@ VisualObject::VisualObject(const mrs_lib::geometry::Rectangle& rectangle, const 
 //}
 
 /* mrs_lib::geometry::Cuboid //{ */
-VisualObject::VisualObject(const mrs_lib::geometry::Cuboid& cuboid, const double r, const double g, const double b, const double a,
-                           const rclcpp::Duration& timeout, const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node)
-    : id_(id), node_(node) {
+VisualObject::VisualObject(const mrs_lib::geometry::Cuboid& cuboid, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout, const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node) : id_(id), node_(node) {
 
   for (int i = 0; i < 6; i++) {
     for (const auto& t : cuboid.getRectangle(i).triangles()) {
@@ -179,7 +171,7 @@ VisualObject::VisualObject(const mrs_lib::geometry::Cuboid& cuboid, const double
     }
   }
   if (timeout.seconds() <= 0) {
-    timeout_time_ = rclcpp::Time(0);
+    timeout_time_ = rclcpp::Time(0, 0, node_->get_clock()->get_clock_type());
   } else {
     timeout_time_ = node_->now() + timeout;
   }
@@ -187,12 +179,10 @@ VisualObject::VisualObject(const mrs_lib::geometry::Cuboid& cuboid, const double
 //}
 
 /* mrs_lib::geometry::Ellipse//{ */
-VisualObject::VisualObject(const mrs_lib::geometry::Ellipse& ellipse, const double r, const double g, const double b, const double a,
-                           const rclcpp::Duration& timeout, const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node, const int num_points)
-    : id_(id), node_(node) {
+VisualObject::VisualObject(const mrs_lib::geometry::Ellipse& ellipse, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout, const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node, const int num_points) : id_(id), node_(node) {
   addEllipse(ellipse, r, g, b, a, filled, num_points);
   if (timeout.seconds() <= 0) {
-    timeout_time_ = rclcpp::Time(0);
+    timeout_time_ = rclcpp::Time(0, 0, node_->get_clock()->get_clock_type());
   } else {
     timeout_time_ = node_->now() + timeout;
   }
@@ -200,9 +190,7 @@ VisualObject::VisualObject(const mrs_lib::geometry::Ellipse& ellipse, const doub
 //}
 
 /* mrs_lib::geometry::Cylinder //{ */
-VisualObject::VisualObject(const mrs_lib::geometry::Cylinder& cylinder, const double r, const double g, const double b, const double a,
-                           const rclcpp::Duration& timeout, const bool filled, const bool capped, const unsigned long& id, const rclcpp::Node::SharedPtr& node, const int num_sides)
-    : id_(id), node_(node) {
+VisualObject::VisualObject(const mrs_lib::geometry::Cylinder& cylinder, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout, const bool filled, const bool capped, const unsigned long& id, const rclcpp::Node::SharedPtr& node, const int num_sides) : id_(id), node_(node) {
   if (capped) {
     mrs_lib::geometry::Ellipse top    = cylinder.getCap(mrs_lib::geometry::Cylinder::TOP);
     mrs_lib::geometry::Ellipse bottom = cylinder.getCap(mrs_lib::geometry::Cylinder::BOTTOM);
@@ -220,7 +208,7 @@ VisualObject::VisualObject(const mrs_lib::geometry::Cylinder& cylinder, const do
   addTriangle(rect.triangles()[0], r, g, b, a, filled);
   addTriangle(rect.triangles()[1], r, g, b, a, filled);
   if (timeout.seconds() <= 0) {
-    timeout_time_ = rclcpp::Time(0);
+    timeout_time_ = rclcpp::Time(0, 0, node_->get_clock()->get_clock_type());
   } else {
     timeout_time_ = node_->now() + timeout;
   }
@@ -228,9 +216,7 @@ VisualObject::VisualObject(const mrs_lib::geometry::Cylinder& cylinder, const do
 //}
 
 /* mrs_lib::geometry::Cone //{ */
-VisualObject::VisualObject(const mrs_lib::geometry::Cone& cone, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout,
-                           const bool filled, const bool capped, const unsigned long& id, const rclcpp::Node::SharedPtr& node, const int num_sides)
-    : id_(id), node_(node) {
+VisualObject::VisualObject(const mrs_lib::geometry::Cone& cone, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout, const bool filled, const bool capped, const unsigned long& id, const rclcpp::Node::SharedPtr& node, const int num_sides) : id_(id), node_(node) {
   if (capped) {
     mrs_lib::geometry::Ellipse cap = cone.getCap();
     addEllipse(cap, r, g, b, a, filled, num_sides);
@@ -243,7 +229,7 @@ VisualObject::VisualObject(const mrs_lib::geometry::Cone& cone, const double r, 
   mrs_lib::geometry::Triangle tri(cap_points[cap_points.size() - 1], cap_points[0], cone.origin());
   addTriangle(tri, r, g, b, a, filled);
   if (timeout.seconds() <= 0) {
-    timeout_time_ = rclcpp::Time(0);
+    timeout_time_ = rclcpp::Time(0, 0, node_->get_clock()->get_clock_type());
   } else {
     timeout_time_ = node_->now() + timeout;
   }
@@ -251,9 +237,7 @@ VisualObject::VisualObject(const mrs_lib::geometry::Cone& cone, const double r, 
 //}
 
 /* mrs_msgs::msg::Path //{ */
-VisualObject::VisualObject(const mrs_msgs::msg::Path& p, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout,
-                           const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node)
-    : id_(id), node_(node) {
+VisualObject::VisualObject(const mrs_msgs::msg::Path& p, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout, const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node) : id_(id), node_(node) {
   if (p.points.size() < 2) {
     return;
   }
@@ -277,7 +261,7 @@ VisualObject::VisualObject(const mrs_msgs::msg::Path& p, const double r, const d
     }
   }
   if (timeout.seconds() <= 0) {
-    timeout_time_ = rclcpp::Time(0);
+    timeout_time_ = rclcpp::Time(0, 0, node_->get_clock()->get_clock_type());
   } else {
     timeout_time_ = node_->now() + timeout;
   }
@@ -285,9 +269,7 @@ VisualObject::VisualObject(const mrs_msgs::msg::Path& p, const double r, const d
 //}
 
 /* mrs_msgs::msg::TrajectoryReference //{ */
-VisualObject::VisualObject(const mrs_msgs::msg::TrajectoryReference& traj, const double r, const double g, const double b, const double a,
-                           const rclcpp::Duration& timeout, const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node)
-    : id_(id), node_(node) {
+VisualObject::VisualObject(const mrs_msgs::msg::TrajectoryReference& traj, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout, const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node) : id_(id), node_(node) {
   if (traj.points.size() < 2) {
     return;
   }
@@ -311,7 +293,7 @@ VisualObject::VisualObject(const mrs_msgs::msg::TrajectoryReference& traj, const
     }
   }
   if (timeout.seconds() <= 0) {
-    timeout_time_ = rclcpp::Time(0);
+    timeout_time_ = rclcpp::Time(0, 0, node_->get_clock()->get_clock_type());
   } else {
     timeout_time_ = node_->now() + timeout;
   }

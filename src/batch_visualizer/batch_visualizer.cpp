@@ -13,12 +13,12 @@ BatchVisualizer::~BatchVisualizer() {
 }
 
 BatchVisualizer::BatchVisualizer(const std::shared_ptr<rclcpp::Node> &node, const std::string marker_topic_name, const std::string parent_frame) {
-  this->node = node;
+  this->node              = node;
   this->parent_frame      = parent_frame;
   this->marker_topic_name = marker_topic_name;
   initialize();
 
-  this->visual_pub = node->create_publisher<visualization_msgs::msg::MarkerArray>(marker_topic_name, 1);
+  this->visual_pub = node->create_publisher<visualization_msgs::msg::MarkerArray>(marker_topic_name, rclcpp::SystemDefaultsQoS());
   publish();
 }
 //}
@@ -44,7 +44,7 @@ void BatchVisualizer::initialize() {
   std::stringstream ss;
   ss << marker_topic_name << "_points";
   points_marker.header.frame_id    = parent_frame;
-  points_marker.header.stamp       = node->now();
+  points_marker.header.stamp       = node->get_clock()->now();
   points_marker.ns                 = ss.str().c_str();
   points_marker.action             = visualization_msgs::msg::Marker::ADD;
   points_marker.pose.orientation.w = 1.0;
@@ -59,7 +59,7 @@ void BatchVisualizer::initialize() {
   ss.str(std::string());
   ss << marker_topic_name << "_lines";
   lines_marker.header.frame_id    = parent_frame;
-  lines_marker.header.stamp       = node->now();
+  lines_marker.header.stamp       = node->get_clock()->now();
   lines_marker.ns                 = ss.str().c_str();
   lines_marker.action             = visualization_msgs::msg::Marker::ADD;
   lines_marker.pose.orientation.w = 1.0;
@@ -73,7 +73,7 @@ void BatchVisualizer::initialize() {
   ss.str(std::string());
   ss << marker_topic_name << "_triangles";
   triangles_marker.header.frame_id    = parent_frame;
-  triangles_marker.header.stamp       = node->now();
+  triangles_marker.header.stamp       = node->get_clock()->now();
   triangles_marker.ns                 = ss.str().c_str();
   triangles_marker.action             = visualization_msgs::msg::Marker::ADD;
   triangles_marker.pose.orientation.w = 1.0;
@@ -107,8 +107,7 @@ void BatchVisualizer::addRay(const mrs_lib::geometry::Ray &ray, const double r, 
 //}
 
 /* addTriangle //{ */
-void BatchVisualizer::addTriangle(const mrs_lib::geometry::Triangle &tri, const double r, const double g, const double b, const double a, const bool filled,
-                                  const rclcpp::Duration &timeout) {
+void BatchVisualizer::addTriangle(const mrs_lib::geometry::Triangle &tri, const double r, const double g, const double b, const double a, const bool filled, const rclcpp::Duration &timeout) {
 
   VisualObject obj = VisualObject(tri, r, g, b, a, timeout, filled, uuid++, this->node);
   visual_objects.insert(obj);
@@ -116,8 +115,7 @@ void BatchVisualizer::addTriangle(const mrs_lib::geometry::Triangle &tri, const 
 //}
 
 /* addRectangle //{ */
-void BatchVisualizer::addRectangle(const mrs_lib::geometry::Rectangle &rect, const double r, const double g, const double b, const double a, const bool filled,
-                                   const rclcpp::Duration &timeout) {
+void BatchVisualizer::addRectangle(const mrs_lib::geometry::Rectangle &rect, const double r, const double g, const double b, const double a, const bool filled, const rclcpp::Duration &timeout) {
 
   VisualObject obj = VisualObject(rect, r, g, b, a, timeout, filled, uuid++, this->node);
   visual_objects.insert(obj);
@@ -125,8 +123,7 @@ void BatchVisualizer::addRectangle(const mrs_lib::geometry::Rectangle &rect, con
 //}
 
 /* addCuboid //{ */
-void BatchVisualizer::addCuboid(const mrs_lib::geometry::Cuboid &cuboid, const double r, const double g, const double b, const double a, const bool filled,
-                                const rclcpp::Duration &timeout) {
+void BatchVisualizer::addCuboid(const mrs_lib::geometry::Cuboid &cuboid, const double r, const double g, const double b, const double a, const bool filled, const rclcpp::Duration &timeout) {
 
   VisualObject obj = VisualObject(cuboid, r, g, b, a, timeout, filled, uuid++, this->node);
   visual_objects.insert(obj);
@@ -134,8 +131,7 @@ void BatchVisualizer::addCuboid(const mrs_lib::geometry::Cuboid &cuboid, const d
 //}
 
 /* addEllipse //{ */
-void BatchVisualizer::addEllipse(const mrs_lib::geometry::Ellipse &ellipse, const double r, const double g, const double b, const double a, const bool filled,
-                                 const int num_points, const rclcpp::Duration &timeout) {
+void BatchVisualizer::addEllipse(const mrs_lib::geometry::Ellipse &ellipse, const double r, const double g, const double b, const double a, const bool filled, const int num_points, const rclcpp::Duration &timeout) {
 
   VisualObject obj = VisualObject(ellipse, r, g, b, a, timeout, filled, uuid++, this->node, num_points);
   visual_objects.insert(obj);
@@ -143,32 +139,28 @@ void BatchVisualizer::addEllipse(const mrs_lib::geometry::Ellipse &ellipse, cons
 //}
 
 /* addCylinder //{ */
-void BatchVisualizer::addCylinder(const mrs_lib::geometry::Cylinder &cylinder, const double r, const double g, const double b, const double a,
-                                  const bool filled, const bool capped, const int sides, const rclcpp::Duration &timeout) {
+void BatchVisualizer::addCylinder(const mrs_lib::geometry::Cylinder &cylinder, const double r, const double g, const double b, const double a, const bool filled, const bool capped, const int sides, const rclcpp::Duration &timeout) {
   VisualObject obj = VisualObject(cylinder, r, g, b, a, timeout, filled, capped, uuid++, this->node, sides);
   visual_objects.insert(obj);
 }
 //}
 
 /* addCone //{ */
-void BatchVisualizer::addCone(const mrs_lib::geometry::Cone &cone, const double r, const double g, const double b, const double a, const bool filled,
-                              const bool capped, const int sides, const rclcpp::Duration &timeout) {
+void BatchVisualizer::addCone(const mrs_lib::geometry::Cone &cone, const double r, const double g, const double b, const double a, const bool filled, const bool capped, const int sides, const rclcpp::Duration &timeout) {
   VisualObject obj = VisualObject(cone, r, g, b, a, timeout, filled, capped, uuid++, this->node, sides);
   visual_objects.insert(obj);
 }
 //}
 
 /* addPath //{ */
-void BatchVisualizer::addPath(const mrs_msgs::msg::Path &p, const double r, const double g, const double b, const double a, const bool filled,
-                              const rclcpp::Duration &timeout) {
+void BatchVisualizer::addPath(const mrs_msgs::msg::Path &p, const double r, const double g, const double b, const double a, const bool filled, const rclcpp::Duration &timeout) {
   VisualObject obj = VisualObject(p, r, g, b, a, timeout, filled, uuid++, this->node);
   visual_objects.insert(obj);
 }
 //}
 
 /* addTrajectory //{ */
-void BatchVisualizer::addTrajectory(const mrs_msgs::msg::TrajectoryReference &traj, const double r, const double g, const double b, const double a,
-                                    const bool filled, const rclcpp::Duration &timeout) {
+void BatchVisualizer::addTrajectory(const mrs_msgs::msg::TrajectoryReference &traj, const double r, const double g, const double b, const double a, const bool filled, const rclcpp::Duration &timeout) {
   VisualObject obj = VisualObject(traj, r, g, b, a, timeout, filled, uuid++, this->node);
   visual_objects.insert(obj);
 }
@@ -278,6 +270,11 @@ void BatchVisualizer::clearVisuals() {
 /* publish //{ */
 void BatchVisualizer::publish() {
 
+  this->publish(node->get_clock()->now());
+}
+
+void BatchVisualizer::publish(const rclcpp::Time stamp) {
+
   msg.markers.clear();
   points_marker.points.clear();
   points_marker.colors.clear();
@@ -290,6 +287,7 @@ void BatchVisualizer::publish() {
 
   // fill marker messages and remove objects that have timed out
   for (auto it = visual_objects.begin(); it != visual_objects.end();) {
+
     if (it->isTimedOut()) {
       it = visual_objects.erase(it);
     } else {
@@ -316,15 +314,13 @@ void BatchVisualizer::publish() {
     }
   }
 
-  auto now = node->now();
-
   if (!points_marker.points.empty()) {
     points_marker.scale.x = points_scale;
     points_marker.scale.y = points_scale;
   } else {
     addNullPoint();
   }
-  points_marker.header.stamp = now;
+  points_marker.header.stamp = stamp;
   msg.markers.push_back(points_marker);
 
   if (!lines_marker.points.empty()) {
@@ -332,15 +328,15 @@ void BatchVisualizer::publish() {
   } else {
     addNullLine();
   }
-  lines_marker.header.stamp = now;
+  lines_marker.header.stamp = stamp;
   msg.markers.push_back(lines_marker);
 
   if (!triangles_marker.points.empty()) {
-    triangles_marker.header.stamp = now;
+    triangles_marker.header.stamp = stamp;
   } else {
     addNullTriangle();
   }
-  triangles_marker.header.stamp = now;
+  triangles_marker.header.stamp = stamp;
   msg.markers.push_back(triangles_marker);
 
   if (msg.markers.empty()) {
