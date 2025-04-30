@@ -34,7 +34,7 @@ protected:
 
   void initialize(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions()) {
 
-    node_ = std::make_shared<rclcpp::Node>("test_publisher_handler", node_options);
+    node_ = std::make_shared<rclcpp::Node>("test_timer_handler", node_options);
 
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
     executor_->add_node(node_);
