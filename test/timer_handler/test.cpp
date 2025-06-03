@@ -172,6 +172,7 @@ void Test::do_test(const bool use_threadtimer) {
     rclcpp::sleep_for(std::chrono::milliseconds(int(1000 * test_dur)));
 
     timer_->stop();
+
     EXPECT_FALSE(cbk_running_);
 
     const double expected_cbks              = test_dur * rate_;

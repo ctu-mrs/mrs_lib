@@ -45,7 +45,12 @@ void ROSTimer::stop() {
   std::scoped_lock lock(mutex_timer_);
 
   if (timer_) {
+
     timer_->cancel();
+
+    while (rclcpp::ok() && !timer_->is_canceled()) {
+      node_->get_clock()->sleep_for(std::chrono::duration<double>(0.001));
+    }
   }
 }
 

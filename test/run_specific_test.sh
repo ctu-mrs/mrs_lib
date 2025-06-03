@@ -11,6 +11,6 @@ done
 
 colcon test-result --delete-yes
 
-colcon test --packages-select mrs_lib --ctest-args -R 'dynparam_mgr'
+colcon test --packages-select mrs_lib --ctest-args -R 'timer_handler'
 
 colcon test-result --all --verbose
