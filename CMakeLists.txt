@@ -9,24 +9,22 @@ add_definitions("-Wall")
 add_definitions("-Wextra")
 add_definitions("-Wpedantic")
 
-if(MRS_ENABLE_TESTING)
-  message(WARNING "Setting optimizaton levels for tests")
-  add_definitions("-O1")
-  add_definitions("-g")
-endif()
-
-if(COVERAGE)
-  message(WARNING "building with --coverage, the performance might be limited")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
-endif()
-
 # 1 == use rclcpp::Timer implementation
 # 0 == use MRS's thread timer implementation
 set(USE_ROS_TIMER 0)
 
 if(${USE_ROS_TIMER})
   MESSAGE(WARNING "[mrs_uav_managers]: Compiling with ROS Timers. This can cause high CPU load in runtime.")
+endif()
+
+if(ENABLE_COVERAGE)
+  message(WARNING "building for coverage, the performance might be limited")
+
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage -fprofile-arcs")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage -fprofile-arcs")
+
+  add_definitions("-O1")
+  add_definitions("-g")
 endif()
 
 find_package(ament_cmake REQUIRED)
@@ -344,7 +342,7 @@ ament_target_dependencies(MrsLib_BatchVisualizer
 ## |                           Testing                          |
 ## --------------------------------------------------------------
 
-if(BUILD_TESTING)
+if(ENABLE_TESTS)
 
   add_subdirectory(test)
 
