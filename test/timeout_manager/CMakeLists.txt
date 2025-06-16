@@ -13,3 +13,5 @@ ament_target_dependencies(test_${TEST_NAME}
   rclcpp
   std_msgs
   )
+
+target_compile_definitions(test_${TEST_NAME} PRIVATE USE_ROS_TIMER=${USE_ROS_TIMER})
