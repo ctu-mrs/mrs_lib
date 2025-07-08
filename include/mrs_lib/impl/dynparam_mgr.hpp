@@ -15,21 +15,24 @@ namespace mrs_lib
   template <typename MemT>
   bool DynparamMgr::register_param(const std::string& name, MemT* param_var, const std::function<void(const MemT&)>& update_cbk)
   {
+    const auto resolved_name = m_pp.resolveName(name);
     // make sure that the parameter is always declared in ROS
     // even if the default value will be loaded from YAML (by default,
     // when loading from YAML, the ParamProvider does not declare the
     // parameter in ROS to speed up the loading)
-    if (!m_node->has_parameter(m_pp.resolveName(name)))
+    if (!m_node->has_parameter(resolved_name))
     {
-      const bool declare_success = m_pp.declareParam<MemT>(name, true);
+      const bool declare_success = m_pp.declareParam<MemT>(resolved_name, true);
       if (!declare_success)
         return false;
     }
   
-    const bool get_success = m_pp.getParam(name, *param_var, true);
+    // load the param variable with the current value of the parameter
+    const bool get_success = m_pp.getParam(resolved_name, *param_var, true);
     if (!get_success)
       return false;
   
+    // remember the registered parameter, the corresponding variable, etc.
     m_registered_params.emplace_back(
           *m_node,
           name,
@@ -40,6 +43,38 @@ namespace mrs_lib
     return true;
   }
   //}
+
+  template <typename MemT>
+  bool DynparamMgr::register_param(const std::string& name, MemT* param_var, const MemT minimum, const MemT maximum, const std::function<void(const MemT&)>& update_cbk)
+  requires std::integral<MemT> or std::floating_point<MemT>
+  {
+    const auto resolved_name = m_pp.resolveName(name);
+    // make sure that the parameter is always declared in ROS
+    // even if the default value will be loaded from YAML (by default,
+    // when loading from YAML, the ParamProvider does not declare the
+    // parameter in ROS to speed up the loading)
+    if (!m_node->has_parameter(resolved_name))
+    {
+      const bool declare_success = m_pp.declareParam<MemT>(resolved_name, minimum, maximum, true);
+      if (!declare_success)
+        return false;
+    }
+  
+    // load the param variable with the current value of the parameter
+    const bool get_success = m_pp.getParam(resolved_name, *param_var, true);
+    if (!get_success)
+      return false;
+  
+    // remember the registered parameter, the corresponding variable, etc.
+    m_registered_params.emplace_back(
+          *m_node,
+          name,
+          to_param_type<MemT>(),
+          param_var,
+          update_cbk
+        );
+    return true;
+  }
 
   /* registered_param_t struct //{ */
   

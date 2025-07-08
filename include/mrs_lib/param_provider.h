@@ -119,6 +119,19 @@ public:
   bool declareParam(const std::string& param_name, const bool reconfigurable = false) const;
 
   /*!
+   * \brief Defines a parameter with an allowed range.
+   *
+   * This method only declares the parameter in ROS.
+   *
+   * \param param_name      Name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
+   * \param reconfigurable  If true, the paramter will be declared as dynamically reconfigurable (unless it was already defined as read-only).
+   * \return                true iff the parameter was successfully declared.
+   */
+  template <typename T>
+  bool declareParam(const resolved_name_t& resolved_name, const T minimum, const T maximum, const bool reconfigurable) const
+  requires std::integral<T> or std::floating_point<T>;
+
+  /*!
    * \brief Defines a parameter.
    *
    * This method only declares the parameter in ROS.

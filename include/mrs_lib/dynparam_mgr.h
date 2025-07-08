@@ -7,6 +7,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <mrs_lib/param_provider.h>
+#include <concepts>
 
 namespace mrs_lib
 {
@@ -79,12 +80,29 @@ namespace mrs_lib
    * 3. Set the value of the variable pointed-to by param_var to this default value.
    * 4. Save the name of the parameter and the pointer so that the variable can be updated when the `on_set_parameters` is called.
    * 
-   * \return    true if the parameter was successfully declared and its default value loaded.
+   * \param name        Name of the parameter (this will be used for the declaration etc.).
+   * \param param_var   Pointer to a variable whose value will be changed when the parameter is updated. It is the user's responsibility to ensure that the lifetime of the pointed-to variable is valid while it is being used by the DynparamMgr.
+   * \param update_cbk  Optional function to be called when the parameter is changed.
+   * \return            true if the parameter was successfully declared and its default value loaded.
    *
    * \note The C++ type passed to this function will be mapped to one of the valid values of rclcpp::ParameterType. Not all C++ types are supported (see valid_types_t).
    */
     template <typename MemT>
     bool register_param(const std::string& name, MemT* param_var, const std::function<void(const MemT&)>& update_cbk = {});
+
+  /*!
+   * \brief An overload of register_param() for specifying minimum and maximum of a number value.
+   *
+   * \param name        Name of the parameter (this will be used for the declaration etc.).
+   * \param param_var   Pointer to a variable whose value will be changed when the parameter is updated. It is the user's responsibility to ensure that the lifetime of the pointed-to variable is valid while it is being used by the DynparamMgr.
+   * \param minimum     The minimal value of the number (a lower value cannot be set).
+   * \param maximum     The maximal value of the number (a higher value cannot be set).
+   * \param update_cbk  Optional function to be called when the parameter is changed.
+   * \return            true if the parameter was successfully declared and its default value loaded.
+   */
+    template <typename MemT>
+    bool register_param(const std::string& name, MemT* param_var, const MemT minimum, const MemT maximum, const std::function<void(const MemT&)>& update_cbk = {})
+    requires std::integral<MemT> or std::floating_point<MemT>;
 
   /*!
    * \brief Pushes the current values of the pointed-to variables to ROS.

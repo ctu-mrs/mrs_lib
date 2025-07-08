@@ -150,6 +150,51 @@ namespace mrs_lib
   }
 
   template <typename T>
+  bool ParamProvider::declareParam(const ParamProvider::resolved_name_t& resolved_name, const T minimum, const T maximum, const bool reconfigurable) const
+  requires std::integral<T> or std::floating_point<T>
+  {
+    try
+    {
+      // a hack to allow declaring a strong-typed parameter without a default value
+      // because ROS2 apparently fell on its head when it was a litle baby
+      // this is actually not documented in the API documentation, so see https://github.com/ros2/rclcpp/issues/1691
+      const rclcpp::ParameterType type = to_param_type<T>();
+      rcl_interfaces::msg::ParameterDescriptor descriptor;
+      descriptor.read_only = !reconfigurable;
+      descriptor.type = type;
+      if constexpr (std::integral<T>)
+      {
+        rcl_interfaces::msg::IntegerRange range;
+        range.from_value = minimum;
+        range.to_value = maximum;
+        descriptor.integer_range.push_back(range);
+      }
+      else if constexpr (std::floating_point<T>)
+      {
+        rcl_interfaces::msg::FloatingPointRange range;
+        range.from_value = minimum;
+        range.to_value = maximum;
+        descriptor.floating_point_range.push_back(range);
+      }
+      /* RCLCPP_INFO_STREAM(m_node->get_logger(), "Declaring param '" << resolved_name << "' of type " << type); */
+      const rclcpp::ParameterValue ret = m_node->declare_parameter(resolved_name, type, descriptor);
+    }
+    catch (const std::exception& e)
+    {
+      // this can happen if (see
+      // http://docs.ros.org/en/humble/p/rclcpp/generated/classrclcpp_1_1Node.html#_CPPv4N6rclcpp4Node17declare_parameterERKNSt6stringERKN6rclcpp14ParameterValueERKN14rcl_interfaces3msg19ParameterDescriptorEb):
+      // * parameter has already been declared              (rclcpp::exceptions::ParameterAlreadyDeclaredException)
+      // * parameter name is invalid                        (rclcpp::exceptions::InvalidParametersException)
+      // * initial value fails to be set                    (rclcpp::exceptions::InvalidParameterValueException, not sure what exactly this means)
+      // * type of the default value or override is wrong   (rclcpp::exceptions::InvalidParameterTypeException, the most common one)
+      RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not declare param '" << resolved_name << "': " << e.what());
+
+      return false;
+    }
+    return true;
+  }
+
+  template <typename T>
   bool ParamProvider::declareParamDefault(const std::string& param_name, const T& default_value, const bool reconfigurable) const
   {
     const auto resolved_name = resolveName(param_name);
