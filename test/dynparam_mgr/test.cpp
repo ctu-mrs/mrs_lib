@@ -115,52 +115,6 @@ void Test::set_param_type(mrs_lib::DynparamMgr& dynparam_mgr, const std::string&
 
 //}
 
-/* TEST_F(Test, dynparam_mgr_set_param) //{ */
-
-TEST_F(Test, dynparam_mgr_set_param) {
-
-  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
-
-  auto clock = node_->get_clock();
-
-  RCLCPP_INFO(node_->get_logger(), "defining ParamProvider");
-
-  std::mutex mtx;
-  RCLCPP_INFO(node_->get_logger(), "defining DynparamMgr");
-  auto dynparam_mgr = mrs_lib::DynparamMgr(node_, mtx);
-
-  set_param_type<bool>(dynparam_mgr, "test_bool", false, {true, false});
-
-  set_param_type<int>(dynparam_mgr, "test_int", 0, {-1, 1, 666});
-
-  set_param_type<int64_t>(dynparam_mgr, "test_int64", 0, {-1, 1, 666});
-
-  set_param_type<float>(dynparam_mgr, "test_float", 0.0f, {-1.0f, 1.0f, 666.0f, 1e-3f, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()});
-
-  set_param_type<double>(dynparam_mgr, "test_double", 0.0, {-1.0, 1.0, 666.0, 1e-3, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()});
-
-  set_param_type<std::string>(dynparam_mgr, "test_string", "", {"asdf", "gbleasdgelasdagdds", "554"});
-
-  set_param_type<std::vector<uint8_t>>(dynparam_mgr, "test_bytearr", {}, {{123, 1, 2}, {255}, {}});
-
-  set_param_type<std::vector<bool>>(dynparam_mgr, "test_boolarr", {}, {{true, false, true}, {false}, {}});
-
-  /* set_param_type<std::vector<int>>(dynparam_mgr, "test_intarr", {}, {{1, 2, 3}, {-1}, {}}); */
-
-  set_param_type<std::vector<int64_t>>(dynparam_mgr, "test_int64arr", {}, {{1, 2, 3}, {-1}, {}});
-
-  /* set_param_type<std::vector<float>>(dynparam_mgr, "test_floatarr", {}, {{1.0f, 2.0f, 3.0f}, {-1.0f}, {-1.0f, 1.0f, 666.0f, 1e-3f, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()}, {}}); */
-
-  set_param_type<std::vector<double>>(dynparam_mgr, "test_doublearr", {}, {{1.0, 2.0, 3.0}, {-1.0}, {-1.0, 1.0, 666.0, 1e-3, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()}, {}});
-
-  set_param_type<std::vector<std::string>>(dynparam_mgr, "test_stringarr", {}, {{"asdf", "gbleasdgelasdagdds", "554"}, {}, {"blebleble"}});
-
-  RCLCPP_INFO(node_->get_logger(), "finished");
-  despin();
-}
-
-//}
-
 /* update_params_type(mrs_lib::DynparamMgr& dynparam_mgr, const std::string& param_name, const T& init_value, const std::vector<T>& test_values) //{ */
 
 template <typename T>
@@ -206,6 +160,52 @@ void Test::update_params_type(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr
     // value of the variable should be what it was set to
     EXPECT_EQ(test_var, test_val);
   }
+}
+
+//}
+
+/* TEST_F(Test, dynparam_mgr_set_param) //{ */
+
+TEST_F(Test, dynparam_mgr_set_param) {
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  auto clock = node_->get_clock();
+
+  RCLCPP_INFO(node_->get_logger(), "defining ParamProvider");
+
+  std::mutex mtx;
+  RCLCPP_INFO(node_->get_logger(), "defining DynparamMgr");
+  auto dynparam_mgr = mrs_lib::DynparamMgr(node_, mtx);
+
+  set_param_type<bool>(dynparam_mgr, "test_bool", false, {true, false});
+
+  set_param_type<int>(dynparam_mgr, "test_int", 0, {-1, 1, 666});
+
+  set_param_type<int64_t>(dynparam_mgr, "test_int64", 0, {-1, 1, 666});
+
+  set_param_type<float>(dynparam_mgr, "test_float", 0.0f, {-1.0f, 1.0f, 666.0f, 1e-3f, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()});
+
+  set_param_type<double>(dynparam_mgr, "test_double", 0.0, {-1.0, 1.0, 666.0, 1e-3, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()});
+
+  set_param_type<std::string>(dynparam_mgr, "test_string", "", {"asdf", "gbleasdgelasdagdds", "554"});
+
+  set_param_type<std::vector<uint8_t>>(dynparam_mgr, "test_bytearr", {}, {{123, 1, 2}, {255}, {}});
+
+  set_param_type<std::vector<bool>>(dynparam_mgr, "test_boolarr", {}, {{true, false, true}, {false}, {}});
+
+  /* set_param_type<std::vector<int>>(dynparam_mgr, "test_intarr", {}, {{1, 2, 3}, {-1}, {}}); */
+
+  set_param_type<std::vector<int64_t>>(dynparam_mgr, "test_int64arr", {}, {{1, 2, 3}, {-1}, {}});
+
+  /* set_param_type<std::vector<float>>(dynparam_mgr, "test_floatarr", {}, {{1.0f, 2.0f, 3.0f}, {-1.0f}, {-1.0f, 1.0f, 666.0f, 1e-3f, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()}, {}}); */
+
+  set_param_type<std::vector<double>>(dynparam_mgr, "test_doublearr", {}, {{1.0, 2.0, 3.0}, {-1.0}, {-1.0, 1.0, 666.0, 1e-3, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()}, {}});
+
+  set_param_type<std::vector<std::string>>(dynparam_mgr, "test_stringarr", {}, {{"asdf", "gbleasdgelasdagdds", "554"}, {}, {"blebleble"}});
+
+  RCLCPP_INFO(node_->get_logger(), "finished");
+  despin();
 }
 
 //}
@@ -312,6 +312,53 @@ TEST_F(Test, dynparam_mgr_subnode) {
   update_params_type(subnode, dynparam_mgr, test_stringarr, "test_stringarr", {}, {{"asdf", "gbleasdgelasdagdds", "554"}, {}, {"blebleble"}});
 
   RCLCPP_INFO(subnode->get_logger(), "finished");
+  despin();
+}
+
+//}
+
+template <typename T>
+void callback(const std::string& param_name, const T& new_value)
+{
+  RCLCPP_INFO_STREAM(node_->get_logger(), "Got new value for parameter \"" << param_name << "\": " << new_value);
+}
+
+/* TEST_F(Test, dynparam_mgr_callback) //{ */
+
+TEST_F(Test, dynparam_mgr_callback) {
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  auto clock = node_->get_clock();
+
+  RCLCPP_INFO(node_->get_logger(), "defining ParamProvider");
+
+  std::mutex mtx;
+  RCLCPP_INFO(node_->get_logger(), "defining DynparamMgr");
+  auto dynparam_mgr = mrs_lib::DynparamMgr(node_, mtx);
+
+  bool test_bool;
+  int test_int;
+  int64_t test_int64;
+  float test_float;
+  double test_double;
+  std::string test_string;
+  std::vector<uint8_t> test_bytearr;
+  std::vector<bool> test_boolarr;
+  /* std::vector<int> test_intarr; */
+  std::vector<int64_t> test_int64arr;
+  /* std::vector<float> test_floatarr; */
+  std::vector<double> test_doublearr;
+  std::vector<std::string> test_stringarr;
+
+  // TODO: make into a generic function, check in the callback, test for all types, etc.
+  const auto param_name = "test_bool";
+  const auto result = dynparam_mgr.get_param_provider().setParam(param_name, test_values.front(), true);
+  EXPECT_TRUE(result);
+  const std::function<void(const bool&)> cbk = std::bind(&callback<bool>, param_name, std::placeholders::_1);
+  EXPECT_TRUE(dynparam_mgr.register_param(param_name, &test_bool, cbk));
+
+  RCLCPP_INFO(node_->get_logger(), "finished");
   despin();
 }
 
