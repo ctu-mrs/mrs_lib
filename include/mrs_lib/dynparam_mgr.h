@@ -44,6 +44,20 @@ namespace mrs_lib
         std::vector<std::string>*
         >;
 
+    using valid_callbacks_t = std::variant<
+        std::function<void(const int&)>,
+        std::function<void(const int64_t&)>,
+        std::function<void(const float&)>,
+        std::function<void(const double&)>,
+        std::function<void(const bool&)>,
+        std::function<void(const std::string&)>,
+        std::function<void(const std::vector<uint8_t>&)>,
+        std::function<void(const std::vector<int64_t>&)>,
+        std::function<void(const std::vector<double>&)>,
+        std::function<void(const std::vector<bool>&)>,
+        std::function<void(const std::vector<std::string>&)>
+        >;
+
   /*!
    * \brief The main constructor.
    *
@@ -70,7 +84,7 @@ namespace mrs_lib
    * \note The C++ type passed to this function will be mapped to one of the valid values of rclcpp::ParameterType. Not all C++ types are supported (see valid_types_t).
    */
     template <typename MemT>
-    bool register_param(const std::string& name, MemT* param_var);
+    bool register_param(const std::string& name, MemT* param_var, const std::function<void(const MemT&)>& update_cbk = {});
 
   /*!
    * \brief Pushes the current values of the pointed-to variables to ROS.
