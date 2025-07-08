@@ -125,7 +125,7 @@ void PublisherHandler_impl<TopicType>::publish(const std::shared_ptr<TopicType>&
 /* publish(TopicType::ConstSharedPtr& msg) //{ */
 
 template <class TopicType>
-void PublisherHandler_impl<TopicType>::publish(TopicType::ConstSharedPtr msg) {
+void PublisherHandler_impl<TopicType>::publish(typename TopicType::ConstSharedPtr msg) {
 
   if (!publisher_initialized_) {
     return;
@@ -252,7 +252,7 @@ void PublisherHandler<TopicType>::publish(const std::shared_ptr<TopicType>& msg)
 /* publish(const TopicType::ConstSharedPtr& msg) //{ */
 
 template <class TopicType>
-void PublisherHandler<TopicType>::publish(TopicType::ConstSharedPtr msg) {
+void PublisherHandler<TopicType>::publish(typename TopicType::ConstSharedPtr msg) {
 
   impl_->publish(msg);
 }

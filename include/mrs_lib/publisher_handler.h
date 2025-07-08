@@ -90,7 +90,7 @@ public:
    *
    * @param msg message
    */
-  void publish(TopicType::ConstSharedPtr msg);
+  void publish(typename TopicType::ConstSharedPtr msg);
 
   /**
    * @brief get number of subscribers
@@ -195,7 +195,7 @@ public:
    *
    * @param msg
    */
-  void publish(TopicType::ConstSharedPtr msg);
+  void publish(typename TopicType::ConstSharedPtr msg);
 
   /**
    * @brief get number of subscribers
