@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <optional>
+#include <concepts>
 
 #include <yaml-cpp/yaml.h>
 #include <rclcpp/rclcpp.hpp>

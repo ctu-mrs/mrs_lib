@@ -80,12 +80,48 @@ namespace mrs_lib
   
   struct DynparamMgr::registered_param_t
   {
+    // | --------------------- Metaprogramming -------------------- |
+    // some metaprogramming tooling to generate a variant of pointers from a tuple of types
+    template <typename ... Types>
+    using variant_of_pointers_t = std::variant<std::add_pointer_t<Types>...>;
+
+    template <typename Type>
+    struct pointer_variant_from_list_t;
+
+    template <typename ... Types>
+    struct pointer_variant_from_list_t<std::tuple<Types...>>
+    {
+      using type = variant_of_pointers_t<Types...>;
+    };
+
+    // the same tooling for creating a variant of functions with the types as const-ref arguments
+    template <typename Type>
+    using add_function_cref_t = std::function<void(const Type&)>;
+
+    template <typename ... Types>
+    using variant_of_functions_t = std::variant<add_function_cref_t<Types>...>;
+
+    template <typename Type>
+    struct function_variant_from_list_t;
+
+    template <typename ... Types>
+    struct function_variant_from_list_t<std::tuple<Types...>>
+    {
+      using type = variant_of_functions_t<Types...>;
+    };
+
+    using param_ptr_variant_t = pointer_variant_from_list_t<valid_types_t>::type;
+
+    using update_cbk_variant_t = function_variant_from_list_t<valid_types_t>::type;
+
+    // | ------------------------- Members ------------------------ |
     rclcpp::Node& node; // non-owning reference (the memory is share-owned by the DynparamMgr)
     std::string name;
     rclcpp::ParameterType type;
-    valid_types_t param_ptr;
-    valid_callbacks_t update_cbk;
+    param_ptr_variant_t param_ptr;
+    update_cbk_variant_t update_cbk;
   
+    // | ------------------------- Methods ------------------------ |
     template <typename T>
     bool try_cast(T& out)
     {

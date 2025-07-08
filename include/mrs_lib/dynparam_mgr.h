@@ -5,9 +5,10 @@
  */
 #pragma once
 
+#include <concepts>
+
 #include <rclcpp/rclcpp.hpp>
 #include <mrs_lib/param_provider.h>
-#include <concepts>
 
 namespace mrs_lib
 {
@@ -31,33 +32,19 @@ namespace mrs_lib
    * \brief A convenience alias defining the valid C++ types to be registered.
    *
    */
-    using valid_types_t = std::variant<
-        int*,
-        int64_t*,
-        float*,
-        double*,
-        bool*,
-        std::string*,
-        std::vector<uint8_t>*,
-        std::vector<int64_t>*,
-        std::vector<double>*,
-        std::vector<bool>*,
-        std::vector<std::string>*
-        >;
-
-    using valid_callbacks_t = std::variant<
-        std::function<void(const int&)>,
-        std::function<void(const int64_t&)>,
-        std::function<void(const float&)>,
-        std::function<void(const double&)>,
-        std::function<void(const bool&)>,
-        std::function<void(const std::string&)>,
-        std::function<void(const std::vector<uint8_t>&)>,
-        std::function<void(const std::vector<int64_t>&)>,
-        std::function<void(const std::vector<double>&)>,
-        std::function<void(const std::vector<bool>&)>,
-        std::function<void(const std::vector<std::string>&)>
-        >;
+    using valid_types_t = std::tuple<
+        int,
+        int64_t,
+        float,
+        double,
+        bool,
+        std::string,
+        std::vector<uint8_t>,
+        std::vector<int64_t>,
+        std::vector<double>,
+        std::vector<bool>,
+        std::vector<std::string>
+      >;
 
   /*!
    * \brief The main constructor.
