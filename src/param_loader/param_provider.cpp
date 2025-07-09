@@ -67,15 +67,15 @@ namespace mrs_lib
       bool loaded = true;
       {
         constexpr char delimiter = '/';
-        auto substr_start = std::cbegin(resolved_name);
+        auto substr_start = std::cbegin(resolved_name.str);
         auto substr_end = substr_start;
         do
         {
-          substr_end = std::find(substr_start, std::cend(resolved_name), delimiter);
+          substr_end = std::find(substr_start, std::cend(resolved_name.str), delimiter);
           // why can't substr or string_view take iterators? :'(
-          const auto start_pos = std::distance(std::cbegin(resolved_name), substr_start);
+          const auto start_pos = std::distance(std::cbegin(resolved_name.str), substr_start);
           const auto count = std::distance(substr_start, substr_end);
-          const std::string param_substr = resolved_name.substr(start_pos, count);
+          const std::string param_substr = resolved_name.str.substr(start_pos, count);
           substr_start = substr_end+1;
 
           bool found = false;
@@ -95,7 +95,7 @@ namespace mrs_lib
             break;
           }
         }
-        while (substr_end != std::end(resolved_name) && cur_node_it->second.IsMap());
+        while (substr_end != std::end(resolved_name.str) && cur_node_it->second.IsMap());
       }
 
       if (loaded)

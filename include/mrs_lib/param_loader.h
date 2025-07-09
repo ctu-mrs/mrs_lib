@@ -55,12 +55,14 @@ private:
   template <typename T>
   using MatrixX = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 
+  using resolved_name_t = ParamProvider::resolved_name_t;
+
 private:
-  bool                            m_load_successful, m_print_values;
-  std::string                     m_node_name;
-  std::shared_ptr<rclcpp::Node>   m_node;
-  mrs_lib::ParamProvider          m_pp;
-  std::unordered_set<std::string> m_loaded_params;
+  bool                                m_load_successful, m_print_values;
+  std::string                         m_node_name;
+  std::shared_ptr<rclcpp::Node>       m_node;
+  mrs_lib::ParamProvider              m_pp;
+  std::unordered_set<resolved_name_t> m_loaded_params;
 
   /* printing helper functions //{ */
 
@@ -74,20 +76,18 @@ private:
   /* printValue function and overloads //{ */
 
   template <typename T>
-  void printValue(const std::string& name, const T& value) const;
+  void printValue(const resolved_name_t& name, const T& value) const;
 
   template <typename T>
-  void printValue(const std::string& name, const std::vector<T>& value) const;
+  void printValue(const resolved_name_t& name, const std::vector<T>& value) const;
 
   template <typename T1, typename T2>
-  void printValue(const std::string& name, const std::map<T1, T2>& value) const;
+  void printValue(const resolved_name_t& name, const std::map<T1, T2>& value) const;
 
   template <typename T>
-  void printValue(const std::string& name, const MatrixX<T>& value) const;
+  void printValue(const resolved_name_t& name, const MatrixX<T>& value) const;
   
   //}
-
-  std::string prepend_node_name(const std::string& resolved_name) const;
 
   //}
 
@@ -95,7 +95,7 @@ private:
 
   /* check_duplicit_loading checks whether the parameter was already loaded - returns true if yes //{ */
 
-  bool check_duplicit_loading(const std::string& name);
+  bool check_duplicit_loading(const resolved_name_t& name);
   
   //}
 

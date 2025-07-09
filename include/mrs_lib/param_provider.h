@@ -36,11 +36,34 @@ public:
   /** \brief Helper struct to distinguish standard names from resolved names.
    *
    * This struct serves as a strong type different from std::string (used for non-resolved parameter
-   * names) so that the user cannot accidentally call a method expecting the "raw" name with a resolved name.
+   * names) so that the user cannot accidentally call a method expecting the "raw" name with a resolved name
+   * and vice-versa.
    *
    */
-  struct resolved_name_t : std::string
-  {};
+  struct resolved_name_t
+  {
+    std::string str;
+
+    resolved_name_t() = default;
+    resolved_name_t(std::string&& s) : str(s) {}
+    resolved_name_t(const std::string& s) : str(s) {}
+
+    // Explicit conversion
+    explicit operator std::string() const
+    {
+      return str;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const resolved_name_t& r)
+    {
+      return os << r.str;
+    }
+
+    friend bool operator==(const resolved_name_t& lhs, const resolved_name_t& rhs)
+    {
+      return lhs.str == rhs.str;
+    }
+  };
 
   /*!
    * \brief Main constructor.
@@ -112,7 +135,7 @@ public:
    *
    * This method only declares the parameter in ROS.
    *
-   * \param param_name      Name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
+   * \param param_name      Name of the parameter to be loaded.
    * \param reconfigurable  If true, the paramter will be declared as dynamically reconfigurable (unless it was already defined as read-only).
    * \return                true iff the parameter was successfully declared.
    */
@@ -124,7 +147,9 @@ public:
    *
    * This method only declares the parameter in ROS.
    *
-   * \param param_name      Name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
+   * \param resolved_name   Resolved (including namespace etc.) name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
+   * \param minimum         The minimal valid value of the parameter.
+   * \param maximum         The maximal valid value of the parameter.
    * \param reconfigurable  If true, the paramter will be declared as dynamically reconfigurable (unless it was already defined as read-only).
    * \return                true iff the parameter was successfully declared.
    */
@@ -137,7 +162,7 @@ public:
    *
    * This method only declares the parameter in ROS.
    *
-   * \param param_name      Name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
+   * \param resolved_name   Resolved (including namespace etc.) name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
    * \param reconfigurable  If true, the paramter will be declared as dynamically reconfigurable (unless it was already defined as read-only).
    * \return                true iff the parameter was successfully declared.
    */
@@ -149,13 +174,42 @@ public:
    *
    * This method declares the parameter in ROS and sets the default value if there is no value in ROS.
    *
-   * \param param_name      Name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
+   * \param param_name      Name of the parameter to be loaded.
    * \param default_value   The default value to be set if there is no value of the parameter.
    * \param reconfigurable  If true, the paramter will be declared as dynamically reconfigurable (unless it was already defined as read-only).
    * \return                true iff the parameter was successfully declared.
    */
   template <typename T>
   bool declareParamDefault(const std::string& param_name, const T& default_value, const bool reconfigurable) const;
+
+  /*!
+   * \brief Defines a parameter with a default value.
+   *
+   * This method declares the parameter in ROS and sets the default value if there is no value in ROS.
+   *
+   * \param resolved_name   Resolved (including namespace etc.) name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
+   * \param default_value   The default value to be set if there is no value of the parameter.
+   * \param reconfigurable  If true, the paramter will be declared as dynamically reconfigurable (unless it was already defined as read-only).
+   * \return                true iff the parameter was successfully declared.
+   */
+  template <typename T>
+  bool declareParamDefault(const resolved_name_t& param_name, const T& default_value, const bool reconfigurable) const;
+
+  /*!
+   * \brief Defines a parameter with a default value.
+   *
+   * This method declares the parameter in ROS and sets the default value if there is no value in ROS.
+   *
+   * \param resolved_name   Resolved (including namespace etc.) name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
+   * \param default_value   The default value to be set if there is no value of the parameter.
+   * \param minimum         The minimal valid value of the parameter.
+   * \param maximum         The maximal valid value of the parameter.
+   * \param reconfigurable  If true, the paramter will be declared as dynamically reconfigurable (unless it was already defined as read-only).
+   * \return                true iff the parameter was successfully declared.
+   */
+  template <typename T>
+  bool declareParamDefault(const resolved_name_t& param_name, const T default_value, const T minimum, const T maximum, const bool reconfigurable) const
+  requires std::integral<T> or std::floating_point<T>;
 
   /*!
    * \brief Sets a prefix that will be applied to parameter names before subnode namespaces.
@@ -194,6 +248,18 @@ private:
 //}
 
 }  // namespace mrs_lib
+
+namespace std
+{
+  template <>
+  struct hash<mrs_lib::ParamProvider::resolved_name_t>
+  {
+    std::size_t operator()(const mrs_lib::ParamProvider::resolved_name_t& r) const noexcept
+    {
+      return std::hash<std::string>{}(r.str);
+    }
+  };
+}
 
 #ifndef PARAM_PROVIDER_HPP
 #include <mrs_lib/impl/param_provider.hpp>

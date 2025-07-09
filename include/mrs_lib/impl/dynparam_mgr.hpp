@@ -16,21 +16,26 @@ namespace mrs_lib
   bool DynparamMgr::register_param(const std::string& name, MemT* param_var, const std::function<void(const MemT&)>& update_cbk)
   {
     const auto resolved_name = m_pp.resolveName(name);
+  
+    // load the current value of the parameter
+    MemT current_value;
+    const bool get_success = m_pp.getParam(resolved_name, current_value, true);
+    if (!get_success)
+      return false;
+
     // make sure that the parameter is always declared in ROS
     // even if the default value will be loaded from YAML (by default,
     // when loading from YAML, the ParamProvider does not declare the
     // parameter in ROS to speed up the loading)
-    if (!m_node->has_parameter(resolved_name))
+    if (!m_node->has_parameter(resolved_name.str))
     {
-      const bool declare_success = m_pp.declareParam<MemT>(resolved_name, true);
+      const bool declare_success = m_pp.declareParamDefault<MemT>(resolved_name, current_value, true);
       if (!declare_success)
         return false;
     }
-  
-    // load the param variable with the current value of the parameter
-    const bool get_success = m_pp.getParam(resolved_name, *param_var, true);
-    if (!get_success)
-      return false;
+
+    // only assign the default value if everything is OK, otherwise leave param_var untouched
+    *param_var = current_value;
   
     // remember the registered parameter, the corresponding variable, etc.
     m_registered_params.emplace_back(
@@ -49,21 +54,26 @@ namespace mrs_lib
   requires std::integral<MemT> or std::floating_point<MemT>
   {
     const auto resolved_name = m_pp.resolveName(name);
+  
+    // load the current value of the parameter
+    MemT current_value;
+    const bool get_success = m_pp.getParam(resolved_name, current_value, true);
+    if (!get_success)
+      return false;
+
     // make sure that the parameter is always declared in ROS
     // even if the default value will be loaded from YAML (by default,
     // when loading from YAML, the ParamProvider does not declare the
     // parameter in ROS to speed up the loading)
-    if (!m_node->has_parameter(resolved_name))
+    if (!m_node->has_parameter(resolved_name.str))
     {
-      const bool declare_success = m_pp.declareParam<MemT>(resolved_name, minimum, maximum, true);
+      const bool declare_success = m_pp.declareParamDefault<MemT>(resolved_name, current_value, minimum, maximum, true);
       if (!declare_success)
         return false;
     }
-  
-    // load the param variable with the current value of the parameter
-    const bool get_success = m_pp.getParam(resolved_name, *param_var, true);
-    if (!get_success)
-      return false;
+
+    // only assign the default value if everything is OK, otherwise leave param_var untouched
+    *param_var = current_value;
   
     // remember the registered parameter, the corresponding variable, etc.
     m_registered_params.emplace_back(

@@ -11,12 +11,15 @@
 namespace mrs_lib
 {
 
+  /* to_param_type() method //{ */
   template <typename T>
   rclcpp::ParameterType to_param_type()
   {
     return rclcpp::ParameterValue{T{}}.get_type();
   }
+  //}
 
+  /* getParam() method and overloads //{ */
   template <typename T>
   bool ParamProvider::getParam(const std::string& param_name, T& value_out, const bool reconfigurable) const
   {
@@ -49,14 +52,14 @@ namespace mrs_lib
     {
       // firstly, the parameter has to be declared
       // see https://docs.ros.org/en/jazzy/Concepts/Basic/About-Parameters.html#parameters
-      if (!m_node->has_parameter(resolved_name) && !declareParam<T>(resolved_name, reconfigurable))
+      if (!m_node->has_parameter(resolved_name.str) && !declareParam<T>(resolved_name, reconfigurable))
         return false;
 
       try
       {
         /* RCLCPP_INFO_STREAM(m_node->get_logger(), "Getting param '" << resolved_name << "'"); */
         rclcpp::Parameter param;
-        if (!m_node->get_parameter(resolved_name, param))
+        if (!m_node->get_parameter(resolved_name.str, param))
         {
           // do not print an error as the parameter may have been optional - it is therefore OK if it is not declared
           /* RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not get param '" << resolved_name << "' (not declared)"); */
@@ -77,7 +80,9 @@ namespace mrs_lib
     RCLCPP_ERROR_STREAM(m_node->get_logger(), "Param '" << resolved_name << "' not found in YAML files");
     return false;
   }
+  //}
 
+  /* setParam() method //{ */
   template <typename T>
   bool ParamProvider::setParam(const std::string& param_name, const T& value, const bool reconfigurable) const
   {
@@ -86,13 +91,13 @@ namespace mrs_lib
       const auto resolved_name = resolveName(param_name);
       // firstly, the parameter has to be declared
       // see https://docs.ros.org/en/jazzy/Concepts/Basic/About-Parameters.html#parameters
-      if (!m_node->has_parameter(resolved_name) && !declareParam<T>(param_name, reconfigurable))
+      if (!m_node->has_parameter(resolved_name.str) && !declareParam<T>(param_name, reconfigurable))
         return false;
 
       try
       {
         /* RCLCPP_INFO_STREAM(m_node->get_logger(), "Setting param '" << resolved_name << "'"); */
-        rcl_interfaces::msg::SetParametersResult res = m_node->set_parameter({resolved_name, value});
+        rcl_interfaces::msg::SetParametersResult res = m_node->set_parameter({resolved_name.str, value});
         if (!res.successful)
         {
           RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not set param '" << resolved_name << "': " << res.reason);
@@ -112,7 +117,9 @@ namespace mrs_lib
     RCLCPP_ERROR_STREAM(m_node->get_logger(), "use_rosparam is false - cannot set YAML parameter value!");
     return false;
   }
+  //}
 
+  /* declareParam() method and overloads //{ */
   template <typename T>
   bool ParamProvider::declareParam(const std::string& param_name, const bool reconfigurable) const
   {
@@ -132,7 +139,7 @@ namespace mrs_lib
       descriptor.read_only = !reconfigurable;
       descriptor.type = type;
       /* RCLCPP_INFO_STREAM(m_node->get_logger(), "Declaring param '" << resolved_name << "' of type " << type); */
-      const rclcpp::ParameterValue ret = m_node->declare_parameter(resolved_name, type, descriptor);
+      const rclcpp::ParameterValue ret = m_node->declare_parameter(resolved_name.str, type, descriptor);
     }
     catch (const std::exception& e)
     {
@@ -177,7 +184,39 @@ namespace mrs_lib
         descriptor.floating_point_range.push_back(range);
       }
       /* RCLCPP_INFO_STREAM(m_node->get_logger(), "Declaring param '" << resolved_name << "' of type " << type); */
-      const rclcpp::ParameterValue ret = m_node->declare_parameter(resolved_name, type, descriptor);
+      const rclcpp::ParameterValue ret = m_node->declare_parameter(resolved_name.str, type, descriptor);
+    }
+    catch (const std::exception& e)
+    {
+      // this can happen if (see
+      // http://docs.ros.org/en/humble/p/rclcpp/generated/classrclcpp_1_1Node.html#_CPPv4N6rclcpp4Node17declare_parameterERKNSt6stringERKN6rclcpp14ParameterValueERKN14rcl_interfaces3msg19ParameterDescriptorEb):
+      // * parameter has already been declared              (rclcpp::exceptions::ParameterAlreadyDeclaredException)
+      // * parameter name is invalid                        (rclcpp::exceptions::InvalidParametersException)
+      // * initial value fails to be set                    (rclcpp::exceptions::InvalidParameterValueException, not sure what exactly this means)
+      // * type of the default value or override is wrong   (rclcpp::exceptions::InvalidParameterTypeException, the most common one)
+      RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not declare param '" << resolved_name << "': " << e.what());
+
+      return false;
+    }
+    return true;
+  }
+  //}
+
+  /* declareParamDefault() method and overloads //{ */
+  template <typename T>
+  bool ParamProvider::declareParamDefault(const std::string& param_name, const T& default_value, const bool reconfigurable) const
+  {
+    return declareParamDefault(resolveName(param_name), default_value, reconfigurable);
+  }
+
+  template <typename T>
+  bool ParamProvider::declareParamDefault(const resolved_name_t& resolved_name, const T& default_value, const bool reconfigurable) const
+  {
+    try
+    {
+      rcl_interfaces::msg::ParameterDescriptor descriptor;
+      descriptor.read_only = !reconfigurable;
+      m_node->declare_parameter(resolved_name.str, default_value, descriptor);
     }
     catch (const std::exception& e)
     {
@@ -195,14 +234,28 @@ namespace mrs_lib
   }
 
   template <typename T>
-  bool ParamProvider::declareParamDefault(const std::string& param_name, const T& default_value, const bool reconfigurable) const
+  bool ParamProvider::declareParamDefault(const resolved_name_t& resolved_name, const T default_value, const T minimum, const T maximum, const bool reconfigurable) const
+  requires std::integral<T> or std::floating_point<T>
   {
-    const auto resolved_name = resolveName(param_name);
     try
     {
       rcl_interfaces::msg::ParameterDescriptor descriptor;
       descriptor.read_only = !reconfigurable;
-      m_node->declare_parameter(resolved_name, default_value, descriptor);
+      if constexpr (std::integral<T>)
+      {
+        rcl_interfaces::msg::IntegerRange range;
+        range.from_value = minimum;
+        range.to_value = maximum;
+        descriptor.integer_range.push_back(range);
+      }
+      else if constexpr (std::floating_point<T>)
+      {
+        rcl_interfaces::msg::FloatingPointRange range;
+        range.from_value = minimum;
+        range.to_value = maximum;
+        descriptor.floating_point_range.push_back(range);
+      }
+      m_node->declare_parameter(resolved_name.str, default_value, descriptor);
     }
     catch (const std::exception& e)
     {
@@ -218,4 +271,5 @@ namespace mrs_lib
     }
     return true;
   }
+  //}
 }  // namespace mrs_lib

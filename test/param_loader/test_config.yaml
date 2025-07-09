@@ -1,3 +1,9 @@
+test_bool: true
+test_int: 1000
+
+dynparam_tests:
+  test_bool: true
+
 param_provider:
   test_int: 666
   test_double: 666.666
