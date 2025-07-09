@@ -4,17 +4,17 @@
 
 namespace mrs_lib
 {
-  // Explicit instantiation of the tepmplated functions to precompile them into mrs_lib and speed up compilation of user program.
+  // Explicit instantiation of the templated functions to precompile them into mrs_lib and speed up compilation of user program.
 
-  template bool ParamProvider::getParam<bool>(const std::string& name, bool& out_value, const bool reconfigurable) const;
-  template bool ParamProvider::getParam<int>(const std::string& name, int& out_value, const bool reconfigurable) const;
-  template bool ParamProvider::getParam<double>(const std::string& name, double& out_value, const bool reconfigurable) const;
-  template bool ParamProvider::getParam<std::string>(const std::string& name, std::string& out_value, const bool reconfigurable) const;
-  template bool ParamProvider::getParam<std::vector<bool>>(const std::string& name, std::vector<bool>& out_value, const bool reconfigurable) const;
-  template bool ParamProvider::getParam<std::vector<uint8_t>>(const std::string& name, std::vector<uint8_t>& out_value, const bool reconfigurable) const;
-  template bool ParamProvider::getParam<std::vector<int64_t>>(const std::string& name, std::vector<int64_t>& out_value, const bool reconfigurable) const;
-  template bool ParamProvider::getParam<std::vector<double>>(const std::string& name, std::vector<double>& out_value, const bool reconfigurable) const;
-  template bool ParamProvider::getParam<std::vector<std::string>>(const std::string& name, std::vector<std::string>& out_value, const bool reconfigurable) const;
+  template bool ParamProvider::getParam<bool>(const std::string& name, bool& out_value) const;
+  template bool ParamProvider::getParam<int>(const std::string& name, int& out_value) const;
+  template bool ParamProvider::getParam<double>(const std::string& name, double& out_value) const;
+  template bool ParamProvider::getParam<std::string>(const std::string& name, std::string& out_value) const;
+  template bool ParamProvider::getParam<std::vector<bool>>(const std::string& name, std::vector<bool>& out_value) const;
+  template bool ParamProvider::getParam<std::vector<uint8_t>>(const std::string& name, std::vector<uint8_t>& out_value) const;
+  template bool ParamProvider::getParam<std::vector<int64_t>>(const std::string& name, std::vector<int64_t>& out_value) const;
+  template bool ParamProvider::getParam<std::vector<double>>(const std::string& name, std::vector<double>& out_value) const;
+  template bool ParamProvider::getParam<std::vector<std::string>>(const std::string& name, std::vector<std::string>& out_value) const;
 
   ParamProvider::ParamProvider(const std::shared_ptr<rclcpp::Node>& node, const bool use_rosparam)
   : m_node(node), m_node_name(m_node->get_name()), m_use_rosparam(use_rosparam)

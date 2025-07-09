@@ -16,27 +16,53 @@ namespace mrs_lib
   bool DynparamMgr::register_param(const std::string& name, MemT* param_var, const update_cbk_t<MemT>& update_cbk)
   {
     const auto resolved_name = m_pp.resolveName(name);
+
+    ParamProvider::options_t<MemT> opts;
+    opts.always_declare = true;
+    opts.declare_options.reconfigurable = true;
   
     // load the current value of the parameter
     MemT current_value;
-    const bool get_success = m_pp.getParam(resolved_name, current_value, true);
+    const bool get_success = m_pp.getParam(resolved_name, current_value, opts);
     if (!get_success)
       return false;
-
-    // make sure that the parameter is always declared in ROS
-    // even if the default value will be loaded from YAML (by default,
-    // when loading from YAML, the ParamProvider does not declare the
-    // parameter in ROS to speed up the loading)
-    if (!m_node->has_parameter(resolved_name.str))
-    {
-      const bool declare_success = m_pp.declareParamDefault<MemT>(resolved_name, current_value, true);
-      if (!declare_success)
-        return false;
-    }
 
     // only assign the default value if everything is OK, otherwise leave param_var untouched
     *param_var = current_value;
   
+    // remember the registered parameter, the corresponding variable, etc.
+    m_registered_params.emplace_back(
+          *m_node,
+          name,
+          to_param_type<MemT>(),
+          param_var,
+          update_cbk
+        );
+    return true;
+  }
+
+
+  template <typename MemT>
+  bool DynparamMgr::register_param(const std::string& name, MemT* param_var, const MemT minimum, const MemT maximum, const update_cbk_t<MemT>& update_cbk)
+  requires std::integral<MemT> or std::floating_point<MemT>
+  {
+    const auto resolved_name = m_pp.resolveName(name);
+
+    ParamProvider::options_t<MemT> opts;
+    opts.always_declare = true;
+    opts.declare_options.reconfigurable = true;
+    opts.declare_options.minimum = minimum;
+    opts.declare_options.maximum = maximum;
+
+    // load the current value of the parameter
+    MemT current_value;
+    const bool get_success = m_pp.getParam(resolved_name, current_value, opts);
+    if (!get_success)
+      return false;
+
+    // only assign the default value if everything is OK, otherwise leave param_var untouched
+    *param_var = current_value;
+
     // remember the registered parameter, the corresponding variable, etc.
     m_registered_params.emplace_back(
           *m_node,
@@ -48,46 +74,6 @@ namespace mrs_lib
     return true;
   }
   //}
-
-  template <typename MemT>
-  bool DynparamMgr::register_param(const std::string& name, MemT* param_var, const MemT minimum, const MemT maximum, const update_cbk_t<MemT>& update_cbk)
-  requires std::integral<MemT> or std::floating_point<MemT>
-  {
-    const auto resolved_name = m_pp.resolveName(name);
-  
-    // load the current value of the parameter
-    MemT current_value;
-    const bool get_success = m_pp.getParam(resolved_name, current_value, minimum, maximum, true);
-    if (!get_success)
-    {
-      RCLCPP_ERROR_STREAM(m_node->get_logger(), "Failed to load parameter \"" << name << "\"!");
-      return false;
-    }
-
-    // make sure that the parameter is always declared in ROS
-    // even if the default value will be loaded from YAML (by default,
-    // when loading from YAML, the ParamProvider does not declare the
-    // parameter in ROS to speed up the loading)
-    if (!m_node->has_parameter(resolved_name.str))
-    {
-      const bool declare_success = m_pp.declareParamDefault<MemT>(resolved_name, current_value, minimum, maximum, true);
-      if (!declare_success)
-        return false;
-    }
-
-    // only assign the default value if everything is OK, otherwise leave param_var untouched
-    *param_var = current_value;
-  
-    // remember the registered parameter, the corresponding variable, etc.
-    m_registered_params.emplace_back(
-          *m_node,
-          name,
-          to_param_type<MemT>(),
-          param_var,
-          update_cbk
-        );
-    return true;
-  }
 
   /* registered_param_t struct //{ */
   

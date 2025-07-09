@@ -147,21 +147,21 @@ TEST_F(Test, param_provider_set) {
 
   const auto name_raw = "test_int";
   const auto name = pp.resolveName(name_raw);
-  EXPECT_FALSE(pp.declareParamDefault(name, -100, -1, 100, true));
+  EXPECT_FALSE(pp.declareParam<int>(name, {.reconfigurable = true, .default_value = -100, .minimum = -1, .maximum = 100}));
   int init_value = 1;
-  EXPECT_TRUE(pp.declareParamDefault(name, init_value, -1, 100, true));
+  EXPECT_TRUE(pp.declareParam<int>(name, {.reconfigurable = true, .default_value = init_value, .minimum = -1, .maximum = 100}));
 
   int test_int = -666;
-  EXPECT_FALSE(pp.setParam(name_raw, 666, true));
-  EXPECT_TRUE(pp.getParam(name_raw, test_int, true));
+  EXPECT_FALSE(pp.setParam(name_raw, 666));
+  EXPECT_TRUE(pp.getParam(name_raw, test_int));
   EXPECT_EQ(test_int, init_value);
 
-  EXPECT_TRUE(pp.setParam(name_raw, -1, true));
-  EXPECT_TRUE(pp.getParam(name_raw, test_int, true));
+  EXPECT_TRUE(pp.setParam(name_raw, -1));
+  EXPECT_TRUE(pp.getParam(name_raw, test_int));
   EXPECT_EQ(test_int, -1);
 
-  EXPECT_TRUE(pp.setParam(name_raw, 66, true));
-  EXPECT_TRUE(pp.getParam(name_raw, test_int, true));
+  EXPECT_TRUE(pp.setParam(name_raw, 66));
+  EXPECT_TRUE(pp.getParam(name_raw, test_int));
   EXPECT_EQ(test_int, 66);
 
   despin();

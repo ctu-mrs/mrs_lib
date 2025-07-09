@@ -88,7 +88,7 @@ void Test::set_param_type(mrs_lib::DynparamMgr& dynparam_mgr, const std::string&
   // set the value of the test_var parameter
   {
     RCLCPP_INFO_STREAM(node_->get_logger(), "setting " << param_name);
-    const auto result = dynparam_mgr.get_param_provider().setParam(param_name, test_values.front(), true);
+    const auto result = dynparam_mgr.get_param_provider().setParam(param_name, test_values.front());
     EXPECT_TRUE(result);
   }
 
@@ -105,7 +105,7 @@ void Test::set_param_type(mrs_lib::DynparamMgr& dynparam_mgr, const std::string&
   for (const auto& test_val : test_values)
   {
     // change the value of the test_var parameter
-    const auto result = dynparam_mgr.get_param_provider().setParam(param_name, test_val, true);
+    const auto result = dynparam_mgr.get_param_provider().setParam(param_name, test_val);
     // check that the setting was successful
     EXPECT_TRUE(result);
     // now the variable should be changed
@@ -127,7 +127,7 @@ void Test::update_params_type(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr
   // set the value of the test_var parameter
   {
     RCLCPP_INFO_STREAM(node->get_logger(), "setting " << param_name);
-    const auto result = dynparam_mgr.get_param_provider().setParam(param_name, test_values.front(), true);
+    const auto result = dynparam_mgr.get_param_provider().setParam(param_name, test_values.front());
     EXPECT_TRUE(result);
   }
 
@@ -355,7 +355,7 @@ std::shared_ptr<CallbackTester<T>> test_callback(rclcpp::Node::SharedPtr node, m
 {
   auto tester_ptr = std::make_shared<CallbackTester<T>>(param_name, node);
 
-  EXPECT_TRUE(dynparam_mgr.get_param_provider().setParam(param_name, init_value, true));
+  EXPECT_TRUE(dynparam_mgr.get_param_provider().setParam(param_name, init_value));
 
   const mrs_lib::DynparamMgr::update_cbk_t<T> cbk = std::bind(&CallbackTester<T>::callback, tester_ptr.get(), param_name, std::placeholders::_1);
   EXPECT_TRUE(dynparam_mgr.register_param(param_name, &test_var, cbk));
@@ -364,7 +364,7 @@ std::shared_ptr<CallbackTester<T>> test_callback(rclcpp::Node::SharedPtr node, m
   for (const auto& test_val : test_values)
   {
     tester_ptr->expected_param_value = test_val;
-    EXPECT_TRUE(dynparam_mgr.get_param_provider().setParam(param_name, test_val, true));
+    EXPECT_TRUE(dynparam_mgr.get_param_provider().setParam(param_name, test_val));
   }
   EXPECT_EQ(tester_ptr->valid_callbacks, test_values.size());
 
@@ -432,7 +432,7 @@ void test_ranges(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynparam_mg
   for (const auto& test_val : test_values)
   {
     const T prev_val = test_var;
-    const auto parameter_set_result = dynparam_mgr.get_param_provider().setParam(param_name, test_val, true);
+    const auto parameter_set_result = dynparam_mgr.get_param_provider().setParam(param_name, test_val);
     if (test_val >= minimum && test_val <= maximum)
     {
       if (!parameter_set_result)
