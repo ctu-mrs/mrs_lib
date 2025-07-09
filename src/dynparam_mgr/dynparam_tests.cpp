@@ -1,6 +1,12 @@
 #include <mrs_lib/param_provider.h>
 #include <mrs_lib/dynparam_mgr.h>
 
+template <typename T>
+void callback(const std::string& param_name, const T& new_value)
+{
+  std::cout << "parameter \"" << param_name << "\" changed: " << new_value << std::endl;
+}
+
 int main(int argc, char **argv)
 {
   rclcpp::init(argc, argv);
@@ -14,7 +20,8 @@ int main(int argc, char **argv)
 
   int test_int;
 
-  const auto result = dynparam_mgr.register_param("test_int", &test_int, -1, 100);
+  const mrs_lib::DynparamMgr::update_cbk_t<int> cbk = std::bind(&callback<int>, "test_int", std::placeholders::_1);
+  const auto result = dynparam_mgr.register_param("test_int", &test_int, -1, 100, cbk);
   std::cout << "register param \"test_int\": " << result << std::endl;
 
   const auto resolved_name = param_provider.resolveName("test_int");

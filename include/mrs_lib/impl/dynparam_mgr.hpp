@@ -13,7 +13,7 @@ namespace mrs_lib
 
   /* register_param() method //{ */
   template <typename MemT>
-  bool DynparamMgr::register_param(const std::string& name, MemT* param_var, const std::function<void(const MemT&)>& update_cbk)
+  bool DynparamMgr::register_param(const std::string& name, MemT* param_var, const update_cbk_t<MemT>& update_cbk)
   {
     const auto resolved_name = m_pp.resolveName(name);
   
@@ -50,7 +50,7 @@ namespace mrs_lib
   //}
 
   template <typename MemT>
-  bool DynparamMgr::register_param(const std::string& name, MemT* param_var, const MemT minimum, const MemT maximum, const std::function<void(const MemT&)>& update_cbk)
+  bool DynparamMgr::register_param(const std::string& name, MemT* param_var, const MemT minimum, const MemT maximum, const update_cbk_t<MemT>& update_cbk)
   requires std::integral<MemT> or std::floating_point<MemT>
   {
     const auto resolved_name = m_pp.resolveName(name);

@@ -1,5 +1,5 @@
 test_bool: true
-test_int: 1000
+test_int: 100
 
 dynparam_tests:
   test_bool: true

@@ -46,6 +46,9 @@ namespace mrs_lib
         std::vector<std::string>
       >;
 
+    template <typename T>
+    using update_cbk_t = std::function<void(const T&)>;
+
   /*!
    * \brief The main constructor.
    *
@@ -75,7 +78,7 @@ namespace mrs_lib
    * \note The C++ type passed to this function will be mapped to one of the valid values of rclcpp::ParameterType. Not all C++ types are supported (see valid_types_t).
    */
     template <typename MemT>
-    bool register_param(const std::string& name, MemT* param_var, const std::function<void(const MemT&)>& update_cbk = {});
+    bool register_param(const std::string& name, MemT* param_var, const update_cbk_t<MemT>& update_cbk = {});
 
   /*!
    * \brief An overload of register_param() for specifying minimum and maximum of a number value.
@@ -88,7 +91,7 @@ namespace mrs_lib
    * \return            true if the parameter was successfully declared and its default value loaded.
    */
     template <typename MemT>
-    bool register_param(const std::string& name, MemT* param_var, const MemT minimum, const MemT maximum, const std::function<void(const MemT&)>& update_cbk = {})
+    bool register_param(const std::string& name, MemT* param_var, const MemT minimum, const MemT maximum, const update_cbk_t<MemT>& update_cbk = {})
     requires std::integral<MemT> or std::floating_point<MemT>;
 
   /*!
