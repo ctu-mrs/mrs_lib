@@ -53,6 +53,71 @@ namespace mrs_lib
       // firstly, the parameter has to be declared
       // see https://docs.ros.org/en/jazzy/Concepts/Basic/About-Parameters.html#parameters
       if (!m_node->has_parameter(resolved_name.str) && !declareParam<T>(resolved_name, reconfigurable))
+      {
+        RCLCPP_ERROR_STREAM(m_node->get_logger(), "Failed to declare parameter \"" << resolved_name << "\".");
+        return false;
+      }
+
+      try
+      {
+        /* RCLCPP_INFO_STREAM(m_node->get_logger(), "Getting param '" << resolved_name << "'"); */
+        rclcpp::Parameter param;
+        if (!m_node->get_parameter(resolved_name.str, param))
+        {
+          // do not print an error as the parameter may have been optional - it is therefore OK if it is not declared
+          /* RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not get param '" << resolved_name << "' (not declared)"); */
+          return false;
+        }
+        value_out = param.get_value<T>();
+      }
+      // if the parameter has a wrong value, return failure
+      catch (const rclcpp::exceptions::InvalidParameterTypeException& e)
+      {
+        RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not get param '" << resolved_name << "': " << e.what());
+        return false;
+      }
+
+      return true;
+    }
+
+    RCLCPP_ERROR_STREAM(m_node->get_logger(), "Param '" << resolved_name << "' not found in YAML files");
+    return false;
+  }
+
+  template <typename T>
+  bool ParamProvider::getParam(const resolved_name_t& resolved_name, T& value_out, const T minimum, const T maximum, const bool reconfigurable) const
+  requires std::integral<T> or std::floating_point<T>
+  {
+    const auto found_node = findYamlNode(resolved_name);
+    if (found_node.has_value())
+    {
+      try
+      {
+        // try catch is the only type-generic option...
+        T loaded_value = found_node.value().as<T>();
+        if (loaded_value >= minimum && loaded_value <= maximum)
+        {
+          value_out = loaded_value;
+          return true;
+        }
+        else
+          return false;
+      }
+      catch (const YAML::BadConversion& e)
+      {
+      }
+      catch (const YAML::Exception& e)
+      {
+        RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node_name << "]: YAML-CPP threw an unknown exception: " << e.what());
+        return false;
+      }
+    }
+
+    if (m_use_rosparam)
+    {
+      // firstly, the parameter has to be declared
+      // see https://docs.ros.org/en/jazzy/Concepts/Basic/About-Parameters.html#parameters
+      if (!m_node->has_parameter(resolved_name.str) && !declareParam<T>(resolved_name, minimum, maximum, reconfigurable))
         return false;
 
       try

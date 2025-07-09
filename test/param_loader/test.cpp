@@ -135,6 +135,42 @@ TEST_F(Test, param_provider_load) {
 
 //}
 
+/* TEST_F(Test, param_provider_set) //{ */
+
+TEST_F(Test, param_provider_set) {
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  auto clock = node_->get_clock();
+
+  auto pp = mrs_lib::ParamProvider(node_, true);
+
+  const auto name_raw = "test_int";
+  const auto name = pp.resolveName(name_raw);
+  EXPECT_FALSE(pp.declareParamDefault(name, -100, -1, 100, true));
+  int init_value = 1;
+  EXPECT_TRUE(pp.declareParamDefault(name, init_value, -1, 100, true));
+
+  int test_int = -666;
+  EXPECT_FALSE(pp.setParam(name_raw, 666, true));
+  EXPECT_TRUE(pp.getParam(name_raw, test_int, true));
+  EXPECT_EQ(test_int, init_value);
+
+  EXPECT_TRUE(pp.setParam(name_raw, -1, true));
+  EXPECT_TRUE(pp.getParam(name_raw, test_int, true));
+  EXPECT_EQ(test_int, -1);
+
+  EXPECT_TRUE(pp.setParam(name_raw, 66, true));
+  EXPECT_TRUE(pp.getParam(name_raw, test_int, true));
+  EXPECT_EQ(test_int, 66);
+
+  despin();
+
+  clock->sleep_for(1s);
+}
+
+//}
+
 /* TEST_F(Test, param_loader_load_from_file) //{ */
 
 TEST_F(Test, param_loader_load_from_file) {

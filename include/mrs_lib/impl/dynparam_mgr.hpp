@@ -57,9 +57,12 @@ namespace mrs_lib
   
     // load the current value of the parameter
     MemT current_value;
-    const bool get_success = m_pp.getParam(resolved_name, current_value, true);
+    const bool get_success = m_pp.getParam(resolved_name, current_value, minimum, maximum, true);
     if (!get_success)
+    {
+      RCLCPP_ERROR_STREAM(m_node->get_logger(), "Failed to load parameter \"" << name << "\"!");
       return false;
+    }
 
     // make sure that the parameter is always declared in ROS
     // even if the default value will be loaded from YAML (by default,

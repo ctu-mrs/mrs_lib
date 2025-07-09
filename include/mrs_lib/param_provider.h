@@ -120,6 +120,21 @@ public:
   bool getParam(const resolved_name_t& resolved_name, T& value_out, const bool reconfigurable = false) const;
 
   /*!
+   * \brief Defines a parameter with an allowed range.
+   *
+   * This method only declares the parameter in ROS.
+   *
+   * \param resolved_name   Resolved (including namespace etc.) name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
+   * \param minimum         The minimal valid value of the parameter.
+   * \param maximum         The maximal valid value of the parameter.
+   * \param reconfigurable  If true, the paramter will be declared as dynamically reconfigurable (unless it was already defined as read-only).
+   * \return                true iff the parameter was successfully declared.
+   */
+  template <typename T>
+  bool getParam(const resolved_name_t& resolved_name, T& value_out, const T minimum, const T maximum, const bool reconfigurable = false) const
+  requires std::integral<T> or std::floating_point<T>;
+
+  /*!
    * \brief Sets the value of a parameter.
    *
    * \param param_name      Name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
@@ -154,7 +169,7 @@ public:
    * \return                true iff the parameter was successfully declared.
    */
   template <typename T>
-  bool declareParam(const resolved_name_t& resolved_name, const T minimum, const T maximum, const bool reconfigurable) const
+  bool declareParam(const resolved_name_t& resolved_name, const T minimum, const T maximum, const bool reconfigurable = false) const
   requires std::integral<T> or std::floating_point<T>;
 
   /*!
@@ -167,7 +182,7 @@ public:
    * \return                true iff the parameter was successfully declared.
    */
   template <typename T>
-  bool declareParam(const resolved_name_t& resolved_name, const bool reconfigurable) const;
+  bool declareParam(const resolved_name_t& resolved_name, const bool reconfigurable = false) const;
 
   /*!
    * \brief Defines a parameter with a default value.
@@ -180,7 +195,7 @@ public:
    * \return                true iff the parameter was successfully declared.
    */
   template <typename T>
-  bool declareParamDefault(const std::string& param_name, const T& default_value, const bool reconfigurable) const;
+  bool declareParamDefault(const std::string& param_name, const T& default_value, const bool reconfigurable = false) const;
 
   /*!
    * \brief Defines a parameter with a default value.
@@ -193,7 +208,7 @@ public:
    * \return                true iff the parameter was successfully declared.
    */
   template <typename T>
-  bool declareParamDefault(const resolved_name_t& param_name, const T& default_value, const bool reconfigurable) const;
+  bool declareParamDefault(const resolved_name_t& param_name, const T& default_value, const bool reconfigurable = false) const;
 
   /*!
    * \brief Defines a parameter with a default value.
@@ -208,7 +223,7 @@ public:
    * \return                true iff the parameter was successfully declared.
    */
   template <typename T>
-  bool declareParamDefault(const resolved_name_t& param_name, const T default_value, const T minimum, const T maximum, const bool reconfigurable) const
+  bool declareParamDefault(const resolved_name_t& param_name, const T default_value, const T minimum, const T maximum, const bool reconfigurable = false) const
   requires std::integral<T> or std::floating_point<T>;
 
   /*!
