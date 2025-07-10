@@ -101,6 +101,10 @@ namespace mrs_lib
       }
     }
 
+    // the parameter value was successfully loaded and the parameter was declared if required, everything is done, return true
+    if (loaded_from_yaml)
+      return true;
+
     // if the value was not found in a YAML file and loading from ROS is enabled, try it
     if (!loaded_from_yaml && use_rosparam)
     {

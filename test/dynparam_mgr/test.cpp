@@ -351,11 +351,9 @@ struct CallbackTester
 };
 
 template <typename T>
-std::shared_ptr<CallbackTester<T>> test_callback(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynparam_mgr, T& test_var, const std::string& param_name, const T& init_value, const std::vector<T>& test_values)
+std::shared_ptr<CallbackTester<T>> test_callback(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynparam_mgr, T& test_var, const std::string& param_name, const std::vector<T>& test_values)
 {
   auto tester_ptr = std::make_shared<CallbackTester<T>>(param_name, node);
-
-  EXPECT_TRUE(dynparam_mgr.get_param_provider().setParam(param_name, init_value));
 
   const mrs_lib::DynparamMgr::update_cbk_t<T> cbk = std::bind(&CallbackTester<T>::callback, tester_ptr.get(), param_name, std::placeholders::_1);
   EXPECT_TRUE(dynparam_mgr.register_param(param_name, &test_var, cbk));
@@ -384,6 +382,8 @@ TEST_F(Test, dynparam_mgr_callback)
   std::mutex mtx;
   RCLCPP_INFO(node_->get_logger(), "defining DynparamMgr");
   auto dynparam_mgr = mrs_lib::DynparamMgr(node_, mtx);
+  // add the YAML files with the default values of the parameters
+  EXPECT_TRUE(dynparam_mgr.get_param_provider().addYamlFile(test_resources_path.string() + "/test_config.yaml"));
 
   bool test_bool;
   int test_int;
@@ -400,19 +400,19 @@ TEST_F(Test, dynparam_mgr_callback)
   std::vector<std::string> test_stringarr;
 
   // the returned pointers have to be stored to ensure that the callbacks are still valid
-  const auto tester_bool = test_callback(node_, dynparam_mgr, test_bool, "test_bool", false, {true, false});
-  const auto tester_int = test_callback(node_, dynparam_mgr, test_int, "test_int", 0, {-1, 1, 666});
-  const auto tester_int64 = test_callback(node_, dynparam_mgr, test_int64, "test_int64", 0l, {-1l, 1l, 666l});
-  const auto tester_float = test_callback(node_, dynparam_mgr, test_float, "test_float", 0.0f, {-1.0f, 1.0f, 666.0f, 1e-3f, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()});
-  const auto tester_double = test_callback(node_, dynparam_mgr, test_double, "test_double", 0.0, {-1.0, 1.0, 666.0, 1e-3, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()});
-  const auto tester_string = test_callback(node_, dynparam_mgr, test_string, "test_string", ""s, {"asdf"s, "gbleasdgelasdagdds"s, "554"s});
-  const auto tester_bytearr = test_callback(node_, dynparam_mgr, test_bytearr, "test_bytearr", {}, {{123, 1, 2}, {255}, {}});
-  const auto tester_boolarr = test_callback(node_, dynparam_mgr, test_boolarr, "test_boolarr", {}, {{true, false, true}, {false}, {}});
-  /* const auto tester_intarr = test_callback(node_, dynparam_mgr, test_intarr, "test_intarr", {}, {{1, 2, 3}, {-1}, {}}); */
-  const auto tester_int64arr = test_callback(node_, dynparam_mgr, test_int64arr, "test_int64arr", {}, {{1, 2, 3}, {-1}, {}});
-  /* const auto tester_floatarr = test_callback(node_, dynparam_mgr, test_floatarr, "test_floatarr", {}, {{1.0f, 2.0f, 3.0f}, {-1.0f}, {-1.0f, 1.0f, 666.0f, 1e-3f, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()}, {}}); */
-  const auto tester_doublearr = test_callback(node_, dynparam_mgr, test_doublearr, "test_doublearr", {}, {{1.0, 2.0, 3.0}, {-1.0}, {-1.0, 1.0, 666.0, 1e-3, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()}, {}});
-  const auto tester_stringarr = test_callback(node_, dynparam_mgr, test_stringarr, "test_stringarr", {}, {{"asdf", "gbleasdgelasdagdds", "554"}, {}, {"blebleble"}});
+  const auto tester_bool = test_callback(node_, dynparam_mgr, test_bool, "test_bool", {true, false});
+  const auto tester_int = test_callback(node_, dynparam_mgr, test_int, "test_int", {-1, 1, 666});
+  const auto tester_int64 = test_callback(node_, dynparam_mgr, test_int64, "test_int64", {-1l, 1l, 666l});
+  const auto tester_float = test_callback(node_, dynparam_mgr, test_float, "test_float", {-1.0f, 1.0f, 666.0f, 1e-3f, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()});
+  const auto tester_double = test_callback(node_, dynparam_mgr, test_double, "test_double", {-1.0, 1.0, 666.0, 1e-3, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()});
+  const auto tester_string = test_callback(node_, dynparam_mgr, test_string, "test_string", {"asdf"s, "gbleasdgelasdagdds"s, "554"s});
+  const auto tester_bytearr = test_callback(node_, dynparam_mgr, test_bytearr, "test_bytearr", {{123, 1, 2}, {255}, {}});
+  const auto tester_boolarr = test_callback(node_, dynparam_mgr, test_boolarr, "test_boolarr", {{true, false, true}, {false}, {}});
+  /* const auto tester_intarr = test_callback(node_, dynparam_mgr, test_intarr, "test_intarr", {{1, 2, 3}, {-1}, {}}); */
+  const auto tester_int64arr = test_callback(node_, dynparam_mgr, test_int64arr, "test_int64arr", {{1, 2, 3}, {-1}, {}});
+  /* const auto tester_floatarr = test_callback(node_, dynparam_mgr, test_floatarr, "test_floatarr", {{1.0f, 2.0f, 3.0f}, {-1.0f}, {-1.0f, 1.0f, 666.0f, 1e-3f, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()}, {}}); */
+  const auto tester_doublearr = test_callback(node_, dynparam_mgr, test_doublearr, "test_doublearr", {{1.0, 2.0, 3.0}, {-1.0}, {-1.0, 1.0, 666.0, 1e-3, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()}, {}});
+  const auto tester_stringarr = test_callback(node_, dynparam_mgr, test_stringarr, "test_stringarr", {{"asdf", "gbleasdgelasdagdds", "554"}, {}, {"blebleble"}});
 
   RCLCPP_INFO(node_->get_logger(), "finished");
   despin();
@@ -462,6 +462,7 @@ TEST_F(Test, dynparam_mgr_ranges)
   std::mutex mtx;
   RCLCPP_INFO(node_->get_logger(), "defining DynparamMgr");
   auto dynparam_mgr = mrs_lib::DynparamMgr(node_, mtx);
+  // add the YAML files with the default values of the parameters
   EXPECT_TRUE(dynparam_mgr.get_param_provider().addYamlFile(test_resources_path.string() + "/test_config.yaml"));
 
   int test_int;
