@@ -17,7 +17,7 @@ namespace mrs_lib
   {
     const auto resolved_name = m_pp.resolveName(name);
 
-    ParamProvider::options_t<MemT> opts;
+    ParamProvider::get_options_t<MemT> opts;
     opts.always_declare = true;
     opts.declare_options.reconfigurable = true;
   
@@ -48,11 +48,10 @@ namespace mrs_lib
   {
     const auto resolved_name = m_pp.resolveName(name);
 
-    ParamProvider::options_t<MemT> opts;
+    ParamProvider::get_options_t<MemT> opts;
     opts.always_declare = true;
     opts.declare_options.reconfigurable = true;
-    opts.declare_options.minimum = minimum;
-    opts.declare_options.maximum = maximum;
+    opts.declare_options.range = {.minimum = minimum, .maximum = maximum};
 
     // load the current value of the parameter
     MemT current_value;
@@ -109,8 +108,10 @@ namespace mrs_lib
       using type = variant_of_functions_t<Types...>;
     };
 
+    // define the std::variant of pointers-to the types from valid_types_t
     using param_ptr_variant_t = pointer_variant_from_list_t<valid_types_t>::type;
 
+    // define the std::variant of std::functions taking a const-ref of the types from valid_types_t
     using update_cbk_variant_t = function_variant_from_list_t<valid_types_t>::type;
 
     // | ------------------------- Members ------------------------ |

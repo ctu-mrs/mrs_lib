@@ -52,7 +52,7 @@ namespace mrs_lib
   }
 
   template <typename T>
-  bool ParamProvider::getParam(const resolved_name_t& resolved_name, T& value_out, const options_t<T>& opts) const
+  bool ParamProvider::getParam(const resolved_name_t& resolved_name, T& value_out, const get_options_t<T>& opts) const
   {
     bool use_rosparam = m_use_rosparam;
     // the options structure always has precedence if the parameter is set
@@ -137,51 +137,43 @@ namespace mrs_lib
 
   /* setParam() method //{ */
   template <typename T>
-  bool ParamProvider::setParam(const std::string& param_name, const T& value, const options_t<T>& opts) const
+  bool ParamProvider::setParam(const std::string& param_name, const T& value) const
   {
-    const auto resolved_name = resolveName(param_name);
-    bool use_rosparam = m_use_rosparam;
-    // the options structure always has precedence if the parameter is set
-    if (opts.use_rosparam.has_value())
-      use_rosparam = opts.use_rosparam.value();
+    return setParam(resolveName(param_name), value);
+  }
 
-    if (use_rosparam)
+  template <typename T>
+  bool ParamProvider::setParam(const resolved_name_t& resolved_name, const T& value, const set_options_t<T>& opts) const
+  {
+    // if the parameter is not yet declared, declare and set it together
+    if (!m_node->has_parameter(resolved_name.str))
     {
-      // if the parameter is not yet declared, declare and set it together
-      if (!m_node->has_parameter(resolved_name.str))
-      {
-        auto declare_opts_local = opts.declare_options;
-        declare_opts_local.default_value = value;
-        const auto result = declareParam<T>(param_name, opts.declare_options);
-        if (!result)
-          RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not declare and set param '" << resolved_name << "'!");
-        return result;
-      }
-      else
-      {
-        // otherwise, try setting it
-        try
-        {
-          /* RCLCPP_INFO_STREAM(m_node->get_logger(), "Setting param '" << resolved_name << "'"); */
-          rcl_interfaces::msg::SetParametersResult res = m_node->set_parameter({resolved_name.str, value});
-          if (!res.successful)
-          {
-            RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not set param '" << resolved_name << "': " << res.reason);
-            return false;
-          }
-          return true;
-        }
-        // if the parameter has a wrong value, return failure
-        catch (const rclcpp::exceptions::ParameterNotDeclaredException& e)
-        {
-          RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not set param '" << resolved_name << "': " << e.what());
-          return false;
-        }
-      }
+      auto declare_opts_local = opts.declare_options;
+      declare_opts_local.default_value = value;
+      const auto result = declareParam<T>(resolved_name, opts.declare_options);
+      if (!result)
+        RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not declare and set param '" << resolved_name << "'!");
+      return result;
     }
 
-    RCLCPP_ERROR_STREAM(m_node->get_logger(), "use_rosparam is false - cannot set YAML value of param '" << resolved_name << "'!");
-    return false;
+    // otherwise, try setting it
+    try
+    {
+      /* RCLCPP_INFO_STREAM(m_node->get_logger(), "Setting param '" << resolved_name << "'"); */
+      rcl_interfaces::msg::SetParametersResult res = m_node->set_parameter({resolved_name.str, value});
+      if (!res.successful)
+      {
+        RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not set param '" << resolved_name << "': " << res.reason);
+        return false;
+      }
+    }
+    // if the parameter has a wrong value, return failure
+    catch (const rclcpp::exceptions::ParameterNotDeclaredException& e)
+    {
+      RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not set param '" << resolved_name << "': " << e.what());
+      return false;
+    }
+    return true;
   }
   //}
 
@@ -193,6 +185,12 @@ namespace mrs_lib
   }
 
   template <typename T>
+  bool ParamProvider::declareParam(const std::string& param_name, const T& default_value) const
+  {
+    return declareParam<T>(resolveName(param_name), {.default_value = default_value});
+  }
+
+  template <typename T>
   bool ParamProvider::declareParam(const resolved_name_t& resolved_name, const declare_options_t<T>& opts) const
   {
     try
@@ -200,40 +198,32 @@ namespace mrs_lib
       rcl_interfaces::msg::ParameterDescriptor descriptor;
       descriptor.read_only = !opts.reconfigurable;
 
-      // first, check if the range is specified, and if it is correct
-      if constexpr (!std::integral<T> && !std::floating_point<T>)
+      // if the parameter range is specified, set it if applicable
+      if (opts.range.has_value())
       {
-        // if the parameter type is not numerical and there is a specified range, this is an error
-        if (opts.minimum.has_value() || opts.maximum.has_value())
-            RCLCPP_ERROR_STREAM(m_node->get_logger(), "Error when declaring parameter \"" << resolved_name << "\": Range cannot be set for non-numerical values! Ignoring range.");
-      }
-      else
-      {
-        // if the parameter type is numerical, check if both the minimum and maximum is specified
-        if (opts.minimum.has_value() && opts.maximum.has_value())
+        const auto& opt_range = opts.range.value();
+        // set the range approprately according to the parameter type
+        if constexpr (std::integral<T>)
         {
-          // set the range approprately according to the parameter type
-          if constexpr (std::integral<T>)
-          {
-            // integer range for integral types
-            rcl_interfaces::msg::IntegerRange range;
-            range.from_value = opts.minimum.value();
-            range.to_value = opts.maximum.value();
-            descriptor.integer_range.push_back(range);
-          }
-          else if constexpr (std::floating_point<T>)
-          {
-            // floating-point range for floating-point types
-            rcl_interfaces::msg::FloatingPointRange range;
-            range.from_value = opts.minimum.value();
-            range.to_value = opts.maximum.value();
-            descriptor.floating_point_range.push_back(range);
-          }
-          // if only the minimum or the maximum is specified, this is an error
-          else if (opts.minimum.has_value() != opts.maximum.has_value())
-          {
-            RCLCPP_ERROR_STREAM(m_node->get_logger(), "Error when declaring parameter \"" << resolved_name << "\": Both the minimum and maximum must be set when defining range! Ignoring range.");
-          }
+          // integer range for integral types
+          rcl_interfaces::msg::IntegerRange range;
+          range.from_value = opt_range.minimum;
+          range.to_value = opt_range.maximum;
+          descriptor.integer_range.push_back(range);
+        }
+        else if constexpr (std::floating_point<T>)
+        {
+          // floating-point range for floating-point types
+          rcl_interfaces::msg::FloatingPointRange range;
+          range.from_value = opt_range.minimum;
+          range.to_value = opt_range.maximum;
+          descriptor.floating_point_range.push_back(range);
+        }
+        else
+        {
+          // if the type is not numerical, print an error to let the user know and fail
+          RCLCPP_ERROR_STREAM(m_node->get_logger(), "Error when declaring parameter \"" << resolved_name << "\": Range cannot be set for non-numerical values! Ignoring range.");
+          return false;
         }
       }
 
@@ -266,13 +256,6 @@ namespace mrs_lib
     }
     return true;
   }
-
-  template <typename T>
-  bool ParamProvider::declareParam(const std::string& param_name, const T& default_value) const
-  {
-    return declareParam<T>(resolveName(param_name), {.default_value = default_value});
-  }
-
   //}
 
 }  // namespace mrs_lib

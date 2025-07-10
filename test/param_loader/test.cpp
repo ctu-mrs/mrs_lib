@@ -147,9 +147,10 @@ TEST_F(Test, param_provider_set) {
 
   const auto name_raw = "test_int";
   const auto name = pp.resolveName(name_raw);
-  EXPECT_FALSE(pp.declareParam<int>(name, {.reconfigurable = true, .default_value = -100, .minimum = -1, .maximum = 100}));
+  mrs_lib::ParamProvider::declare_options_t<int>::range_t range = {.minimum = -1, .maximum = 100};
+  EXPECT_FALSE(pp.declareParam<int>(name, {.reconfigurable = true, .default_value = -100, .range = range}));
   int init_value = 1;
-  EXPECT_TRUE(pp.declareParam<int>(name, {.reconfigurable = true, .default_value = init_value, .minimum = -1, .maximum = 100}));
+  EXPECT_TRUE(pp.declareParam<int>(name, {.reconfigurable = true, .default_value = init_value, .range = range}));
 
   int test_int = -666;
   EXPECT_FALSE(pp.setParam(name_raw, 666));

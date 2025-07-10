@@ -17,7 +17,7 @@ namespace mrs_lib
    * \brief Convenience class for managing dynamic ROS parameters.
    *
    * In the typical use-case, you give DynparamMgr a mutex and register a number of ROS parameters
-   * together with pointers to variables that you want to keep up-to-date with the value of the respective
+   * together with pointers to variables that you want to keep up-to-date with the values of the respective
    * parameters. When a parameter is changed, the mutex is locked and the value of the corresponding
    * variable is updated accordingly.
    *
@@ -46,13 +46,17 @@ namespace mrs_lib
         std::vector<std::string>
       >;
 
+  /*!
+   * \brief A convenience alias defining the update callback function type.
+   *
+   */
     template <typename T>
     using update_cbk_t = std::function<void(const T&)>;
 
   /*!
    * \brief The main constructor.
    *
-   * Constructs the DynparamMgr object and registers the `on_set_parameters` callback.
+   * Constructs the DynparamMgr object, initialies an internal ParamProvider object,  and registers the `on_set_parameters` ROS callback.
    *
    * \param node      A pointer to the ROS node handle used for registering, getting, setting, etc. of the parameters.
    * \param mtx       The mutex to be locked whenever the pointed-to variables passed in register_param() are touched.
@@ -62,18 +66,18 @@ namespace mrs_lib
   /*!
    * \brief Registers a ROS parameter and a corresponding variable.
    *
-   * This method registers a pair of the provided pointer to a variable and a name of a ROS parameter to keep the variable up-to-date with the value of the ROS parameter.
+   * This method registers the provided pointer to a variable and a name of a ROS parameter to keep the pointed-to variable up-to-date with the value of the ROS parameter.
    *
    * It will:
-   * 1. Declare the parameter in ROS as a dynamic parameter with the corresponding type .
-   * 2. Load its default value using ParamProvider - this means the default value can be loaded from ROS or directly from a provided YAML file, if available.
-   * 3. Set the value of the variable pointed-to by param_var to this default value.
-   * 4. Save the name of the parameter and the pointer so that the variable can be updated when the `on_set_parameters` is called.
+   * 1. Declare the parameter in ROS as a dynamic parameter with the corresponding type, or return false if the declaration fails.
+   * 2. Load its default value using ParamProvider - this means the default value can be loaded from ROS or from a provided YAML file, if available, or return false if the loading fails.
+   * 3. Set the value of the pointed-to variable to this default value.
+   * 4. Save the name of the parameter and the pointer so that the variable can be updated when the parameter value changes.
    * 
-   * \param name        Name of the parameter (this will be used for the declaration etc.).
-   * \param param_var   Pointer to a variable whose value will be changed when the parameter is updated. It is the user's responsibility to ensure that the lifetime of the pointed-to variable is valid while it is being used by the DynparamMgr.
+   * \param name        Name of the parameter (this will be used for the ROS declaration etc.).
+   * \param param_var   Pointer to the variable whose value will be changed when the parameter is updated. It is the user's responsibility to ensure that the lifetime of the pointed-to variable is valid while it is being used by the DynparamMgr.
    * \param update_cbk  Optional function to be called when the parameter is changed.
-   * \return            true if the parameter was successfully declared and its default value loaded.
+   * \return            true iff the parameter was successfully declared and its default value loaded.
    *
    * \note The C++ type passed to this function will be mapped to one of the valid values of rclcpp::ParameterType. Not all C++ types are supported (see valid_types_t).
    */
@@ -81,14 +85,14 @@ namespace mrs_lib
     bool register_param(const std::string& name, MemT* param_var, const update_cbk_t<MemT>& update_cbk = {});
 
   /*!
-   * \brief An overload of register_param() for specifying minimum and maximum of a number value.
+   * \brief An overload of register_param() for specifying the minimum and maximum of a numeric value.
    *
    * \param name        Name of the parameter (this will be used for the declaration etc.).
    * \param param_var   Pointer to a variable whose value will be changed when the parameter is updated. It is the user's responsibility to ensure that the lifetime of the pointed-to variable is valid while it is being used by the DynparamMgr.
    * \param minimum     The minimal value of the number (a lower value cannot be set).
    * \param maximum     The maximal value of the number (a higher value cannot be set).
    * \param update_cbk  Optional function to be called when the parameter is changed.
-   * \return            true if the parameter was successfully declared and its default value loaded.
+   * \return            true iff the parameter was successfully declared and its default value loaded.
    */
     template <typename MemT>
     bool register_param(const std::string& name, MemT* param_var, const MemT minimum, const MemT maximum, const update_cbk_t<MemT>& update_cbk = {})
