@@ -15,43 +15,39 @@ namespace mrs_lib
   template <typename MemT>
   bool DynparamMgr::register_param(const std::string& name, MemT* param_var, const update_cbk_t<MemT>& update_cbk)
   {
-    const auto resolved_name = m_pp.resolveName(name);
-
-    ParamProvider::get_options_t<MemT> opts;
-    opts.always_declare = true;
-    opts.declare_options.reconfigurable = true;
-  
-    // load the current value of the parameter
-    MemT current_value;
-    const bool get_success = m_pp.getParam(resolved_name, current_value, opts);
-    if (!get_success)
-      return false;
-
-    // only assign the default value if everything is OK, otherwise leave param_var untouched
-    *param_var = current_value;
-  
-    // remember the registered parameter, the corresponding variable, etc.
-    m_registered_params.emplace_back(
-          *m_node,
-          name,
-          to_param_type<MemT>(),
-          param_var,
-          update_cbk
-        );
-    return true;
+    return register_param_impl<MemT>(name, param_var, std::nullopt, std::nullopt, update_cbk);
   }
 
+  template <typename MemT>
+  bool DynparamMgr::register_param(const std::string& name, MemT* param_var, const MemT& default_value, const update_cbk_t<MemT>& update_cbk)
+  {
+    return register_param_impl<MemT>(name, param_var, default_value, std::nullopt, update_cbk);
+  }
 
   template <typename MemT>
-  bool DynparamMgr::register_param(const std::string& name, MemT* param_var, const MemT minimum, const MemT maximum, const update_cbk_t<MemT>& update_cbk)
-  requires std::integral<MemT> or std::floating_point<MemT>
+  bool DynparamMgr::register_param(const std::string& name, MemT* param_var, const range_t<MemT>& valid_range, const update_cbk_t<MemT>& update_cbk)
+  requires(numeric<MemT>)
+  {
+    return register_param_impl<MemT>(name, param_var, std::nullopt, valid_range, update_cbk);
+  }
+
+  template <typename MemT>
+  bool DynparamMgr::register_param(const std::string& name, MemT* param_var, const MemT& default_value, const range_t<MemT>& valid_range, const update_cbk_t<MemT>& update_cbk)
+  requires(numeric<MemT>)
+  {
+    return register_param_impl<MemT>(name, param_var, default_value, valid_range, update_cbk);
+  }
+
+  template <typename MemT>
+  bool DynparamMgr::register_param_impl(const std::string& name, MemT* param_var, const std::optional<MemT>& default_value, const std::optional<range_t<MemT>>& valid_range, const update_cbk_t<MemT>& update_cbk)
   {
     const auto resolved_name = m_pp.resolveName(name);
 
     ParamProvider::get_options_t<MemT> opts;
     opts.always_declare = true;
     opts.declare_options.reconfigurable = true;
-    opts.declare_options.range = {.minimum = minimum, .maximum = maximum};
+    opts.declare_options.default_value = default_value;
+    opts.declare_options.range = valid_range;
 
     // load the current value of the parameter
     MemT current_value;

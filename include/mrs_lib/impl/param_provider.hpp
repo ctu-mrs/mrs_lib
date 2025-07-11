@@ -203,7 +203,13 @@ namespace mrs_lib
       {
         const auto& opt_range = opts.range.value();
         // set the range approprately according to the parameter type
-        if constexpr (std::integral<T>)
+        if constexpr (!numeric<T>)
+        {
+          // if the type is not numerical, print an error to let the user know and fail
+          RCLCPP_ERROR_STREAM(m_node->get_logger(), "Error when declaring parameter \"" << resolved_name << "\": Range cannot be set for non-numerical values! Ignoring range.");
+          return false;
+        }
+        else if constexpr (std::integral<T>)
         {
           // integer range for integral types
           rcl_interfaces::msg::IntegerRange range;
@@ -218,12 +224,6 @@ namespace mrs_lib
           range.from_value = opt_range.minimum;
           range.to_value = opt_range.maximum;
           descriptor.floating_point_range.push_back(range);
-        }
-        else
-        {
-          // if the type is not numerical, print an error to let the user know and fail
-          RCLCPP_ERROR_STREAM(m_node->get_logger(), "Error when declaring parameter \"" << resolved_name << "\": Range cannot be set for non-numerical values! Ignoring range.");
-          return false;
         }
       }
 

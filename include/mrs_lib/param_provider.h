@@ -19,10 +19,14 @@ namespace mrs_lib
   template <typename T>
   rclcpp::ParameterType to_param_type();
 
+  /** \brief Convenience concept of a numeric value (i.e. either integral or floating point, and not bool). */
+  template <typename T>
+  concept numeric = (std::integral<T> || std::floating_point<T>) && !std::same_as<T, bool>;
+
 /*** ParamProvider CLASS //{ **/
 
 /**
- * \brief Helper class for ParamLoader.
+ * \brief Helper class for ParamLoader and DynparamMgr.
  *
  * This class abstracts away loading of parameters from ROS parameter server and directly from
  * YAML files ("static" parameters). The user can specify a number of YAML files that will be
@@ -43,6 +47,16 @@ public:
    */
   struct resolved_name_t;
 
+  /** \brief Helper struct for a numeric range with named members to make the code a bit more readable. */
+  template <typename T>
+  struct range_t
+  {
+    /** \brief Minimal value of a parameter. */
+    T minimum;
+    /** \brief Maximal value of a parameter. */
+    T maximum;
+  };
+
   /** \brief Struct of options when declaring a parameter to ROS.
    *
    * If the optionals are not filled (i.e. equal to std::nullopt), no default value, minimum
@@ -56,10 +70,8 @@ public:
     bool reconfigurable = false;
     /** \brief An optional default value to initialize the parameter with. */
     std::optional<T> default_value = std::nullopt;
-    /** \brief Just a helper struct for a range with named members to make the code a bit more readable. */
-    struct range_t {T minimum, maximum;};
     /** \brief An optional range of valid values of the parameter (only for numerical types). */
-    std::optional<range_t> range = std::nullopt;
+    std::optional<range_t<T>> range = std::nullopt;
   };
 
   /** \brief Struct of options when getting a parameter from ROS.

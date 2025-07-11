@@ -420,13 +420,16 @@ TEST_F(Test, dynparam_mgr_callback)
 
 //}
 
+template <typename T>
+using range_t = mrs_lib::DynparamMgr::range_t<T>;
+
 /* TEST_F(Test, dynparam_mgr_ranges) //{ */
 
 template <typename T>
 void test_ranges(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynparam_mgr, T& test_var, const T& minimum, const T& maximum, const std::string& param_name, const std::vector<T>& test_values)
 {
   // all the parameters should be available in the YAML file
-  EXPECT_TRUE(dynparam_mgr.register_param(param_name, &test_var, minimum, maximum));
+  EXPECT_TRUE(dynparam_mgr.register_param(param_name, &test_var, {minimum, maximum}));
 
   // now if the ROS parameter value is changed, the value of the variable should change as well
   for (const auto& test_val : test_values)

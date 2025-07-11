@@ -54,6 +54,13 @@ namespace mrs_lib
     using update_cbk_t = std::function<void(const T&)>;
 
   /*!
+   * \brief A helper alias for ParamProvider's range struct for specifying ranges of numeric values.
+   *
+   */
+    template <typename T>
+    using range_t = ParamProvider::range_t<T>;
+
+  /*!
    * \brief The main constructor.
    *
    * Constructs the DynparamMgr object, initialies an internal ParamProvider object,  and registers the `on_set_parameters` ROS callback.
@@ -74,10 +81,10 @@ namespace mrs_lib
    * 3. Set the value of the pointed-to variable to this default value.
    * 4. Save the name of the parameter and the pointer so that the variable can be updated when the parameter value changes.
    * 
-   * \param name        Name of the parameter (this will be used for the ROS declaration etc.).
-   * \param param_var   Pointer to the variable whose value will be changed when the parameter is updated. It is the user's responsibility to ensure that the lifetime of the pointed-to variable is valid while it is being used by the DynparamMgr.
-   * \param update_cbk  Optional function to be called when the parameter is changed.
-   * \return            true iff the parameter was successfully declared and its default value loaded.
+   * \param name            Name of the parameter (this will be used for the ROS declaration etc.).
+   * \param param_var       Pointer to the variable whose value will be changed when the parameter is updated. It is the user's responsibility to ensure that the lifetime of the pointed-to variable is valid while it is being used by the DynparamMgr.
+   * \param update_cbk      Optional function to be called when the parameter is changed.
+   * \return                true iff the parameter was successfully declared and its default value loaded.
    *
    * \note The C++ type passed to this function will be mapped to one of the valid values of rclcpp::ParameterType. Not all C++ types are supported (see valid_types_t).
    */
@@ -85,18 +92,45 @@ namespace mrs_lib
     bool register_param(const std::string& name, MemT* param_var, const update_cbk_t<MemT>& update_cbk = {});
 
   /*!
-   * \brief An overload of register_param() for specifying the minimum and maximum of a numeric value.
+   * \brief An overoad for specifying a default value of the parameter.
    *
-   * \param name        Name of the parameter (this will be used for the declaration etc.).
-   * \param param_var   Pointer to a variable whose value will be changed when the parameter is updated. It is the user's responsibility to ensure that the lifetime of the pointed-to variable is valid while it is being used by the DynparamMgr.
-   * \param minimum     The minimal value of the number (a lower value cannot be set).
-   * \param maximum     The maximal value of the number (a higher value cannot be set).
-   * \param update_cbk  Optional function to be called when the parameter is changed.
-   * \return            true iff the parameter was successfully declared and its default value loaded.
+   * \param name            Name of the parameter (this will be used for the ROS declaration etc.).
+   * \param param_var       Pointer to the variable whose value will be changed when the parameter is updated. It is the user's responsibility to ensure that the lifetime of the pointed-to variable is valid while it is being used by the DynparamMgr.
+   * \param default_value   Optional default value to be set if no value could be loaded from ParamProvider.
+   * \param update_cbk      Optional function to be called when the parameter is changed.
+   * \return                true iff the parameter was successfully declared and its default value loaded.
+   *
+   * \note The C++ type passed to this function will be mapped to one of the valid values of rclcpp::ParameterType. Not all C++ types are supported (see valid_types_t).
+   */
+  template <typename MemT>
+  bool register_param(const std::string& name, MemT* param_var, const MemT& default_value, const update_cbk_t<MemT>& update_cbk = {});
+
+  /*!
+   * \brief An overload of for specifying the minimum and maximum of a numeric value.
+   *
+   * \param name            Name of the parameter (this will be used for the declaration etc.).
+   * \param param_var       Pointer to a variable whose value will be changed when the parameter is updated. It is the user's responsibility to ensure that the lifetime of the pointed-to variable is valid while it is being used by the DynparamMgr.
+   * \param valid_range     Range of valid values (inclusive) of the parameter.
+   * \param update_cbk      Optional function to be called when the parameter is changed.
+   * \return                true iff the parameter was successfully declared and its default value loaded.
    */
     template <typename MemT>
-    bool register_param(const std::string& name, MemT* param_var, const MemT minimum, const MemT maximum, const update_cbk_t<MemT>& update_cbk = {})
-    requires std::integral<MemT> or std::floating_point<MemT>;
+    bool register_param(const std::string& name, MemT* param_var, const range_t<MemT>& valid_range, const update_cbk_t<MemT>& update_cbk = {})
+    requires(numeric<MemT>);
+
+  /*!
+   * \brief An overload of for specifying the default, minimum and maximum of a numeric value.
+   *
+   * \param name            Name of the parameter (this will be used for the declaration etc.).
+   * \param param_var       Pointer to a variable whose value will be changed when the parameter is updated. It is the user's responsibility to ensure that the lifetime of the pointed-to variable is valid while it is being used by the DynparamMgr.
+   * \param default_value   Default value to be set if no value could be loaded from ParamProvider.
+   * \param valid_range     Range of valid values (inclusive) of the parameter.
+   * \param update_cbk      Optional function to be called when the parameter is changed.
+   * \return                true iff the parameter was successfully declared and its default value loaded.
+   */
+    template <typename MemT>
+    bool register_param(const std::string& name, MemT* param_var, const MemT& default_value, const range_t<MemT>& valid_range, const update_cbk_t<MemT>& update_cbk = {})
+    requires(numeric<MemT>);
 
   /*!
    * \brief Pushes the current values of the pointed-to variables to ROS.
@@ -124,6 +158,9 @@ namespace mrs_lib
     rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr m_param_cbk;
 
     rcl_interfaces::msg::SetParametersResult cbk_param_update(const std::vector<rclcpp::Parameter>& parameters);
+
+    template <typename MemT>
+    bool register_param_impl(const std::string& name, MemT* param_var, const std::optional<MemT>& default_value, const std::optional<range_t<MemT>>& valid_range, const update_cbk_t<MemT>& update_cbk);
 
     struct registered_param_t;
     std::mutex& m_mtx;
