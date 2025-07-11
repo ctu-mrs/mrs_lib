@@ -195,6 +195,21 @@ ament_target_dependencies(MrsLib_DynparamMgr
   rclcpp
   )
 
+add_executable(dynparam_tests
+  src/dynparam_mgr/dynparam_tests.cpp
+  src/dynparam_mgr/dynparam_mgr.cpp
+  src/param_loader/param_provider.cpp
+  )
+
+# yaml-cpp does not use standart naming conventions which create issues with ament_target_dependencies()
+target_link_libraries(dynparam_tests
+  MrsLib_ParamProvider
+  )
+
+ament_target_dependencies(dynparam_tests
+  rclcpp
+  )
+
 # scope timer
 
 add_library(MrsLib_ScopeTimer SHARED

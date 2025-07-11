@@ -41,8 +41,6 @@ add_subdirectory(./lkf)
 
 add_subdirectory(./ukf)
 
-add_subdirectory(./dkf)
-
 add_subdirectory(./nckf)
 
 add_subdirectory(./transform_broadcaster)

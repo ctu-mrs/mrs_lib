@@ -4,17 +4,17 @@
 
 namespace mrs_lib
 {
-  // Explicit instantiation of the tepmplated functions to precompile them into mrs_lib and speed up compilation of user program.
+  // Explicit instantiation of the templated functions to precompile them into mrs_lib and speed up compilation of user program.
 
-  template bool ParamProvider::getParam<bool>(const std::string& name, bool& out_value, const bool reconfigurable) const;
-  template bool ParamProvider::getParam<int>(const std::string& name, int& out_value, const bool reconfigurable) const;
-  template bool ParamProvider::getParam<double>(const std::string& name, double& out_value, const bool reconfigurable) const;
-  template bool ParamProvider::getParam<std::string>(const std::string& name, std::string& out_value, const bool reconfigurable) const;
-  template bool ParamProvider::getParam<std::vector<bool>>(const std::string& name, std::vector<bool>& out_value, const bool reconfigurable) const;
-  template bool ParamProvider::getParam<std::vector<uint8_t>>(const std::string& name, std::vector<uint8_t>& out_value, const bool reconfigurable) const;
-  template bool ParamProvider::getParam<std::vector<int64_t>>(const std::string& name, std::vector<int64_t>& out_value, const bool reconfigurable) const;
-  template bool ParamProvider::getParam<std::vector<double>>(const std::string& name, std::vector<double>& out_value, const bool reconfigurable) const;
-  template bool ParamProvider::getParam<std::vector<std::string>>(const std::string& name, std::vector<std::string>& out_value, const bool reconfigurable) const;
+  template bool ParamProvider::getParam<bool>(const std::string& name, bool& out_value) const;
+  template bool ParamProvider::getParam<int>(const std::string& name, int& out_value) const;
+  template bool ParamProvider::getParam<double>(const std::string& name, double& out_value) const;
+  template bool ParamProvider::getParam<std::string>(const std::string& name, std::string& out_value) const;
+  template bool ParamProvider::getParam<std::vector<bool>>(const std::string& name, std::vector<bool>& out_value) const;
+  template bool ParamProvider::getParam<std::vector<uint8_t>>(const std::string& name, std::vector<uint8_t>& out_value) const;
+  template bool ParamProvider::getParam<std::vector<int64_t>>(const std::string& name, std::vector<int64_t>& out_value) const;
+  template bool ParamProvider::getParam<std::vector<double>>(const std::string& name, std::vector<double>& out_value) const;
+  template bool ParamProvider::getParam<std::vector<std::string>>(const std::string& name, std::vector<std::string>& out_value) const;
 
   ParamProvider::ParamProvider(const std::shared_ptr<rclcpp::Node>& node, const bool use_rosparam)
   : m_node(node), m_node_name(m_node->get_name()), m_use_rosparam(use_rosparam)
@@ -67,15 +67,15 @@ namespace mrs_lib
       bool loaded = true;
       {
         constexpr char delimiter = '/';
-        auto substr_start = std::cbegin(resolved_name);
+        auto substr_start = std::cbegin(resolved_name.str);
         auto substr_end = substr_start;
         do
         {
-          substr_end = std::find(substr_start, std::cend(resolved_name), delimiter);
+          substr_end = std::find(substr_start, std::cend(resolved_name.str), delimiter);
           // why can't substr or string_view take iterators? :'(
-          const auto start_pos = std::distance(std::cbegin(resolved_name), substr_start);
+          const auto start_pos = std::distance(std::cbegin(resolved_name.str), substr_start);
           const auto count = std::distance(substr_start, substr_end);
-          const std::string param_substr = resolved_name.substr(start_pos, count);
+          const std::string param_substr = resolved_name.str.substr(start_pos, count);
           substr_start = substr_end+1;
 
           bool found = false;
@@ -95,7 +95,7 @@ namespace mrs_lib
             break;
           }
         }
-        while (substr_end != std::end(resolved_name) && cur_node_it->second.IsMap());
+        while (substr_end != std::end(resolved_name.str) && cur_node_it->second.IsMap());
       }
 
       if (loaded)

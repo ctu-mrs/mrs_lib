@@ -9,8 +9,4 @@ while [ ! -e "build/COLCON_IGNORE" ]; do
   fi
 done
 
-colcon test-result --delete-yes
-
-colcon test --packages-select mrs_lib --ctest-args -R 'dynparam_mgr'
-
-colcon test-result --all --verbose
+colcon build --packages-select mrs_lib --cmake-args -DENABLE_TESTS=1

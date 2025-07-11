@@ -135,6 +135,43 @@ TEST_F(Test, param_provider_load) {
 
 //}
 
+/* TEST_F(Test, param_provider_set) //{ */
+
+TEST_F(Test, param_provider_set) {
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  auto clock = node_->get_clock();
+
+  auto pp = mrs_lib::ParamProvider(node_, true);
+
+  const auto name_raw = "test_int";
+  const auto name = pp.resolveName(name_raw);
+  mrs_lib::ParamProvider::range_t<int> range = {.minimum = -1, .maximum = 100};
+  EXPECT_FALSE(pp.declareParam<int>(name, {.reconfigurable = true, .default_value = -100, .range = range}));
+  int init_value = 1;
+  EXPECT_TRUE(pp.declareParam<int>(name, {.reconfigurable = true, .default_value = init_value, .range = range}));
+
+  int test_int = -666;
+  EXPECT_FALSE(pp.setParam(name_raw, 666));
+  EXPECT_TRUE(pp.getParam(name_raw, test_int));
+  EXPECT_EQ(test_int, init_value);
+
+  EXPECT_TRUE(pp.setParam(name_raw, -1));
+  EXPECT_TRUE(pp.getParam(name_raw, test_int));
+  EXPECT_EQ(test_int, -1);
+
+  EXPECT_TRUE(pp.setParam(name_raw, 66));
+  EXPECT_TRUE(pp.getParam(name_raw, test_int));
+  EXPECT_EQ(test_int, 66);
+
+  despin();
+
+  clock->sleep_for(1s);
+}
+
+//}
+
 /* TEST_F(Test, param_loader_load_from_file) //{ */
 
 TEST_F(Test, param_loader_load_from_file) {

@@ -9,7 +9,7 @@ namespace mrs_lib
   /* printValue function and overloads //{ */
 
   template <typename T>
-  void ParamLoader::printValue(const std::string& name, const T& value) const
+  void ParamLoader::printValue(const resolved_name_t& name, const T& value) const
   {
     if (m_node_name.empty())
       std::cout << "\t" << name << ":\t" << value << std::endl;
@@ -18,7 +18,7 @@ namespace mrs_lib
   }
 
   template <typename T>
-  void ParamLoader::printValue(const std::string& name, const std::vector<T>& value) const
+  void ParamLoader::printValue(const resolved_name_t& name, const std::vector<T>& value) const
   {
     std::stringstream strstr;
     if (m_node_name.empty())
@@ -38,7 +38,7 @@ namespace mrs_lib
   }
 
   template <typename T1, typename T2>
-  void ParamLoader::printValue(const std::string& name, const std::map<T1, T2>& value) const
+  void ParamLoader::printValue(const resolved_name_t& name, const std::map<T1, T2>& value) const
   {
     std::stringstream strstr;
     if (m_node_name.empty())
@@ -58,7 +58,7 @@ namespace mrs_lib
   }
 
   template <typename T>
-  void ParamLoader::printValue(const std::string& name, const MatrixX<T>& value) const
+  void ParamLoader::printValue(const resolved_name_t& name, const MatrixX<T>& value) const
   {
     std::stringstream strstr;
     /* const Eigen::IOFormat fmt(4, 0, ", ", "\n", "\t\t[", "]"); */
@@ -89,14 +89,14 @@ namespace mrs_lib
     // this function only accepts dynamic columns (you can always transpose the matrix afterward)
     if (rows < 0) {
       // if the parameter was compulsory, alert the user and set the flag
-      printError(std::string("Invalid expected matrix dimensions for parameter ") + prepend_node_name(resolved_name));
+      printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved_name.str);
       m_load_successful = false;
       return {loaded, used_rosparam_value};
     }
     const bool expect_zero_matrix = rows == 0;
     if (expect_zero_matrix) {
       if (cols > 0) {
-        printError(std::string("Invalid expected matrix dimensions for parameter ") + prepend_node_name(resolved_name) +
+        printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved_name.str +
                    ". One dimension indicates zero matrix, but other expects non-zero.");
         m_load_successful = false;
         return {loaded, used_rosparam_value};
@@ -129,7 +129,7 @@ namespace mrs_lib
       if (success && !correct_size) {
         // warn the user that this parameter was not successfully loaded because of wrong vector length (might be an oversight)
         std::string warning =
-            std::string("Matrix parameter ") + resolved_name +
+            std::string("Matrix parameter ") + resolved_name.str +
             std::string(" could not be loaded because the vector has a wrong length " + std::to_string(tmp_vec.size()) + " instead of expected ");
         // process the message correctly based on whether the loaded matrix should be dynamic or static
         if (cols <= 0)  // for dynamic matrices
@@ -141,7 +141,7 @@ namespace mrs_lib
       // if it was not loaded, the default value is used (set at the beginning of the function)
       if (!optional) {
         // if the parameter was compulsory, alert the user and set the flag
-        printError(std::string("Could not load non-optional parameter ") + prepend_node_name(resolved_name));
+        printError(std::string("Could not load non-optional parameter ") + resolved_name.str);
         cur_load_successful = false;
       }
     }
@@ -175,7 +175,7 @@ namespace mrs_lib
     MatrixX<T> loaded = default_value;
     // first, check that at least one dimension is set
     if (rows <= 0 || cols <= 0) {
-      printError(std::string("Invalid expected matrix dimensions for parameter ") + prepend_node_name(m_pp.resolveName(name)) + std::string(" (use loadMatrixDynamic?)"));
+      printError(std::string("Invalid expected matrix dimensions for parameter ") + m_pp.resolveName(name).str + std::string(" (use loadMatrixDynamic?)"));
       m_load_successful = false;
       return {loaded, false};
     }
@@ -192,7 +192,7 @@ namespace mrs_lib
 
     // next, check that at least one dimension is set
     if (rows <= 0 && cols <= 0) {
-      printError(std::string("Invalid expected matrix dimensions for parameter ") + prepend_node_name(m_pp.resolveName(name)) +
+      printError(std::string("Invalid expected matrix dimensions for parameter ") + m_pp.resolveName(name).str +
                  std::string(" (at least one dimension must be specified)"));
       m_load_successful = false;
       return {loaded, false};
@@ -215,8 +215,8 @@ namespace mrs_lib
     int rows;
     std::vector<long int> cols;
     bool success = true;
-    success = success && m_pp.getParam(resolved_name + "/rows", rows);
-    success = success && m_pp.getParam(resolved_name + "/cols", cols);
+    success = success && m_pp.getParam(resolved_name_t(resolved_name.str + "/rows"), rows);
+    success = success && m_pp.getParam(resolved_name_t(resolved_name.str + "/cols"), cols);
 
     std::vector<MatrixX<T>> loaded;
     loaded.reserve(cols.size());
@@ -225,18 +225,18 @@ namespace mrs_lib
     /* check correctness of loaded parameters so far calculate the total dimension //{ */
 
     if (!success) {
-      printError(std::string("Failed to load ") + prepend_node_name(resolved_name) + std::string("/rows or ") + prepend_node_name(resolved_name) + std::string("/cols"));
+      printError(std::string("Failed to load ") + resolved_name.str + std::string("/rows or ") + resolved_name.str + std::string("/cols"));
       m_load_successful = false;
       return default_value;
     }
     if (rows < 0) {
-      printError(std::string("Invalid expected matrix dimensions for parameter ") + prepend_node_name(resolved_name) + std::string(" (rows and cols must be >= 0)"));
+      printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved_name.str + std::string(" (rows and cols must be >= 0)"));
       m_load_successful = false;
       return default_value;
     }
     for (const auto& col : cols) {
       if (col < 0) {
-        printError(std::string("Invalid expected matrix dimensions for parameter ") + prepend_node_name(resolved_name) + std::string(" (rows and cols must be >= 0)"));
+        printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved_name.str + std::string(" (rows and cols must be >= 0)"));
         m_load_successful = false;
         return default_value;
       }
@@ -261,7 +261,7 @@ namespace mrs_lib
       /* std::cout << "cur_mat: " << cur_mat << std::endl; */
       loaded.push_back(cur_mat);
       cols_loaded += cur_cols;
-      printValue(resolved_name + "/matrix#" + std::to_string(it), cur_mat);
+      printValue(resolved_name_t(resolved_name.str + "/matrix#" + std::to_string(it)), cur_mat);
     }
     return loaded;
   }
@@ -297,7 +297,7 @@ namespace mrs_lib
       loaded = default_value;
       if (!optional) {
         // if the parameter was compulsory, alert the user and set the flag
-        printError(std::string("Could not load non-optional parameter ") + prepend_node_name(resolved_name));
+        printError(std::string("Could not load non-optional parameter ") + resolved_name.str);
         cur_load_successful = false;
       }
     }

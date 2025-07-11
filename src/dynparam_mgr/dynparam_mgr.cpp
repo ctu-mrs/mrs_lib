@@ -8,35 +8,40 @@
 namespace mrs_lib
 {
 
+  /* constructor //{ */
   DynparamMgr::DynparamMgr(const std::shared_ptr<rclcpp::Node>& node, std::mutex& mtx)
     : m_node(node), m_pp(node), m_mtx(mtx)
   {
     decltype(decltype(m_param_cbk)::element_type::callback) cbk = std::bind(&DynparamMgr::cbk_param_update, this, std::placeholders::_1);
     m_param_cbk = m_node->add_on_set_parameters_callback(cbk);
-
+  
   }
+  //}
 
+  /* update_to_ros() method //{ */
   rcl_interfaces::msg::SetParametersResult DynparamMgr::update_to_ros()
   {
     std::vector<rclcpp::Parameter> parameters;
-
+  
     {
       std::scoped_lock lck(m_mtx);
-
+  
       for (const auto& reg_param : m_registered_params)
-        parameters.emplace_back(m_pp.resolveName(reg_param.name), reg_param.to_param_val());
+        parameters.emplace_back(m_pp.resolveName(reg_param.name).str, reg_param.to_param_val());
     }
-
+  
     const auto result = m_node->set_parameters_atomically(parameters);
     return result;
   }
+  //}
 
+  /* cbk_param_update() method //{ */
   rcl_interfaces::msg::SetParametersResult DynparamMgr::cbk_param_update(const std::vector<rclcpp::Parameter>& parameters)
   {
     rcl_interfaces::msg::SetParametersResult result;
     result.successful = true;
     std::stringstream reason;
-
+  
     std::scoped_lock lck(m_mtx);
     for (const auto& new_param : parameters)
     {
@@ -49,11 +54,11 @@ namespace mrs_lib
               return registered_param.name == param_name;
             }
           );
-
+  
       // if the parameter was not found, ignore it
       if (found_it == std::end(m_registered_params))
         continue;
-
+  
       // update the parameter value
       auto& found_el = *found_it;
       using type_enum = rclcpp::ParameterType;
@@ -80,7 +85,7 @@ namespace mrs_lib
         case type_enum::PARAMETER_NOT_SET:
           result.successful = false; break;
       }
-
+  
       if (!result.successful)
       {
         if (new_param.get_type() == type_enum::PARAMETER_NOT_SET)
@@ -89,14 +94,16 @@ namespace mrs_lib
           reason << "Parameter " << param_name << " has a wrong type (" << new_param.get_type_name() << ")!\n";
       }
     }
-
+  
     result.reason = reason.str();
     // remove the trailing \n if there is one
     if (!result.reason.empty())
       result.reason.pop_back();
     return result;
   }
+  //}
 
+  /* registered_param_t::to_param_val() method //{ */
   rclcpp::ParameterValue DynparamMgr::registered_param_t::to_param_val() const
   {
     try
@@ -111,6 +118,7 @@ namespace mrs_lib
       return rclcpp::ParameterValue{};
     }
   }
+  //}
 
 }  // namespace mrs_lib
 

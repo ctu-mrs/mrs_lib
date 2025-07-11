@@ -137,11 +137,11 @@ namespace mrs_lib
     m_pp.copyYamls(param_loader.m_pp);
   }
 
-  bool ParamLoader::check_duplicit_loading(const std::string& name)
+  bool ParamLoader::check_duplicit_loading(const resolved_name_t& name)
   {
     if (m_loaded_params.count(name))
     {
-      printError(std::string("Tried to load parameter \"") + name + std::string("\" twice"));
+      printError(std::string("Tried to load parameter \"") + name.str + std::string("\" twice"));
       m_load_successful = false;
       return true;
     }
@@ -149,11 +149,6 @@ namespace mrs_lib
     {
       return false;
     }
-  }
-
-  std::string ParamLoader::prepend_node_name(const std::string& resolved_name) const
-  {
-    return std::string(m_node->get_fully_qualified_name()) + " " + resolved_name;
   }
 
   /* printError and printWarning functions //{*/

@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <optional>
+#include <concepts>
 
 #include <yaml-cpp/yaml.h>
 #include <rclcpp/rclcpp.hpp>
@@ -18,10 +19,14 @@ namespace mrs_lib
   template <typename T>
   rclcpp::ParameterType to_param_type();
 
+  /** \brief Convenience concept of a numeric value (i.e. either integral or floating point, and not bool). */
+  template <typename T>
+  concept numeric = (std::integral<T> || std::floating_point<T>) && !std::same_as<T, bool>;
+
 /*** ParamProvider CLASS //{ **/
 
 /**
- * \brief Helper class for ParamLoader.
+ * \brief Helper class for ParamLoader and DynparamMgr.
  *
  * This class abstracts away loading of parameters from ROS parameter server and directly from
  * YAML files ("static" parameters). The user can specify a number of YAML files that will be
@@ -30,16 +35,78 @@ namespace mrs_lib
  * in FIFO order and when a matching name is found in a file, its value is returned.
  *
  */
-class ParamProvider {
+class ParamProvider
+{
 public:
   /** \brief Helper struct to distinguish standard names from resolved names.
    *
    * This struct serves as a strong type different from std::string (used for non-resolved parameter
-   * names) so that the user cannot accidentally call a method expecting the "raw" name with a resolved name.
+   * names) so that the user cannot accidentally call a method expecting the "raw" name with a resolved name
+   * and vice-versa.
    *
    */
-  struct resolved_name_t : std::string
-  {};
+  struct resolved_name_t;
+
+  /** \brief Helper struct for a numeric range with named members to make the code a bit more readable. */
+  template <typename T>
+  struct range_t
+  {
+    /** \brief Minimal value of a parameter. */
+    T minimum;
+    /** \brief Maximal value of a parameter. */
+    T maximum;
+  };
+
+  /** \brief Struct of options when declaring a parameter to ROS.
+   *
+   * If the optionals are not filled (i.e. equal to std::nullopt), no default value, minimum
+   * or maximum will be defined for the declared variable.
+   *
+   */
+  template <typename T>
+  struct declare_options_t
+  {
+    /** \brief If true, the parameter will be dynamically reconfigurable, otherwise it will be declared as read-only. */
+    bool reconfigurable = false;
+    /** \brief An optional default value to initialize the parameter with. */
+    std::optional<T> default_value = std::nullopt;
+    /** \brief An optional range of valid values of the parameter (only for numerical types). */
+    std::optional<range_t<T>> range = std::nullopt;
+  };
+
+  /** \brief Struct of options when getting a parameter from ROS.
+   *
+   * If the optionals are not filled (i.e. equal to std::nullopt), the values set in the ParamProvider class are used.
+   *
+   */
+  template <typename T>
+  struct get_options_t
+  {
+    /** \brief Iff true, the parameter will be declared to ROS even if it's value was loaded from a YAML. */
+    bool always_declare = false;
+    /** \brief Iff false, loading from YAML will be skipped even if some YAML files were specified. */
+    bool use_yaml = true;
+    /** \brief Specifies whether the parameter should be attempted to be loaded from ROS if it cannot be loaded from a YAML. */
+    std::optional<bool> use_rosparam = std::nullopt;
+    /** \brief If filled, overrides any prefix set using the setPrefix() method. */
+    std::optional<std::string> prefix = std::nullopt;
+    /** \brief Options when declaring a parameter to ROS (see the declare_options_t<T> documentation). */
+    declare_options_t<T> declare_options = {};
+  };
+
+  /** \brief Struct of options when setting a parameter to ROS.
+   *
+   * If the optionals are not filled (i.e. equal to std::nullopt), the values set in the ParamProvider class are used.
+   *
+   */
+  template <typename T>
+  struct set_options_t
+  {
+    /** \brief If filled, overrides any prefix set using the setPrefix() method. */
+    std::optional<std::string> prefix = std::nullopt;
+    /** \brief Options when declaring a parameter to ROS (see the declare_options_t<T> documentation). */
+    declare_options_t<T> declare_options = {};
+  };
 
   /*!
    * \brief Main constructor.
@@ -74,11 +141,10 @@ public:
    *
    * \param param_name      Name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
    * \param value_out       Output argument that will hold the value of the loaded parameter, if successfull. Not modified otherwise.
-   * \param reconfigurable  If true, the paramter will be declared as dynamically reconfigurable (unless it was already defined as read-only).
    * \return                true iff the parameter was successfully loaded.
    */
   template <typename T>
-  bool getParam(const std::string& param_name, T& value_out, const bool reconfigurable = false) const;
+  bool getParam(const std::string& param_name, T& value_out) const;
 
   /*!
    * \brief Gets the value of a parameter.
@@ -89,59 +155,73 @@ public:
    *
    * \param param_name      Name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
    * \param value_out       Output argument that will hold the value of the loaded parameter, if successfull. Not modified otherwise.
-   * \param reconfigurable  If true, the paramter will be declared as dynamically reconfigurable (unless it was already defined as read-only).
+   * \param opts            Options regarding getting and declaring the parameter (see the get_options_t<T> documentation).
    * \return                true iff the parameter was successfully loaded.
    */
   template <typename T>
-  bool getParam(const resolved_name_t& resolved_name, T& value_out, const bool reconfigurable = false) const;
+  bool getParam(const resolved_name_t& resolved_name, T& value_out, const get_options_t<T>& opts = {}) const;
 
   /*!
-   * \brief Sets the value of a parameter.
+   * \brief Sets the value of a parameter to ROS.
    *
-   * \param param_name      Name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
-   * \param value_out       Output argument that will hold the value of the loaded parameter, if successfull. Not modified otherwise.
-   * \param reconfigurable  If true, the paramter will be declared as dynamically reconfigurable (unless it was already defined as read-only).
-   * \return                true iff the parameter was successfully loaded.
+   * This method sets the parameter to ROS with the desired value.
+   *
+   * \param param_name      Name of the parameter to be set. Namespaces should be separated with a forward slash '/'.
+   * \param value           The desired value of the parameter.
+   * \return                true iff the parameter was successfully set.
    */
   template <typename T>
-  bool setParam(const std::string& param_name, const T& value, const bool reconfigurable = false) const;
+  bool setParam(const std::string& param_name, const T& value) const;
+
+  /*!
+   * \brief Sets the value of a parameter to ROS.
+   *
+   * This method sets the parameter to ROS with the behavior controlled by the options allowing to
+   * set a default value, valid value range (for numerical types), declare the parameter as reconfigurable, etc.
+   *
+   * \param param_name      Name of the parameter to be set. Namespaces should be separated with a forward slash '/'.
+   * \param value           The desired value of the parameter.
+   * \param opts            Options regarding setting and declaring the parameter (see the set_options_t<T> documentation).
+   * \return                true iff the parameter was successfully set.
+   */
+  template <typename T>
+  bool setParam(const resolved_name_t& resolved_name, const T& value, const set_options_t<T>& opts = {}) const;
 
   /*!
    * \brief Defines a parameter.
    *
    * This method only declares the parameter in ROS.
    *
-   * \param param_name      Name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
-   * \param reconfigurable  If true, the paramter will be declared as dynamically reconfigurable (unless it was already defined as read-only).
+   * \param param_name      Name of the parameter to be loaded.
    * \return                true iff the parameter was successfully declared.
    */
   template <typename T>
-  bool declareParam(const std::string& param_name, const bool reconfigurable = false) const;
-
-  /*!
-   * \brief Defines a parameter.
-   *
-   * This method only declares the parameter in ROS.
-   *
-   * \param param_name      Name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
-   * \param reconfigurable  If true, the paramter will be declared as dynamically reconfigurable (unless it was already defined as read-only).
-   * \return                true iff the parameter was successfully declared.
-   */
-  template <typename T>
-  bool declareParam(const resolved_name_t& resolved_name, const bool reconfigurable) const;
+  bool declareParam(const std::string& param_name) const;
 
   /*!
    * \brief Defines a parameter with a default value.
    *
    * This method declares the parameter in ROS and sets the default value if there is no value in ROS.
    *
-   * \param param_name      Name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
+   * \param param_name      Name of the parameter to be loaded.
    * \param default_value   The default value to be set if there is no value of the parameter.
-   * \param reconfigurable  If true, the paramter will be declared as dynamically reconfigurable (unless it was already defined as read-only).
    * \return                true iff the parameter was successfully declared.
    */
   template <typename T>
-  bool declareParamDefault(const std::string& param_name, const T& default_value, const bool reconfigurable) const;
+  bool declareParam(const std::string& param_name, const T& default_value) const;
+
+  /*!
+   * \brief Defines a parameter with various options.
+   *
+   * This method declares the parameter in ROS with the behavior controlled by the options allowing
+   * to set a default value, valid value range (for numerical types), declare the parameter as reconfigurable, etc.
+   *
+   * \param param_name      Name of the parameter to be loaded.
+   * \param opts            Options regarding declaring the parameter (see the declare_options_t<T> documentation).
+   * \return                true iff the parameter was successfully declared.
+   */
+  template <typename T>
+  bool declareParam(const resolved_name_t& resolved_name, const declare_options_t<T>& opts = {}) const;
 
   /*!
    * \brief Sets a prefix that will be applied to parameter names before subnode namespaces.
