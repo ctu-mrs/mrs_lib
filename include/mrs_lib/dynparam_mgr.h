@@ -5,17 +5,11 @@
  */
 #pragma once
 
-#include <concepts>
-
 #include <rclcpp/rclcpp.hpp>
 #include <mrs_lib/param_provider.h>
 
 namespace mrs_lib
 {
-
-  /** \brief Convenience concept of a numeric value (i.e. either integral or floating point, and not bool). */
-  template <typename T>
-  concept numeric = (std::integral<T> || std::floating_point<T>) && !std::same_as<T, bool>;
 
   /**
    * \brief Convenience class for managing dynamic ROS parameters.
