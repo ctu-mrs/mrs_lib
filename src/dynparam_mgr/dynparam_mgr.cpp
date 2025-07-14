@@ -10,13 +10,18 @@ namespace mrs_lib
 
   /* constructor //{ */
   DynparamMgr::DynparamMgr(const std::shared_ptr<rclcpp::Node>& node, std::mutex& mtx)
-    : m_node(node), m_pp(node), m_mtx(mtx)
+    : m_node(node), m_pp(node), m_load_successful(true), m_mtx(mtx)
   {
     decltype(decltype(m_param_cbk)::element_type::callback) cbk = std::bind(&DynparamMgr::cbk_param_update, this, std::placeholders::_1);
     m_param_cbk = m_node->add_on_set_parameters_callback(cbk);
   
   }
   //}
+
+  bool DynparamMgr::loaded_successfully() const
+  {
+    return m_load_successful;
+  }
 
   /* update_to_ros() method //{ */
   rcl_interfaces::msg::SetParametersResult DynparamMgr::update_to_ros()

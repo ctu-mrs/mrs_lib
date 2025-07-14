@@ -8,7 +8,6 @@
 
 #include <memory>
 #include <optional>
-#include <concepts>
 
 #include <yaml-cpp/yaml.h>
 #include <rclcpp/rclcpp.hpp>
@@ -18,10 +17,6 @@ namespace mrs_lib
 
   template <typename T>
   rclcpp::ParameterType to_param_type();
-
-  /** \brief Convenience concept of a numeric value (i.e. either integral or floating point, and not bool). */
-  template <typename T>
-  concept numeric = (std::integral<T> || std::floating_point<T>) && !std::same_as<T, bool>;
 
 /*** ParamProvider CLASS //{ **/
 

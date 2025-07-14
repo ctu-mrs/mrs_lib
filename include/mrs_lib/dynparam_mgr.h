@@ -13,6 +13,10 @@
 namespace mrs_lib
 {
 
+  /** \brief Convenience concept of a numeric value (i.e. either integral or floating point, and not bool). */
+  template <typename T>
+  concept numeric = (std::integral<T> || std::floating_point<T>) && !std::same_as<T, bool>;
+
   /**
    * \brief Convenience class for managing dynamic ROS parameters.
    *
@@ -133,6 +137,13 @@ namespace mrs_lib
     requires(numeric<MemT>);
 
   /*!
+   * \brief Indicates whether all parameters were successfully declared and loaded.
+   *
+   * \return false if any compulsory parameter was not declared or loaded. Otherwise returns true.
+   */
+    bool loaded_successfully() const;
+
+  /*!
    * \brief Pushes the current values of the pointed-to variables to ROS.
    *
    * This method serves to update changes to the registered pointed-to variables made in your code to their ROS counterparts.
@@ -161,6 +172,8 @@ namespace mrs_lib
 
     template <typename MemT>
     bool register_param_impl(const std::string& name, MemT* param_var, const std::optional<MemT>& default_value, const std::optional<range_t<MemT>>& valid_range, const update_cbk_t<MemT>& update_cbk);
+
+    bool m_load_successful;
 
     struct registered_param_t;
     std::mutex& m_mtx;

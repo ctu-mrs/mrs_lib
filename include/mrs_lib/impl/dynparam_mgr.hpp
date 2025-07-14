@@ -53,7 +53,10 @@ namespace mrs_lib
     MemT current_value;
     const bool get_success = m_pp.getParam(resolved_name, current_value, opts);
     if (!get_success)
+    {
+      m_load_successful = false;
       return false;
+    }
 
     // only assign the default value if everything is OK, otherwise leave param_var untouched
     *param_var = current_value;

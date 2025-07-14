@@ -317,6 +317,43 @@ TEST_F(Test, dynparam_mgr_subnode) {
 
 //}
 
+/* TEST_F(Test, dynparam_mgr_loaded_successfully) //{ */
+
+TEST_F(Test, dynparam_mgr_loaded_successfully) {
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+  auto subnode = node_->create_sub_node("subnode");
+
+  auto clock = subnode->get_clock();
+
+  RCLCPP_INFO(subnode->get_logger(), "defining ParamProvider");
+
+  std::mutex mtx;
+  RCLCPP_INFO(subnode->get_logger(), "defining DynparamMgr");
+  auto dynparam_mgr = mrs_lib::DynparamMgr(subnode, mtx);
+
+  bool test_bool;
+  const std::string param_name = "test_bool";
+
+  RCLCPP_INFO_STREAM(node_->get_logger(), "setting " << param_name);
+  const auto result = dynparam_mgr.get_param_provider().setParam(param_name, false);
+  EXPECT_TRUE(result);
+
+  RCLCPP_INFO_STREAM(node_->get_logger(), "registering " << param_name);
+  EXPECT_TRUE(dynparam_mgr.register_param(param_name, &test_bool));
+  EXPECT_TRUE(dynparam_mgr.loaded_successfully());
+
+  const std::string nonexistent_param_name = "doesnt_exist";
+  RCLCPP_INFO_STREAM(node_->get_logger(), "registering " << nonexistent_param_name);
+  EXPECT_TRUE(!dynparam_mgr.register_param(nonexistent_param_name, &test_bool));
+  EXPECT_TRUE(!dynparam_mgr.loaded_successfully());
+
+  RCLCPP_INFO(subnode->get_logger(), "finished");
+  despin();
+}
+
+//}
+
 /* TEST_F(Test, dynparam_mgr_callback) //{ */
 
 template <typename T>
