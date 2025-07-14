@@ -9,5 +9,6 @@ while [ ! -e "build/COLCON_IGNORE" ]; do
   fi
 done
 
+# gdb -ex run ./build/mrs_lib/test/param_provider/test_param_provider
 gdb -ex run ./build/mrs_lib/test/dynparam_mgr/test_dynparam_mgr
 # gdb -ex run ./build/mrs_lib/test/param_loader/test_param_loader

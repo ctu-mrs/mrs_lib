@@ -1,0 +1,30 @@
+param_provider:
+  test_int: 666
+  test_double: 666.666
+  test_bool: true
+  test_str: "some_str"
+  test_int_array: [0, 1, 2, 3]
+  test_double_array: [0.0, 1.1, 2.2, 3.3]
+  test_bool_array: [true, false]
+  test_str_array: ["this", "should", "load"]
+
+test_param_nd_matrix:
+
+  rows: 3
+
+  cols: [1, 1]
+
+  data: [-5.0, -10.0,
+         -5.0, -10.0,
+          2.0,   4.0]
+
+test_param_matrix_empty: []
+
+test_param_matrix_3x3: [0.0, 0.1, 0.2,
+                        1.0, 1.1, 1.2,
+                        2.0, 2.1, 2.2]
+
+test_param_matrix_4x2: [0.0, 0.1,
+                        1.0, 1.1,
+                        2.0, 2.1,
+                        3.0, 3.1]

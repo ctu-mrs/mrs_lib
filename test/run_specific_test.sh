@@ -11,6 +11,7 @@ done
 
 colcon test-result --delete-yes
 
+# colcon test --packages-select mrs_lib --ctest-args -R 'param_loader'
 colcon test --packages-select mrs_lib --ctest-args -R 'dynparam_mgr'
 
 colcon test-result --all --verbose

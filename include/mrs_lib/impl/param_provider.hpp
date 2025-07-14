@@ -59,7 +59,7 @@ namespace mrs_lib
     if (opts.use_rosparam.has_value())
       use_rosparam = opts.use_rosparam.value();
 
-    bool loaded_from_yaml = false;
+    std::optional<T> loaded_value;
     if (opts.use_yaml)
     {
       const auto found_node = findYamlNode(resolved_name);
@@ -68,8 +68,7 @@ namespace mrs_lib
         try
         {
           // try catch is the only type-generic option...
-          value_out = found_node.value().as<T>();
-          loaded_from_yaml = true;
+          loaded_value = found_node.value().as<T>();
         }
         catch (const YAML::BadConversion& e)
         {
@@ -84,50 +83,91 @@ namespace mrs_lib
       }
     }
 
-    // declare the parameter if:
-    // 1. it was loaded from YAML and the options specify to always define it
-    // 2. it was not loaded from YAML and loading from ROS is enabled
-    if ((loaded_from_yaml && opts.always_declare) || (!loaded_from_yaml && use_rosparam))
+    if (loaded_value.has_value())
     {
-      auto declare_opts_local = opts.declare_options;
-      if (loaded_from_yaml)
+      // declare the parameter if it was loaded from YAML and the options specify to always define it
+      if (opts.always_declare)
+      {
+        auto declare_opts_local = opts.declare_options;
         declare_opts_local.default_value = value_out;
 
-      // see https://docs.ros.org/en/jazzy/Concepts/Basic/About-Parameters.html#parameters
-      if (!m_node->has_parameter(resolved_name.str) && !declareParam<T>(resolved_name, declare_opts_local))
-      {
-        RCLCPP_ERROR_STREAM(m_node->get_logger(), "Failed to declare parameter \"" << resolved_name << "\".");
-        return false;
+        // see https://docs.ros.org/en/jazzy/Concepts/Basic/About-Parameters.html#parameters
+        if (!m_node->has_parameter(resolved_name.str) && !declareParam<T>(resolved_name, declare_opts_local))
+        {
+          RCLCPP_ERROR_STREAM(m_node->get_logger(), "Failed to declare parameter \"" << resolved_name << "\".");
+          return false;
+        }
       }
+
+      // if all is OK, set the output value
+      value_out = std::move(loaded_value.value());
+      // the parameter value was successfully loaded and the parameter was declared if required, everything is done, return true
+      return true;
     }
 
-    // the parameter value was successfully loaded and the parameter was declared if required, everything is done, return true
-    if (loaded_from_yaml)
-      return true;
-
     // if the value was not found in a YAML file and loading from ROS is enabled, try it
-    if (!loaded_from_yaml && use_rosparam)
+    if (!loaded_value.has_value() && use_rosparam)
     {
+      const bool rosparam_existed = m_node->has_parameter(resolved_name.str);
+
+      // if the parameter is not declared yet, check if it is available on ROS by declaring it as dynamically-typed and read-writable
+      if (!rosparam_existed)
+      {
+        rcl_interfaces::msg::ParameterDescriptor descriptor;
+        descriptor.read_only = false;
+        descriptor.dynamic_typing = true;
+        try
+        {
+          m_node->declare_parameter(resolved_name.str, rclcpp::ParameterValue(), descriptor);
+        }
+        catch (const std::exception& e)
+        {
+          // if the declaration already fails, something is wrong
+          RCLCPP_ERROR_STREAM(m_node->get_logger(), "Failed to declare parameter \"" << resolved_name << "\": " << e.what());
+          return false;
+        }
+      }
+
+      // now try loading the parameter
       try
       {
         /* RCLCPP_INFO_STREAM(m_node->get_logger(), "Getting param '" << resolved_name << "'"); */
         rclcpp::Parameter param;
-        if (!m_node->get_parameter(resolved_name.str, param))
-        {
-          // do not print an error as the parameter may have been optional - it is therefore OK if it is not declared
-          /* RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not get param '" << resolved_name << "' (not declared)"); */
-          return false;
-        }
-        value_out = param.get_value<T>();
+        if (m_node->get_parameter(resolved_name.str, param))
+          loaded_value = param.get_value<T>();
       }
       // if the parameter has a wrong value, return failure
       catch (const rclcpp::exceptions::InvalidParameterTypeException& e)
       {
         RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not get param '" << resolved_name << "' from ROS: " << e.what());
-        return false;
       }
 
-      return true;
+      // if the parameter was not declared before, undecalre it:
+      // 1. either it was loaded successfully and has to be re-declared with the correct options
+      // 2. or it was not loaded and has to be un-declared
+      if (!rosparam_existed)
+        m_node->undeclare_parameter(resolved_name.str);
+
+      // loading from ROS was successful
+      if (loaded_value.has_value())
+      {
+        // if the parameter was not declared before, redeclare it with the correct parameters
+        if (!rosparam_existed)
+        {
+          auto declare_opts_local = opts.declare_options;
+          declare_opts_local.default_value = value_out;
+          if (!declareParam<T>(resolved_name, declare_opts_local))
+          {
+            RCLCPP_ERROR_STREAM(m_node->get_logger(), "Failed to declare parameter \"" << resolved_name << "\".");
+            return false;
+          }
+        }
+        
+        // if all went good, set the value and return true
+        value_out = std::move(loaded_value.value());
+        return true;
+      }
+
     }
 
     RCLCPP_ERROR_STREAM(m_node->get_logger(), "Param '" << resolved_name << "' not found in YAML files nor in ROS.");
@@ -150,7 +190,7 @@ namespace mrs_lib
     {
       auto declare_opts_local = opts.declare_options;
       declare_opts_local.default_value = value;
-      const auto result = declareParam<T>(resolved_name, opts.declare_options);
+      const auto result = declareParam<T>(resolved_name, declare_opts_local);
       if (!result)
         RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not declare and set param '" << resolved_name << "'!");
       return result;

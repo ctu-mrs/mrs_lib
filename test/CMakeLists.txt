@@ -31,6 +31,8 @@ add_subdirectory(./lockable)
 
 add_subdirectory(./param_loader)
 
+add_subdirectory(./param_provider)
+
 add_subdirectory(./dynparam_mgr)
 
 add_subdirectory(./mutex)

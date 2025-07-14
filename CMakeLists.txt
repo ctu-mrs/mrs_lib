@@ -8,6 +8,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_definitions("-Wall")
 add_definitions("-Wextra")
 add_definitions("-Wpedantic")
+add_definitions("-O0")
+add_definitions("-g")
 
 # 1 == use rclcpp::Timer implementation
 # 0 == use MRS's thread timer implementation
