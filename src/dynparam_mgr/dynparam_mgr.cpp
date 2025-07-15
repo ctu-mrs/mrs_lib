@@ -32,7 +32,7 @@ namespace mrs_lib
       std::scoped_lock lck(m_mtx);
   
       for (const auto& reg_param : m_registered_params)
-        parameters.emplace_back(m_pp.resolveName(reg_param.name).str, reg_param.to_param_val());
+        parameters.emplace_back(reg_param.resolved_name.str, reg_param.to_param_val());
     }
   
     const auto result = m_node->set_parameters_atomically(parameters);
@@ -56,7 +56,7 @@ namespace mrs_lib
             std::begin(m_registered_params), std::end(m_registered_params),
             [&param_name](const auto& registered_param)
             {
-              return registered_param.name == param_name;
+              return registered_param.resolved_name.str == param_name;
             }
           );
   
