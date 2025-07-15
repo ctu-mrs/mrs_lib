@@ -10,13 +10,18 @@ namespace mrs_lib
 
   /* constructor //{ */
   DynparamMgr::DynparamMgr(const std::shared_ptr<rclcpp::Node>& node, std::mutex& mtx)
-    : m_node(node), m_pp(node), m_mtx(mtx)
+    : m_node(node), m_pp(node), m_load_successful(true), m_mtx(mtx)
   {
     decltype(decltype(m_param_cbk)::element_type::callback) cbk = std::bind(&DynparamMgr::cbk_param_update, this, std::placeholders::_1);
     m_param_cbk = m_node->add_on_set_parameters_callback(cbk);
   
   }
   //}
+
+  bool DynparamMgr::loaded_successfully() const
+  {
+    return m_load_successful;
+  }
 
   /* update_to_ros() method //{ */
   rcl_interfaces::msg::SetParametersResult DynparamMgr::update_to_ros()
@@ -27,7 +32,7 @@ namespace mrs_lib
       std::scoped_lock lck(m_mtx);
   
       for (const auto& reg_param : m_registered_params)
-        parameters.emplace_back(m_pp.resolveName(reg_param.name).str, reg_param.to_param_val());
+        parameters.emplace_back(reg_param.resolved_name.str, reg_param.to_param_val());
     }
   
     const auto result = m_node->set_parameters_atomically(parameters);
@@ -51,7 +56,7 @@ namespace mrs_lib
             std::begin(m_registered_params), std::end(m_registered_params),
             [&param_name](const auto& registered_param)
             {
-              return registered_param.name == param_name;
+              return registered_param.resolved_name.str == param_name;
             }
           );
   

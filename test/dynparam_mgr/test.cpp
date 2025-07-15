@@ -317,6 +317,36 @@ TEST_F(Test, dynparam_mgr_subnode) {
 
 //}
 
+/* TEST_F(Test, dynparam_mgr_loaded_successfully) //{ */
+
+TEST_F(Test, dynparam_mgr_loaded_successfully) {
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+  RCLCPP_INFO(node_->get_logger(), "defining ParamProvider");
+
+  std::mutex mtx;
+  RCLCPP_INFO(node_->get_logger(), "defining DynparamMgr");
+  auto dynparam_mgr = mrs_lib::DynparamMgr(node_, mtx);
+  EXPECT_TRUE(dynparam_mgr.get_param_provider().addYamlFile(test_resources_path.string() + "/test_config.yaml"));
+
+  int test_int;
+  const std::string param_name = "test_int";
+
+  RCLCPP_INFO_STREAM(node_->get_logger(), "registering " << param_name);
+  EXPECT_TRUE(dynparam_mgr.register_param(param_name, &test_int));
+  EXPECT_TRUE(dynparam_mgr.loaded_successfully());
+
+  const std::string nonexistent_param_name = "doesnt_exist";
+  RCLCPP_INFO_STREAM(node_->get_logger(), "registering " << nonexistent_param_name);
+  EXPECT_FALSE(dynparam_mgr.register_param(nonexistent_param_name, &test_int));
+  EXPECT_FALSE(dynparam_mgr.loaded_successfully());
+
+  RCLCPP_INFO(node_->get_logger(), "finished");
+  despin();
+}
+
+//}
+
 /* TEST_F(Test, dynparam_mgr_callback) //{ */
 
 template <typename T>

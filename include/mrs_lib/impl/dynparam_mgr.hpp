@@ -53,7 +53,10 @@ namespace mrs_lib
     MemT current_value;
     const bool get_success = m_pp.getParam(resolved_name, current_value, opts);
     if (!get_success)
+    {
+      m_load_successful = false;
       return false;
+    }
 
     // only assign the default value if everything is OK, otherwise leave param_var untouched
     *param_var = current_value;
@@ -61,7 +64,7 @@ namespace mrs_lib
     // remember the registered parameter, the corresponding variable, etc.
     m_registered_params.emplace_back(
           *m_node,
-          name,
+          resolved_name,
           to_param_type<MemT>(),
           param_var,
           update_cbk
@@ -112,7 +115,7 @@ namespace mrs_lib
 
     // | ------------------------- Members ------------------------ |
     rclcpp::Node& node; // non-owning reference (the memory is share-owned by the DynparamMgr)
-    std::string name;
+    mrs_lib::ParamProvider::resolved_name_t resolved_name;
     rclcpp::ParameterType type;
     param_ptr_variant_t param_ptr;
     update_cbk_variant_t update_cbk;
@@ -147,7 +150,7 @@ namespace mrs_lib
           }
           else
           {
-            RCLCPP_ERROR_STREAM_THROTTLE(node.get_logger(), *node.get_clock(), 1000, "Cannot call update callback for parameter \"" << name << "\" - incompatible callback type!");
+            RCLCPP_ERROR_STREAM_THROTTLE(node.get_logger(), *node.get_clock(), 1000, "Cannot call update callback for parameter \"" << resolved_name.str << "\" - incompatible callback type!");
           }
         }, update_cbk);
 
