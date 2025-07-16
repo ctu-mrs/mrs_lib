@@ -89,7 +89,7 @@ namespace mrs_lib
       if (opts.always_declare)
       {
         auto declare_opts_local = opts.declare_options;
-        declare_opts_local.default_value = value_out;
+        declare_opts_local.default_value = loaded_value.value();
 
         // see https://docs.ros.org/en/jazzy/Concepts/Basic/About-Parameters.html#parameters
         if (!m_node->has_parameter(resolved_name.str) && !declareParam<T>(resolved_name, declare_opts_local))

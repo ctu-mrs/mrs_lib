@@ -157,7 +157,7 @@ ament_target_dependencies(MrsLib_TimerHandler
 # Param provider
 
 add_library(MrsLib_ParamProvider SHARED
-  src/param_loader/param_provider.cpp
+  src/param_provider/param_provider.cpp
   )
 
 # yaml-cpp does not use standart naming conventions which create issues with ament_target_dependencies()
@@ -190,7 +190,10 @@ ament_target_dependencies(MrsLib_ParamLoader
 
 add_library(MrsLib_DynparamMgr SHARED
   src/dynparam_mgr/dynparam_mgr.cpp
-  src/param_loader/param_provider.cpp
+  )
+
+target_link_libraries(MrsLib_DynparamMgr
+  MrsLib_ParamProvider
   )
 
 ament_target_dependencies(MrsLib_DynparamMgr
@@ -199,12 +202,11 @@ ament_target_dependencies(MrsLib_DynparamMgr
 
 add_executable(dynparam_tests
   src/dynparam_mgr/dynparam_tests.cpp
-  src/dynparam_mgr/dynparam_mgr.cpp
-  src/param_loader/param_provider.cpp
   )
 
 # yaml-cpp does not use standart naming conventions which create issues with ament_target_dependencies()
 target_link_libraries(dynparam_tests
+  MrsLib_DynparamMgr
   MrsLib_ParamProvider
   )
 

@@ -225,8 +225,9 @@ void update_to_ros_test(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynp
 
     // value of the ROS parameter should now be changed
     RCLCPP_INFO_STREAM(node->get_logger(), "getting the ROS value");
+    const auto resolved_name = dynparam_mgr.get_param_provider().resolveName(param_name);
     T ros_param_val;
-    dynparam_mgr.get_param_provider().getParam(param_name, ros_param_val);
+    dynparam_mgr.get_param_provider().getParam(resolved_name, ros_param_val, {.use_yaml = false});
     EXPECT_EQ(ros_param_val, test_val);
     // value of the variable should be what it was set to
     EXPECT_EQ(test_var, test_val);
@@ -298,7 +299,7 @@ TEST_F(Test, dynparam_mgr_subnode) {
   auto subnode = node2->create_sub_node("subnode");
 
   std::mutex mtx;
-  RCLCPP_INFO(node2->get_logger(), "defining DynparamMgr");
+  RCLCPP_INFO(subnode->get_logger(), "defining DynparamMgr");
   auto dynparam_mgr = mrs_lib::DynparamMgr(subnode, mtx);
   // add the YAML files with the default values of the parameters
   EXPECT_TRUE(dynparam_mgr.get_param_provider().addYamlFile(test_resources_path.string() + "/test_config.yaml"));
