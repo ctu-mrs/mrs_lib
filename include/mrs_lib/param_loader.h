@@ -219,6 +219,13 @@ public:
    */
   void copyYamls(const ParamLoader& param_loader);
 
+  /*!
+   * \brief Returns the internal ParamProvider object.
+   *
+   * \return  a reference to the internal ParamProvider object.
+   */
+  ParamProvider& getParamProvider();
+
   /* loadedSuccessfully function //{ */
   /*!
    * \brief Indicates whether all compulsory parameters were successfully loaded.

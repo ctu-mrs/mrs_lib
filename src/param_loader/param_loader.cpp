@@ -137,6 +137,11 @@ namespace mrs_lib
     m_pp.copyYamls(param_loader.m_pp);
   }
 
+  mrs_lib::ParamProvider& ParamLoader::getParamProvider()
+  {
+    return m_pp;
+  }
+
   bool ParamLoader::check_duplicit_loading(const resolved_name_t& name)
   {
     if (m_loaded_params.count(name))
