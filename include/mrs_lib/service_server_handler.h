@@ -20,7 +20,7 @@ namespace mrs_lib
 
   public:
 
-    using callback_t = rclcpp::Service<ServiceType>::CallbackType;
+    using callback_t = typename rclcpp::Service<ServiceType>::CallbackType;
 
     /**
      * @brief The main constructor with all the options.
