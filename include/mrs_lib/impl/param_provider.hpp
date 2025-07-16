@@ -11,6 +11,33 @@
 namespace mrs_lib
 {
 
+  template <typename T>
+  std::ostream& operator<<(std::ostream& os, const std::vector<T>& var)
+  {
+    for (size_t it = 0; it < var.size(); it++)
+    {
+      os << var.at(it);
+      if (it < var.size() - 1)
+        os << ", ";
+    }
+    return os;
+  }
+
+  template <typename Key, typename Value>
+  std::ostream& operator<<(std::ostream& os, const std::map<Key, Value>& var)
+  {
+    size_t it = 0;
+    for (const auto& pair : var) {
+      os << pair.first << ": " << pair.second;
+      if (it < var.size() - 1)
+        os << std::endl;
+      it++;
+    }
+    return os;
+  }
+
+  /* ParamProvider::resolved_name_t //{ */
+  
   struct ParamProvider::resolved_name_t
   {
     std::string str;
@@ -35,6 +62,8 @@ namespace mrs_lib
       return lhs.str == rhs.str;
     }
   };
+  
+  //}
 
   /* to_param_type() method //{ */
   template <typename T>

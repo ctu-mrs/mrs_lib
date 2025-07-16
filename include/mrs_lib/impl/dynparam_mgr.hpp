@@ -55,6 +55,7 @@ namespace mrs_lib
     if (!get_success)
     {
       m_load_successful = false;
+      RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node->get_name() << "]: Could not register dynamic parameter '" << name << "'");
       return false;
     }
 
@@ -62,6 +63,8 @@ namespace mrs_lib
     *param_var = current_value;
 
     // remember the registered parameter, the corresponding variable, etc.
+    RCLCPP_INFO_STREAM(m_node->get_logger(), "[" << m_node->get_name() << "]: Dynamic parameter '" << name << "':\t" << *param_var);
+
     m_registered_params.emplace_back(
           *m_node,
           resolved_name,

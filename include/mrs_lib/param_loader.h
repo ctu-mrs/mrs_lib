@@ -3,7 +3,6 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <string>
-#include <map>
 #include <unordered_set>
 #include <Eigen/Dense>
 #include <std_msgs/msg/color_rgba.hpp>
@@ -11,6 +10,16 @@
 
 namespace mrs_lib
 {
+
+  /*!
+   * \brief Helper overload for printing of Eigen matrices.
+   *
+   * \param os          The output stream to send the printed matrix to.
+   * \param var         The matrix to be printed.
+   * \return            A reference to the output stream.
+   */
+  template <typename T>
+  std::ostream& operator<<(std::ostream& os, const Eigen::MatrixX<T>& var);
 
 /*** ParamLoader CLASS //{ **/
 
@@ -77,15 +86,6 @@ private:
 
   template <typename T>
   void printValue(const resolved_name_t& name, const T& value) const;
-
-  template <typename T>
-  void printValue(const resolved_name_t& name, const std::vector<T>& value) const;
-
-  template <typename T1, typename T2>
-  void printValue(const resolved_name_t& name, const std::map<T1, T2>& value) const;
-
-  template <typename T>
-  void printValue(const resolved_name_t& name, const MatrixX<T>& value) const;
   
   //}
 
