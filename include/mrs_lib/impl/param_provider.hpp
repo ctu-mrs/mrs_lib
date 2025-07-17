@@ -11,6 +11,33 @@
 namespace mrs_lib
 {
 
+  template <typename T>
+  std::ostream& operator<<(std::ostream& os, const std::vector<T>& var)
+  {
+    for (size_t it = 0; it < var.size(); it++)
+    {
+      os << var.at(it);
+      if (it < var.size() - 1)
+        os << ", ";
+    }
+    return os;
+  }
+
+  template <typename Key, typename Value>
+  std::ostream& operator<<(std::ostream& os, const std::map<Key, Value>& var)
+  {
+    size_t it = 0;
+    for (const auto& pair : var) {
+      os << pair.first << ": " << pair.second;
+      if (it < var.size() - 1)
+        os << std::endl;
+      it++;
+    }
+    return os;
+  }
+
+  /* ParamProvider::resolved_name_t //{ */
+  
   struct ParamProvider::resolved_name_t
   {
     std::string str;
@@ -35,6 +62,8 @@ namespace mrs_lib
       return lhs.str == rhs.str;
     }
   };
+  
+  //}
 
   /* to_param_type() method //{ */
   template <typename T>
@@ -59,78 +88,38 @@ namespace mrs_lib
     if (opts.use_rosparam.has_value())
       use_rosparam = opts.use_rosparam.value();
 
-    bool loaded_from_yaml = false;
-    if (opts.use_yaml)
-    {
-      const auto found_node = findYamlNode(resolved_name);
-      if (found_node.has_value())
-      {
-        try
-        {
-          // try catch is the only type-generic option...
-          value_out = found_node.value().as<T>();
-          loaded_from_yaml = true;
-        }
-        catch (const YAML::BadConversion& e)
-        {
-          RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node_name << "]: The YAML-loaded parameter has a wrong type: " << e.what());
-          return false;
-        }
-        catch (const YAML::Exception& e)
-        {
-          RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node_name << "]: YAML-CPP threw an unknown exception: " << e.what());
-          return false;
-        }
-      }
-    }
+    // first, try to load from YAML, if enabled
+    if (opts.use_yaml && loadFromYaml(resolved_name, value_out, opts))
+      return true;
 
-    // declare the parameter if:
-    // 1. it was loaded from YAML and the options specify to always define it
-    // 2. it was not loaded from YAML and loading from ROS is enabled
-    if ((loaded_from_yaml && opts.always_declare) || (!loaded_from_yaml && use_rosparam))
-    {
-      auto declare_opts_local = opts.declare_options;
-      if (loaded_from_yaml)
-        declare_opts_local.default_value = value_out;
+    // then, try to load from ROS, if enabled
+    if (use_rosparam && loadFromROS(resolved_name, value_out, opts))
+      return true;
 
-      // see https://docs.ros.org/en/jazzy/Concepts/Basic/About-Parameters.html#parameters
-      if (!m_node->has_parameter(resolved_name.str) && !declareParam<T>(resolved_name, declare_opts_local))
+    // if both fail, check for a default value
+    if (opts.declare_options.default_value.has_value())
+    {
+      const auto& default_value = opts.declare_options.default_value.value();
+
+      if (opts.always_declare && !declareParam<T>(resolved_name, opts.declare_options))
       {
         RCLCPP_ERROR_STREAM(m_node->get_logger(), "Failed to declare parameter \"" << resolved_name << "\".");
         return false;
       }
-    }
 
-    // the parameter value was successfully loaded and the parameter was declared if required, everything is done, return true
-    if (loaded_from_yaml)
-      return true;
-
-    // if the value was not found in a YAML file and loading from ROS is enabled, try it
-    if (!loaded_from_yaml && use_rosparam)
-    {
-      try
-      {
-        /* RCLCPP_INFO_STREAM(m_node->get_logger(), "Getting param '" << resolved_name << "'"); */
-        rclcpp::Parameter param;
-        if (!m_node->get_parameter(resolved_name.str, param))
-        {
-          // do not print an error as the parameter may have been optional - it is therefore OK if it is not declared
-          /* RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not get param '" << resolved_name << "' (not declared)"); */
-          return false;
-        }
-        value_out = param.get_value<T>();
-      }
-      // if the parameter has a wrong value, return failure
-      catch (const rclcpp::exceptions::InvalidParameterTypeException& e)
-      {
-        RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not get param '" << resolved_name << "' from ROS: " << e.what());
-        return false;
-      }
-
+      value_out = default_value;
       return true;
     }
 
-    RCLCPP_ERROR_STREAM(m_node->get_logger(), "Param '" << resolved_name << "' not found in YAML files nor in ROS.");
+    // if all options fail, return false
+    std::stringstream ss;
+    ss << "Param '" << resolved_name << "' not found:";
+    if (opts.use_yaml)
+      ss << " in YAML files,";
+    if (use_rosparam)
+      ss << " in ROS,";
+    ss << " no default value provided.";
+    RCLCPP_ERROR_STREAM(m_node->get_logger(), ss.str());
     return false;
   }
   //}
@@ -150,7 +139,7 @@ namespace mrs_lib
     {
       auto declare_opts_local = opts.declare_options;
       declare_opts_local.default_value = value;
-      const auto result = declareParam<T>(resolved_name, opts.declare_options);
+      const auto result = declareParam<T>(resolved_name, declare_opts_local);
       if (!result)
         RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not declare and set param '" << resolved_name << "'!");
       return result;
@@ -254,6 +243,166 @@ namespace mrs_lib
 
       return false;
     }
+    return true;
+  }
+  //}
+
+  /* loadFromYaml() method //{ */
+  template <typename T>
+  bool ParamProvider::loadFromYaml(const resolved_name_t& resolved_name, T& value_out, const get_options_t<T>& opts) const
+  {
+    T loaded_value;
+  
+    const auto found_node = findYamlNode(resolved_name);
+    if (!found_node.has_value())
+    {
+      return false;
+    }
+  
+    try
+    {
+      // try catch is the only type-generic option...
+      loaded_value = found_node.value().as<T>();
+    }
+    catch (const YAML::BadConversion& e)
+    {
+      RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node_name << "]: The YAML-loaded parameter has a wrong type: " << e.what());
+      return false;
+    }
+    catch (const YAML::Exception& e)
+    {
+      RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node_name << "]: YAML-CPP threw an unknown exception: " << e.what());
+      return false;
+    }
+  
+    // declare the parameter if the options specify to always define it
+    if (opts.always_declare)
+    {
+      auto declare_opts_local = opts.declare_options;
+      declare_opts_local.default_value = loaded_value;
+  
+      // see https://docs.ros.org/en/jazzy/Concepts/Basic/About-Parameters.html#parameters
+      if (!m_node->has_parameter(resolved_name.str) && !declareParam<T>(resolved_name, declare_opts_local))
+      {
+        RCLCPP_ERROR_STREAM(m_node->get_logger(), "Failed to declare parameter \"" << resolved_name << "\".");
+        return false;
+      }
+    }
+  
+    // if all is OK, set the output value
+    value_out = loaded_value;
+    // the parameter value was successfully loaded and the parameter was declared if required, everything is done, return true
+    return true;
+  }
+  //}
+
+  /* ranges_match() method //{ */
+  template <typename T>
+  bool ParamProvider::ranges_match(const rcl_interfaces::msg::ParameterDescriptor& descriptor, const range_t<T>& declare_range) const
+  {
+    if constexpr (numeric<T>)
+    {
+      if (!descriptor.floating_point_range.empty())
+      {
+        const auto& desc_range = descriptor.floating_point_range.front();
+        if (desc_range.from_value != declare_range.minimum || desc_range.to_value != declare_range.maximum)
+          return false;
+      }
+  
+      if (!descriptor.integer_range.empty())
+      {
+        const auto& desc_range = descriptor.integer_range.front();
+        if (desc_range.from_value != declare_range.minimum || desc_range.to_value != declare_range.maximum)
+          return false;
+      }
+    }
+
+    // trying to specify a range for a non-numeric type...
+    return false;
+  }
+
+//}
+
+  /* loadFromROS() method //{ */
+  template <typename T>
+  bool ParamProvider::loadFromROS(const resolved_name_t& resolved_name, T& value_out, const get_options_t<T>& opts) const
+  {
+    std::optional<T> loaded_value;
+    const bool was_declared = m_node->has_parameter(resolved_name.str);
+  
+    // check if the current declaration is compatible with the desired declaration
+    if (was_declared)
+    {
+      const auto descriptor = m_node->describe_parameter(resolved_name.str);
+      if (descriptor.read_only && opts.declare_options.reconfigurable)
+      {
+        RCLCPP_ERROR_STREAM(m_node->get_logger(), "Parameter \"" << resolved_name << "\" already declared as read-only, cannot re-declare as reconfigurable!");
+        return false;
+      }
+  
+      if (opts.declare_options.range.has_value() && !ranges_match(descriptor, opts.declare_options.range.value()))
+      {
+        RCLCPP_ERROR_STREAM(m_node->get_logger(), "Parameter \"" << resolved_name << "\" already declared with a range, cannot re-declare with a different one!");
+        return false;
+      }
+    }
+  
+    // if the parameter is not declared yet, check if it is available in ROS by declaring it as dynamically-typed and read-writable
+    if (!was_declared)
+    {
+      rcl_interfaces::msg::ParameterDescriptor descriptor;
+      descriptor.read_only = false;
+      descriptor.dynamic_typing = true;
+      try
+      {
+        m_node->declare_parameter(resolved_name.str, rclcpp::ParameterValue(), descriptor);
+      }
+      catch (const std::exception& e)
+      {
+        // if the declaration already fails, something is wrong
+        RCLCPP_ERROR_STREAM(m_node->get_logger(), "Failed to declare parameter \"" << resolved_name << "\": " << e.what());
+        return false;
+      }
+    }
+  
+    // now try loading the parameter
+    try
+    {
+      /* RCLCPP_INFO_STREAM(m_node->get_logger(), "Getting param '" << resolved_name << "'"); */
+      rclcpp::Parameter param;
+      if (m_node->get_parameter(resolved_name.str, param))
+        loaded_value = param.get_value<T>();
+    }
+    // if the parameter has a wrong value, return failure
+    catch (const rclcpp::exceptions::InvalidParameterTypeException& e)
+    {
+      RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not get param '" << resolved_name << "' from ROS: " << e.what());
+    }
+  
+    // if the parameter was not declared before, undecalre it:
+    // 1. either it was loaded successfully and has to be re-declared with the correct options
+    // 2. or it was not loaded and has to be un-declared
+    if (!was_declared)
+      m_node->undeclare_parameter(resolved_name.str);
+  
+    // loading from ROS was not successful, just return false
+    if (!loaded_value.has_value())
+      return false;
+  
+    // if the parameter was not declared before, redeclare it with the correct parameters
+    if (!was_declared)
+    {
+      auto declare_opts_local = opts.declare_options;
+      declare_opts_local.default_value = value_out;
+      if (!declareParam<T>(resolved_name, declare_opts_local))
+      {
+        RCLCPP_ERROR_STREAM(m_node->get_logger(), "Failed to declare parameter \"" << resolved_name << "\".");
+        return false;
+      }
+    }
+  
+    // if all went good, set the value and return true
+    value_out = std::move(loaded_value.value());
     return true;
   }
   //}

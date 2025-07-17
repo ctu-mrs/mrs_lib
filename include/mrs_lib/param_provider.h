@@ -16,6 +16,40 @@
 namespace mrs_lib
 {
 
+  /*!
+   * \brief Helper overload for printing of std::vectors.
+   *
+   * \param os          The output stream to send the printed vector to.
+   * \param var         The vector to be printed.
+   * \return            A reference to the output stream.
+   */
+  template <typename T>
+  std::ostream& operator<<(std::ostream& os, const std::vector<T>& var);
+
+  /*!
+   * \brief Helper overload for printing of std::maps.
+   *
+   * \param os          The output stream to send the printed map to.
+   * \param var         The map to be printed.
+   * \return            A reference to the output stream.
+   */
+  template <typename Key, typename Value>
+  std::ostream& operator<<(std::ostream& os, const std::map<Key, Value>& var);
+
+  /*!
+   * \brief Helper overload for printing of rclcpp::ParameterType.
+   *
+   * \param os          The output stream to send the printed map to.
+   * \param var         The parameter type to be printed.
+   * \return            A reference to the output stream.
+   */
+  std::ostream& operator<<(std::ostream& os, rclcpp::ParameterType& var);
+
+  /*!
+   * \brief Convenince function to get the corresponding rclcpp::ParamType from a C++ type.
+   *
+   * \return            the rclcpp::ParamType enum value corresponding to the C++ type specified by the template.
+   */
   template <typename T>
   rclcpp::ParameterType to_param_type();
 
@@ -256,6 +290,15 @@ private:
   std::string m_prefix;
 
   std::optional<YAML::Node> findYamlNode(const resolved_name_t& resolved_name) const;
+
+  template <typename T>
+  bool ranges_match(const rcl_interfaces::msg::ParameterDescriptor& descriptor, const range_t<T>& declare_range) const;
+
+  template <typename T>
+  bool loadFromYaml(const resolved_name_t& resolved_name, T& value_out, const get_options_t<T>& opts) const;
+
+  template <typename T>
+  bool loadFromROS(const resolved_name_t& resolved_name, T& value_out, const get_options_t<T>& opts) const;
 };
 //}
 

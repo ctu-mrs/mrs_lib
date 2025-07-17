@@ -1,13 +1,28 @@
-test_int: 666
-test_int64: 666
-test_float: 666.0
-test_double: 666.0
+test_int: 333
+test_int64: 334
+test_float: 335.0
+test_double: 336.0
 test_bool: true
 test_string: "some_str"
-test_bytearr: [0, 1, 2, 3]
-test_intarr: [0, 1, 2, 3]
-test_int64arr: [0, 1, 2, 3]
+test_bytearr: [0, 1]
+test_intarr: [2, 3, 4]
+test_int64arr: [5, 6, 7, 8]
 test_floatarr: [0.0, 1.1, 2.2, 3.3]
-test_doublearr: [0.0, 1.1, 2.2, 3.3]
+test_doublearr: [0.1, 1.2, 2.3, 3.4]
 test_boolarr: [true, false]
 test_stringarr: ["this", "should", "load"]
+
+subnode:
+  test_int: 333
+  test_int64: 334
+  test_float: 335.0
+  test_double: 336.0
+  test_bool: true
+  test_string: "some_str"
+  test_bytearr: [0, 1]
+  test_intarr: [2, 3, 4]
+  test_int64arr: [5, 6, 7, 8]
+  test_floatarr: [0.0, 1.1, 2.2, 3.3]
+  test_doublearr: [0.1, 1.2, 2.3, 3.4]
+  test_boolarr: [true, false]
+  test_stringarr: ["this", "should", "load"]

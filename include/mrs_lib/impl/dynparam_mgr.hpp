@@ -55,6 +55,7 @@ namespace mrs_lib
     if (!get_success)
     {
       m_load_successful = false;
+      RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node->get_name() << "]: Could not register dynamic parameter '" << name << "'");
       return false;
     }
 
@@ -62,6 +63,8 @@ namespace mrs_lib
     *param_var = current_value;
 
     // remember the registered parameter, the corresponding variable, etc.
+    RCLCPP_INFO_STREAM(m_node->get_logger(), "[" << m_node->get_name() << "]: Dynamic parameter '" << name << "':\t" << *param_var);
+
     m_registered_params.emplace_back(
           *m_node,
           resolved_name,
@@ -115,7 +118,7 @@ namespace mrs_lib
 
     // | ------------------------- Members ------------------------ |
     rclcpp::Node& node; // non-owning reference (the memory is share-owned by the DynparamMgr)
-    mrs_lib::ParamProvider::resolved_name_t resolved_name;
+    ParamProvider::resolved_name_t resolved_name;
     rclcpp::ParameterType type;
     param_ptr_variant_t param_ptr;
     update_cbk_variant_t update_cbk;

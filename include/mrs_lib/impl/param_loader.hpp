@@ -18,57 +18,12 @@ namespace mrs_lib
   }
 
   template <typename T>
-  void ParamLoader::printValue(const resolved_name_t& name, const std::vector<T>& value) const
+  std::ostream& operator<<(std::ostream& os, const Eigen::MatrixX<T>& var)
   {
-    std::stringstream strstr;
-    if (m_node_name.empty())
-      strstr << "\t";
-    strstr << name << ":\t";
-    size_t it = 0;
-    for (const auto& elem : value) {
-      strstr << elem;
-      if (it < value.size() - 1)
-        strstr << ", ";
-      it++;
-    }
-    if (m_node_name.empty())
-      std::cout << strstr.str() << std::endl;
-    else
-      RCLCPP_INFO_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << strstr.str());
-  }
-
-  template <typename T1, typename T2>
-  void ParamLoader::printValue(const resolved_name_t& name, const std::map<T1, T2>& value) const
-  {
-    std::stringstream strstr;
-    if (m_node_name.empty())
-      strstr << "\t";
-    strstr << name << ":" << std::endl;
-    size_t it = 0;
-    for (const auto& pair : value) {
-      strstr << pair.first << " = " << pair.second;
-      if (it < value.size() - 1)
-        strstr << std::endl;
-      it++;
-    }
-    if (m_node_name.empty())
-      std::cout << strstr.str() << std::endl;
-    else
-      RCLCPP_INFO_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << strstr.str());
-  }
-
-  template <typename T>
-  void ParamLoader::printValue(const resolved_name_t& name, const MatrixX<T>& value) const
-  {
-    std::stringstream strstr;
     /* const Eigen::IOFormat fmt(4, 0, ", ", "\n", "\t\t[", "]"); */
     /* strstr << value.format(fmt); */
     const Eigen::IOFormat fmt;
-    strstr << value.format(fmt);
-    if (m_node_name.empty())
-      std::cout << "\t" << name << ":\t" << std::endl << strstr.str() << std::endl;
-    else
-      RCLCPP_INFO_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << name << "':" << std::endl << strstr.str());
+    return os << var.format(fmt);
   }
   //}
 
