@@ -43,7 +43,6 @@ namespace mrs_lib
    * \param var         The parameter type to be printed.
    * \return            A reference to the output stream.
    */
-  template <typename Key, typename Value>
   std::ostream& operator<<(std::ostream& os, rclcpp::ParameterType& var);
 
   /*!

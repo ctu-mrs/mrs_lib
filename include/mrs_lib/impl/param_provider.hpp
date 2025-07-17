@@ -36,34 +36,6 @@ namespace mrs_lib
     return os;
   }
 
-  std::ostream& operator<<(std::ostream& os, rclcpp::ParameterType& var)
-  {
-    /* PARAMETER_NOT_SET */ 	
-    /* PARAMETER_BOOL */ 	
-    /* PARAMETER_INTEGER */ 	
-    /* PARAMETER_DOUBLE */ 	
-    /* PARAMETER_STRING */ 	
-    /* PARAMETER_BYTE_ARRAY */ 	
-    /* PARAMETER_BOOL_ARRAY */ 	
-    /* PARAMETER_INTEGER_ARRAY */ 	
-    /* PARAMETER_DOUBLE_ARRAY */ 	
-    /* PARAMETER_STRING_ARRAY */ 
-    switch (var)
-    {
-      case rclcpp::ParameterType::PARAMETER_NOT_SET: return os << "NOT_SET";
-      case rclcpp::ParameterType::PARAMETER_BOOL: return os << "BOOL";
-      case rclcpp::ParameterType::PARAMETER_INTEGER: return os << "PARAMETER_INTEGER";
-      case rclcpp::ParameterType::PARAMETER_DOUBLE: return os << "PARAMETER_DOUBLE";
-      case rclcpp::ParameterType::PARAMETER_STRING: return os << "PARAMETER_STRING";
-      case rclcpp::ParameterType::PARAMETER_BYTE_ARRAY: return os << "PARAMETER_BYTE_ARRAY";
-      case rclcpp::ParameterType::PARAMETER_BOOL_ARRAY: return os << "PARAMETER_BOOL_ARRAY";
-      case rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY: return os << "PARAMETER_INTEGER_ARRAY";
-      case rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY: return os << "PARAMETER_DOUBLE_ARRAY";
-      case rclcpp::ParameterType::PARAMETER_STRING_ARRAY: return os << "PARAMETER_STRING_ARRAY";
-      default: return os << "INVALID";
-    }
-  }
-
   /* ParamProvider::resolved_name_t //{ */
   
   struct ParamProvider::resolved_name_t
