@@ -129,7 +129,7 @@ TEST_F(Test, param_provider_load) {
   EXPECT_FALSE(param_provider.getParam("test_bool", test_bool));
 
   EXPECT_FALSE(param_provider.addYamlFile(""));
-  EXPECT_FALSE(param_provider.addYamlFile(test_resources_path.string() + "/custom_test_config.yaml"));
+  EXPECT_FALSE(param_provider.addYamlFile(test_resources_path.string() + "/nonexistent_config.yaml"));
   EXPECT_TRUE(param_provider.addYamlFile(test_resources_path.string() + "/test_config.yaml"));
 
   EXPECT_TRUE(param_provider.getParam("param_provider/test_bool", test_bool));

@@ -196,6 +196,52 @@ TEST_F(Test, dynparam_mgr_nonexisting_param) {
 
 //}
 
+/* TEST_F(Test, dynparam_mgr_default_value) //{ */
+
+/* default_value_test(mrs_lib::DynparamMgr& dynparam_mgr, const std::string& param_name, const T& init_value) //{ */
+
+template <typename T>
+void default_value_test(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynparam_mgr, T& test_var, const std::string& param_name, const T& init_value, const T& default_value)
+{
+  test_var = init_value;
+
+  // register test_var
+  RCLCPP_INFO_STREAM(node->get_logger(), "registering " << param_name);
+  EXPECT_TRUE(dynparam_mgr.register_param(param_name, &test_var, default_value));
+  // the parameter shouldnot be available anywhere, so it should be equal to the default value
+  EXPECT_EQ(test_var, default_value);
+}
+
+//}
+
+TEST_F(Test, dynparam_mgr_default_value) {
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  auto test_parameters = test_parameters_defaults;
+
+  RCLCPP_INFO(node_->get_logger(), "defining dynparam_mgr_default_value");
+  std::shared_ptr<rclcpp::Node> node2 = std::make_shared<rclcpp::Node>("dynparam_mgr_default_value", "");
+
+  std::mutex mtx;
+  RCLCPP_INFO(node2->get_logger(), "defining DynparamMgr");
+  auto dynparam_mgr = mrs_lib::DynparamMgr(node2, mtx);
+
+  std::apply
+  (
+    [node2, &dynparam_mgr](auto& ... tupleArgs)
+    {
+    // the static cast bullshit is a fix for a std::vector<bool>
+      ((default_value_test(node2, dynparam_mgr, tupleArgs.param_variable, tupleArgs.name, tupleArgs.init_value, static_cast<decltype(tupleArgs.init_value)>(tupleArgs.test_values.at(1))), ...));
+    }, test_parameters
+  );
+
+  RCLCPP_INFO(node_->get_logger(), "finished");
+  despin();
+}
+
+//}
+
 /* TEST_F(Test, dynparam_mgr_update_params) //{ */
 
 /* update_to_ros_test(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynparam_mgr, const std::string& param_name, const T& init_value, const std::vector<T>& test_values) //{ */
