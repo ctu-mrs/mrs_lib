@@ -112,14 +112,6 @@ namespace mrs_lib
     }
 
     // if all options fail, return false
-    std::stringstream ss;
-    ss << "Param '" << resolved_name << "' not found:";
-    if (opts.use_yaml)
-      ss << " in YAML files,";
-    if (use_rosparam)
-      ss << " in ROS,";
-    ss << " no default value provided.";
-    RCLCPP_ERROR_STREAM(m_node->get_logger(), ss.str());
     return false;
   }
   //}

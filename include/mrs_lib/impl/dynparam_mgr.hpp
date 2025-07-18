@@ -55,7 +55,7 @@ namespace mrs_lib
     if (!get_success)
     {
       m_load_successful = false;
-      RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node->get_name() << "]: Could not register dynamic parameter '" << name << "'");
+      RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node->get_name() << "]: Could not register or load default value for dynamic parameter '" << name << "'");
       return false;
     }
 
