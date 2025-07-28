@@ -68,6 +68,7 @@ set(LIBRARIES
   MrsLib_MedianFilter
   MrsLib_SafetyZone
   MrsLib_IIRFilter
+  MrsLib_NotchFilter
   MrsLib_Utils
   )
 
@@ -336,6 +337,20 @@ add_library(MrsLib_IIRFilter SHARED
   )
 
 ament_target_dependencies(MrsLib_IIRFilter
+  Eigen3
+  )
+
+# Notch filter
+
+add_library(MrsLib_NotchFilter SHARED
+  src/notch_filter/notch_filter.cpp
+  )
+
+target_link_libraries(MrsLib_NotchFilter
+  MrsLib_IIRFilter
+  )
+
+ament_target_dependencies(MrsLib_NotchFilter
   Eigen3
   )
 
