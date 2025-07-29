@@ -372,6 +372,15 @@ ament_target_dependencies(MrsLib_BatchVisualizer
   Eigen3
   )
 
+add_executable(subscribe_handler_example
+  src/subscriber_handler/example.cpp
+  src/timeout_manager/timeout_manager.cpp
+  src/timer_handler/timer_handler.cpp)
+ament_target_dependencies(subscribe_handler_example
+  rclcpp
+  std_msgs
+  )
+
 ## --------------------------------------------------------------
 ## |                           Testing                          |
 ## --------------------------------------------------------------
