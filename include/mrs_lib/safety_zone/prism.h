@@ -8,131 +8,128 @@
 namespace mrs_lib
 {
 
-  class Subscriber
+class Subscriber {
+protected:
+  bool is_active_ = true;
+
+public:
+  // Called every time a change has been made to the prism
+  virtual void update() = 0;
+
+  // Called once upon deleting the prism
+  virtual void cleanup() = 0;
+};
+
+class Prism {
+private:
+  Polygon polygon_;
+  double min_z_;
+  double max_z_;
+
+  std::set<Subscriber *> subscribers_;
+
+  void notifySubscribers();
+  void cleanSubscribers();
+
+public:
+  // If max_z < min_z, automatically swaps them
+  // Throws std::invalid argument if polygon is invalid
+  Prism(const std::vector<Point2d> &points, const double max_z, const double min_z);
+
+  // Copy assignment operator
+  Prism &operator=(const Prism &other) {
+    if (this != &other) {
+      polygon_ = other.polygon_;
+      min_z_   = other.min_z_;
+      max_z_   = other.max_z_;
+      // Keep existing subscribers, don't copy them
+    }
+    return *this;
+  }
+
+  // Copy constructor
+  Prism(const Prism &other)
+      : polygon_(other.polygon_), min_z_(other.min_z_), max_z_(other.max_z_), subscribers_() // Don't copy observers
   {
-  protected:
-    bool is_active_ = true;
+  }
 
-  public:
-    // Called every time a change has been made to the prism
-    virtual void update() = 0;
+  // Move constructor
+  Prism(Prism &&other) noexcept : polygon_(std::move(other.polygon_)), min_z_(other.min_z_), max_z_(other.max_z_), subscribers_(std::move(other.subscribers_)) {
+  }
 
-    // Called once upon deleting the prism
-    virtual void cleanup() = 0;
-  };
-
-  class Prism
-  {
-  private:
-    Polygon polygon_;
-    double min_z_;
-    double max_z_;
-
-    std::set<Subscriber*> subscribers_;
-
-    void notifySubscribers();
-    void cleanSubscribers();
-
-  public:
-    // If max_z < min_z, automatically swaps them
-    // Throws std::invalid argument if polygon is invalid
-    Prism(const std::vector<Point2d>& points, const double max_z, const double min_z);
-
-    // Copy assignment operator
-    Prism &operator=(const Prism &other) {
-      if (this != &other) {
-        polygon_ = other.polygon_;
-        min_z_   = other.min_z_;
-        max_z_   = other.max_z_;
-        // Keep existing subscribers, don't copy them
-      }
-      return *this;
+  // Move assignment operator
+  Prism &operator=(Prism &&other) noexcept {
+    if (this != &other) {
+      polygon_     = std::move(other.polygon_);
+      min_z_       = other.min_z_;
+      max_z_       = other.max_z_;
+      subscribers_ = std::move(other.subscribers_);
     }
+    return *this;
+  }
 
-    // Copy constructor
-    Prism(const Prism &other)
-        : polygon_(other.polygon_), min_z_(other.min_z_), max_z_(other.max_z_), subscribers_() // Don't copy observers
-    {
-    }
+  ~Prism();
 
-    // Move constructor
-    Prism(Prism &&other) noexcept
-        : polygon_(std::move(other.polygon_)), min_z_(other.min_z_), max_z_(other.max_z_), subscribers_(std::move(other.subscribers_)) {
-    }
+  void subscribe(Subscriber *entity);
+  void unsubscribe(Subscriber *entity);
 
-    // Move assignment operator 
-    Prism &operator=(Prism &&other) noexcept {
-      if (this != &other) {
-        polygon_     = std::move(other.polygon_);
-        min_z_       = other.min_z_;
-        max_z_       = other.max_z_;
-        subscribers_ = std::move(other.subscribers_);
-      }
-      return *this;
-    }
+  std::vector<Point2d> getPoints();
+  double getMaxZ();
+  double getMinZ();
 
-    ~Prism();
+  Polygon getPolygon();
 
-    void subscribe(Subscriber* entity);
-    void unsubscribe(Subscriber* entity);
+  // Returns number of vertices in the polygon of the prism.
+  unsigned int getVerticesNum();
 
-    std::vector<Point2d> getPoints();
-    double getMaxZ();
-    double getMinZ();
+  // Returns the centroid of the polygon of the prism.
+  Point2d getCenter();
 
-    Polygon getPolygon();
+  void setMaxZ(const double value);
 
-    // Returns number of vertices in the polygon of the prism.
-    unsigned int getVerticesNum();
+  void setMinZ(const double value);
 
-    // Returns the centroid of the polygon of the prism.
-    Point2d getCenter();
+  // Tries to change the coordinates of given vertex.
+  // returns true if succeeded
+  // returns false otherwise
+  bool setVertex(const Point2d &vertex, const unsigned int index);
 
-    void setMaxZ(const double value);
+  // Tries to change the coordinates of given vertecies.
+  // Only notifies subsribers once in case of success
+  // returns true if succeeded
+  // returns false otherwise
+  bool setVertices(const std::vector<Point2d> &vertices, const std::vector<unsigned int> &indices);
 
-    void setMinZ(const double value);
+  // Adds new vertex in the middle of the neighboring verge
+  void addVertexClockwise(const unsigned int index);
 
-    // Tries to change the coordinates of given vertex.
-    // returns true if succeeded
-    // returns false otherwise
-    bool setVertex(const Point2d& vertex, const unsigned int index);
+  // Adds new vertex in the middle of the neighboring verge
+  void addVertexCounterclockwise(const unsigned int index);
 
-    // Tries to change the coordinates of given vertecies.
-    // Only notifies subsribers once in case of success
-    // returns true if succeeded
-    // returns false otherwise
-    bool setVertices(const std::vector<Point2d>& vertices, const std::vector<unsigned int>& indices);
+  void move(const Point3d &adjustment);
 
-    // Adds new vertex in the middle of the neighboring verge
-    void addVertexClockwise(const unsigned int index);
+  // Takes angle in radians, rotates clockwise (counter-clockwise if alpha < 0)
+  void rotate(const double alpha);
 
-    // Adds new vertex in the middle of the neighboring verge
-    void addVertexCounterclockwise(const unsigned int index);
+  // Deletes the vertex only if vertex_count > 3
+  void deleteVertex(const unsigned int index);
 
-    void move(const Point3d& adjustment);
+  // Controls, if 3d point lies within the prism
+  bool isPointIn(const Point3d &point);
 
-    // Takes angle in radians, rotates clockwise (counter-clockwise if alpha < 0)
-    void rotate(const double alpha);
+  // Convinient version of isPointIn(Point3d point)
+  bool isPointIn(const double x, const double y, const double z);
 
-    // Deletes the vertex only if vertex_count > 3
-    void deleteVertex(const unsigned int index);
+  // Controls, if 2d point lies within the polygon of prism
+  bool isPointIn(const Point2d &point);
 
-    // Controls, if 3d point lies within the prism
-    bool isPointIn(const Point3d& point);
+  // Convinient version of isPointIn(Point2d point)
+  bool isPointIn(const double x, const double y);
 
-    // Convinient version of isPointIn(Point3d point)
-    bool isPointIn(const double x, const double y, const double z);
+  // Helper method for text representation
+  void accept(Visitor &visitor);
+};
 
-    // Controls, if 2d point lies within the polygon of prism
-    bool isPointIn(const Point2d& point);
-
-    // Convinient version of isPointIn(Point2d point)
-    bool isPointIn(const double x, const double y);
-
-    // Helper method for text representation
-    void accept(Visitor& visitor);
-  };
-
-}  // namespace mrs_lib
+} // namespace mrs_lib
 
 #endif
