@@ -18,7 +18,7 @@ namespace mrs_lib
     SafetyZone(Prism outer_border);
 
     // Cleaning the obstacles' memory is SafetyZone's responsibility
-    SafetyZone(Prism outer_border, std::vector<std::unique_ptr<Prism>> obstacles);
+    SafetyZone(Prism outer_border, std::vector<std::unique_ptr<Prism>>&& obstacles);
 
     ~SafetyZone() = default;
 

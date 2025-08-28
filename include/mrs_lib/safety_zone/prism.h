@@ -38,6 +38,39 @@ namespace mrs_lib
     // Throws std::invalid argument if polygon is invalid
     Prism(const std::vector<Point2d>& points, const double max_z, const double min_z);
 
+    // Copy assignment operator
+    Prism &operator=(const Prism &other) {
+      if (this != &other) {
+        polygon_ = other.polygon_;
+        min_z_   = other.min_z_;
+        max_z_   = other.max_z_;
+        // Keep existing subscribers, don't copy them
+      }
+      return *this;
+    }
+
+    // Copy constructor
+    Prism(const Prism &other)
+        : polygon_(other.polygon_), min_z_(other.min_z_), max_z_(other.max_z_), subscribers_() // Don't copy observers
+    {
+    }
+
+    // Move constructor
+    Prism(Prism &&other) noexcept
+        : polygon_(std::move(other.polygon_)), min_z_(other.min_z_), max_z_(other.max_z_), subscribers_(std::move(other.subscribers_)) {
+    }
+
+    // Move assignment operator 
+    Prism &operator=(Prism &&other) noexcept {
+      if (this != &other) {
+        polygon_     = std::move(other.polygon_);
+        min_z_       = other.min_z_;
+        max_z_       = other.max_z_;
+        subscribers_ = std::move(other.subscribers_);
+      }
+      return *this;
+    }
+
     ~Prism();
 
     void subscribe(Subscriber* entity);

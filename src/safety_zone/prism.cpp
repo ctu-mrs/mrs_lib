@@ -37,12 +37,21 @@ namespace mrs_lib
     }
   }
   //}
+  
+  // Copy assignment operator
+  Prism::Prism &operator=(const Prism &other) {
+      if (this != &other) {
+        polygon_ = other.polygon_;
+        min_z_   = other.min_z_;
+        max_z_   = other.max_z_;
+        // Keep existing subscribers, don't copy them
+      }
+      return *this;
+    }
 
   /* Prism() //{ */
   Prism::~Prism()
-  {
-    cleanSubscribers();
-  }
+  {}
   //}
 
   /* subscribe() //{ */

@@ -16,7 +16,7 @@ namespace mrs_lib
   //}
 
   /* SafetyZone() //{ */
-  SafetyZone::SafetyZone(Prism outer_border, std::vector<std::unique_ptr<Prism>> obstacles) : outer_border_(outer_border)
+  SafetyZone::SafetyZone(Prism outer_border, std::vector<std::unique_ptr<Prism>>&& obstacles) : outer_border_(outer_border)
   {
 
     for (auto& obstacle : obstacles)
