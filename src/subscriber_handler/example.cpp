@@ -5,10 +5,10 @@
 
      This example may be run after building *mrs_lib* by executing `rosrun mrs_lib subscribe_handler_example`.
 
-     See \ref subscribe_handler/example.cpp.
+     See \ref subscriber_handler/example.cpp.
  */
 
-/**  \example "subscribe_handler/example.cpp"
+/**  \example "subscriber_handler/example.cpp"
 
      This example may be run after building *mrs_lib* by executing `rosrun mrs_lib subscribe_handler_example`.
  */

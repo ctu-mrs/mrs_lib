@@ -104,7 +104,7 @@ namespace mrs_lib
    * states to which the constraint applies.
    *
    * Example usage:
-   * \include src/nckf/nckf_tests.cpp
+   * \include test/nckf/test.cpp
    *
    */
   template <int n_states, int n_inputs, int n_measurements, int n_norm_constrained_states>

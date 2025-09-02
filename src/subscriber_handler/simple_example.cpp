@@ -6,10 +6,10 @@
      A simple example demonstrating basic usage of the SubscribeHandler class.
      This example may be run after building *mrs_lib* by executing `rosrun mrs_lib subscribe_handler_simple_example`.
 
-     See \ref subscribe_handler/simple_example.cpp.
+     See \ref subscriber_handler/simple_example.cpp.
  */
 
-/**  \example "subscribe_handler/simple_example.cpp"
+/**  \example "subscriber_handler/simple_example.cpp"
 
      This example may be run after building *mrs_lib* by executing `rosrun mrs_lib subscribe_handler_simple_example`.
  */
