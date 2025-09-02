@@ -1,0 +1,7 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" href="$classmrs__lib_1_1MRSTimer.html" title="Common wrapper representing the functionality of the rclcpp::Timer." alt="" coords="5,31,151,56"/>
+<area shape="rect" id="Node000001" href="$classmrs__lib_1_1ROSTimer.html" title="rclcpp::Timer wrapper. The interface is the same as with rclcpp::Timer, except for the initialization..." alt="" coords="208,5,351,31"/>
+<area shape="poly" id="edge17_Node000000_Node000001" title=" " alt="" coords="164,30,207,24,208,30,165,35"/>
+<area shape="rect" id="Node000002" href="$classmrs__lib_1_1ThreadTimer.html" title="Custom thread&#45;based Timers with the same interface as mrs_lib::ROSTimer." alt="" coords="199,55,360,80"/>
+<area shape="poly" id="edge18_Node000000_Node000002" title=" " alt="" coords="165,51,199,55,198,60,164,56"/>
+</map>

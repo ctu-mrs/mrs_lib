@@ -1,0 +1,23 @@
+<map id="mrs_lib::KalmanFilter&lt; n_states, n_inputs, n_measurements &gt;" name="mrs_lib::KalmanFilter&lt; n_states, n_inputs, n_measurements &gt;">
+<area shape="rect" id="Node000001" title="This abstract class defines common interfaces and types for a generic Kalman filter." alt="" coords="5,85,167,139"/>
+<area shape="rect" id="Node000002" href="$classmrs__lib_1_1LKF.html" title=" " alt="" coords="235,5,411,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="159,77,214,55,250,43,251,48,216,60,161,81"/>
+<area shape="rect" id="Node000004" href="$classmrs__lib_1_1LKF.html" title=" " alt="" coords="237,70,409,95"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="180,98,237,91,237,96,181,103"/>
+<area shape="rect" id="Node000006" href="$classmrs__lib_1_1LKF.html" title="Implementation of the Linear Kalman filter ." alt="" coords="215,120,432,160"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="181,120,215,125,214,130,180,126"/>
+<area shape="rect" id="Node000010" href="$classmrs__lib_1_1UKF.html" title="Implementation of the Unscented Kalman filter ." alt="" coords="215,224,432,264"/>
+<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="149,144,288,222,285,226,147,148"/>
+<area shape="rect" id="Node000003" href="$classmrs__lib_1_1DKF.html" title="Implementation of the Degenerate measurement Linear Kalman filter." alt="" coords="499,5,678,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="425,23,499,23,499,28,425,28"/>
+<area shape="rect" id="Node000005" href="$classmrs__lib_1_1LKF__MRS__odom.html" title=" " alt="" coords="497,70,680,95"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="423,80,497,80,497,85,423,85"/>
+<area shape="rect" id="Node000007" href="$classmrs__lib_1_1NCLKF.html" title="This class implements the norm&#45;constrained linear Kalman filter ." alt="" coords="480,120,697,160"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="446,137,480,137,480,143,446,143"/>
+<area shape="rect" id="Node000009" href="$classmrs__lib_1_1varstepLKF.html" title=" " alt="" coords="509,185,668,239"/>
+<area shape="poly" id="edge8_Node000006_Node000009" title=" " alt="" coords="412,161,510,188,508,193,410,166"/>
+<area shape="rect" id="Node000008" href="$classmrs__lib_1_1NCLKF__partial.html" title="This class implements the partially norm&#45;constrained linear Kalman filter ." alt="" coords="745,105,941,175"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="711,137,745,137,745,143,711,143"/>
+<area shape="rect" id="Node000011" href="$classmrs__lib_1_1NCUKF.html" title=" " alt="" coords="480,264,697,304"/>
+<area shape="poly" id="edge10_Node000010_Node000011" title=" " alt="" coords="446,260,480,265,480,270,445,265"/>
+</map>

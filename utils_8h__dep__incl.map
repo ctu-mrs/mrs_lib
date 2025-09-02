@@ -1,0 +1,21 @@
+<map id="include/mrs_lib/utils.h" name="include/mrs_lib/utils.h">
+<area shape="rect" id="Node000001" title="Defines various general utility functions." alt="" coords="130,5,295,31"/>
+<area shape="rect" id="Node000002" href="$repredictor_8h_source.html" title=" " alt="" coords="5,86,212,111"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="188,41,126,88,122,84,185,37"/>
+<area shape="rect" id="Node000003" href="$timer__handler_8h_source.html" title=" " alt="" coords="237,79,397,119"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="240,37,293,76,290,81,237,41"/>
+<area shape="rect" id="Node000004" href="$subscriber__handler_8hpp_source.html" title=" " alt="" coords="39,167,215,207"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="264,127,170,169,168,164,262,122"/>
+<area shape="rect" id="Node000007" href="$timer__handler_8hpp_source.html" title=" " alt="" coords="239,167,394,207"/>
+<area shape="poly" id="edge8_Node000003_Node000007" title=" " alt="" coords="311,132,312,166,306,167,305,132"/>
+<area shape="rect" id="Node000008" href="$timeout__manager_8h.html" title="TODO." alt="" coords="418,167,594,207"/>
+<area shape="poly" id="edge10_Node000003_Node000008" title=" " alt="" coords="372,122,466,164,463,169,369,127"/>
+<area shape="rect" id="Node000005" href="$subscriber__handler_8h.html" title="Defines SubscriberHandler and related convenience classes for subscribing to ROS topics." alt="" coords="98,255,290,295"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="144,216,174,253,170,256,140,220"/>
+<area shape="rect" id="Node000006" href="$src_2subscriber__handler_2example_8cpp.html" title="Example file for the SubscribeHandler convenience class." alt="" coords="43,343,211,383"/>
+<area shape="poly" id="edge7_Node000004_Node000006" title=" " alt="" coords="106,219,89,255,85,275,89,294,99,319,114,341,109,344,95,322,83,295,80,275,83,254,101,217"/>
+<area shape="poly" id="edge5_Node000005_Node000004" title=" " alt="" coords="177,245,148,209,152,205,181,242"/>
+<area shape="poly" id="edge6_Node000005_Node000006" title=" " alt="" coords="173,307,144,344,140,341,169,304"/>
+<area shape="poly" id="edge9_Node000007_Node000003" title=" " alt="" coords="323,153,322,119,327,119,328,153"/>
+<area shape="poly" id="edge11_Node000008_Node000005" title=" " alt="" coords="425,213,263,257,262,252,424,208"/>
+</map>

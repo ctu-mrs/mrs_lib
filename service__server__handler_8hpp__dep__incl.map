@@ -1,0 +1,6 @@
+<map id="include/mrs_lib/impl/service_server_handler.hpp" name="include/mrs_lib/impl/service_server_handler.hpp">
+<area shape="rect" id="Node000001" title="Implements the ServiceServerHandler wrapper to ROS2&#39;s ServiceServer." alt="" coords="5,5,209,45"/>
+<area shape="rect" id="Node000002" href="$service__server__handler_8h.html" title="Defines the ServiceServerHandler wrapper to ROS2&#39;s ServiceServer." alt="" coords="21,93,193,133"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="101,59,102,93,97,93,96,59"/>
+<area shape="poly" id="edge2_Node000002_Node000001" title=" " alt="" coords="113,80,112,46,118,46,119,80"/>
+</map>

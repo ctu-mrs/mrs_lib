@@ -1,0 +1,8 @@
+<map id="include/mrs_lib/publisher_handler.h" name="include/mrs_lib/publisher_handler.h">
+<area shape="rect" id="Node000001" title="Defines PublisherHandler and related convenience classes for upgrading the ROS publisher." alt="" coords="5,5,191,45"/>
+<area shape="rect" id="Node000002" href="$publisher__handler_8hpp_source.html" title=" " alt="" coords="13,93,183,133"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="92,59,93,93,88,93,87,59"/>
+<area shape="rect" id="Node000003" href="$profiler_8h.html" title="A scoped function profiler which publishes ROS messages." alt="" coords="207,101,389,126"/>
+<area shape="poly" id="edge3_Node000001_Node000003" title=" " alt="" coords="155,48,272,98,270,103,153,53"/>
+<area shape="poly" id="edge2_Node000002_Node000001" title=" " alt="" coords="104,80,103,46,108,46,109,80"/>
+</map>

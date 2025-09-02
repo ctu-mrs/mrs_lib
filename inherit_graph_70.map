@@ -1,0 +1,29 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" title=" " alt="" coords="5,413,120,438"/>
+<area shape="rect" id="Node000001" href="$structmrs__lib_1_1AttitudeConverter_1_1EulerFormatException.html" title="is thrown when the Euler angle format is set wrongly" alt="" coords="181,5,376,45"/>
+<area shape="poly" id="edge20_Node000000_Node000001" title=" " alt="" coords="61,399,63,331,77,239,90,189,109,141,134,96,166,55,181,44,185,48,170,59,138,99,114,143,95,191,82,240,69,331,66,399"/>
+<area shape="rect" id="Node000002" href="$structmrs__lib_1_1AttitudeConverter_1_1GetHeadingException.html" title="is thrown when calculating of heading is not possible due to atan2 exception" alt="" coords="181,69,376,109"/>
+<area shape="poly" id="edge21_Node000000_Node000002" title=" " alt="" coords="63,398,69,341,85,266,99,226,116,188,138,151,166,119,182,107,185,112,170,123,143,155,121,190,104,228,91,268,74,342,68,399"/>
+<area shape="rect" id="Node000003" href="$structmrs__lib_1_1AttitudeConverter_1_1InvalidAttitudeException.html" title="is thrown when the internal attitude becomes invalid" alt="" coords="181,133,376,173"/>
+<area shape="poly" id="edge22_Node000000_Node000003" title=" " alt="" coords="65,398,76,352,94,294,124,235,143,207,166,183,184,171,187,176,170,187,147,211,128,237,99,296,81,353,71,399"/>
+<area shape="rect" id="Node000004" href="$structmrs__lib_1_1AttitudeConverter_1_1MathErrorException.html" title="is thrown when math breaks" alt="" coords="181,197,376,237"/>
+<area shape="poly" id="edge23_Node000000_Node000004" title=" " alt="" coords="70,399,83,364,104,324,131,282,166,247,186,235,189,240,170,251,136,286,109,326,88,366,75,401"/>
+<area shape="rect" id="Node000005" href="$structmrs__lib_1_1AttitudeConverter_1_1SetHeadingException.html" title="is thrown when the heading cannot be set to an existing attitude" alt="" coords="181,261,376,301"/>
+<area shape="poly" id="edge24_Node000000_Node000005" title=" " alt="" coords="78,400,115,355,140,331,167,311,191,299,193,304,169,316,143,335,119,358,82,403"/>
+<area shape="rect" id="Node000006" href="$structmrs__lib_1_1LKF_1_1inverse__exception.html" title="This exception is thrown when taking the inverse of a matrix fails." alt="" coords="177,326,380,381"/>
+<area shape="poly" id="edge25_Node000000_Node000006" title=" " alt="" coords="114,406,195,378,197,383,115,411"/>
+<area shape="rect" id="Node000007" href="$structmrs__lib_1_1TransformBroadcaster_1_1NotInitializedException.html" title="is thrown when calculating of heading is not possible due to atan2 exception" alt="" coords="168,405,389,445"/>
+<area shape="poly" id="edge26_Node000000_Node000007" title=" " alt="" coords="134,423,168,423,168,428,134,428"/>
+<area shape="rect" id="Node000008" href="$structmrs__lib_1_1UKF_1_1inverse__exception.html" title="is thrown when taking the inverse of a matrix fails during kalman gain calculation" alt="" coords="177,470,380,525"/>
+<area shape="poly" id="edge27_Node000000_Node000008" title=" " alt="" coords="115,440,197,467,195,473,114,445"/>
+<area shape="rect" id="Node000009" href="$structmrs__lib_1_1UKF_1_1square__root__exception.html" title="is thrown when taking the square root of a matrix fails during sigma generation" alt="" coords="177,549,380,603"/>
+<area shape="poly" id="edge28_Node000000_Node000009" title=" " alt="" coords="83,447,120,491,144,514,169,534,191,546,189,551,167,538,140,518,116,495,79,451"/>
+<area shape="rect" id="Node000010" href="$structmrs__lib_1_1safety__zone_1_1BorderError.html" title=" " alt="" coords="200,628,357,668"/>
+<area shape="poly" id="edge29_Node000000_Node000010" title=" " alt="" coords="74,450,87,487,107,531,134,575,170,613,201,630,198,635,166,617,130,578,102,533,82,489,69,452"/>
+<area shape="rect" id="Node000011" href="$structmrs__lib_1_1safety__zone_1_1ExtraVertices.html" title=" " alt="" coords="200,692,357,732"/>
+<area shape="poly" id="edge30_Node000000_Node000011" title=" " alt="" coords="70,451,79,499,97,561,126,624,146,653,170,678,201,697,198,701,166,682,142,656,122,627,92,563,74,501,65,452"/>
+<area shape="rect" id="Node000012" href="$structmrs__lib_1_1safety__zone_1_1WrongNumberOfColumns.html" title=" " alt="" coords="181,756,377,796"/>
+<area shape="poly" id="edge31_Node000000_Node000012" title=" " alt="" coords="67,452,73,511,89,590,102,631,119,671,142,709,170,742,185,754,182,758,166,746,137,712,115,674,97,633,83,591,68,512,62,452"/>
+<area shape="rect" id="Node000013" href="$structmrs__lib_1_1safety__zone_1_1WrongNumberOfVertices.html" title=" " alt="" coords="183,820,374,860"/>
+<area shape="poly" id="edge32_Node000000_Node000013" title=" " alt="" coords="66,451,68,522,80,617,93,668,112,718,137,765,170,806,185,818,181,822,166,810,133,768,107,720,88,669,75,618,62,522,60,452"/>
+</map>

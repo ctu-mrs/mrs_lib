@@ -1,0 +1,20 @@
+<map id="include/mrs_lib/param_provider.h" name="include/mrs_lib/param_provider.h">
+<area shape="rect" id="Node000001" title="Defines ParamProvider &#45; a convenience class for seamlessly loading parameters from YAML or ROS." alt="" coords="232,5,399,45"/>
+<area shape="rect" id="Node000002" href="$dynparam__mgr_8h.html" title="Defines DynparamMgr &#45; a convenience class for managing dynamic ROS parameters." alt="" coords="5,93,196,133"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="257,53,149,96,147,91,255,48"/>
+<area shape="rect" id="Node000005" href="$param__provider_8hpp.html" title="Implements ParamProvider &#45; a convenience class for seamlessly loading parameters from YAML or ROS." alt="" coords="237,93,393,133"/>
+<area shape="poly" id="edge5_Node000001_Node000005" title=" " alt="" coords="309,59,310,93,305,93,304,59"/>
+<area shape="rect" id="Node000006" href="$param__loader_8h_source.html" title=" " alt="" coords="427,93,593,133"/>
+<area shape="poly" id="edge7_Node000001_Node000006" title=" " alt="" coords="371,48,468,91,466,96,369,53"/>
+<area shape="rect" id="Node000003" href="$dynparam__mgr_8hpp.html" title="Defines DynparamMgr &#45; a convenience class for managing dynamic ROS parameters." alt="" coords="14,181,169,221"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="91,147,88,181,83,181,86,147"/>
+<area shape="rect" id="Node000004" href="$dynparam__mgr_8cpp.html" title="Implements DynparamMgr &#45; a convenience class for managing dynamic ROS parameters." alt="" coords="193,181,408,221"/>
+<area shape="poly" id="edge4_Node000002_Node000004" title=" " alt="" coords="158,136,258,179,256,184,156,141"/>
+<area shape="poly" id="edge3_Node000003_Node000002" title=" " alt="" coords="101,168,104,133,109,134,106,168"/>
+<area shape="poly" id="edge6_Node000005_Node000001" title=" " alt="" coords="321,80,320,46,326,46,327,80"/>
+<area shape="rect" id="Node000007" href="$param__loader_8hpp_source.html" title=" " alt="" coords="433,181,587,221"/>
+<area shape="poly" id="edge8_Node000006_Node000007" title=" " alt="" coords="504,147,505,181,500,181,499,147"/>
+<area shape="rect" id="Node000008" href="$src_2param__loader_2example_8cpp.html" title="Example file for the ParamLoader convenience class." alt="" coords="612,189,835,214"/>
+<area shape="poly" id="edge10_Node000006_Node000008" title=" " alt="" coords="571,136,696,186,694,191,569,141"/>
+<area shape="poly" id="edge9_Node000007_Node000006" title=" " alt="" coords="516,168,515,134,520,134,521,168"/>
+</map>
