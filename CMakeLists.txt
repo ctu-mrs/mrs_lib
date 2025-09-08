@@ -29,7 +29,7 @@ if(ENABLE_COVERAGE)
   add_definitions("-g")
 endif()
 
-find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
 
 set(DEPENDENCIES
   geometry_msgs
@@ -423,5 +423,7 @@ ament_export_targets(
 ament_export_dependencies(
   ${DEPENDENCIES}
   )
+
+ament_python_install_package(${PROJECT_NAME})
 
 ament_package()
