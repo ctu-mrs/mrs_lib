@@ -100,8 +100,9 @@ class RemappingsCustomConfigParser(LaunchDescriptionEntity):
         #config_remappings = [((TextSubstitution(text='/uav1/image_raw'),), (TextSubstitution(text='/some_topic_name'),))]    # remappings data structure
         config_remappings = self.convert_remappings(raw_remappings)
         
-        # Add to wrapped node using your working pattern
-        old_remappings = list(getattr(self.wrapped_node, '_ComposableNode__remappings', []))
+        # We have to explicitly test the return value, because if the remappings are not set, the attribute still exist, it is just NoneType.
+        old_remappings_attr = getattr(self.wrapped_node, '_ComposableNode__remappings', [])
+        old_remappings = list([] if old_remappings_attr is None else old_remappings_attr)
         new_remappings = []
         
         # We have to build the list of remappings 'backwards' - first the new remappings that should override
