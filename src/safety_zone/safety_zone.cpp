@@ -1,73 +1,228 @@
 #include <mrs_lib/safety_zone.h>
 
-namespace mrs_lib
-{
+namespace bg = boost::geometry;
 
-namespace safety_zone
-{
+namespace mrs_lib {
+
+namespace safety_zone {
 
 /* SafetyZone() //{ */
-
-SafetyZone::SafetyZone(std::shared_ptr<Polygon> border) {
-  outerBorder = border;
-}
-
+// Constructor without obstacles
+SafetyZone::SafetyZone(Prism outer_border) : outer_border_(outer_border) {}
 //}
 
 /* SafetyZone() //{ */
+// Constructor with obstacles
+SafetyZone::SafetyZone(Prism outer_border,
+                       std::vector<std::unique_ptr<Prism>> &&obstacles)
+    : outer_border_(outer_border) {
 
-SafetyZone::SafetyZone(const Eigen::MatrixXd& outerBorderMatrix) {
-
-  try {
-    outerBorder = std::make_shared<Polygon>(outerBorderMatrix);
-  }
-  catch (const WrongNumberOfVertices&) {
-    throw BorderError();
-  }
-  catch (const WrongNumberOfColumns&) {
-    throw BorderError();
-  }
-  catch (const ExtraVertices&) {
-    throw BorderError();
+  for (auto &obstacle : obstacles) {
+    obstacles_.emplace(next_obstacle_id_++, std::move(obstacle));
   }
 }
-
 //}
 
-/* isPointValid() //{ */
+/* enableSafetyZone() //{ */
+void SafetyZone::enableSafetyZone(const bool enable) {
+  std::scoped_lock lock(mutex_safety_zone_);
+  enable ? safety_zone_enabled_ = true : safety_zone_enabled_ = false;
+}
+//}
 
-bool SafetyZone::isPointValid(const double px, const double py) {
+/* safetyZoneEnabled() //{ */
+bool SafetyZone::safetyZoneEnabled(void) {
+  bool result;
+  safety_zone_enabled_ ? result = true : result = false;
 
-  if (!outerBorder->isPointInside(px, py)) {
+  return result;
+}
+//}
+
+/* isPointValid(Point2d) //{ */
+bool SafetyZone::isPointValid(const Point2d point) {
+  std::scoped_lock lock(mutex_safety_zone_);
+  if (!outer_border_.isPointIn(point)) {
     return false;
+  }
+
+  for (auto &obstacle : obstacles_) {
+    if (obstacle.second->isPointIn(point)) {
+      return false;
+    }
   }
 
   return true;
 }
+//}
 
+/* isPointValid(px, py) //{ */
+bool SafetyZone::isPointValid(const double px, const double py) {
+  std::scoped_lock lock(mutex_safety_zone_);
+  if (!outer_border_.isPointIn(px, py)) {
+    return false;
+  }
+
+  for (auto &obstacle : obstacles_) {
+    if (obstacle.second->isPointIn(px, py)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+//}
+
+/* isPointValid() //{ */
+// Overload for Point3d
+bool SafetyZone::isPointValid(const Point3d point) {
+  std::scoped_lock lock(mutex_safety_zone_);
+  if (!outer_border_.isPointIn(point)) {
+    return false;
+  }
+
+  for (auto &obstacle : obstacles_) {
+    if (obstacle.second->isPointIn(point)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+//}
+
+/* isPointValid(px, py, pz) //{ */
+bool SafetyZone::isPointValid(const double px, const double py,
+                              const double pz) {
+  std::scoped_lock lock(mutex_safety_zone_);
+  if (!outer_border_.isPointIn(px, py, pz)) {
+    return false;
+  }
+
+  for (auto &obstacle : obstacles_) {
+    if (obstacle.second->isPointIn(px, py, pz)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+//}
+
+/* isPathValid() //{ */
+bool SafetyZone::isPathValid(const Point3d start, const Point3d end) {
+  int count = static_cast<int>(
+      ceil((bg::distance(start, end) * _discretization_steps_)));
+
+  Point3d current_point = start;
+  Point3d increment = end;
+  bg::subtract_point(increment, start); // Calculate a vector from start to end
+  bg::divide_value(increment, count);   // Obtaing the incremental step vector
+  for (int i = 0; i < count; i++) {
+    if (!isPointValid(current_point)) {
+      return false;
+    }
+    bg::add_point(current_point,
+                  increment); // Advancing current point by the step vector to
+                              // move along the path
+  }
+  return true;
+}
 //}
 
 /* isPathValid() //{ */
 
-bool SafetyZone::isPathValid(const double p1x, const double p1y, const double p2x, const double p2y) {
+bool SafetyZone::isPathValid(const Point2d start, const Point2d end) {
+  int count = static_cast<int>(
+      ceil((bg::distance(start, end) * _discretization_steps_)));
 
-  if (outerBorder->doesSectionIntersect(p1x, p1y, p2x, p2y)) {
-    return false;
+  Point2d current_point = start;
+  Point2d increment = end;
+  bg::subtract_point(increment, start); // Calculate a vector from start to end
+  bg::divide_value(increment, count);   // Obtaing the incremental step vector
+  for (int i = 0; i < count; i++) {
+    if (!isPointValid(current_point)) {
+      return false;
+    }
+    bg::add_point(current_point, increment); // Advancing current point by step
+                                             // vector to move along the path
   }
-
   return true;
 }
 
 //}
 
-/* getBorder() //{ */
+/* accept() //{ */
 
-Polygon SafetyZone::getBorder() {
-  return *outerBorder;
-}
+// void SafetyZone::accept(Visitor &visitor) {
+//   visitor.visit(this);
+//
+//   for (auto &entry : obstacles_) {
+//     entry.second->accept(visitor);
+//   }
+// }
 
 //}
 
-}  // namespace safety_zone
+/* getBorder() //{ */
+Prism *SafetyZone::getBorder() {
+  std::scoped_lock lock(mutex_safety_zone_);
+  return &outer_border_;
+}
+//}
 
-}  // namespace mrs_lib
+/* getObstacles() //{ */
+const std::map<int, std::unique_ptr<Prism>> &SafetyZone::getObstacles() const {
+  std::scoped_lock lock(mutex_safety_zone_);
+  return obstacles_;
+}
+//}
+
+/* getObstacle() //{ */
+// TODO make const function
+Prism *SafetyZone::getObstacle(const int index) {
+  std::scoped_lock lock(mutex_safety_zone_);
+  auto it = obstacles_.find(index);
+
+  if (it != obstacles_.end()) {
+    return it->second.get();
+  }
+  return nullptr;
+}
+//}
+
+/* getObstacleBegin() //{ */
+std::map<int, std::unique_ptr<Prism>>::iterator
+SafetyZone::getObstaclesBegin() {
+  std::scoped_lock lock(mutex_safety_zone_);
+  return obstacles_.begin();
+}
+//}
+
+/* getObstacleEnd() //{ */
+std::map<int, std::unique_ptr<Prism>>::iterator SafetyZone::getObstaclesEnd() {
+  std::scoped_lock lock(mutex_safety_zone_);
+  return obstacles_.end();
+}
+//}
+
+/* addObstacle //{ */
+int SafetyZone::addObstacle(std::unique_ptr<Prism> obstacle) {
+  std::scoped_lock lock(mutex_safety_zone_);
+  int current_id = ++next_obstacle_id_;
+  obstacles_.emplace(current_id, std::move(obstacle));
+  return next_obstacle_id_;
+}
+//}
+
+/* deleteObstacle() //{ */
+void SafetyZone::deleteObstacle(int id) {
+  std::scoped_lock lock(mutex_safety_zone_);
+  auto it = obstacles_.find(id);
+  obstacles_.erase(
+      it); // this will automatically delete the obstacle in the map
+}
+//}
+
+} // namespace safety_zone
+} // namespace mrs_lib

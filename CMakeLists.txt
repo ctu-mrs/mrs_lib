@@ -48,6 +48,7 @@ set(DEPENDENCIES
   visualization_msgs
   Eigen3
   yaml-cpp
+  Boost
   )
 
 set(LIBRARIES
@@ -322,12 +323,14 @@ add_library(MrsLib_SafetyZone SHARED
   src/safety_zone/safety_zone.cpp
   src/safety_zone/line_operations.cpp
   src/safety_zone/polygon.cpp
+  src/safety_zone/prism.cpp
   )
 
 ament_target_dependencies(MrsLib_SafetyZone
   rclcpp
   geometry_msgs
   Eigen3
+  Boost
   )
 
 # IIR filter
