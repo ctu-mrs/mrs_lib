@@ -42,6 +42,11 @@ bool SafetyZone::safetyZoneEnabled(void) {
 /* isPointValid(Point2d) //{ */
 bool SafetyZone::isPointValid(const Point2d point) {
   std::scoped_lock lock(mutex_safety_zone_);
+
+  if (!safety_zone_enabled_) {
+    return true;
+  }
+
   if (!outer_border_.isPointIn(point)) {
     return false;
   }
@@ -59,6 +64,12 @@ bool SafetyZone::isPointValid(const Point2d point) {
 /* isPointValid(px, py) //{ */
 bool SafetyZone::isPointValid(const double px, const double py) {
   std::scoped_lock lock(mutex_safety_zone_);
+
+  if (!safety_zone_enabled_) {
+    std::cout << "safety zone disabled" << std::endl; 
+    return true;
+  }
+  
   if (!outer_border_.isPointIn(px, py)) {
     return false;
   }
@@ -77,6 +88,11 @@ bool SafetyZone::isPointValid(const double px, const double py) {
 // Overload for Point3d
 bool SafetyZone::isPointValid(const Point3d point) {
   std::scoped_lock lock(mutex_safety_zone_);
+
+  if (!safety_zone_enabled_) {
+    return true;
+  }
+
   if (!outer_border_.isPointIn(point)) {
     return false;
   }
@@ -95,6 +111,12 @@ bool SafetyZone::isPointValid(const Point3d point) {
 bool SafetyZone::isPointValid(const double px, const double py,
                               const double pz) {
   std::scoped_lock lock(mutex_safety_zone_);
+
+  if (!safety_zone_enabled_) {
+    std::cout << "safety zone disabled" << std::endl;
+    return true;
+  }
+
   if (!outer_border_.isPointIn(px, py, pz)) {
     return false;
   }
@@ -111,6 +133,11 @@ bool SafetyZone::isPointValid(const double px, const double py,
 
 /* isPathValid() //{ */
 bool SafetyZone::isPathValid(const Point3d start, const Point3d end) {
+
+  if (!safety_zone_enabled_) {
+    return true;
+  }
+
   int count = static_cast<int>(
       ceil((bg::distance(start, end) * _discretization_steps_)));
 
@@ -133,6 +160,11 @@ bool SafetyZone::isPathValid(const Point3d start, const Point3d end) {
 /* isPathValid() //{ */
 
 bool SafetyZone::isPathValid(const Point2d start, const Point2d end) {
+
+  if (!safety_zone_enabled_) {
+    return true;
+  }
+
   int count = static_cast<int>(
       ceil((bg::distance(start, end) * _discretization_steps_)));
 
