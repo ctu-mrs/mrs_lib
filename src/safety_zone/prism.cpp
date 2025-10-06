@@ -8,9 +8,8 @@ namespace safety_zone {
 
 /* Prism() //{ */
 Prism::Prism(const std::vector<Point2d> &points, const double max_z,
-             const double min_z)
-    : polygon_(), min_z_(std::min(min_z, max_z_)),
-      max_z_(std::max(min_z, max_z)) {
+             const double min_z) : polygon_(), min_z_(std::min(min_z, max_z_)), max_z_(std::max(min_z, max_z)) 
+ {
   if (points.size() < 3)
     throw std::invalid_argument(
         "A valid polygon must have at least three points.");
@@ -38,6 +37,36 @@ Prism::Prism(const std::vector<Point2d> &points, const double max_z,
   }
 }
 //}
+
+Prism::Prism(const std::vector<Point2d> &points, const double max_z, const double min_z, const std::string &horizontal_frame,
+             const std::string &vertical_frame) : polygon_(), min_z_(std::min(min_z, max_z_)), max_z_(std::max(min_z, max_z)),
+             horizontal_frame_(horizontal_frame), vertical_frame_(vertical_frame) 
+{
+  if (points.size() < 3)
+    throw std::invalid_argument(
+        "A valid polygon must have at least three points.");
+  // Append points into polygon
+  for (const auto &point : points)
+    bg::append(polygon_, point);
+
+  // If first and last point not identical, add first point to close the polygon
+  if (!bg::equals(points.front(), points.back()))
+    bg::append(polygon_, points.front());
+
+  std::string msg;
+  bool is_valid;
+  is_valid = bg::is_valid(polygon_, msg);
+
+  // Flip the order of vertices if it has wrong orientation
+  if (msg == "Geometry has wrong orientation") {
+    bg::reverse(polygon_);
+    is_valid = bg::is_valid(polygon_, msg);
+  }
+
+  if (!is_valid) {
+    throw std::invalid_argument("The polygon is invalid: " + msg);
+  }
+}
 
 /* Prism() //{ */
 Prism::~Prism() {}
@@ -345,6 +374,14 @@ double Prism::getMaxZ() { return max_z_; }
 
 /* getMinZ //{ */
 double Prism::getMinZ() { return min_z_; }
+//}
+
+/* getHorizontalFrame() //{ */
+std::string Prism::getHorizontalFrame() { return horizontal_frame_; } 
+//}
+
+///* getVerticalFrame() //{ */
+std::string Prism::getVerticalFrame() { return vertical_frame_; }
 //}
 
 /* getPolygon2D() //{ */

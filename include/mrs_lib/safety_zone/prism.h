@@ -33,6 +33,8 @@ private:
   Polygon2D polygon_;
   double min_z_;
   double max_z_;
+  std::string horizontal_frame_; // frame in which the polygon is defined
+  std::string vertical_frame_;   // frame in which the z limits are defined
 
   std::set<Subscriber *> subscribers_;
 
@@ -40,10 +42,16 @@ private:
   void cleanSubscribers();
 
 public:
+  //Empty constructor 
+  Prism() : polygon_(), min_z_(0.0), max_z_(0.0), horizontal_frame_("world_origin"), vertical_frame_("world_origin") {}
   // If max_z < min_z, automatically swaps them
   // Throws std::invalid argument if polygon is invalid
   Prism(const std::vector<Point2d> &points, const double max_z,
         const double min_z);
+
+  Prism(const std::vector<Point2d> &points, const double max_z,
+        const double min_z, const std::string &horizontal_frame,
+        const std::string &vertical_frame);
 
   // Copy assignment operator
   Prism &operator=(const Prism &other) {
@@ -86,6 +94,8 @@ public:
   std::vector<Point2d> getPoints();
   double getMaxZ();
   double getMinZ();
+  std::string getHorizontalFrame();
+  std::string getVerticalFrame();
 
   Polygon2D getPolygon();
 
