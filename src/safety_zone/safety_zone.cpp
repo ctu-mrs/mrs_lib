@@ -197,9 +197,9 @@ bool SafetyZone::isPathValid(const Point2d start, const Point2d end) {
 //}
 
 /* getBorder() //{ */
-Prism *SafetyZone::getBorder() {
+Prism SafetyZone::getBorder() const {
   std::scoped_lock lock(mutex_safety_zone_);
-  return &outer_border_;
+  return outer_border_;
 }
 //}
 
@@ -211,32 +211,18 @@ const std::map<int, std::unique_ptr<Prism>> &SafetyZone::getObstacles() const {
 //}
 
 /* getObstacle() //{ */
-// TODO make const function
-Prism *SafetyZone::getObstacle(const int index) {
+Prism SafetyZone::getObstacle(const int index) const {
   std::scoped_lock lock(mutex_safety_zone_);
   auto it = obstacles_.find(index);
 
   if (it != obstacles_.end()) {
-    return it->second.get();
+    return *(it->second);
   }
-  return nullptr;
+  throw std::out_of_range("No obstacle with the given index");
+  return Prism();
 }
 //}
 
-/* getObstacleBegin() //{ */
-std::map<int, std::unique_ptr<Prism>>::iterator
-SafetyZone::getObstaclesBegin() {
-  std::scoped_lock lock(mutex_safety_zone_);
-  return obstacles_.begin();
-}
-//}
-
-/* getObstacleEnd() //{ */
-std::map<int, std::unique_ptr<Prism>>::iterator SafetyZone::getObstaclesEnd() {
-  std::scoped_lock lock(mutex_safety_zone_);
-  return obstacles_.end();
-}
-//}
 
 /* addObstacle //{ */
 int SafetyZone::addObstacle(std::unique_ptr<Prism> obstacle) {

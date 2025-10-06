@@ -47,15 +47,11 @@ public:
   // ignores max_z and min_z of all prisms
   bool isPathValid(const Point2d start, const Point2d end);
 
-  Prism *getBorder();
+  Prism getBorder() const;
 
   const std::map<int, std::unique_ptr<Prism>> &getObstacles() const;
 
-  Prism *getObstacle(const int index);
-
-  std::map<int, std::unique_ptr<Prism>>::iterator getObstaclesBegin();
-
-  std::map<int, std::unique_ptr<Prism>>::iterator getObstaclesEnd();
+  Prism getObstacle(const int index) const;
 
   int addObstacle(std::unique_ptr<Prism> obstacle);
 

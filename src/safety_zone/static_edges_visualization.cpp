@@ -11,7 +11,7 @@ namespace mrs_lib
 
   /* StaticEdgesVisualization(prism) //{ */
 
-  StaticEdgesVisualization::StaticEdgesVisualization(safety_zone::Prism* prism, const std::string& uav_name, const std::string& frame_id, const rclcpp::Node::SharedPtr node,
+  StaticEdgesVisualization::StaticEdgesVisualization(safety_zone::Prism prism, const std::string& uav_name, const std::string& frame_id, const rclcpp::Node::SharedPtr node,
                                                      const double& markers_update_rate)
       : id_(id_generator_++), prism_(prism), uav_name_(uav_name), frame_id_(frame_id), node_(node)
   {
@@ -29,6 +29,7 @@ namespace mrs_lib
                                                      const rclcpp::Node::SharedPtr node, const double& markers_update_rate)
 
       : id_(id_generator_++), prism_(safety_zone->getObstacle(obstacle_id)), uav_name_(uav_name), frame_id_(frame_id), node_(node)
+
   {
     timer_ = node_->create_wall_timer(std::chrono::duration<double>(markers_update_rate),[this](){ sendMarker();});
     last_markers_.markers.push_back(visualization_msgs::msg::Marker());
@@ -60,7 +61,7 @@ namespace mrs_lib
   {
     if (is_active_)
     {
-      prism_->unsubscribe(this);
+      prism_.unsubscribe(this);
     }
     cleanup();
   }
@@ -73,7 +74,7 @@ namespace mrs_lib
   {
 
     publisher_ = mrs_lib::PublisherHandler<visualization_msgs::msg::MarkerArray>(node_, "safety_area_static_markers_out"); 
-    prism_->subscribe(this);
+    prism_.subscribe(this);
     update();
     is_active_ = true;  // is_active_ flag inherited from Subscriber class defined in safety_zone::Prism
   }
@@ -99,9 +100,9 @@ namespace mrs_lib
       return;
     }
 
-    const double max_z = prism_->getMaxZ();
-    const double min_z = prism_->getMinZ();
-    const auto polygon = prism_->getPolygon().outer();
+    const double max_z = prism_.getMaxZ();
+    const double min_z = prism_.getMinZ();
+    const auto polygon = prism_.getPolygon().outer();
 
     visualization_msgs::msg::Marker marker;
     marker.id = id_;

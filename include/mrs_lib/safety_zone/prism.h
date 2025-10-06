@@ -59,6 +59,8 @@ public:
       polygon_ = other.polygon_;
       min_z_ = other.min_z_;
       max_z_ = other.max_z_;
+      horizontal_frame_ = other.horizontal_frame_;
+      vertical_frame_ = other.vertical_frame_;
       // Keep existing subscribers, don't copy them
     }
     return *this;
@@ -66,14 +68,15 @@ public:
 
   // Copy constructor
   Prism(const Prism &other)
-      : polygon_(other.polygon_), min_z_(other.min_z_), max_z_(other.max_z_),
+      : polygon_(other.polygon_), min_z_(other.min_z_), max_z_(other.max_z_), horizontal_frame_(other.horizontal_frame_), vertical_frame_(other.vertical_frame_),
         subscribers_() // Don't copy observers
   {}
 
   // Move constructor
   Prism(Prism &&other) noexcept
       : polygon_(std::move(other.polygon_)), min_z_(other.min_z_),
-        max_z_(other.max_z_), subscribers_(std::move(other.subscribers_)) {}
+        max_z_(other.max_z_), horizontal_frame_(other.horizontal_frame_), vertical_frame_(other.vertical_frame_),
+          subscribers_(std::move(other.subscribers_)) {}
 
   // Move assignment operator
   Prism &operator=(Prism &&other) noexcept {
@@ -81,6 +84,8 @@ public:
       polygon_ = std::move(other.polygon_);
       min_z_ = other.min_z_;
       max_z_ = other.max_z_;
+      horizontal_frame_ = other.horizontal_frame_;
+      vertical_frame_ = other.vertical_frame_;
       subscribers_ = std::move(other.subscribers_);
     }
     return *this;

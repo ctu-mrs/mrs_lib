@@ -20,7 +20,7 @@ namespace mrs_lib
 
   public:
     // Represents the prism
-    StaticEdgesVisualization(safety_zone::Prism* prism, const std::string& uav_name, const std::string& frame_id, const rclcpp::Node::SharedPtr node,
+    StaticEdgesVisualization(safety_zone::Prism prism, const std::string& uav_name, const std::string& frame_id, const rclcpp::Node::SharedPtr node,
                              const double& markers_update_rate);
 
     // Represents corresponding obstacle in the safety_zone.
@@ -46,11 +46,10 @@ namespace mrs_lib
     const int id_;
     static std::atomic<int> id_generator_;
 
-    safety_zone::Prism* prism_;
+    safety_zone::Prism prism_;
     std::string uav_name_;
     std::string frame_id_;
     rclcpp::Node::SharedPtr node_;
-    /* std::shared_ptr<mrs_uav_managers::safety_area_manager::CommonHandlers_t> common_handlers; */
 
     // Static markers
     mrs_lib::PublisherHandler<visualization_msgs::msg::MarkerArray>     publisher_;
