@@ -6,17 +6,18 @@
 #include <mrs_lib/safety_zone/prism.h>
 #include <vector>
 
-namespace mrs_lib {
+namespace mrs_lib
+{
 
-namespace safety_zone {
+namespace safety_zone
+{
 
 class SafetyZone {
 public:
   SafetyZone(std::unique_ptr<Prism> &&outer_border);
 
   // Cleaning the obstacles' memory is SafetyZone's responsibility
-  SafetyZone(std::unique_ptr<Prism> &&outer_border,
-             std::vector<std::unique_ptr<Prism>> &&obstacles);
+  SafetyZone(std::unique_ptr<Prism> &&outer_border, std::vector<std::unique_ptr<Prism>> &&obstacles);
 
   ~SafetyZone() = default;
 

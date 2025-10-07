@@ -2,21 +2,22 @@
 
 namespace bg = boost::geometry;
 
-namespace mrs_lib {
+namespace mrs_lib
+{
 
-namespace safety_zone {
+namespace safety_zone
+{
 
 /* SafetyZone() //{ */
 // Constructor without obstacles
-SafetyZone::SafetyZone(std::unique_ptr<Prism> &&outer_border) : outer_border_(std::move(outer_border)) {}
+SafetyZone::SafetyZone(std::unique_ptr<Prism> &&outer_border) : outer_border_(std::move(outer_border)) {
+}
 
 //}
 
 /* SafetyZone() //{ */
 // Constructor with obstacles
-SafetyZone::SafetyZone(std::unique_ptr<Prism> &&outer_border,
-                       std::vector<std::unique_ptr<Prism>> &&obstacles)
-    : outer_border_(std::move(outer_border)) {
+SafetyZone::SafetyZone(std::unique_ptr<Prism> &&outer_border, std::vector<std::unique_ptr<Prism>> &&obstacles) : outer_border_(std::move(outer_border)) {
 
   for (auto &obstacle : obstacles) {
     obstacles_.emplace(next_obstacle_id_++, std::move(obstacle));
@@ -67,10 +68,10 @@ bool SafetyZone::isPointValid(const double px, const double py) {
   std::scoped_lock lock(mutex_safety_zone_);
 
   if (!safety_zone_enabled_) {
-    std::cout << "safety zone disabled" << std::endl; 
+    std::cout << "safety zone disabled" << std::endl;
     return true;
   }
-  
+
   if (!outer_border_->isPointIn(px, py)) {
     return false;
   }
@@ -109,8 +110,7 @@ bool SafetyZone::isPointValid(const Point3d point) {
 //}
 
 /* isPointValid(px, py, pz) //{ */
-bool SafetyZone::isPointValid(const double px, const double py,
-                              const double pz) {
+bool SafetyZone::isPointValid(const double px, const double py, const double pz) {
   std::scoped_lock lock(mutex_safety_zone_);
 
   if (!safety_zone_enabled_) {
@@ -139,11 +139,10 @@ bool SafetyZone::isPathValid(const Point3d start, const Point3d end) {
     return true;
   }
 
-  int count = static_cast<int>(
-      ceil((bg::distance(start, end) * _discretization_steps_)));
+  int count = static_cast<int>(ceil((bg::distance(start, end) * _discretization_steps_)));
 
   Point3d current_point = start;
-  Point3d increment = end;
+  Point3d increment     = end;
   bg::subtract_point(increment, start); // Calculate a vector from start to end
   bg::divide_value(increment, count);   // Obtaing the incremental step vector
   for (int i = 0; i < count; i++) {
@@ -166,11 +165,10 @@ bool SafetyZone::isPathValid(const Point2d start, const Point2d end) {
     return true;
   }
 
-  int count = static_cast<int>(
-      ceil((bg::distance(start, end) * _discretization_steps_)));
+  int count = static_cast<int>(ceil((bg::distance(start, end) * _discretization_steps_)));
 
   Point2d current_point = start;
-  Point2d increment = end;
+  Point2d increment     = end;
   bg::subtract_point(increment, start); // Calculate a vector from start to end
   bg::divide_value(increment, count);   // Obtaing the incremental step vector
   for (int i = 0; i < count; i++) {
@@ -238,8 +236,7 @@ int SafetyZone::addObstacle(std::unique_ptr<Prism> obstacle) {
 void SafetyZone::deleteObstacle(int id) {
   std::scoped_lock lock(mutex_safety_zone_);
   auto it = obstacles_.find(id);
-  obstacles_.erase(
-      it); // this will automatically delete the obstacle in the map
+  obstacles_.erase(it); // this will automatically delete the obstacle in the map
 }
 //}
 

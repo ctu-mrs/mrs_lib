@@ -6,14 +6,14 @@
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 
-namespace mrs_lib {
+namespace mrs_lib
+{
 
-namespace safety_zone {
+namespace safety_zone
+{
 
-typedef boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian>
-    Point2d;
-typedef boost::geometry::model::point<double, 3, boost::geometry::cs::cartesian>
-    Point3d;
+typedef boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian> Point2d;
+typedef boost::geometry::model::point<double, 3, boost::geometry::cs::cartesian> Point3d;
 typedef boost::geometry::model::polygon<Point2d> Polygon2D;
 
 class Subscriber {
@@ -42,25 +42,23 @@ private:
   void cleanSubscribers();
 
 public:
-  //Empty constructor 
-  Prism() : polygon_(), min_z_(0.0), max_z_(0.0), horizontal_frame_("world_origin"), vertical_frame_("world_origin") {}
+  // Empty constructor
+  Prism() : polygon_(), min_z_(0.0), max_z_(0.0), horizontal_frame_("world_origin"), vertical_frame_("world_origin") {
+  }
   // If max_z < min_z, automatically swaps them
   // Throws std::invalid argument if polygon is invalid
-  Prism(const std::vector<Point2d> &points, const double max_z,
-        const double min_z);
+  Prism(const std::vector<Point2d> &points, const double max_z, const double min_z);
 
-  Prism(const std::vector<Point2d> &points, const double max_z,
-        const double min_z, const std::string &horizontal_frame,
-        const std::string &vertical_frame);
+  Prism(const std::vector<Point2d> &points, const double max_z, const double min_z, const std::string &horizontal_frame, const std::string &vertical_frame);
 
   // Copy assignment operator
   Prism &operator=(const Prism &other) {
     if (this != &other) {
-      polygon_ = other.polygon_;
-      min_z_ = other.min_z_;
-      max_z_ = other.max_z_;
+      polygon_          = other.polygon_;
+      min_z_            = other.min_z_;
+      max_z_            = other.max_z_;
       horizontal_frame_ = other.horizontal_frame_;
-      vertical_frame_ = other.vertical_frame_;
+      vertical_frame_   = other.vertical_frame_;
       // Keep existing subscribers, don't copy them
     }
     return *this;
@@ -68,25 +66,26 @@ public:
 
   // Copy constructor
   Prism(const Prism &other)
-      : polygon_(other.polygon_), min_z_(other.min_z_), max_z_(other.max_z_), horizontal_frame_(other.horizontal_frame_), vertical_frame_(other.vertical_frame_),
-        subscribers_() // Don't copy observers
-  {}
+      : polygon_(other.polygon_), min_z_(other.min_z_), max_z_(other.max_z_), horizontal_frame_(other.horizontal_frame_),
+        vertical_frame_(other.vertical_frame_), subscribers_() // Don't copy observers
+  {
+  }
 
   // Move constructor
   Prism(Prism &&other) noexcept
-      : polygon_(std::move(other.polygon_)), min_z_(other.min_z_),
-        max_z_(other.max_z_), horizontal_frame_(other.horizontal_frame_), vertical_frame_(other.vertical_frame_),
-          subscribers_(std::move(other.subscribers_)) {}
+      : polygon_(std::move(other.polygon_)), min_z_(other.min_z_), max_z_(other.max_z_), horizontal_frame_(other.horizontal_frame_),
+        vertical_frame_(other.vertical_frame_), subscribers_(std::move(other.subscribers_)) {
+  }
 
   // Move assignment operator
   Prism &operator=(Prism &&other) noexcept {
     if (this != &other) {
-      polygon_ = std::move(other.polygon_);
-      min_z_ = other.min_z_;
-      max_z_ = other.max_z_;
+      polygon_          = std::move(other.polygon_);
+      min_z_            = other.min_z_;
+      max_z_            = other.max_z_;
       horizontal_frame_ = other.horizontal_frame_;
-      vertical_frame_ = other.vertical_frame_;
-      subscribers_ = std::move(other.subscribers_);
+      vertical_frame_   = other.vertical_frame_;
+      subscribers_      = std::move(other.subscribers_);
     }
     return *this;
   }
@@ -123,8 +122,7 @@ public:
   // Only notifies subsribers once in case of success
   // returns true if succeeded
   // returns false otherwise
-  bool setVertices(const std::vector<Point2d> &vertices,
-                   const std::vector<unsigned int> &indices);
+  bool setVertices(const std::vector<Point2d> &vertices, const std::vector<unsigned int> &indices);
 
   // Adds new vertex in the middle of the neighboring verge
   void addVertexClockwise(const unsigned int index);
@@ -140,16 +138,16 @@ public:
   // Deletes the vertex only if vertex_count > 3
   void deleteVertex(const unsigned int index);
 
-  // Overload with Point3d 
+  // Overload with Point3d
   bool isPointIn(const Point3d &point);
 
-  // Overload with 3D point (double,double,double) 
+  // Overload with 3D point (double,double,double)
   bool isPointIn(const double x, const double y, const double z);
 
-  // Overload with Point2d 
+  // Overload with Point2d
   bool isPointIn(const Point2d &point);
 
-  // Overload with 2D point (double,double) 
+  // Overload with 2D point (double,double)
   bool isPointIn(const double x, const double y);
 
   // Helper method for text representation
