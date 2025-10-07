@@ -68,7 +68,9 @@ StaticEdgesVisualization::~StaticEdgesVisualization() {
 
 void StaticEdgesVisualization::init() {
 
-  publisher_ = mrs_lib::PublisherHandler<visualization_msgs::msg::MarkerArray>(node_, "safety_area_static_markers_out");
+  // TODO remap topic names
+  publisher_            = mrs_lib::PublisherHandler<visualization_msgs::msg::MarkerArray>(node_, "safety_area_static_markers_out");
+  coordinate_publisher_ = mrs_lib::PublisherHandler<visualization_msgs::msg::MarkerArray>(node_, "safety_area_coordinates_out");
   prism_.subscribe(this);
   update();
   is_active_ = true; // is_active_ flag inherited from Subscriber class defined in safety_zone::Prism
@@ -81,6 +83,7 @@ void StaticEdgesVisualization::init() {
 // Lines must be updated periodically. View https://github.com/ros-visualization/rviz/issues/1287
 void StaticEdgesVisualization::sendMarker() {
   publisher_.publish(last_markers_);
+  coordinate_publisher_.publish(last_coordinates_);
 }
 
 //}
@@ -109,7 +112,28 @@ void StaticEdgesVisualization::update() {
   marker.pose.orientation     = mrs_lib::AttitudeConverter(0, 0, 0);
   marker.scale.x              = 0.2;
 
+  visualization_msgs::msg::Marker safety_area_coordinates_marker;
+  safety_area_coordinates_marker.ns               = "coords_" + std::to_string(id_);
+  std::string safety_area_coordinates_frame_id    = "world_origin";
+  safety_area_coordinates_marker.header.frame_id  = uav_name_ + "/" + safety_area_coordinates_frame_id;
+  safety_area_coordinates_marker.type             = visualization_msgs::msg::Marker::TEXT_VIEW_FACING;
+  safety_area_coordinates_marker.action           = visualization_msgs::msg::Marker::ADD;
+  safety_area_coordinates_marker.color.a          = 1.0;
+  safety_area_coordinates_marker.scale.z          = 1.0;
+  safety_area_coordinates_marker.color.r          = 0.0;
+  safety_area_coordinates_marker.color.g          = 0.0;
+  safety_area_coordinates_marker.color.b          = 0.0;
+  safety_area_coordinates_marker.pose.orientation = mrs_lib::AttitudeConverter(0, 0, 0);
+
+
   // Iterating over polygon edges to publish the marker lines
+
+  // Clear all previous markers first
+  visualization_msgs::msg::Marker delete_marker;
+  delete_marker.action = visualization_msgs::msg::Marker::DELETEALL;
+  delete_marker.ns     = "coords_" + std::to_string(id_);
+  last_coordinates_.markers.clear();
+  last_coordinates_.markers.push_back(delete_marker);
 
   for (size_t i = 0; i < polygon.size() - 1; i++) { // -1 because the last is the same as the first one
     // Adding upper horizontal edges
@@ -147,10 +171,54 @@ void StaticEdgesVisualization::update() {
     // Adding vertical edges
     marker.points.push_back(upper_start);
     marker.points.push_back(lower_start);
+
+    // Adding text markers for coordinates
+    // Upper text marker
+    std::stringstream ss;
+    safety_area_coordinates_marker.id              = id_ * 1000 + i * 2;
+    safety_area_coordinates_marker.pose.position.x = upper_start.x;
+    safety_area_coordinates_marker.pose.position.y = upper_start.y;
+    safety_area_coordinates_marker.pose.position.z = upper_start.z + 0.5;
+
+    if (frame_id_ == "latlon_origin") {
+      ss << std::fixed << std::setprecision(6) << "lat: " << std::to_string(upper_start.y).substr(0, 9)
+         << "\n lon: " << std::to_string(upper_start.x).substr(0, 9) << "\n alt: " << std::to_string(upper_start.z).substr(0, 4);
+    } else {
+      ss << std::fixed << std::setprecision(2) << "x: " << std::to_string(upper_start.x).substr(0, 6)
+         << " m\n y: " << std::to_string(upper_start.y).substr(0, 6) << " m\n z: " << std::to_string(upper_start.z).substr(0, 6) << " m";
+    }
+
+    safety_area_coordinates_marker.text = ss.str();
+
+    last_coordinates_.markers.push_back(safety_area_coordinates_marker);
+
+    // Clearing stringstream for reuse
+    ss.str("");
+
+    // Lower text marker
+    safety_area_coordinates_marker.id              = id_ * 1000 + i * 2 + 1;
+    safety_area_coordinates_marker.pose.position.x = lower_start.x;
+    safety_area_coordinates_marker.pose.position.y = lower_start.y;
+    safety_area_coordinates_marker.pose.position.z = lower_start.z - 0.5;
+
+    if (frame_id_ == "latlon_origin") {
+      ss.str("");
+      ss << std::fixed << std::setprecision(6) << "lat: " << std::to_string(lower_start.y).substr(0, 9)
+         << "\n lon: " << std::to_string(lower_start.x).substr(0, 9) << "\n alt: " << std::to_string(lower_start.z).substr(0, 4);
+      safety_area_coordinates_marker.text = ss.str();
+    } else {
+      ss << std::fixed << std::setprecision(2) << "x: " << std::to_string(lower_start.x).substr(0, 6)
+         << " m\n y: " << std::to_string(lower_start.y).substr(0, 6) << " m\n z: " << std::to_string(lower_start.z).substr(0, 6) << " m";
+    }
+
+    safety_area_coordinates_marker.text = ss.str();
+
+    last_coordinates_.markers.push_back(safety_area_coordinates_marker);
   }
 
   last_markers_.markers[id_] = marker;
   publisher_.publish(last_markers_);
+  coordinate_publisher_.publish(last_coordinates_);
 }
 
 //}
@@ -159,7 +227,15 @@ void StaticEdgesVisualization::update() {
 
 void StaticEdgesVisualization::cleanup() {
   last_markers_.markers[id_].action = visualization_msgs::msg::Marker::DELETE;
-  is_active_                        = false;
+
+  visualization_msgs::msg::Marker delete_marker;
+  delete_marker.action = visualization_msgs::msg::Marker::DELETEALL;
+  delete_marker.ns     = "coords_" + std::to_string(id_);
+  last_coordinates_.markers.clear();
+  last_coordinates_.markers.push_back(delete_marker);
+  coordinate_publisher_.publish(last_coordinates_);
+
+  is_active_ = false;
 }
 
 //}
