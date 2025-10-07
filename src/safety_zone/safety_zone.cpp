@@ -8,14 +8,15 @@ namespace safety_zone {
 
 /* SafetyZone() //{ */
 // Constructor without obstacles
-SafetyZone::SafetyZone(Prism outer_border) : outer_border_(outer_border) {}
+SafetyZone::SafetyZone(std::unique_ptr<Prism> &&outer_border) : outer_border_(std::move(outer_border)) {}
+
 //}
 
 /* SafetyZone() //{ */
 // Constructor with obstacles
-SafetyZone::SafetyZone(Prism outer_border,
+SafetyZone::SafetyZone(std::unique_ptr<Prism> &&outer_border,
                        std::vector<std::unique_ptr<Prism>> &&obstacles)
-    : outer_border_(outer_border) {
+    : outer_border_(std::move(outer_border)) {
 
   for (auto &obstacle : obstacles) {
     obstacles_.emplace(next_obstacle_id_++, std::move(obstacle));
@@ -47,7 +48,7 @@ bool SafetyZone::isPointValid(const Point2d point) {
     return true;
   }
 
-  if (!outer_border_.isPointIn(point)) {
+  if (!outer_border_->isPointIn(point)) {
     return false;
   }
 
@@ -70,7 +71,7 @@ bool SafetyZone::isPointValid(const double px, const double py) {
     return true;
   }
   
-  if (!outer_border_.isPointIn(px, py)) {
+  if (!outer_border_->isPointIn(px, py)) {
     return false;
   }
 
@@ -93,7 +94,7 @@ bool SafetyZone::isPointValid(const Point3d point) {
     return true;
   }
 
-  if (!outer_border_.isPointIn(point)) {
+  if (!outer_border_->isPointIn(point)) {
     return false;
   }
 
@@ -117,7 +118,7 @@ bool SafetyZone::isPointValid(const double px, const double py,
     return true;
   }
 
-  if (!outer_border_.isPointIn(px, py, pz)) {
+  if (!outer_border_->isPointIn(px, py, pz)) {
     return false;
   }
 
@@ -199,7 +200,7 @@ bool SafetyZone::isPathValid(const Point2d start, const Point2d end) {
 /* getBorder() //{ */
 Prism SafetyZone::getBorder() const {
   std::scoped_lock lock(mutex_safety_zone_);
-  return outer_border_;
+  return *outer_border_;
 }
 //}
 

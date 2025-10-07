@@ -12,10 +12,10 @@ namespace safety_zone {
 
 class SafetyZone {
 public:
-  SafetyZone(Prism outer_border);
+  SafetyZone(std::unique_ptr<Prism> &&outer_border);
 
   // Cleaning the obstacles' memory is SafetyZone's responsibility
-  SafetyZone(Prism outer_border,
+  SafetyZone(std::unique_ptr<Prism> &&outer_border,
              std::vector<std::unique_ptr<Prism>> &&obstacles);
 
   ~SafetyZone() = default;
@@ -62,7 +62,7 @@ public:
 
 private:
   // TODO make this a unique_ptr
-  Prism outer_border_;
+  std::unique_ptr<Prism> outer_border_;
   std::map<int, std::unique_ptr<Prism>> obstacles_;
   // TODO need mutable?
   mutable std::mutex mutex_safety_zone_;
