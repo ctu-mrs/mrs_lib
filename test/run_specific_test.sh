@@ -9,10 +9,13 @@ while [ ! -e "build/COLCON_IGNORE" ]; do
   fi
 done
 
+export RMS_IMPLEMENTATION=rmw_fastrtps_cpp
+
 colcon test-result --delete-yes
 
-colcon test --packages-select mrs_lib --ctest-args -R 'param_provider'
+# colcon test --packages-select mrs_lib --ctest-args -R 'param_provider'
 # colcon test --packages-select mrs_lib --ctest-args -R 'param_loader'
 # colcon test --packages-select mrs_lib --ctest-args -R 'dynparam_mgr'
+colcon test --packages-select mrs_lib --ctest-args -R 'timeout_manager'
 
 colcon test-result --all --verbose
