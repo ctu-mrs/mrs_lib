@@ -103,7 +103,7 @@ TEST(TESTSuite, timeout_test)
   // Expected: (obj.max_dt_err) <= (obj.max_expected_dt_err), actual: 0.002796132 vs 0.001500000
   //
   //  until we solve this, I am just gonna artificially increase this delay by factor of 3
-  const ros::Duration max_expected_delay = 3*(update_period + spin_period);
+  const ros::Duration max_expected_delay = ros::Duration(3.0*(update_period + spin_period).toSec());
 
   std::array<ros::Duration, 4> tos = { ros::Duration{ 0.1 }, ros::Duration{ 0.01 }, ros::Duration{ 0.001 }, ros::Duration{ 0.001 } };
 
