@@ -34,12 +34,13 @@ protected:
     return node_;
   }
 
-  rclcpp::Node::SharedPtr node_;
-
 public:
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr get_node_base_interface() {
     return node_->get_node_base_interface();
   }
+
+private:
+  rclcpp::Node::SharedPtr node_;
 };
 
 }  // namespace mrs_lib
