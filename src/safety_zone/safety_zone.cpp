@@ -68,7 +68,6 @@ bool SafetyZone::isPointValid(const double px, const double py) {
   std::scoped_lock lock(mutex_safety_zone_);
 
   if (!safety_zone_enabled_) {
-    std::cout << "safety zone disabled" << std::endl;
     return true;
   }
 
@@ -114,7 +113,6 @@ bool SafetyZone::isPointValid(const double px, const double py, const double pz)
   std::scoped_lock lock(mutex_safety_zone_);
 
   if (!safety_zone_enabled_) {
-    std::cout << "safety zone disabled" << std::endl;
     return true;
   }
 
