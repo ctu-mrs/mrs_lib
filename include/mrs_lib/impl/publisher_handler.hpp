@@ -148,7 +148,7 @@ unsigned int PublisherHandler_impl<TopicType>::getNumSubscribers(void) {
   {
     std::scoped_lock lock(mutex_publisher_);
 
-    return publisher_.getNumSubscribers();
+    return publisher_->get_subscription_count();
   }
 }
 
