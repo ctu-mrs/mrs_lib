@@ -68,9 +68,8 @@ StaticEdgesVisualization::~StaticEdgesVisualization() {
 
 void StaticEdgesVisualization::init() {
 
-  // TODO remap topic names
-  publisher_            = mrs_lib::PublisherHandler<visualization_msgs::msg::MarkerArray>(node_, "safety_area_static_markers_out");
-  coordinate_publisher_ = mrs_lib::PublisherHandler<visualization_msgs::msg::MarkerArray>(node_, "safety_area_coordinates_out");
+  publisher_            = mrs_lib::PublisherHandler<visualization_msgs::msg::MarkerArray>(node_, "~/static_markers_out");
+  coordinate_publisher_ = mrs_lib::PublisherHandler<visualization_msgs::msg::MarkerArray>(node_, "~/static_markers_coordinates_out");
   prism_.subscribe(this);
   update();
   is_active_ = true; // is_active_ flag inherited from Subscriber class defined in safety_zone::Prism
