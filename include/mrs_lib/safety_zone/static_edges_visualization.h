@@ -38,7 +38,6 @@ public:
 private:
   void init();
   void sendMarker();
-  std::tuple<bool, geometry_msgs::msg::Point> transformPoint(geometry_msgs::msg::Point point, std::string &frame_id, geometry_msgs::msg::TransformStamped tf);
 
   // It is required for generating static marker names,
   // because their id's must be unique on topic

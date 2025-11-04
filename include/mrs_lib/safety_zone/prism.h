@@ -96,18 +96,18 @@ public:
   void unsubscribe(Subscriber *entity);
 
   std::vector<Point2d> getPoints();
-  double getMaxZ();
-  double getMinZ();
-  std::string getHorizontalFrame();
-  std::string getVerticalFrame();
+  double getMaxZ() const;
+  double getMinZ() const;
+  std::string getHorizontalFrame() const;
+  std::string getVerticalFrame() const;
 
-  Polygon2D getPolygon();
+  Polygon2D getPolygon() const;
 
   // Returns number of vertices in the polygon of the prism.
-  unsigned int getVerticesNum();
+  unsigned int getNumVertices() const;
 
   // Returns the centroid of the polygon of the prism.
-  Point2d getCenter();
+  Point2d getCenter() const;
 
   void setMaxZ(const double value);
 
@@ -139,16 +139,16 @@ public:
   void deleteVertex(const unsigned int index);
 
   // Overload with Point3d
-  bool isPointIn(const Point3d &point);
+  bool isPointIn(const Point3d &point) const;
 
   // Overload with 3D point (double,double,double)
-  bool isPointIn(const double x, const double y, const double z);
+  bool isPointIn(const double x, const double y, const double z) const;
 
   // Overload with Point2d
-  bool isPointIn(const Point2d &point);
+  bool isPointIn(const Point2d &point) const;
 
   // Overload with 2D point (double,double)
-  bool isPointIn(const double x, const double y);
+  bool isPointIn(const double x, const double y) const;
 
   // Helper method for text representation
   // void accept(Visitor &visitor);

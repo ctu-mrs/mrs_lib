@@ -27,26 +27,26 @@ public:
   bool safetyZoneEnabled(void);
 
   // Controls, if 3d point lies within the prism
-  bool isPointValid(const Point3d point);
+  bool isPointValid(const Point3d &point);
 
-  // Convinient version of isPointIn(Point3d point)
+  // Convenient version of isPointIn(Point3d point)
   bool isPointValid(const double px, const double py, const double pz);
 
   // Controls, if 2d point lies within the polygon of prism (i.e. ignores max_z
   // and min_z of all prisms)
-  bool isPointValid(const Point2d point);
+  bool isPointValid(const Point2d &point);
 
-  // Convinient version of isPointIn(Point2d point)
+  // Convenient version of isPointIn(Point2d point)
   bool isPointValid(const double px, const double py);
 
   // The function divides the path into smaller segments (on average 20 segments
   // per meter) and validates each intermediate point to determine if the entire
   // path is valid.
-  bool isPathValid(const Point3d start, const Point3d end);
+  bool isPathValid(const Point3d &start, const Point3d &end);
 
   // 2d version of isPathValid(const Point3d start, const Point3d end), i.e.
   // ignores max_z and min_z of all prisms
-  bool isPathValid(const Point2d start, const Point2d end);
+  bool isPathValid(const Point2d &start, const Point2d &end);
 
   Prism getBorder() const;
 
@@ -62,13 +62,11 @@ public:
   // void accept(Visitor &visitor);
 
 private:
-  // TODO make this a unique_ptr
   std::unique_ptr<Prism> outer_border_;
   std::map<int, std::unique_ptr<Prism>> obstacles_;
-  // TODO need mutable?
   mutable std::mutex mutex_safety_zone_;
   int next_obstacle_id_ = 0;
-  bool safety_zone_enabled_;
+  bool safety_zone_enabled_ = false;
 
   // Used to discretize between start and end for the path validation
   int _discretization_steps_ = 20;

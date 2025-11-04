@@ -10,7 +10,7 @@ namespace safety_zone
 
 /* Prism() //{ */
 Prism::Prism(const std::vector<Point2d> &points, const double max_z, const double min_z)
-    : polygon_(), min_z_(std::min(min_z, max_z_)), max_z_(std::max(min_z, max_z)) {
+    : polygon_(), min_z_(std::min(min_z, max_z)), max_z_(std::max(min_z, max_z)) {
   if (points.size() < 3)
     throw std::invalid_argument("A valid polygon must have at least three points.");
 
@@ -39,7 +39,7 @@ Prism::Prism(const std::vector<Point2d> &points, const double max_z, const doubl
 //}
 
 Prism::Prism(const std::vector<Point2d> &points, const double max_z, const double min_z, const std::string &horizontal_frame, const std::string &vertical_frame)
-    : polygon_(), min_z_(std::min(min_z, max_z_)), max_z_(std::max(min_z, max_z)), horizontal_frame_(horizontal_frame), vertical_frame_(vertical_frame) {
+    : polygon_(), min_z_(std::min(min_z, max_z)), max_z_(std::max(min_z, max_z)), horizontal_frame_(horizontal_frame), vertical_frame_(vertical_frame) {
   if (points.size() < 3)
     throw std::invalid_argument("A valid polygon must have at least three points.");
   // Append points into polygon
@@ -242,7 +242,7 @@ void Prism::move(const Point3d &adjustment) {
   bool do_notify = false;
 
   double dz = adjustment.get<2>();
-  if (dz != 0) {
+  if (dz != 0.0) {
     do_notify = true;
     max_z_ += dz;
     min_z_ += dz;
@@ -251,7 +251,7 @@ void Prism::move(const Point3d &adjustment) {
   double dx            = adjustment.get<0>();
   double dy            = adjustment.get<1>();
   Point2d adjustment2d = Point2d{dx, dy};
-  if (dx != 0 || dy != 0) {
+  if (dx != 0.0 || dy != 0.0) {
     do_notify        = true;
     auto &outer_ring = polygon_.outer();
     for (size_t i = 0; i < outer_ring.size(); i++) {
@@ -288,7 +288,7 @@ void Prism::rotate(const double alpha) {
 //}
 
 /* isPointIn(Point3d point) //{ */
-bool Prism::isPointIn(const Point3d &point) {
+bool Prism::isPointIn(const Point3d &point) const {
   Point2d point2d;
   bg::set<0>(point2d, bg::get<0>(point));
   bg::set<1>(point2d, bg::get<1>(point));
@@ -301,7 +301,7 @@ bool Prism::isPointIn(const Point3d &point) {
 //}
 
 /* isPointIn(double x, double y, double z) //{ */
-bool Prism::isPointIn(const double x, const double y, const double z) {
+bool Prism::isPointIn(const double x, const double y, const double z) const {
   // Fill in 3d point and call point3d function
   Point3d point;
   bg::set<0>(point, x);
@@ -313,13 +313,13 @@ bool Prism::isPointIn(const double x, const double y, const double z) {
 //}
 
 /* isPointIn(Point2d point) //{ */
-bool Prism::isPointIn(const Point2d &point) {
+bool Prism::isPointIn(const Point2d &point) const {
   return bg::within(point, polygon_);
 }
 //}
 
 /* isPointIn(double x, double y) //{ */
-bool Prism::isPointIn(const double x, const double y) {
+bool Prism::isPointIn(const double x, const double y) const {
   Point2d point;
   bg::set<0>(point, x);
   bg::set<1>(point, y);
@@ -335,7 +335,7 @@ bool Prism::isPointIn(const double x, const double y) {
 //}
 
 /* getCenter() //{ */
-Point2d Prism::getCenter() {
+Point2d Prism::getCenter() const {
   Point2d res;
   boost::geometry::centroid(polygon_, res);
   return res;
@@ -361,37 +361,37 @@ std::vector<Point2d> Prism::getPoints() {
 //}
 
 /* getMaxZ() //{ */
-double Prism::getMaxZ() {
+double Prism::getMaxZ() const {
   return max_z_;
 }
 //}
 
 /* getMinZ //{ */
-double Prism::getMinZ() {
+double Prism::getMinZ() const {
   return min_z_;
 }
 //}
 
 /* getHorizontalFrame() //{ */
-std::string Prism::getHorizontalFrame() {
+std::string Prism::getHorizontalFrame() const {
   return horizontal_frame_;
 }
 //}
 
 ///* getVerticalFrame() //{ */
-std::string Prism::getVerticalFrame() {
+std::string Prism::getVerticalFrame() const {
   return vertical_frame_;
 }
 //}
 
 /* getPolygon2D() //{ */
-Polygon2D Prism::getPolygon() {
+Polygon2D Prism::getPolygon() const {
   return polygon_;
 }
 //}
 
 /* getVerticesNum() //{ */
-unsigned int Prism::getVerticesNum() {
+unsigned int Prism::getNumVertices() const {
   return polygon_.outer().size() - 1;
 }
 //}

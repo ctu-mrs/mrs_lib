@@ -28,21 +28,19 @@ SafetyZone::SafetyZone(std::unique_ptr<Prism> &&outer_border, std::vector<std::u
 /* enableSafetyZone() //{ */
 void SafetyZone::enableSafetyZone(const bool enable) {
   std::scoped_lock lock(mutex_safety_zone_);
-  enable ? safety_zone_enabled_ = true : safety_zone_enabled_ = false;
+  safety_zone_enabled_ = enable;
 }
 //}
 
 /* safetyZoneEnabled() //{ */
 bool SafetyZone::safetyZoneEnabled(void) {
-  bool result;
-  safety_zone_enabled_ ? result = true : result = false;
-
-  return result;
+  std::scoped_lock lock(mutex_safety_zone_);
+  return safety_zone_enabled_;
 }
 //}
 
 /* isPointValid(Point2d) //{ */
-bool SafetyZone::isPointValid(const Point2d point) {
+bool SafetyZone::isPointValid(const Point2d &point) {
   std::scoped_lock lock(mutex_safety_zone_);
 
   if (!safety_zone_enabled_) {
@@ -87,7 +85,7 @@ bool SafetyZone::isPointValid(const double px, const double py) {
 
 /* isPointValid() //{ */
 // Overload for Point3d
-bool SafetyZone::isPointValid(const Point3d point) {
+bool SafetyZone::isPointValid(const Point3d &point) {
   std::scoped_lock lock(mutex_safety_zone_);
 
   if (!safety_zone_enabled_) {
@@ -131,7 +129,7 @@ bool SafetyZone::isPointValid(const double px, const double py, const double pz)
 //}
 
 /* isPathValid() //{ */
-bool SafetyZone::isPathValid(const Point3d start, const Point3d end) {
+bool SafetyZone::isPathValid(const Point3d &start, const Point3d &end) {
 
   if (!safety_zone_enabled_) {
     return true;
@@ -142,7 +140,7 @@ bool SafetyZone::isPathValid(const Point3d start, const Point3d end) {
   Point3d current_point = start;
   Point3d increment     = end;
   bg::subtract_point(increment, start); // Calculate a vector from start to end
-  bg::divide_value(increment, count);   // Obtaing the incremental step vector
+  bg::divide_value(increment, count);   // Obtain the incremental step vector
   for (int i = 0; i < count; i++) {
     if (!isPointValid(current_point)) {
       return false;
@@ -157,7 +155,7 @@ bool SafetyZone::isPathValid(const Point3d start, const Point3d end) {
 
 /* isPathValid() //{ */
 
-bool SafetyZone::isPathValid(const Point2d start, const Point2d end) {
+bool SafetyZone::isPathValid(const Point2d &start, const Point2d &end) {
 
   if (!safety_zone_enabled_) {
     return true;
@@ -168,7 +166,7 @@ bool SafetyZone::isPathValid(const Point2d start, const Point2d end) {
   Point2d current_point = start;
   Point2d increment     = end;
   bg::subtract_point(increment, start); // Calculate a vector from start to end
-  bg::divide_value(increment, count);   // Obtaing the incremental step vector
+  bg::divide_value(increment, count);   // Obtain the incremental step vector
   for (int i = 0; i < count; i++) {
     if (!isPointValid(current_point)) {
       return false;
@@ -212,11 +210,11 @@ Prism SafetyZone::getObstacle(const int index) const {
   std::scoped_lock lock(mutex_safety_zone_);
   auto it = obstacles_.find(index);
 
-  if (it != obstacles_.end()) {
+  if (it == obstacles_.end()) {
+    throw std::out_of_range("No obstacle with the given index");
+  } else {
     return *(it->second);
   }
-  throw std::out_of_range("No obstacle with the given index");
-  return Prism();
 }
 //}
 
@@ -226,15 +224,20 @@ int SafetyZone::addObstacle(std::unique_ptr<Prism> obstacle) {
   std::scoped_lock lock(mutex_safety_zone_);
   int current_id = ++next_obstacle_id_;
   obstacles_.emplace(current_id, std::move(obstacle));
-  return next_obstacle_id_;
+  return current_id;
 }
 //}
 
 /* deleteObstacle() //{ */
 void SafetyZone::deleteObstacle(int id) {
   std::scoped_lock lock(mutex_safety_zone_);
+  // Check if obstacle with given id exists
   auto it = obstacles_.find(id);
-  obstacles_.erase(it); // this will automatically delete the obstacle in the map
+  if (it == obstacles_.end()) {
+    throw std::out_of_range("No obstacle with the given id");
+  } else {
+    obstacles_.erase(it);
+  }
 }
 //}
 
