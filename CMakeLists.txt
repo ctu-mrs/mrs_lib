@@ -70,6 +70,8 @@ set(LIBRARIES
   MrsLib_IIRFilter
   MrsLib_NotchFilter
   MrsLib_Utils
+  MrsLib_ErrorGraph
+  MrsLib_ErrorPublisher
   )
 
 foreach(DEP IN LISTS DEPENDENCIES)
@@ -380,6 +382,26 @@ ament_target_dependencies(subscribe_handler_example
   rclcpp
   std_msgs
   )
+
+# error graph
+add_library(MrsLib_ErrorGraph SHARED
+  src/errorgraph/errorgraph.cpp
+  )
+
+ament_target_dependencies(MrsLib_ErrorGraph
+  rclcpp
+  mrs_msgs
+)
+
+# error publisher
+add_library(MrsLib_ErrorPublisher SHARED
+  src/errorgraph/error_publisher.cpp
+)
+
+ament_target_dependencies(MrsLib_ErrorPublisher
+  rclcpp
+  mrs_msgs
+)
 
 ## --------------------------------------------------------------
 ## |                           Testing                          |
