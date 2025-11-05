@@ -23,7 +23,7 @@ IirFilter::IirFilter(const std::vector<double>& a_in, const std::vector<double>&
     
   ROS_INFO_STREAM("a: " << a_[i] << " b: " << b_[i]);
   }
-  ROS_INFO("filter order : %d",order_);
+  ROS_INFO("filter order : %lu", order_);
   ROS_INFO("[%s]: IIR filter initialized!", ros::this_node::getName().c_str());
 }
 

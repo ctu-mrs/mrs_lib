@@ -1,5 +1,4 @@
-#ifndef PARAM_PROVIDER_HPP
-#define PARAM_PROVIDER_HPP
+#pragma once
 
 #include <mrs_lib/param_provider.h>
 
@@ -23,13 +22,14 @@ namespace mrs_lib
   bool ParamProvider::getParamImpl(const std::string& param_name, T& value_out) const
   {
     {
-      const auto found_node = findYamlNode(param_name);
-      if (found_node.has_value())
+      const auto found_node_opt = findYamlNode(param_name);
+      if (found_node_opt.has_value())
       {
+        const auto& found_node = found_node_opt.value();
         try
         {
           // try catch is the only type-generic option...
-          value_out = found_node.value().as<T>();
+          value_out = applyTag<T>(found_node);
           return true;
         }
         catch (const YAML::BadConversion& e)
@@ -43,6 +43,21 @@ namespace mrs_lib
 
     return false;
   }
-}
 
-#endif // PARAM_PROVIDER_HPP
+  template<typename T> 
+  inline T ParamProvider::degrees2radians(const T degrees)
+  {
+    return degrees / T(180) * T(M_PI);
+  }
+
+  template<typename T>
+  T ParamProvider::applyTag(const YAML::Node& node) const
+  {
+    if constexpr (std::is_floating_point_v<T>)
+    {
+      if (node.Tag() == "!degrees")
+        return degrees2radians(node.as<T>());
+    }
+    return node.as<T>();
+  }
+}

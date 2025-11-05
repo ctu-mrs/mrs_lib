@@ -4,8 +4,7 @@
      \author Matouš Vrba - vrbamato@fel.cvut.cz
  */
 
-#ifndef PARAM_PROVIDER_H
-#define PARAM_PROVIDER_H
+#pragma once
 
 #include <optional>
 
@@ -86,11 +85,15 @@ namespace mrs_lib
       template <typename T>
       bool getParamImpl(const std::string& param_name, T& value_out) const;
 
+      template<typename T> 
+      static inline T degrees2radians(const T degrees);
+
+      template<typename T> 
+      T applyTag(const YAML::Node& node) const;
+
       std::optional<YAML::Node> findYamlNode(const std::string& param_name) const;
   };
 //}
 }
 
 #include "mrs_lib/impl/param_provider.hpp"
-
-#endif // PARAM_PROVIDER_H

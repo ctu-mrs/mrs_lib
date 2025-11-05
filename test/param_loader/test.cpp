@@ -216,6 +216,17 @@ TEST(TESTSuite, static_params_test) {
 
   EXPECT_FALSE(pl.loadParam("static_param_asdf", static_param));
   EXPECT_FALSE(pl.loadedSuccessfully());
+
+  float tagged_param_float;
+  EXPECT_TRUE(pl.loadParam("with_tag", tagged_param_float));
+  EXPECT_TRUE(pl.loadedSuccessfully());
+  EXPECT_EQ(tagged_param_float, float(M_PI));
+
+  double tagged_param_double;
+  EXPECT_TRUE(pl.loadParamReusable("with_tag", tagged_param_double));
+  EXPECT_TRUE(pl.loadedSuccessfully());
+  EXPECT_EQ(tagged_param_double, M_PI);
+
 }
 
 //}
