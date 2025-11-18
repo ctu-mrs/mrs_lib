@@ -21,7 +21,7 @@ ErrorPublisher::ErrorPublisher(const rclcpp::Node::SharedPtr node, const rclcpp:
   {
     std::function<void()> callback_fcn = std::bind(&ErrorPublisher::timerPublisher, this);
 
-    timer_publisher_ = std::make_shared<TimerType>(timer_opts_start, rclcpp::Rate(1.0, clock_), callback_fcn);
+    timer_publisher_ = std::make_shared<TimerType>(timer_opts_start, publish_period, callback_fcn);
   }
 };
 
@@ -29,7 +29,6 @@ void ErrorPublisher::flushAndShutdown() {
   publishErrors();
   timer_publisher_ = {};
   clock_->sleep_for(std::chrono::duration<double>(1.0));
-
   rclcpp::shutdown();
   exit(1);
 }
