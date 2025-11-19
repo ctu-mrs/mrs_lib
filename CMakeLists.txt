@@ -14,7 +14,7 @@ add_definitions("-Wpedantic")
 set(USE_ROS_TIMER 0)
 
 if(${USE_ROS_TIMER})
-  MESSAGE(WARNING "[mrs_uav_managers]: Compiling with ROS Timers. This can cause high CPU load in runtime.")
+  MESSAGE(WARNING "[mrs_lib]: Compiling with ROS Timers. This can cause high CPU load in runtime.")
 endif()
 
 if(ENABLE_COVERAGE)
@@ -197,7 +197,6 @@ add_executable(dynparam_tests
   src/dynparam_mgr/dynparam_tests.cpp
 )
 
-# yaml-cpp does not use standart naming conventions which create issues with ament_target_dependencies()
 target_link_libraries(dynparam_tests
   MrsLib_DynparamMgr
   MrsLib_ParamProvider
@@ -364,6 +363,8 @@ ament_target_dependencies(MrsLib_BatchVisualizer
   Eigen3
 )
 
+## | -------------------- export interfaces ------------------- |
+
 foreach(library IN LISTS LIBRARIES)
   target_include_directories(${library}
     PUBLIC
@@ -373,27 +374,35 @@ foreach(library IN LISTS LIBRARIES)
 endforeach()
 
 add_library(mrs_lib_mrs_lib INTERFACE)
+
 add_library(mrs_lib::mrs_lib ALIAS mrs_lib_mrs_lib)
+
 set_target_properties(mrs_lib_mrs_lib
   PROPERTIES
     EXPORT_NAME mrs_lib
     OUTPUT_NAME mrs_lib
 )
+
 target_link_libraries(mrs_lib_mrs_lib
   INTERFACE
     ${LIBRARIES}
 )
+
 target_include_directories(mrs_lib_mrs_lib
   INTERFACE
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
 )
 
+## | --------------- subscribe handler examples --------------- |
+
+# TODO why is it built from all these different files?
 add_executable(subscribe_handler_example
   src/subscriber_handler/example.cpp
   src/timeout_manager/timeout_manager.cpp
   src/timer_handler/timer_handler.cpp
 )
+
 target_link_libraries(subscribe_handler_example
   PRIVATE
     rclcpp::rclcpp
