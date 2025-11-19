@@ -7,6 +7,8 @@ function(add_ros_isolated_launch_test path)
   add_launch_test("${path}" RUNNER "${RUNNER}" ${ARGN})
 endfunction()
 
+link_libraries(mrs_lib::mrs_lib)
+
 add_subdirectory(./geometry)
 
 add_subdirectory(./utils)

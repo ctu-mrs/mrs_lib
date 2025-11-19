@@ -5,6 +5,7 @@
 #include <memory>
 #include <mrs_lib/safety_zone/prism.h>
 #include <vector>
+#include <Eigen/Dense>
 
 namespace mrs_lib
 {
