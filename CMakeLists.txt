@@ -46,6 +46,7 @@ set(DEPENDENCIES
   visualization_msgs
   Eigen3
   yaml-cpp
+  Boost
 )
 
 set(LIBRARIES
@@ -322,6 +323,7 @@ ament_target_dependencies(MrsLib_SafetyZone
   geometry_msgs
   visualization_msgs
   Eigen3
+  Boost
 )
 
 target_link_libraries(MrsLib_SafetyZone
