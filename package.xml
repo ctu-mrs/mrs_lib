@@ -7,7 +7,7 @@
   <description>MRS C++ libraries</description>
   <maintainer email="matous.vrba@fel.cvut.cz">Matous Vrba</maintainer>
   <maintainer email="tomas.baca@fel.cvut.cz">Tomas Baca</maintainer>
-  <maintainer email="afzalhmd14@gmail.com">Tomas Baca</maintainer>
+  <maintainer email="afzalhmd14@gmail.com">Afzal Ahmad</maintainer>
 
   <license>BSD 3-Clause</license>
 
@@ -21,6 +21,7 @@
   <depend>tf2_geometry_msgs</depend>
   <depend>pcl_ros</depend>
   <depend>libopencv-dev</depend>
+  <depend>libboost-dev</depend>
   <depend>visualization_msgs</depend>
   <depend>eigen</depend>
   <depend>yaml-cpp</depend>
