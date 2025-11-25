@@ -253,16 +253,17 @@ namespace mrs_lib
   {
     T loaded_value;
   
-    const auto found_node = findYamlNode(resolved_name);
-    if (!found_node.has_value())
+    const auto found_node_opt = findYamlNode(resolved_name);
+    if (!found_node_opt.has_value())
     {
       return false;
     }
-  
+
+    const auto& found_node = found_node_opt.value();
     try
     {
       // try catch is the only type-generic option...
-      loaded_value = found_node.value().as<T>();
+      loaded_value = applyTag<T>(found_node);
     }
     catch (const YAML::BadConversion& e)
     {
@@ -293,6 +294,27 @@ namespace mrs_lib
     value_out = loaded_value;
     // the parameter value was successfully loaded and the parameter was declared if required, everything is done, return true
     return true;
+  }
+  //}
+
+  /* degrees2radians() method //{ */
+  template<typename T>
+  inline T ParamProvider::degrees2radians(const T degrees)
+  {
+    return degrees / T(180) * T(M_PI);
+  }
+  //}
+
+  /* applyTag() method //{ */
+  template<typename T>
+  T ParamProvider::applyTag(const YAML::Node& node) const
+  {
+    if constexpr (std::is_floating_point_v<T>)
+    {
+      if (node.Tag() == "!degrees")
+        return degrees2radians(node.as<T>());
+    }
+    return node.as<T>();
   }
   //}
 

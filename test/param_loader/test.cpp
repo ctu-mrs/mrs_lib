@@ -109,6 +109,10 @@ TEST_F(Test, param_loader_load_from_file) {
   std::vector<Eigen::MatrixXd> loaded_nd_matrix = pl.loadMatrixArray2("test_param_nd_matrix");
   EXPECT_TRUE(pl.loadedSuccessfully());
 
+  const auto loaded_radians = pl.loadParam2<double>("test_with_tag");
+  EXPECT_TRUE(pl.loadedSuccessfully());
+  EXPECT_LE(std::abs(loaded_radians - M_PI), 1e-6);
+
   if (pl.loadedSuccessfully()) {
     RCLCPP_INFO(node_->get_logger(), "[%s]: parameter loaded OK", node_->get_name());
     int it = 0;

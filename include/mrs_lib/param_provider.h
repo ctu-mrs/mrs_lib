@@ -291,6 +291,12 @@ private:
 
   std::optional<YAML::Node> findYamlNode(const resolved_name_t& resolved_name) const;
 
+  template<typename T>
+  static inline T degrees2radians(const T degrees);
+
+  template<typename T>
+  T applyTag(const YAML::Node& node) const;
+
   template <typename T>
   bool ranges_match(const rcl_interfaces::msg::ParameterDescriptor& descriptor, const range_t<T>& declare_range) const;
 
