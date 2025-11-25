@@ -524,6 +524,7 @@ namespace mrs_lib
 
     template <class T>
     std::optional<T> transformImpl(const geometry_msgs::TransformStamped& tf, const T& what);
+    std::optional<mrs_msgs::Reference> transformImpl(const geometry_msgs::TransformStamped& tf, const mrs_msgs::Reference& what);
     std::optional<mrs_msgs::ReferenceStamped> transformImpl(const geometry_msgs::TransformStamped& tf, const mrs_msgs::ReferenceStamped& what);
     std::optional<Eigen::Vector3d> transformImpl(const geometry_msgs::TransformStamped& tf, const Eigen::Vector3d& what);
 

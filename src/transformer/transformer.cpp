@@ -15,6 +15,8 @@ template std::optional<test_t> mrs_lib::Transformer::transformSingle<test_t>(con
 template std::optional<test_t::Ptr> mrs_lib::Transformer::transformSingle<test_t>(const test_t::Ptr& what, const std::string& to_frame);
 template std::optional<test_t::Ptr> mrs_lib::Transformer::transformSingle<test_t>(const test_t::ConstPtr& what, const std::string& to_frame);
 
+template std::optional<mrs_msgs::Reference> mrs_lib::Transformer::transformSingle<mrs_msgs::Reference>(const std::string& from_frame, const mrs_msgs::Reference& what, const std::string& to_frame, const ros::Time& time_stamp = ros::Time(0));
+
 namespace tf2
 {
   template <>
@@ -251,30 +253,43 @@ namespace mrs_lib
   
   std::optional<mrs_msgs::ReferenceStamped> Transformer::transformImpl(const geometry_msgs::TransformStamped& tf, const mrs_msgs::ReferenceStamped& what)
   {
-    // create a pose message
-    geometry_msgs::PoseStamped pose;
-    pose.header = what.header;
+    // try to transform the pose message
+    const auto ref_tfd_opt = transformImpl(tf, what.reference);
+    if (!ref_tfd_opt.has_value())
+      return std::nullopt;
   
-    pose.pose.position.x = what.reference.position.x;
-    pose.pose.position.y = what.reference.position.y;
-    pose.pose.position.z = what.reference.position.z;
-    pose.pose.orientation = geometry::fromEigen(geometry::quaternionFromHeading(what.reference.heading));
+    mrs_msgs::ReferenceStamped ret;
+    ret.header = what.header;
+    ret.header.frame_id = frame_to(tf);
+    ret.reference = ref_tfd_opt.value();
+    return ret;
+  }
+  
+  //}
+
+  /* specialization for mrs_msgs::Reference //{ */
+  
+  std::optional<mrs_msgs::Reference> Transformer::transformImpl(const geometry_msgs::TransformStamped& tf, const mrs_msgs::Reference& what)
+  {
+    // create a pose message
+    geometry_msgs::Pose pose;
+  
+    pose.position.x = what.position.x;
+    pose.position.y = what.position.y;
+    pose.position.z = what.position.z;
+    pose.orientation = geometry::fromEigen(geometry::quaternionFromHeading(what.heading));
   
     // try to transform the pose message
     const auto pose_opt = transformImpl(tf, pose);
     if (!pose_opt.has_value())
       return std::nullopt;
-    // overwrite the pose with it's transformed value
+    // overwrite the pose with its transformed value
     pose = pose_opt.value();
   
-    mrs_msgs::ReferenceStamped ret;
-    ret.header = pose.header;
-  
+    mrs_msgs::Reference ret;
     // copy the new transformed data back
-    ret.reference.position.x = pose.pose.position.x;
-    ret.reference.position.y = pose.pose.position.y;
-    ret.reference.position.z = pose.pose.position.z;
-    ret.reference.heading = geometry::headingFromRot(geometry::toEigen(pose.pose.orientation));
+    ret.position = pose.position;
+    ret.heading = geometry::headingFromRot(geometry::toEigen(pose.orientation));
     return ret;
   }
   
