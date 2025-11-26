@@ -53,7 +53,7 @@ private:
   mrs_lib::PublisherHandler<visualization_msgs::msg::MarkerArray> publisher_;
   mrs_lib::PublisherHandler<visualization_msgs::msg::MarkerArray> coordinate_publisher_;
   rclcpp::TimerBase::SharedPtr timer_;
-  static visualization_msgs::msg::MarkerArray last_markers_;
+  visualization_msgs::msg::MarkerArray last_markers_;
   visualization_msgs::msg::MarkerArray last_coordinates_;
 
 }; // class StaticEdgesVisualization

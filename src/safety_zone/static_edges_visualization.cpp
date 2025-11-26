@@ -7,16 +7,16 @@ namespace mrs_lib
 {
 
 std::atomic<int> StaticEdgesVisualization::id_generator_                     = 0;
-visualization_msgs::msg::MarkerArray StaticEdgesVisualization::last_markers_ = visualization_msgs::msg::MarkerArray();
+// visualization_msgs::msg::MarkerArray StaticEdgesVisualization::last_markers_ = visualization_msgs::msg::MarkerArray();
 
 /* StaticEdgesVisualization(prism) //{ */
 
 StaticEdgesVisualization::StaticEdgesVisualization(safety_zone::Prism prism, const std::string &uav_name, const std::string &frame_id,
                                                    const rclcpp::Node::SharedPtr node, const double &markers_update_rate)
-    : id_(id_generator_++), prism_(prism), uav_name_(uav_name), frame_id_(frame_id), node_(node) {
+    : id_(id_generator_++), prism_(prism), uav_name_(uav_name), frame_id_(frame_id), node_(node), last_markers_() {
+
 
   timer_ = node_->create_wall_timer(std::chrono::duration<double>(markers_update_rate), [this]() { sendMarker(); });
-  last_markers_.markers.push_back(visualization_msgs::msg::Marker());
   init();
 }
 
@@ -27,11 +27,10 @@ StaticEdgesVisualization::StaticEdgesVisualization(safety_zone::Prism prism, con
 StaticEdgesVisualization::StaticEdgesVisualization(safety_zone::SafetyZone *safety_zone, const int &obstacle_id, const std::string &uav_name,
                                                    const std::string &frame_id, const rclcpp::Node::SharedPtr node, const double &markers_update_rate)
 
-    : id_(id_generator_++), prism_(safety_zone->getObstacle(obstacle_id)), uav_name_(uav_name), frame_id_(frame_id), node_(node)
+    : id_(id_generator_++), prism_(safety_zone->getObstacle(obstacle_id)), uav_name_(uav_name), frame_id_(frame_id), node_(node), last_markers_()
 
 {
   timer_ = node_->create_wall_timer(std::chrono::duration<double>(markers_update_rate), [this]() { sendMarker(); });
-  last_markers_.markers.push_back(visualization_msgs::msg::Marker());
   init();
 }
 
@@ -42,12 +41,9 @@ StaticEdgesVisualization::StaticEdgesVisualization(safety_zone::SafetyZone *safe
 StaticEdgesVisualization::StaticEdgesVisualization(safety_zone::SafetyZone *safety_zone, const std::string &uav_name, const std::string &frame_id,
                                                    const rclcpp::Node::SharedPtr node, const double &markers_update_rate)
 
-    : id_(id_generator_++), prism_(safety_zone->getBorder()), uav_name_(uav_name), frame_id_(frame_id), node_(node) {
-
-  last_markers_.markers.push_back(visualization_msgs::msg::Marker());
+    : id_(id_generator_++), prism_(safety_zone->getBorder()), uav_name_(uav_name), frame_id_(frame_id), node_(node), last_markers_() {
 
   timer_ = node_->create_wall_timer(std::chrono::duration<double>(markers_update_rate), [this]() { sendMarker(); });
-
   init();
 }
 
@@ -100,6 +96,7 @@ void StaticEdgesVisualization::update() {
 
   visualization_msgs::msg::Marker marker;
   marker.id                   = id_;
+  marker.ns                   = "static_edges_" + std::to_string(id_); 
   std::string target_frame_id = "world_origin";
   marker.header.frame_id      = uav_name_ + "/" + target_frame_id;
   marker.type                 = visualization_msgs::msg::Marker::LINE_LIST;
@@ -112,7 +109,7 @@ void StaticEdgesVisualization::update() {
   marker.scale.x              = 0.2;
 
   visualization_msgs::msg::Marker safety_area_coordinates_marker;
-  safety_area_coordinates_marker.ns               = "coords_" + std::to_string(id_);
+  safety_area_coordinates_marker.ns               = "coords_" + std::to_string(id_);; 
   std::string safety_area_coordinates_frame_id    = "world_origin";
   safety_area_coordinates_marker.header.frame_id  = uav_name_ + "/" + safety_area_coordinates_frame_id;
   safety_area_coordinates_marker.type             = visualization_msgs::msg::Marker::TEXT_VIEW_FACING;
@@ -124,15 +121,8 @@ void StaticEdgesVisualization::update() {
   safety_area_coordinates_marker.color.b          = 0.0;
   safety_area_coordinates_marker.pose.orientation = mrs_lib::AttitudeConverter(0, 0, 0);
 
-
-  // Iterating over polygon edges to publish the marker lines
-
-  // Clear all previous markers first
-  visualization_msgs::msg::Marker delete_marker;
-  delete_marker.action = visualization_msgs::msg::Marker::DELETEALL;
-  delete_marker.ns     = "coords_" + std::to_string(id_);
+  // Clear to prepare for new markers
   last_coordinates_.markers.clear();
-  last_coordinates_.markers.push_back(delete_marker);
 
   for (size_t i = 0; i < polygon.size() - 1; i++) { // -1 because the last is the same as the first one
     // Adding upper horizontal edges
@@ -148,7 +138,6 @@ void StaticEdgesVisualization::update() {
     upper_end.z = max_z;
 
     marker.points.push_back(upper_start);
-
     marker.points.push_back(upper_end);
 
     // Adding lower horizontal edges
@@ -174,10 +163,16 @@ void StaticEdgesVisualization::update() {
     // Adding text markers for coordinates
     // Upper text marker
     std::stringstream ss;
-    safety_area_coordinates_marker.id              = id_ * 1000 + i * 2;
+    safety_area_coordinates_marker.id              = i * 2 + 1;
     safety_area_coordinates_marker.pose.position.x = upper_start.x;
     safety_area_coordinates_marker.pose.position.y = upper_start.y;
     safety_area_coordinates_marker.pose.position.z = upper_start.z + 0.5;
+
+    // Set white color for upper markers
+    safety_area_coordinates_marker.color.r = 1.0;
+    safety_area_coordinates_marker.color.g = 1.0;
+    safety_area_coordinates_marker.color.b = 1.0;
+    safety_area_coordinates_marker.color.a = 1.0;
 
     if (frame_id_ == "latlon_origin") {
       ss << std::fixed << std::setprecision(6) << "lat: " << std::to_string(upper_start.y).substr(0, 9)
@@ -195,10 +190,16 @@ void StaticEdgesVisualization::update() {
     ss.str("");
 
     // Lower text marker
-    safety_area_coordinates_marker.id              = id_ * 1000 + i * 2 + 1;
+    safety_area_coordinates_marker.id              = i * 2 + 2;
     safety_area_coordinates_marker.pose.position.x = lower_start.x;
     safety_area_coordinates_marker.pose.position.y = lower_start.y;
     safety_area_coordinates_marker.pose.position.z = lower_start.z - 0.5;
+
+    // Set white color for lower markers
+    safety_area_coordinates_marker.color.r = 0.0;
+    safety_area_coordinates_marker.color.g = 0.0;
+    safety_area_coordinates_marker.color.b = 0.0;
+    safety_area_coordinates_marker.color.a = 1.0;
 
     if (frame_id_ == "latlon_origin") {
       ss.str("");
@@ -215,7 +216,12 @@ void StaticEdgesVisualization::update() {
     last_coordinates_.markers.push_back(safety_area_coordinates_marker);
   }
 
-  last_markers_.markers[id_] = marker;
+  if (last_markers_.markers.empty()) {
+    last_markers_.markers.push_back(visualization_msgs::msg::Marker());
+  }
+
+  last_markers_.markers[0] = marker;
+  last_markers_.markers[0].id = id_; // Unique id for the marker
   publisher_.publish(last_markers_);
   coordinate_publisher_.publish(last_coordinates_);
 }
@@ -225,16 +231,20 @@ void StaticEdgesVisualization::update() {
 /* cleanup() //{ */
 
 void StaticEdgesVisualization::cleanup() {
-  last_markers_.markers[id_].action = visualization_msgs::msg::Marker::DELETE;
+  if (!last_markers_.markers.empty()) {
+    last_markers_.markers[0].action = visualization_msgs::msg::Marker::DELETE;
+    publisher_.publish(last_markers_);
+  }
 
   visualization_msgs::msg::Marker delete_marker;
   delete_marker.action = visualization_msgs::msg::Marker::DELETEALL;
-  delete_marker.ns     = "coords_" + std::to_string(id_);
+  delete_marker.ns     = "coords_" + std::to_string(id_);; 
   last_coordinates_.markers.clear();
   last_coordinates_.markers.push_back(delete_marker);
   coordinate_publisher_.publish(last_coordinates_);
 
   is_active_ = false;
+
 }
 
 //}
