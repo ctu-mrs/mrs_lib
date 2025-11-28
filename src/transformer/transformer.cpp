@@ -245,6 +245,131 @@ namespace mrs_lib
 
   /* //} */
 
+  /* transformGeoPoint() //{ */
+
+  [[nodiscard]] std::optional<geometry_msgs::Point> Transformer::transformGeoPoint(const geographic_msgs::GeoPoint& what, const geometry_msgs::TransformStamped& tf)
+  {
+    std::scoped_lock lck(mutex_);
+
+    if (!initialized_)
+    {
+      ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform, not initialized", node_name_.c_str());
+      return std::nullopt;
+    }
+
+    const std::string from_frame = resolveFrameImpl(frame_from(tf));
+    if (from_frame != resolveFrameImpl(mrs_lib::LATLON_ORIGIN))
+    {
+      ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform GeoPoint from non-latlon frame \"%s\"", node_name_.c_str(), from_frame.c_str());
+      return std::nullopt;
+    }
+
+    const std::string to_frame = resolveFrameImpl(frame_to(tf));
+    const geometry_msgs::TransformStamped tf_resolved = create_transform(from_frame, to_frame, tf.header.stamp, tf.transform);
+
+    geometry_msgs::Point pt;
+    pt.x = what.latitude;
+    pt.y = what.longitude;
+    pt.z = what.altitude;
+    const auto tfd_pt = transformImpl(tf_resolved, pt);
+    if (tfd_pt.has_value())
+      return tfd_pt.value();
+    else
+      return std::nullopt;
+  }
+
+  [[nodiscard]] std::optional<geometry_msgs::Point> Transformer::transformGeoPoint(const geographic_msgs::GeoPoint& what, const std::string& to_frame_raw, const ros::Time& time_stamp)
+  {
+    std::scoped_lock lck(mutex_);
+
+    if (!initialized_)
+    {
+      ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform, not initialized", node_name_.c_str());
+      return std::nullopt;
+    }
+
+    const std::string latlon_frame = resolveFrameImpl(mrs_lib::LATLON_ORIGIN);
+    const std::string to_frame = resolveFrameImpl(to_frame_raw);
+
+    // get the transform
+    const auto tf_opt = getTransformImpl(latlon_frame, to_frame, time_stamp, latlon_frame);
+    if (!tf_opt.has_value())
+      return std::nullopt;
+    const geometry_msgs::TransformStamped& tf = tf_opt.value();
+
+    // do the transformation
+    const geometry_msgs::TransformStamped tf_resolved = create_transform(latlon_frame, to_frame, tf.header.stamp, tf.transform);
+    geometry_msgs::Point pt;
+    pt.x = what.latitude;
+    pt.y = what.longitude;
+    pt.z = what.altitude;
+    const auto tfd_pt = transformImpl(tf_resolved, pt);
+    if (tfd_pt.has_value())
+      return tfd_pt.value();
+    else
+      return std::nullopt;
+  }
+
+  /* //} */
+
+  /* transformHeading() //{ */
+
+  [[nodiscard]] std::optional<double> Transformer::transformHeading(const double& what, const geometry_msgs::TransformStamped& tf)
+  {
+    std::scoped_lock lck(mutex_);
+
+    if (!initialized_)
+    {
+      ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform, not initialized", node_name_.c_str());
+      return std::nullopt;
+    }
+
+    const std::string from_frame = resolveFrameImpl(frame_from(tf));
+    if (from_frame != resolveFrameImpl(mrs_lib::LATLON_ORIGIN))
+    {
+      ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform GeoPoint from non-latlon frame \"%s\"", node_name_.c_str(), from_frame.c_str());
+      return std::nullopt;
+    }
+
+    const std::string to_frame = resolveFrameImpl(frame_to(tf));
+    const geometry_msgs::TransformStamped tf_resolved = create_transform(from_frame, to_frame, tf.header.stamp, tf.transform);
+
+    const auto q = geometry::fromEigen(geometry::quaternionFromHeading(what));
+    const auto tfd_q_opt = transformImpl(tf_resolved, q);
+    if (!tfd_q_opt.has_value())
+      return std::nullopt;
+    return geometry::headingFromRot(geometry::toEigen(tfd_q_opt.value()));
+  }
+
+  [[nodiscard]] std::optional<double> Transformer::transformHeading(const std::string& from_frame_raw, const double& what, const std::string& to_frame_raw, const ros::Time& time_stamp)
+  {
+    std::scoped_lock lck(mutex_);
+
+    if (!initialized_)
+    {
+      ROS_ERROR_THROTTLE(1.0, "[%s]: Transformer: cannot transform, not initialized", node_name_.c_str());
+      return std::nullopt;
+    }
+
+    const std::string from_frame = resolveFrameImpl(from_frame_raw);
+    const std::string to_frame = resolveFrameImpl(to_frame_raw);
+    const std::string latlon_frame = resolveFrameImpl(mrs_lib::LATLON_ORIGIN);
+
+    // get the transform
+    const auto tf_opt = getTransformImpl(latlon_frame, to_frame, time_stamp, latlon_frame);
+    if (!tf_opt.has_value())
+      return std::nullopt;
+    const geometry_msgs::TransformStamped& tf = tf_opt.value();
+
+    const auto q = geometry::fromEigen(geometry::quaternionFromHeading(what));
+    const auto tfd_q_opt = transformImpl(tf, q);
+    if (!tfd_q_opt.has_value())
+      return std::nullopt;
+    return geometry::headingFromRot(geometry::toEigen(tfd_q_opt.value()));
+  }
+
+  /* //} */
+
   // | ------------- helper implementation methods -------------- |
 
   /* transformImpl() //{ */

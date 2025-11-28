@@ -5,11 +5,8 @@
  *   \author Tomas Baca - tomas.baca@fel.cvut.cz
  *   \author Matouš Vrba - matous.vrba@fel.cvut.cz
  */
-#ifndef TRANSFORMER_H
-#define TRANSFORMER_H
 
-/* #define EIGEN_DONT_VECTORIZE */
-/* #define EIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT */
+#pragma once
 
 /* includes //{ */
 
@@ -24,6 +21,7 @@
 
 #include <mrs_msgs/ReferenceStamped.h>
 
+#include <geographic_msgs/GeoPoint.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Vector3Stamped.h>
 #include <std_msgs/Header.h>
@@ -465,6 +463,58 @@ namespace mrs_lib
     [[nodiscard]] std::optional<Eigen::Vector3d> transformAsPoint(const std::string& from_frame, const Eigen::Vector3d& what, const std::string& to_frame, const ros::Time& time_stamp = ros::Time(0));
     //}
 
+    /* transformGeoPoint() method //{ */
+    /**
+     * \brief Transform a geographic_msgs::GeoPoint from LatLon coordinates to cartesian coordinates.
+     *
+     * Helper function to enable directly returning a geometry_msgs::Point.
+     *
+     * \param what The object to be transformed.
+     * \param tf The transformation to be used.
+     *
+     * \return \p std::nullopt if failed, optional containing the transformed object otherwise.
+     */
+    [[nodiscard]] std::optional<geometry_msgs::Point> transformGeoPoint(const geographic_msgs::GeoPoint& what, const geometry_msgs::TransformStamped& tf);
+
+    /**
+     * \brief Transform a geographic_msgs::GeoPoint from LatLon coordinates to cartesian coordinates.
+     *
+     * Helper function to enable directly returning a geometry_msgs::Point.
+     *
+     * \param from_frame  The current frame of \p what.
+     * \param what The object to be transformed.
+     * \param to_frame    The desired frame of \p what.
+     * \param time_stamp  From which time to take the transformation (use \p ros::Time(0) for the latest time).
+     *
+     * \return \p std::nullopt if failed, optional containing the transformed object otherwise.
+     */
+    [[nodiscard]] std::optional<geometry_msgs::Point> transformGeoPoint(const geographic_msgs::GeoPoint& what, const std::string& to_frame, const ros::Time& time_stamp = ros::Time(0));
+    //}
+
+    /* transformHeading() method //{ */
+    /**
+     * \brief Transform a heading angle.
+     *
+     * \param what The object to be transformed.
+     * \param tf The transformation to be used.
+     *
+     * \return \p std::nullopt if failed, optional containing the transformed object otherwise.
+     */
+    [[nodiscard]] std::optional<double> transformHeading(const double& what, const geometry_msgs::TransformStamped& tf);
+
+    /**
+     * \brief Transform a heading angle.
+     *
+     * \param from_frame  The current frame of \p what.
+     * \param what The object to be transformed.
+     * \param to_frame    The desired frame of \p what.
+     * \param time_stamp  From which time to take the transformation (use \p ros::Time(0) for the latest time).
+     *
+     * \return \p std::nullopt if failed, optional containing the transformed object otherwise.
+     */
+    [[nodiscard]] std::optional<double> transformHeading(const std::string& from_frame, const double& what, const std::string& to_frame, const ros::Time& time_stamp = ros::Time(0));
+    //}
+
     /* getTransform() //{ */
 
     /**
@@ -677,5 +727,3 @@ namespace mrs_lib
 }  // namespace mrs_lib
 
 #include <mrs_lib/impl/transformer.hpp>
-
-#endif  // TRANSFORMER_H
