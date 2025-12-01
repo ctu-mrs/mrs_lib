@@ -43,6 +43,7 @@ public:
    * \brief The main constructor.
    *
    * \param node             The ROS2 node used for publisher advertisement and timer registration.
+   * \param clock            The clock used for timestamping the published error messages.
    * \param node_name        Name of the ROS node used for filling out the node_id in the published error messages.
    * \param component_name   Name of the component used for filling out the node_id in the published error messages.
    * \param publish_period   How often will the aggregated errors be published.
@@ -54,7 +55,7 @@ public:
    * \brief Publishes all aggregated errors and calls ros::shutdown().
    *
    * \note To make sure that the published messages are propagated through ROS to any subscribers,
-   * the method waits 1s after publishin before calling ros::shutdown().
+   * the method waits 1s after publishing before calling ros::shutdown().
    */
   void flushAndShutdown();
 

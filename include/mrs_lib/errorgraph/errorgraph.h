@@ -27,6 +27,10 @@ inline std::ostream &operator<<(std::ostream &os, const node_id_t &node_id) {
 
 class Errorgraph {
 public:
+
+  explicit Errorgraph(rclcpp::Clock::SharedPtr clock) : clock_(clock) {}
+  ~Errorgraph() = default;
+
   /* error_t //{ */
 
   struct error_t
@@ -82,7 +86,7 @@ public:
 
   //}
 
-  /* element_t //{ */
+  /* RRement_t //{ */
 
   struct element_t
   {
@@ -105,17 +109,21 @@ public:
     std::vector<error_t> errors;
     // last time this was updated from a message
     rclcpp::Time stamp                   = rclcpp::Time(0);
-    rclcpp::Duration not_reporting_delay = rclcpp::Duration::from_seconds(3.0);
+    static constexpr double DEFAULT_NOT_REPORTING_DELAY_SECONDS = 3.0;
+    rclcpp::Duration not_reporting_delay = rclcpp::Duration::from_seconds(DEFAULT_NOT_REPORTING_DELAY_SECONDS);
 
     // graph-related variables used by the build_graph() and find_dependency_roots() methods
     std::vector<element_t *> parents;
     std::vector<element_t *> children;
     bool visited = false;
 
-    element_t(size_t element_id, const node_id_t &source_node) : element_id(element_id), type(type_t::node), source_node(source_node) {};
+    rclcpp::Clock::SharedPtr clock_;
 
-    element_t(size_t element_id, const std::string &topic_name, const node_id_t &source_node = {})
-        : element_id(element_id), type(type_t::topic), topic_name(topic_name), source_node(source_node) {};
+    element_t(size_t element_id, const node_id_t &source_node, rclcpp::Clock::SharedPtr clock)
+        : element_id(element_id), type(type_t::node), source_node(source_node), clock_(clock) {};
+
+    element_t(size_t element_id, const std::string &topic_name, const node_id_t &source_node, rclcpp::Clock::SharedPtr clock)
+        : element_id(element_id), type(type_t::topic), topic_name(topic_name), source_node(source_node), clock_(clock) {};
 
     inline std::vector<const std::string *> waited_for_topics() const {
       std::vector<const std::string *> ret;
@@ -151,8 +159,7 @@ public:
 
     inline bool is_not_reporting() const {
 
-      static rclcpp::Clock clock(RCL_ROS_TIME);
-      return type != type_t::topic && clock.now() - stamp > not_reporting_delay;
+      return type != type_t::topic && clock_->now() - stamp > not_reporting_delay;
     }
 
     errorgraph_element_msg_t to_msg() const {
@@ -170,6 +177,8 @@ public:
 private:
   std::vector<std::unique_ptr<element_t>> elements_;
   bool graph_up_to_date_ = false;
+  rclcpp::Clock::SharedPtr clock_;
+
 
   std::vector<element_t *> find_elements_waited_for(const element_t &element);
 

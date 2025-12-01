@@ -95,16 +95,12 @@ std::vector<const Errorgraph::element_t *> Errorgraph::find_roots() {
 }
 
 std::vector<const Errorgraph::element_t *> Errorgraph::find_leaves() {
-  std::vector<const element_t *> leaves;
-  for (const auto &el_ptr : elements_) {
-    bool is_leaf = true;
-    for (const auto &el_ptr2 : elements_) {
-      if (el_ptr2->is_waiting_for(el_ptr->source_node)) {
-        is_leaf = false;
-        break;
-      }
-    }
-    if (is_leaf)
+  build_graph();  // Ensures parent/child relationships are built
+  std::vector<const element_t*> leaves;
+  for (const auto& el_ptr : elements_)
+  {
+    // A leaf has no children (no one waits for it)
+    if (el_ptr->children.empty())
       leaves.push_back(el_ptr.get());
   }
   return leaves;
@@ -187,14 +183,14 @@ void Errorgraph::prepare_graph() {
 }
 
 Errorgraph::element_t *Errorgraph::add_new_element(const std::string &topic_name, const node_id_t &node_id) {
-  auto new_element_ptr = std::make_unique<element_t>(last_element_id++, topic_name, node_id);
+  auto new_element_ptr = std::make_unique<element_t>(last_element_id++, topic_name, node_id, clock_);
   element_t *element   = new_element_ptr.get();
   elements_.push_back(std::move(new_element_ptr));
   return element;
 }
 
 Errorgraph::element_t *Errorgraph::add_new_element(const node_id_t &node_id) {
-  auto new_element_ptr = std::make_unique<element_t>(last_element_id++, node_id);
+  auto new_element_ptr = std::make_unique<element_t>(last_element_id++, node_id, clock_);
   element_t *element   = new_element_ptr.get();
   elements_.push_back(std::move(new_element_ptr));
   return element;
@@ -219,7 +215,7 @@ const Errorgraph::element_t *Errorgraph::add_element_from_msg(const errorgraph_e
 void Errorgraph::write_dot(std::ostream &os) {
   build_graph();
 
-  const auto now = rclcpp::Clock().now();
+  const auto now = clock_->now();
   os << "digraph G\n{\n";
   for (const auto &element : elements_) {
     // define the element itself
