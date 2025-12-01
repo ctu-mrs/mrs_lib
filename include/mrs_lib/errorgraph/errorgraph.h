@@ -97,7 +97,7 @@ namespace mrs_lib
 
       //}
 
-      /* RRement_t //{ */
+      /* element_t //{ */
 
       struct element_t
       {

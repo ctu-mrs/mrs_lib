@@ -53,10 +53,10 @@ namespace mrs_lib
                      const rclcpp::Rate& publish_period = rclcpp::Rate(1.0));
 
       /*!
-       * \brief Publishes all aggregated errors and calls ros::shutdown().
+       * \brief Publishes all aggregated errors and calls rclcpp::shutdown().
        *
        * \note To make sure that the published messages are propagated through ROS to any subscribers,
-       * the method waits 1s after publishing before calling ros::shutdown().
+       * the method waits 1s after publishing before calling rclcpp::shutdown().
        */
       void flushAndShutdown();
 

@@ -385,6 +385,11 @@ ament_target_dependencies(MrsLib_ErrorPublisher
   mrs_msgs
 )
 
+target_link_libraries(MrsLib_ErrorPublisher
+    # MrsLib_PublisherHandler
+    MrsLib_TimerHandler
+)
+
 foreach(library IN LISTS LIBRARIES)
   target_include_directories(${library}
     PUBLIC

@@ -278,7 +278,7 @@ namespace mrs_lib
         os << ">";
 
         // draw a shape of the element based on its type
-        // for topics, use a diamod shape
+        // for topics, use a diamond shape
         if (element->type == element_t::type_t::topic)
           os << " shape=diamond";
         // if it is root, mark it with a box shape
@@ -298,7 +298,7 @@ namespace mrs_lib
 
         // define connections to all children
         for (const auto& child : element->children)
-          os << "  " << element->element_id << " -> " /*>*/ << child->element_id << "[label=\"waiting for\"];\n";
+          os << "  " << element->element_id << " -> " << child->element_id << "[label=\"waiting for\"];\n";
       }
       os << "}";
     }
