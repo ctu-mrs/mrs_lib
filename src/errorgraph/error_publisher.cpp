@@ -20,7 +20,7 @@ namespace mrs_lib
       timer_opts_start.callback_group = cbkgrp_timers_;
 
       {
-        std::function<void()> callback_fcn = std::bind(&ErrorPublisher::timerPublisher, this);
+        auto callback_fcn = [this]() { publishErrors(); };
 
         timer_publisher_ = std::make_shared<TimerType>(timer_opts_start, publish_period, callback_fcn);
       }
@@ -102,11 +102,6 @@ namespace mrs_lib
       msg.waited_for_node.node = node_id.node;
       msg.waited_for_node.component = node_id.component;
       errors_.push_back({std::nullopt, std::move(msg)});
-    }
-
-    void ErrorPublisher::timerPublisher()
-    {
-      publishErrors();
     }
 
     void ErrorPublisher::publishErrors()

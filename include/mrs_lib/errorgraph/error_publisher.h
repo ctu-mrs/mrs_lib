@@ -132,8 +132,6 @@ namespace mrs_lib
 
       std::shared_ptr<TimerType> timer_publisher_;
 
-      void timerPublisher();
-
       void publishErrors();
     };
 

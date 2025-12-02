@@ -235,19 +235,19 @@ namespace mrs_lib
 
       const element_t* add_element_from_msg(const errorgraph_element_msg_t& msg);
 
-      const auto begin()
+      auto begin() const
       {
         return elements_.begin();
       }
-      const auto end()
+      auto end() const
       {
         return elements_.end();
       }
-      const auto cbegin()
+      auto cbegin() const
       {
         return elements_.cbegin();
       }
-      const auto cend()
+      auto cend() const
       {
         return elements_.cend();
       }

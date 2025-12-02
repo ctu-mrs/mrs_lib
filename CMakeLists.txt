@@ -386,7 +386,6 @@ ament_target_dependencies(MrsLib_ErrorPublisher
 )
 
 target_link_libraries(MrsLib_ErrorPublisher
-    # MrsLib_PublisherHandler
     MrsLib_TimerHandler
 )
 
