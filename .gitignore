@@ -21,3 +21,4 @@ act.sh
 log
 
 ci_scripts
+_codeql_detected_source_root
