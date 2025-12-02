@@ -38,7 +38,7 @@ namespace mrs_lib
 
       struct error_t
       {
-        rclcpp::Time stamp; 
+        rclcpp::Time stamp;
         std::string type;
         std::optional<std::string> waited_for_topic;
         std::optional<node_id_t> waited_for_node;
@@ -135,7 +135,7 @@ namespace mrs_lib
 
         element_t(size_t element_id, const std::string& topic_name, const node_id_t& source_node, rclcpp::Clock::SharedPtr clock)
             : element_id(element_id), type(type_t::topic), topic_name(topic_name), source_node(source_node),
-            stamp(static_cast<int64_t>(0),clock->get_clock_type()), clock_(clock) {};
+              stamp(static_cast<int64_t>(0), clock->get_clock_type()), clock_(clock) {};
 
         inline std::vector<const std::string*> waited_for_topics() const
         {
@@ -178,7 +178,6 @@ namespace mrs_lib
 
         inline bool is_not_reporting() const
         {
-
           return type != type_t::topic && clock_->now() - stamp > not_reporting_delay;
         }
 
@@ -199,7 +198,6 @@ namespace mrs_lib
       std::vector<std::unique_ptr<element_t>> elements_;
       bool graph_up_to_date_ = false;
       rclcpp::Clock::SharedPtr clock_;
-
 
       std::vector<element_t*> find_elements_waited_for(const element_t& element);
 

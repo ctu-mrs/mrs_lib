@@ -38,8 +38,7 @@ protected:
           error_msg.waited_for_node.node = waited_for.substr(0, pos);
           error_msg.waited_for_node.component = waited_for.substr(pos + 1);
         }
-      }
-      else if (error_type == errorgraph_error_msg_t::TYPE_WAITING_FOR_TOPIC && !waited_for.empty())
+      } else if (error_type == errorgraph_error_msg_t::TYPE_WAITING_FOR_TOPIC && !waited_for.empty())
       {
         error_msg.waited_for_topic = waited_for;
       }
@@ -220,7 +219,7 @@ TEST_F(ErrorgraphTest, find_error_roots_waiting_with_no_error_dependency)
 
 TEST_F(ErrorgraphTest, find_error_roots_multiple_errors_same_node)
 {
- // Node with both a waiting-for error and a regular error
+  // Node with both a waiting-for error and a regular error
   errorgraph_element_msg_t msg = create_element_msg("multi_error_node", "component");
 
   errorgraph_error_msg_t wait_error;
@@ -245,6 +244,7 @@ TEST_F(ErrorgraphTest, find_error_roots_multiple_errors_same_node)
   EXPECT_EQ(roots[0]->source_node.node, "other_node");
   EXPECT_EQ(roots[0]->source_node.component, "other_comp");
 }
+
 //}
 
 /* TEST: find_error_roots with node waiting for topic //{ */
@@ -262,7 +262,9 @@ TEST_F(ErrorgraphTest, find_error_roots_waiting_for_topic)
 }
 
 //}
-//
+
+/* TEST: find_dependency_roots //{ */
+
 TEST_F(ErrorgraphTest, find_dependency_roots_simple_chain)
 {
   // Create chain: node3 -> node2 -> node1
@@ -282,6 +284,10 @@ TEST_F(ErrorgraphTest, find_dependency_roots_simple_chain)
   EXPECT_EQ(roots[0]->source_node.node, "node1");
 }
 
+//}
+
+/* TEST: find_dependency_roots detects loops //{ */
+
 TEST_F(ErrorgraphTest, find_dependency_roots_detects_loop)
 {
   // Create circular dependency: node1 -> node2 -> node1
@@ -299,6 +305,10 @@ TEST_F(ErrorgraphTest, find_dependency_roots_detects_loop)
   EXPECT_FALSE(roots.empty());
 }
 
+//}
+
+/* TEST: find_roots returns all non-waiting nodes //{ */
+
 TEST_F(ErrorgraphTest, find_roots_returns_all_non_waiting_nodes)
 {
   // Create mix: some waiting, some not
@@ -315,6 +325,10 @@ TEST_F(ErrorgraphTest, find_roots_returns_all_non_waiting_nodes)
   // Should return both root1 and root2 (both not waiting)
   EXPECT_EQ(roots.size(), 2);
 }
+
+//}
+
+/* TEST: find_leaves identifies leaf nodes //{ */
 
 TEST_F(ErrorgraphTest, find_leaves_identifies_leaf_nodes)
 {
@@ -342,6 +356,10 @@ TEST_F(ErrorgraphTest, find_leaves_identifies_leaf_nodes)
   EXPECT_EQ(roots[0]->source_node.node, "node3");
 }
 
+//}
+
+/* TEST: topic element creation when waiting for topic //{ */
+
 TEST_F(ErrorgraphTest, waiting_for_topic_creates_topic_element)
 {
   auto msg = create_element_msg("node1", "comp1", {{errorgraph_error_msg_t::TYPE_WAITING_FOR_TOPIC, "/test/topic"}});
@@ -358,6 +376,9 @@ TEST_F(ErrorgraphTest, waiting_for_topic_creates_topic_element)
   EXPECT_EQ(topic_elem->topic_name, "/test/topic");
 }
 
+//}
+
+/* TEST: node becomes not reporting after delay //{ */
 TEST_F(ErrorgraphTest, node_becomes_not_reporting_after_delay)
 {
   auto msg = create_element_msg("old_node", "comp", {{errorgraph_error_msg_t::TYPE_NO_ERROR, ""}});
@@ -373,8 +394,11 @@ TEST_F(ErrorgraphTest, node_becomes_not_reporting_after_delay)
   auto recent_msg = create_element_msg("old_node", "comp", {{errorgraph_error_msg_t::TYPE_NO_ERROR, ""}});
   graph_->add_element_from_msg(recent_msg);
   EXPECT_FALSE(elem->is_not_reporting());
-
 }
+
+//}
+
+/* TEST: graph rebuilds after updates //{ */
 
 TEST_F(ErrorgraphTest, graph_rebuilds_after_updates)
 {
@@ -392,6 +416,10 @@ TEST_F(ErrorgraphTest, graph_rebuilds_after_updates)
   EXPECT_TRUE(roots2.empty());
 }
 
+//}
+
+/* TEST: find_element returns nullptr for nonexistent elements //{ */
+
 TEST_F(ErrorgraphTest, find_element_returns_null_for_nonexistent)
 {
   auto elem = graph_->find_element(node_id_t{"nonexistent", "node"});
@@ -401,6 +429,7 @@ TEST_F(ErrorgraphTest, find_element_returns_null_for_nonexistent)
   EXPECT_EQ(topic, nullptr);
 }
 
+//}
 
 int main(int argc, char** argv)
 {

@@ -16,6 +16,6 @@ colcon test-result --delete-yes
 # colcon test --packages-select mrs_lib --ctest-args -R 'param_provider'
 # colcon test --packages-select mrs_lib --ctest-args -R 'param_loader'
 # colcon test --packages-select mrs_lib --ctest-args -R 'dynparam_mgr'
-colcon test --packages-select mrs_lib --ctest-args -R 'timeout_manager'
+colcon test --packages-select mrs_lib --ctest-args -R 'errorgraph'
 
 colcon test-result --all --verbose
