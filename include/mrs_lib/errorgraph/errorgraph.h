@@ -38,7 +38,7 @@ namespace mrs_lib
 
       struct error_t
       {
-        rclcpp::Time stamp = rclcpp::Time(0);
+        rclcpp::Time stamp; 
         std::string type;
         std::optional<std::string> waited_for_topic;
         std::optional<node_id_t> waited_for_node;
@@ -119,7 +119,7 @@ namespace mrs_lib
         // a list of errors related to this element (if it is a node)
         std::vector<error_t> errors;
         // last time this was updated from a message
-        rclcpp::Time stamp = rclcpp::Time(0);
+        rclcpp::Time stamp;
         static constexpr double DEFAULT_NOT_REPORTING_DELAY_SECONDS = 3.0;
         rclcpp::Duration not_reporting_delay = rclcpp::Duration::from_seconds(DEFAULT_NOT_REPORTING_DELAY_SECONDS);
 
@@ -131,10 +131,11 @@ namespace mrs_lib
         rclcpp::Clock::SharedPtr clock_;
 
         element_t(size_t element_id, const node_id_t& source_node, rclcpp::Clock::SharedPtr clock)
-            : element_id(element_id), type(type_t::node), source_node(source_node), clock_(clock) {};
+            : element_id(element_id), type(type_t::node), source_node(source_node), stamp(static_cast<int64_t>(0), clock->get_clock_type()), clock_(clock) {};
 
         element_t(size_t element_id, const std::string& topic_name, const node_id_t& source_node, rclcpp::Clock::SharedPtr clock)
-            : element_id(element_id), type(type_t::topic), topic_name(topic_name), source_node(source_node), clock_(clock) {};
+            : element_id(element_id), type(type_t::topic), topic_name(topic_name), source_node(source_node),
+            stamp(static_cast<int64_t>(0),clock->get_clock_type()), clock_(clock) {};
 
         inline std::vector<const std::string*> waited_for_topics() const
         {

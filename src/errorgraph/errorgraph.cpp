@@ -113,7 +113,7 @@ namespace mrs_lib
       for (const auto& el_ptr : elements_)
       {
         // A leaf has no children (no one waits for it)
-        if (el_ptr->children.empty())
+        if (el_ptr->parents.empty())
           leaves.push_back(el_ptr.get());
       }
       return leaves;
