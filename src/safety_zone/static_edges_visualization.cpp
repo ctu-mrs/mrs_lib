@@ -7,7 +7,6 @@ namespace mrs_lib
 {
 
   std::atomic<int> StaticEdgesVisualization::id_generator_ = 0;
-  // visualization_msgs::msg::MarkerArray StaticEdgesVisualization::last_markers_ = visualization_msgs::msg::MarkerArray();
 
   /* StaticEdgesVisualization(prism) //{ */
 
@@ -105,7 +104,7 @@ namespace mrs_lib
     visualization_msgs::msg::Marker marker;
     marker.id = id_;
     marker.ns = "static_edges_" + std::to_string(id_);
-    std::string target_frame_id = "world_origin";
+    std::string target_frame_id = "local_origin";
     marker.header.frame_id = uav_name_ + "/" + target_frame_id;
     marker.type = visualization_msgs::msg::Marker::LINE_LIST;
     marker.action = visualization_msgs::msg::Marker::ADD;
@@ -119,7 +118,7 @@ namespace mrs_lib
     visualization_msgs::msg::Marker safety_area_coordinates_marker;
     safety_area_coordinates_marker.ns = "coords_" + std::to_string(id_);
     ;
-    std::string safety_area_coordinates_frame_id = "world_origin";
+    std::string safety_area_coordinates_frame_id = "local_origin";
     safety_area_coordinates_marker.header.frame_id = uav_name_ + "/" + safety_area_coordinates_frame_id;
     safety_area_coordinates_marker.type = visualization_msgs::msg::Marker::TEXT_VIEW_FACING;
     safety_area_coordinates_marker.action = visualization_msgs::msg::Marker::ADD;

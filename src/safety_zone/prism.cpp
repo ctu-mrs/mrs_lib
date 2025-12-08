@@ -340,7 +340,7 @@ namespace mrs_lib
       bg::set<1>(point2d, bg::get<1>(point));
       double z = bg::get<2>(point);
 
-      bool result = bg::within(point2d, polygon_) && min_z_ < z && z < max_z_;
+      bool result = bg::within(point2d, polygon_) && min_z_ <= z && z <= max_z_;
 
       return result;
     }
