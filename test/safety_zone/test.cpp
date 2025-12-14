@@ -6,21 +6,23 @@
 
 /* TEST(TESTSuite, point_valid_check) //{ */
 
-TEST(TESTSuite, point_valid_check) {
+TEST(TESTSuite, point_valid_check)
+{
 
   Eigen::MatrixXd matrix = Eigen::MatrixXd::Zero(4, 2);
 
   // clang-format off
   matrix << 0, 0,
-                   10, 0,
-                   10, 10,
-                   0, 10;
+            10, 0,
+            10, 10,
+            0, 10;
   // clang-format on
-  
+
   std::vector<mrs_lib::safety_zone::Point2d> points;
   points.reserve(matrix.rows());
 
-  for (int i = 0; i < matrix.rows(); i++) {
+  for (int i = 0; i < matrix.rows(); i++)
+  {
     points.emplace_back(mrs_lib::safety_zone::Point2d{matrix(i, 0), matrix(i, 1)});
   }
 
@@ -31,7 +33,8 @@ TEST(TESTSuite, point_valid_check) {
 
   auto safety_zone = std::make_shared<mrs_lib::safety_zone::SafetyZone>(std::move(border));
 
-  if (safety_zone->safetyZoneEnabled() == false) {
+  if (safety_zone->safetyZoneEnabled() == false)
+  {
     std::cout << "Enabling safety zone for testing." << std::endl;
     safety_zone->enableSafetyZone(true);
   }
@@ -52,14 +55,14 @@ TEST(TESTSuite, point_valid_check) {
 
   EXPECT_FALSE(safety_zone->isPointValid(1, 1, 10)); // Above max_z
   EXPECT_FALSE(safety_zone->isPointValid(1, 1, -1)); // Below min_z
-
 }
 
 //}
 
 /* TEST(TESTSuite, obstacle_valid_check) //{ */
 
-TEST(TESTSuite, obstacle_valid_check) {
+TEST(TESTSuite, obstacle_valid_check)
+{
 
   Eigen::MatrixXd border_matrix = Eigen::MatrixXd::Zero(4, 2);
 
@@ -73,7 +76,8 @@ TEST(TESTSuite, obstacle_valid_check) {
   std::vector<mrs_lib::safety_zone::Point2d> border_points;
   border_points.reserve(border_matrix.rows());
 
-  for (int i = 0; i < border_matrix.rows(); i++) {
+  for (int i = 0; i < border_matrix.rows(); i++)
+  {
     border_points.emplace_back(mrs_lib::safety_zone::Point2d{border_matrix(i, 0), border_matrix(i, 1)});
   }
 
@@ -95,7 +99,8 @@ TEST(TESTSuite, obstacle_valid_check) {
   std::vector<mrs_lib::safety_zone::Point2d> obstacle_points;
   obstacle_points.reserve(obstacle_matrix.rows());
 
-  for (int i = 0; i < obstacle_matrix.rows(); i++) {
+  for (int i = 0; i < obstacle_matrix.rows(); i++)
+  {
     obstacle_points.emplace_back(mrs_lib::safety_zone::Point2d{obstacle_matrix(i, 0), obstacle_matrix(i, 1)});
   }
 
@@ -109,7 +114,8 @@ TEST(TESTSuite, obstacle_valid_check) {
 
   auto safety_zone = std::make_shared<mrs_lib::safety_zone::SafetyZone>(std::move(border), std::move(obstacles));
 
-  if (safety_zone->safetyZoneEnabled() == false) {
+  if (safety_zone->safetyZoneEnabled() == false)
+  {
     std::cout << "Enabling safety zone for testing." << std::endl;
     safety_zone->enableSafetyZone(true);
   }
@@ -118,6 +124,7 @@ TEST(TESTSuite, obstacle_valid_check) {
   EXPECT_FALSE(safety_zone->isPointValid(5, 5, 2));
   EXPECT_FALSE(safety_zone->isPointValid(4.5, 4.5, 1.5));
   EXPECT_FALSE(safety_zone->isPointValid(5.5, 5.5, 2.9));
+
   // Testing points inside border and outside obstacle
   EXPECT_TRUE(safety_zone->isPointValid(3, 3, 2));
   EXPECT_TRUE(safety_zone->isPointValid(7, 7, 4));
@@ -125,7 +132,8 @@ TEST(TESTSuite, obstacle_valid_check) {
 }
 //}
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
+{
   testing::InitGoogleTest(&argc, argv);
 
   return RUN_ALL_TESTS();
