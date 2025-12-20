@@ -145,6 +145,7 @@ namespace mrs_lib
     Impl(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos, const rclcpp::CallbackGroup::SharedPtr& callback_group)
         : callback_group_(callback_group), service_client_(node->create_client<ServiceType>(address, qos, callback_group))
     {
+      RCLCPP_INFO_STREAM(node->get_logger(), "Created client '" << address << "' -> '" << service_client_->get_service_name() << "'");
     }
 
     /**

@@ -37,6 +37,7 @@ namespace mrs_lib
 
       address_ = address;
       publisher_ = node_->create_publisher<TopicType>(address, options.qos);
+      RCLCPP_INFO(node_->get_logger(), " Created publisher on topic '%s' -> '%s'", address.c_str(), publisher_->get_topic_name());
     }
 
     if (options.throttle_rate > 1e-3)
