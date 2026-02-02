@@ -360,7 +360,7 @@ namespace mrs_lib
       rclcpp::Time next_expected;
       {
         std::scoped_lock lck(mutex_state_);
-        next_expected = node_->get_clock()->now() + rclcpp::Duration(std::chrono::duration<double>(delay_dur_));
+        next_expected = next_expected_;
       }
 
       const bool interrupted = !breakableSleep(next_expected);
@@ -394,6 +394,10 @@ namespace mrs_lib
 
         // call the callback
         callback_();
+        {
+          auto now = node_->get_clock()->now();
+          next_expected_ = std::max(next_expected_ + rclcpp::Duration(std::chrono::duration<double>(delay_dur_)), now);
+        }
       }
     }
   }
