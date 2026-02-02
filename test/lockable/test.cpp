@@ -5,7 +5,8 @@
 using namespace std::chrono_literals;
 using namespace std::string_literals;
 
-class Test : public ::testing::Test {
+class Test : public ::testing::Test
+{
 
 public:
 protected:
@@ -21,16 +22,11 @@ struct parameters
 
 /* TEST_F(Test, lockable_unlocker) //{ */
 
-TEST_F(Test, lockable_unlocker) {
+TEST_F(Test, lockable_unlocker)
+{
 
   // TODO: actual tests of the thread-safe access? How to even do that?
-  mrs_lib::Lockable<parameters> params_lck(
-      {
-        true,
-        15,
-        666.0f,
-        "initial_value"
-      });
+  mrs_lib::Lockable<parameters> params_lck({true, 15, 666.0f, "initial_value"});
 
   EXPECT_EQ(params_lck.unsafe_access().bool_param, true);
   EXPECT_EQ(params_lck.unsafe_access().int_param, 15);

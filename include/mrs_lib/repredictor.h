@@ -521,7 +521,7 @@ namespace mrs_lib
 
       // check if adding a new element would throw out the oldest one
       if (m_history.size() == m_history.capacity())
-      {  // if so, first update m_sc
+      { // if so, first update m_sc
         // figure out, what will be the oldest element in the buffer after inserting the newly received one
         auto new_oldest = m_history.front();
         if (m_history.size() == 1 || (m_history.size() > 1 && info.stamp > m_history.at(0).stamp && info.stamp < m_history.at(1).stamp))
@@ -579,7 +579,7 @@ namespace mrs_lib
     }
     //}
   };
-}  // namespace mrs_lib
+} // namespace mrs_lib
 
 
-#endif  // REPREDICTOR_H
+#endif // REPREDICTOR_H

@@ -10,7 +10,7 @@ void callback(const std::string& param_name, const T& new_value)
 template <typename T>
 using range_t = mrs_lib::DynparamMgr::range_t<T>;
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
   auto node = std::make_shared<rclcpp::Node>("dynparam_tests");

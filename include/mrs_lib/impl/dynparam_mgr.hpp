@@ -26,20 +26,22 @@ namespace mrs_lib
 
   template <typename MemT>
   bool DynparamMgr::register_param(const std::string& name, MemT* param_var, const range_t<MemT>& valid_range, const update_cbk_t<MemT>& update_cbk)
-  requires(numeric<MemT>)
+    requires(numeric<MemT>)
   {
     return register_param_impl<MemT>(name, param_var, std::nullopt, valid_range, update_cbk);
   }
 
   template <typename MemT>
-  bool DynparamMgr::register_param(const std::string& name, MemT* param_var, const MemT& default_value, const range_t<MemT>& valid_range, const update_cbk_t<MemT>& update_cbk)
-  requires(numeric<MemT>)
+  bool DynparamMgr::register_param(const std::string& name, MemT* param_var, const MemT& default_value, const range_t<MemT>& valid_range,
+                                   const update_cbk_t<MemT>& update_cbk)
+    requires(numeric<MemT>)
   {
     return register_param_impl<MemT>(name, param_var, default_value, valid_range, update_cbk);
   }
 
   template <typename MemT>
-  bool DynparamMgr::register_param_impl(const std::string& name, MemT* param_var, const std::optional<MemT>& default_value, const std::optional<range_t<MemT>>& valid_range, const update_cbk_t<MemT>& update_cbk)
+  bool DynparamMgr::register_param_impl(const std::string& name, MemT* param_var, const std::optional<MemT>& default_value,
+                                        const std::optional<range_t<MemT>>& valid_range, const update_cbk_t<MemT>& update_cbk)
   {
     const auto resolved_name = m_pp.resolveName(name);
 
@@ -65,30 +67,24 @@ namespace mrs_lib
     // remember the registered parameter, the corresponding variable, etc.
     RCLCPP_INFO_STREAM(m_node->get_logger(), "[" << m_node->get_name() << "]: Dynamic parameter '" << name << "':\t" << *param_var);
 
-    m_registered_params.emplace_back(
-          *m_node,
-          resolved_name,
-          to_param_type<MemT>(),
-          param_var,
-          update_cbk
-        );
+    m_registered_params.emplace_back(*m_node, resolved_name, to_param_type<MemT>(), param_var, update_cbk);
     return true;
   }
   //}
 
   /* registered_param_t struct //{ */
-  
+
   struct DynparamMgr::registered_param_t
   {
     // | --------------------- Metaprogramming -------------------- |
     // some metaprogramming tooling to generate a variant of pointers from a tuple of types
-    template <typename ... Types>
+    template <typename... Types>
     using variant_of_pointers_t = std::variant<std::add_pointer_t<Types>...>;
 
     template <typename Type>
     struct pointer_variant_from_list_t;
 
-    template <typename ... Types>
+    template <typename... Types>
     struct pointer_variant_from_list_t<std::tuple<Types...>>
     {
       using type = variant_of_pointers_t<Types...>;
@@ -98,13 +94,13 @@ namespace mrs_lib
     template <typename Type>
     using add_function_cref_t = std::function<void(const Type&)>;
 
-    template <typename ... Types>
+    template <typename... Types>
     using variant_of_functions_t = std::variant<add_function_cref_t<Types>...>;
 
     template <typename Type>
     struct function_variant_from_list_t;
 
-    template <typename ... Types>
+    template <typename... Types>
     struct function_variant_from_list_t<std::tuple<Types...>>
     {
       using type = variant_of_functions_t<Types...>;
@@ -122,7 +118,7 @@ namespace mrs_lib
     rclcpp::ParameterType type;
     param_ptr_variant_t param_ptr;
     update_cbk_variant_t update_cbk;
-  
+
     // | ------------------------- Methods ------------------------ |
     template <typename T>
     bool try_cast(T& out)
@@ -137,42 +133,43 @@ namespace mrs_lib
         return false;
       }
     }
-  
+
     template <typename NewValueT>
     bool update_value(const NewValueT& new_value)
     {
       // if there is an update callback registered, try to call it
-      std::visit([&new_value, this](auto arg)
-        {
-          using CbkT = decltype(arg);
-          if constexpr (std::is_invocable_v<CbkT, NewValueT>)
-          {
-            if (arg)
-            // actually call the callback
-              arg(new_value);
-          }
-          else
-          {
-            RCLCPP_ERROR_STREAM_THROTTLE(node.get_logger(), *node.get_clock(), 1000, "Cannot call update callback for parameter \"" << resolved_name.str << "\" - incompatible callback type!");
-          }
-        }, update_cbk);
+      std::visit(
+          [&new_value, this](auto arg) {
+            using CbkT = decltype(arg);
+            if constexpr (std::is_invocable_v<CbkT, NewValueT>)
+            {
+              if (arg)
+                // actually call the callback
+                arg(new_value);
+            } else
+            {
+              RCLCPP_ERROR_STREAM_THROTTLE(node.get_logger(), *node.get_clock(), 1000,
+                                           "Cannot call update callback for parameter \"" << resolved_name.str << "\" - incompatible callback type!");
+            }
+          },
+          update_cbk);
 
-      return std::visit([&new_value](auto arg)
-        {
-          using ParamT = std::remove_pointer_t<decltype(arg)>;
-          if constexpr (std::is_convertible_v<NewValueT, ParamT>)
-          {
-            *arg = static_cast<ParamT>(new_value);
-            return true;
-          }
-          else
-            return false;
-        }, param_ptr);
+      return std::visit(
+          [&new_value](auto arg) {
+            using ParamT = std::remove_pointer_t<decltype(arg)>;
+            if constexpr (std::is_convertible_v<NewValueT, ParamT>)
+            {
+              *arg = static_cast<ParamT>(new_value);
+              return true;
+            } else
+              return false;
+          },
+          param_ptr);
     }
-  
+
     rclcpp::ParameterValue to_param_val() const;
   };
-  
+
   //}
 
-};
+}; // namespace mrs_lib

@@ -29,13 +29,13 @@ namespace mrs_lib
   public:
     Lockable() = default;
 
-    Lockable(const LockedVarT& init_val)
-      : locked_var(init_val)
-    {}
+    Lockable(const LockedVarT& init_val) : locked_var(init_val)
+    {
+    }
 
-    Lockable(const LockedVarT&& init_val)
-      : locked_var(init_val)
-    {}
+    Lockable(const LockedVarT&& init_val) : locked_var(init_val)
+    {
+    }
 
     LockedVarT& unsafe_access()
     {
@@ -72,9 +72,9 @@ namespace mrs_lib
   class Unlocker
   {
   public:
-    Unlocker(Lockable<LockedVarT, MutexT>& lockable)
-      : lock(lockable.mtx), lockable(lockable)
-    {}
+    Unlocker(Lockable<LockedVarT, MutexT>& lockable) : lock(lockable.mtx), lockable(lockable)
+    {
+    }
 
     LockedVarT& operator*()
     {
@@ -91,4 +91,4 @@ namespace mrs_lib
     Lockable<LockedVarT>& lockable;
   };
 
-}
+} // namespace mrs_lib

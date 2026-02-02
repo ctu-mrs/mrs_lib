@@ -5,13 +5,15 @@
 using namespace std::chrono_literals;
 using namespace std::string_literals;
 
-class Test : public ::testing::Test {
+class Test : public ::testing::Test
+{
 
 public:
 protected:
   /* SetUpTestCase() //{ */
 
-  static void SetUpTestCase() {
+  static void SetUpTestCase()
+  {
     rclcpp::init(0, nullptr);
   }
 
@@ -19,7 +21,8 @@ protected:
 
   /* TearDownTestCase() //{ */
 
-  static void TearDownTestCase() {
+  static void TearDownTestCase()
+  {
     rclcpp::shutdown();
   }
 
@@ -27,7 +30,8 @@ protected:
 
   /* initialize() //{ */
 
-  void initialize(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions()) {
+  void initialize(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions())
+  {
 
     node_ = std::make_shared<rclcpp::Node>("test_dynparam_mgr", node_options);
 
@@ -41,7 +45,8 @@ protected:
 
   /* spin() //{ */
 
-  void spin() {
+  void spin()
+  {
 
     RCLCPP_INFO(node_->get_logger(), "starting spinning");
 
@@ -54,7 +59,8 @@ protected:
 
   /* despin() //{ */
 
-  void despin() {
+  void despin()
+  {
     executor_->cancel();
 
     main_thread_.join();
@@ -62,7 +68,7 @@ protected:
 
   //}
 
-  rclcpp::Node::SharedPtr                              node_;
+  rclcpp::Node::SharedPtr node_;
   rclcpp::executors::SingleThreadedExecutor::SharedPtr executor_;
 
   std::thread main_thread_;
@@ -80,19 +86,22 @@ struct test_param_t
   T param_variable = {}; // persistent variable
 };
 
-const auto test_parameters_defaults = std::tuple
-{
-  test_param_t<bool>{"test_bool", false, true, {true, false}},
-  test_param_t<int>{"test_int", 0, 333, {-1, 1, 666}},
-  test_param_t<int64_t>{"test_int64", 0, 334, {-1, 1, 666}},
-  test_param_t<float>{"test_float", 0.0f, 335, {-1.0f, 1.0f, 666.0f, 1e-3f, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()}},
-  test_param_t<double>{"test_double", 0.0, 336, {-1.0, 1.0, 666.0, 1e-3, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()}},
-  test_param_t<std::string>{"test_string", "", "some_str", {"asdf", "gbleasdgelasdagdds", "554"}},
-  test_param_t<std::vector<uint8_t>>{"test_bytearr", {}, {0, 1}, {{123, 1, 2}, {255}, {}}},
-  test_param_t<std::vector<bool>>{"test_boolarr", {}, {true, false}, {{true, false, true}, {false}, {}}},
-  test_param_t<std::vector<int64_t>>{"test_int64arr", {}, {5, 6, 7, 8}, {{1, 2, 3}, {-1}, {}}},
-  test_param_t<std::vector<double>>{"test_doublearr", {}, {0.1, 1.2, 2.3, 3.4}, {{1.0, 2.0, 3.0}, {-1.0}, {-1.0, 1.0, 666.0, 1e-3, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()}, {}}},
-  test_param_t<std::vector<std::string>>{"test_stringarr", {}, {"this", "should", "load"}, {{"asdf", "gbleasdgelasdagdds", "554"}, {}, {"blebleble"}}},
+const auto test_parameters_defaults = std::tuple{
+    test_param_t<bool>{"test_bool", false, true, {true, false}},
+    test_param_t<int>{"test_int", 0, 333, {-1, 1, 666}},
+    test_param_t<int64_t>{"test_int64", 0, 334, {-1, 1, 666}},
+    test_param_t<float>{"test_float", 0.0f, 335, {-1.0f, 1.0f, 666.0f, 1e-3f, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()}},
+    test_param_t<double>{"test_double", 0.0, 336, {-1.0, 1.0, 666.0, 1e-3, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()}},
+    test_param_t<std::string>{"test_string", "", "some_str", {"asdf", "gbleasdgelasdagdds", "554"}},
+    test_param_t<std::vector<uint8_t>>{"test_bytearr", {}, {0, 1}, {{123, 1, 2}, {255}, {}}},
+    test_param_t<std::vector<bool>>{"test_boolarr", {}, {true, false}, {{true, false, true}, {false}, {}}},
+    test_param_t<std::vector<int64_t>>{"test_int64arr", {}, {5, 6, 7, 8}, {{1, 2, 3}, {-1}, {}}},
+    test_param_t<std::vector<double>>{
+        "test_doublearr",
+        {},
+        {0.1, 1.2, 2.3, 3.4},
+        {{1.0, 2.0, 3.0}, {-1.0}, {-1.0, 1.0, 666.0, 1e-3, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()}, {}}},
+    test_param_t<std::vector<std::string>>{"test_stringarr", {}, {"this", "should", "load"}, {{"asdf", "gbleasdgelasdagdds", "554"}, {}, {"blebleble"}}},
 };
 
 /* TEST_F(Test, dynparam_mgr_existing_param) //{ */
@@ -100,7 +109,8 @@ const auto test_parameters_defaults = std::tuple
 /* set_param_type(mrs_lib::DynparamMgr& dynparam_mgr, const std::string& param_name, const T& init_value, const std::vector<T>& test_values) //{ */
 
 template <typename T>
-void set_param_type(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynparam_mgr, T& test_var, const std::string& param_name, const T& init_value, const std::vector<T>& test_values)
+void set_param_type(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynparam_mgr, T& test_var, const std::string& param_name, const T& init_value,
+                    const std::vector<T>& test_values)
 {
   test_var = init_value;
 
@@ -124,7 +134,8 @@ void set_param_type(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynparam
 
 //}
 
-TEST_F(Test, dynparam_mgr_existing_param) {
+TEST_F(Test, dynparam_mgr_existing_param)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
@@ -132,15 +143,8 @@ TEST_F(Test, dynparam_mgr_existing_param) {
 
   rclcpp::NodeOptions node_options;
   node_options.automatically_declare_parameters_from_overrides(true);
-  std::apply
-  (
-    [&node_options](const auto& ... tupleArgs)
-    {
-      ((
-        node_options.append_parameter_override(tupleArgs.name, tupleArgs.test_values.front())
-        , ...));
-    }, test_parameters
-  );
+  std::apply([&node_options](const auto&... tupleArgs) { ((node_options.append_parameter_override(tupleArgs.name, tupleArgs.test_values.front()), ...)); },
+             test_parameters);
 
   RCLCPP_INFO(node_->get_logger(), "defining dynparam_mgr_existing_param");
   std::shared_ptr<rclcpp::Node> node2 = std::make_shared<rclcpp::Node>("dynparam_mgr_existing_param", "", node_options);
@@ -149,13 +153,11 @@ TEST_F(Test, dynparam_mgr_existing_param) {
   RCLCPP_INFO(node2->get_logger(), "defining DynparamMgr");
   auto dynparam_mgr = mrs_lib::DynparamMgr(node2, mtx);
 
-  std::apply
-  (
-    [node2, &dynparam_mgr](auto& ... tupleArgs)
-    {
-      ((set_param_type(node2, dynparam_mgr, tupleArgs.param_variable, tupleArgs.name, tupleArgs.init_value, tupleArgs.test_values), ...));
-    }, test_parameters
-  );
+  std::apply(
+      [node2, &dynparam_mgr](auto&... tupleArgs) {
+        ((set_param_type(node2, dynparam_mgr, tupleArgs.param_variable, tupleArgs.name, tupleArgs.init_value, tupleArgs.test_values), ...));
+      },
+      test_parameters);
 
   RCLCPP_INFO(node_->get_logger(), "finished");
   despin();
@@ -172,7 +174,8 @@ void dynparam_mgr_nonexisting_param(mrs_lib::DynparamMgr& dynparam_mgr, T& test_
   EXPECT_EQ(test_var, init_value);
 }
 
-TEST_F(Test, dynparam_mgr_nonexisting_param) {
+TEST_F(Test, dynparam_mgr_nonexisting_param)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
@@ -182,13 +185,9 @@ TEST_F(Test, dynparam_mgr_nonexisting_param) {
   RCLCPP_INFO(node_->get_logger(), "defining DynparamMgr");
   auto dynparam_mgr = mrs_lib::DynparamMgr(node_, mtx);
 
-  std::apply
-  (
-    [&dynparam_mgr](auto& ... tupleArgs)
-    {
-      ((dynparam_mgr_nonexisting_param(dynparam_mgr, tupleArgs.param_variable, tupleArgs.name, tupleArgs.init_value), ...));
-    }, test_parameters
-  );
+  std::apply([&dynparam_mgr](
+                 auto&... tupleArgs) { ((dynparam_mgr_nonexisting_param(dynparam_mgr, tupleArgs.param_variable, tupleArgs.name, tupleArgs.init_value), ...)); },
+             test_parameters);
 
   RCLCPP_INFO(node_->get_logger(), "finished");
   despin();
@@ -201,7 +200,8 @@ TEST_F(Test, dynparam_mgr_nonexisting_param) {
 /* default_value_test(mrs_lib::DynparamMgr& dynparam_mgr, const std::string& param_name, const T& init_value) //{ */
 
 template <typename T>
-void default_value_test(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynparam_mgr, T& test_var, const std::string& param_name, const T& init_value, const T& default_value)
+void default_value_test(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynparam_mgr, T& test_var, const std::string& param_name, const T& init_value,
+                        const T& default_value)
 {
   test_var = init_value;
 
@@ -214,7 +214,8 @@ void default_value_test(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynp
 
 //}
 
-TEST_F(Test, dynparam_mgr_default_value) {
+TEST_F(Test, dynparam_mgr_default_value)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
@@ -227,14 +228,14 @@ TEST_F(Test, dynparam_mgr_default_value) {
   RCLCPP_INFO(node2->get_logger(), "defining DynparamMgr");
   auto dynparam_mgr = mrs_lib::DynparamMgr(node2, mtx);
 
-  std::apply
-  (
-    [node2, &dynparam_mgr](auto& ... tupleArgs)
-    {
-    // the static cast bullshit is a fix for a std::vector<bool>
-      ((default_value_test(node2, dynparam_mgr, tupleArgs.param_variable, tupleArgs.name, tupleArgs.init_value, static_cast<decltype(tupleArgs.init_value)>(tupleArgs.test_values.at(1))), ...));
-    }, test_parameters
-  );
+  std::apply(
+      [node2, &dynparam_mgr](auto&... tupleArgs) {
+        // the static cast bullshit is a fix for a std::vector<bool>
+        ((default_value_test(node2, dynparam_mgr, tupleArgs.param_variable, tupleArgs.name, tupleArgs.init_value,
+                             static_cast<decltype(tupleArgs.init_value)>(tupleArgs.test_values.at(1))),
+          ...));
+      },
+      test_parameters);
 
   RCLCPP_INFO(node_->get_logger(), "finished");
   despin();
@@ -244,10 +245,12 @@ TEST_F(Test, dynparam_mgr_default_value) {
 
 /* TEST_F(Test, dynparam_mgr_update_params) //{ */
 
-/* update_to_ros_test(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynparam_mgr, const std::string& param_name, const T& init_value, const std::vector<T>& test_values) //{ */
+/* update_to_ros_test(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynparam_mgr, const std::string& param_name, const T& init_value, const
+ * std::vector<T>& test_values) //{ */
 
 template <typename T>
-void update_to_ros_test(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynparam_mgr, T& test_var, const std::string& param_name, const T& var_init_value, const T& first_value, const std::vector<T>& test_values)
+void update_to_ros_test(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynparam_mgr, T& test_var, const std::string& param_name, const T& var_init_value,
+                        const T& first_value, const std::vector<T>& test_values)
 {
   test_var = var_init_value;
 
@@ -282,7 +285,8 @@ void update_to_ros_test(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynp
 
 //}
 
-TEST_F(Test, dynparam_mgr_update_params) {
+TEST_F(Test, dynparam_mgr_update_params)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
@@ -290,15 +294,8 @@ TEST_F(Test, dynparam_mgr_update_params) {
 
   rclcpp::NodeOptions node_options;
   node_options.automatically_declare_parameters_from_overrides(true);
-  std::apply
-  (
-    [&node_options](const auto& ... tupleArgs)
-    {
-      ((
-        node_options.append_parameter_override(tupleArgs.name, tupleArgs.test_values.front())
-        , ...));
-    }, test_parameters
-  );
+  std::apply([&node_options](const auto&... tupleArgs) { ((node_options.append_parameter_override(tupleArgs.name, tupleArgs.test_values.front()), ...)); },
+             test_parameters);
 
   std::shared_ptr<rclcpp::Node> node2 = std::make_shared<rclcpp::Node>("dynparam_mgr_update_params", "", node_options);
 
@@ -306,14 +303,14 @@ TEST_F(Test, dynparam_mgr_update_params) {
   RCLCPP_INFO(node2->get_logger(), "defining DynparamMgr");
   auto dynparam_mgr = mrs_lib::DynparamMgr(node2, mtx);
 
-  std::apply
-  (
-    [node2, &dynparam_mgr](auto& ... tupleArgs)
-    {
-    // the static cast bullshit is a fix for a std::vector<bool>
-      ((update_to_ros_test(node2, dynparam_mgr, tupleArgs.param_variable, tupleArgs.name, tupleArgs.init_value, static_cast<decltype(tupleArgs.init_value)>(tupleArgs.test_values.front()), tupleArgs.test_values), ...));
-    }, test_parameters
-  );
+  std::apply(
+      [node2, &dynparam_mgr](auto&... tupleArgs) {
+        // the static cast bullshit is a fix for a std::vector<bool>
+        ((update_to_ros_test(node2, dynparam_mgr, tupleArgs.param_variable, tupleArgs.name, tupleArgs.init_value,
+                             static_cast<decltype(tupleArgs.init_value)>(tupleArgs.test_values.front()), tupleArgs.test_values),
+          ...));
+      },
+      test_parameters);
 
   RCLCPP_INFO(node2->get_logger(), "finished");
   despin();
@@ -323,7 +320,8 @@ TEST_F(Test, dynparam_mgr_update_params) {
 
 /* TEST_F(Test, dynparam_mgr_subnode) //{ */
 
-TEST_F(Test, dynparam_mgr_subnode) {
+TEST_F(Test, dynparam_mgr_subnode)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
@@ -350,13 +348,13 @@ TEST_F(Test, dynparam_mgr_subnode) {
   // add the YAML files with the default values of the parameters
   EXPECT_TRUE(dynparam_mgr.get_param_provider().addYamlFile(test_resources_path.string() + "/test_config.yaml"));
 
-  std::apply
-  (
-    [subnode, &dynparam_mgr](auto& ... tupleArgs)
-    {
-      ((update_to_ros_test(subnode, dynparam_mgr, tupleArgs.param_variable, tupleArgs.name, tupleArgs.init_value, tupleArgs.yaml_value, tupleArgs.test_values), ...));
-    }, test_parameters
-  );
+  std::apply(
+      [subnode, &dynparam_mgr](auto&... tupleArgs) {
+        ((update_to_ros_test(subnode, dynparam_mgr, tupleArgs.param_variable, tupleArgs.name, tupleArgs.init_value, tupleArgs.yaml_value,
+                             tupleArgs.test_values),
+          ...));
+      },
+      test_parameters);
 
   RCLCPP_INFO(node2->get_logger(), "finished");
   despin();
@@ -366,7 +364,9 @@ TEST_F(Test, dynparam_mgr_subnode) {
 
 /* TEST_F(Test, dynparam_mgr_callback) //{ */
 
-struct CallbackTesterBase {};
+struct CallbackTesterBase
+{
+};
 
 template <typename T>
 struct CallbackTester : CallbackTesterBase
@@ -376,9 +376,9 @@ struct CallbackTester : CallbackTesterBase
   T expected_param_value = {};
   int valid_callbacks = 0;
 
-  CallbackTester(const std::string& tested_param_name, const rclcpp::Node::SharedPtr& node)
-    : tested_param_name(tested_param_name), node(node)
-  {}
+  CallbackTester(const std::string& tested_param_name, const rclcpp::Node::SharedPtr& node) : tested_param_name(tested_param_name), node(node)
+  {
+  }
 
   void callback(const std::string& param_name, const T& new_value)
   {
@@ -400,7 +400,8 @@ struct CallbackTester : CallbackTesterBase
 };
 
 template <typename T>
-std::shared_ptr<CallbackTesterBase> test_callback(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynparam_mgr, const std::string& param_name, const std::vector<T>& test_values)
+std::shared_ptr<CallbackTesterBase> test_callback(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynparam_mgr, const std::string& param_name,
+                                                  const std::vector<T>& test_values)
 {
   T test_var;
 
@@ -437,13 +438,9 @@ TEST_F(Test, dynparam_mgr_callback)
   // a vector to hold the objects created within the test_callback so that they don't go out of scope
   // while being used
   std::vector<std::shared_ptr<CallbackTesterBase>> cbk_tester_ptrs;
-  std::apply
-  (
-    [this, &dynparam_mgr, &cbk_tester_ptrs](const auto& ... tupleArgs)
-    {
-      ((cbk_tester_ptrs.push_back(test_callback(node_, dynparam_mgr, tupleArgs.name, tupleArgs.test_values)), ...));
-    }, test_parameters
-  );
+  std::apply([this, &dynparam_mgr, &cbk_tester_ptrs](
+                 const auto&... tupleArgs) { ((cbk_tester_ptrs.push_back(test_callback(node_, dynparam_mgr, tupleArgs.name, tupleArgs.test_values)), ...)); },
+             test_parameters);
 
   RCLCPP_INFO(node_->get_logger(), "finished");
   despin();
@@ -457,7 +454,8 @@ using range_t = mrs_lib::DynparamMgr::range_t<T>;
 /* TEST_F(Test, dynparam_mgr_ranges) //{ */
 
 template <typename T>
-void test_ranges(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynparam_mgr, T& test_var, const T& minimum, const T& maximum, const std::string& param_name, const std::vector<T>& test_values)
+void test_ranges(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynparam_mgr, T& test_var, const T& minimum, const T& maximum,
+                 const std::string& param_name, const std::vector<T>& test_values)
 {
   // all the parameters should be available in the YAML file
   EXPECT_TRUE(dynparam_mgr.register_param(param_name, &test_var, {minimum, maximum}));
@@ -470,14 +468,15 @@ void test_ranges(rclcpp::Node::SharedPtr node, mrs_lib::DynparamMgr& dynparam_mg
     if (test_val >= minimum && test_val <= maximum)
     {
       if (!parameter_set_result)
-        RCLCPP_ERROR_STREAM(node->get_logger(), "Failed to set a new value " << test_val << " of parameter \"" << param_name << "\" with range [" << minimum << ", " << maximum << "].");
+        RCLCPP_ERROR_STREAM(node->get_logger(), "Failed to set a new value " << test_val << " of parameter \"" << param_name << "\" with range [" << minimum
+                                                                             << ", " << maximum << "].");
       EXPECT_TRUE(parameter_set_result);
       EXPECT_EQ(test_var, test_val);
-    }
-    else
+    } else
     {
       if (parameter_set_result)
-        RCLCPP_ERROR_STREAM(node->get_logger(), "Succeeded to set a new value " << test_val << " of parameter \"" << param_name << "\" with range [" << minimum << ", " << maximum << "].");
+        RCLCPP_ERROR_STREAM(node->get_logger(), "Succeeded to set a new value " << test_val << " of parameter \"" << param_name << "\" with range [" << minimum
+                                                                                << ", " << maximum << "].");
       EXPECT_FALSE(parameter_set_result);
       EXPECT_EQ(test_var, prev_val);
     }
@@ -509,8 +508,10 @@ TEST_F(Test, dynparam_mgr_ranges)
   test_ranges(node_, dynparam_mgr, test_float, -3.0f, 666.0f, "test_float", {-1.0f, 1.0f, 666.0f, 667.0f, 1e-3f});
   test_ranges(node_, dynparam_mgr, test_double, -3.0, 666.0, "test_double", {-1.0, 1.0, 666.0, 667.0, 1e-3});
   // for some reason, negative and positive infinity can always be set even if a parameter range is specified... it's another ROS2 bug - yay!
-  /* test_ranges(node_, dynparam_mgr, test_float, -3.0f, 666.0f, "test_float", {-1.0f, 1.0f, 666.0f, 667.0f, 1e-3f, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()}); */
-  /* test_ranges(node_, dynparam_mgr, test_double, -3.0, 666.0, "test_double", {-1.0, 1.0, 666.0, 667.0, 1e-3, -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()}); */
+  /* test_ranges(node_, dynparam_mgr, test_float, -3.0f, 666.0f, "test_float", {-1.0f, 1.0f, 666.0f, 667.0f, 1e-3f, -std::numeric_limits<float>::infinity(),
+   * std::numeric_limits<float>::infinity()}); */
+  /* test_ranges(node_, dynparam_mgr, test_double, -3.0, 666.0, "test_double", {-1.0, 1.0, 666.0, 667.0, 1e-3, -std::numeric_limits<double>::infinity(),
+   * std::numeric_limits<double>::infinity()}); */
 
   RCLCPP_INFO(node_->get_logger(), "finished");
   despin();
@@ -520,7 +521,8 @@ TEST_F(Test, dynparam_mgr_ranges)
 
 /* TEST_F(Test, dynparam_mgr_loaded_successfully) //{ */
 
-TEST_F(Test, dynparam_mgr_loaded_successfully) {
+TEST_F(Test, dynparam_mgr_loaded_successfully)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
   RCLCPP_INFO(node_->get_logger(), "defining ParamProvider");
@@ -547,4 +549,3 @@ TEST_F(Test, dynparam_mgr_loaded_successfully) {
 }
 
 //}
-

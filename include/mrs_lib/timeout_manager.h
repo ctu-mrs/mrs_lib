@@ -85,6 +85,6 @@ namespace mrs_lib
     //}
   };
 
-}  // namespace mrs_lib
+} // namespace mrs_lib
 
-#endif  // TIMEOUT_MANAGER_H
+#endif // TIMEOUT_MANAGER_H

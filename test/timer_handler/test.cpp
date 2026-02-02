@@ -10,13 +10,15 @@
 
 using namespace std::chrono_literals;
 
-class Test : public ::testing::Test {
+class Test : public ::testing::Test
+{
 
 public:
 protected:
   /* SetUpTestCase() //{ */
 
-  static void SetUpTestCase() {
+  static void SetUpTestCase()
+  {
     rclcpp::init(0, nullptr);
   }
 
@@ -24,7 +26,8 @@ protected:
 
   /* TearDownTestCase() //{ */
 
-  static void TearDownTestCase() {
+  static void TearDownTestCase()
+  {
     rclcpp::shutdown();
   }
 
@@ -32,7 +35,8 @@ protected:
 
   /* initialize() //{ */
 
-  void initialize(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions()) {
+  void initialize(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions())
+  {
 
     node_ = std::make_shared<rclcpp::Node>("test_timer_handler", node_options);
 
@@ -48,7 +52,8 @@ protected:
 
   /* spin() //{ */
 
-  void spin() {
+  void spin()
+  {
 
     RCLCPP_INFO(node_->get_logger(), "starting spinning");
 
@@ -61,7 +66,8 @@ protected:
 
   /* despin() //{ */
 
-  void despin() {
+  void despin()
+  {
     executor_->cancel();
 
     main_thread_.join();
@@ -69,24 +75,24 @@ protected:
 
   //}
 
-  rclcpp::Node::SharedPtr                              node_;
+  rclcpp::Node::SharedPtr node_;
   rclcpp::executors::SingleThreadedExecutor::SharedPtr executor_;
 
   std::thread main_thread_;
 
   std::promise<bool> finished_promise_;
-  std::future<bool>  finished_future_;
+  std::future<bool> finished_future_;
 
   void do_test(const bool use_threadtimer);
 
   void timerCallback(void);
 
-  double            rate_         = 50;
-  int               n_cbks_       = 0;
-  bool              cbks_in_time_ = true;
-  bool              null_cbk_     = false;
-  bool              cbks_ok_      = true;
-  std::mutex        cbk_running_mtx_;
+  double rate_ = 50;
+  int n_cbks_ = 0;
+  bool cbks_in_time_ = true;
+  bool null_cbk_ = false;
+  bool cbks_ok_ = true;
+  std::mutex cbk_running_mtx_;
   std::atomic<bool> cbk_running_ = false;
 
   std::atomic<bool> test_stop_from_cbk_ = false;
@@ -98,22 +104,25 @@ protected:
 
 /* timerCallback() //{ */
 
-void Test::timerCallback(void) {
+void Test::timerCallback(void)
+{
 
   std::scoped_lock lck(cbk_running_mtx_);
 
   mrs_lib::AtomicScopeFlag running(cbk_running_);
   n_cbks_++;
 
-  if (last_time_callback_) {
+  if (last_time_callback_)
+  {
 
     double expected_time = (last_time_callback_.value() + rclcpp::Duration(std::chrono::duration<double>(1.0 / rate_))).seconds();
-    double now           = node_->get_clock()->now().seconds();
+    double now = node_->get_clock()->now().seconds();
 
     double dt = now - expected_time;
 
     // this is quite a large tolerance, but the ROS timer actually isn't capable of performing better, so it has to be
-    if (std::abs(dt) > (rate_ / 2.0)) {
+    if (std::abs(dt) > (rate_ / 2.0))
+    {
       RCLCPP_ERROR_STREAM(node_->get_logger(), "Callback did not come in time! Expected: " << expected_time << ", received: " << now
                                                                                            << " (period: " << 1.0 / rate_ << ", difference: " << dt << ")");
       cbks_in_time_ = false;
@@ -122,18 +131,21 @@ void Test::timerCallback(void) {
 
   last_time_callback_ = {node_->get_clock()->now()};
 
-  if (!timer_) {
+  if (!timer_)
+  {
     RCLCPP_ERROR_STREAM(node_->get_logger(), "Callback called while timer is already destroyed!");
     null_cbk_ = true;
     return;
   }
 
-  if (!timer_->running()) {
+  if (!timer_->running())
+  {
     RCLCPP_ERROR_STREAM(node_->get_logger(), "Callback called while timer is not running!");
     cbks_ok_ = false;
   }
 
-  if (test_stop_from_cbk_) {
+  if (test_stop_from_cbk_)
+  {
     timer_->stop();
     std::cout << "\tStopping timer from callback." << std::endl;
   }
@@ -143,7 +155,8 @@ void Test::timerCallback(void) {
 
 /* do_test() //{ */
 
-void Test::do_test(const bool use_threadtimer) {
+void Test::do_test(const bool use_threadtimer)
+{
 
   RCLCPP_INFO(node_->get_logger(), "Constructing timer");
 
@@ -151,14 +164,16 @@ void Test::do_test(const bool use_threadtimer) {
 
   mrs_lib::TimerHandlerOptions opts;
 
-  opts.node      = node_;
+  opts.node = node_;
   opts.autostart = false;
 
   std::function<void()> callback_fcn = std::bind(&Test::timerCallback, this);
 
-  if (use_threadtimer) {
+  if (use_threadtimer)
+  {
     timer_ = std::make_shared<mrs_lib::ThreadTimer>(opts, rclcpp::Rate(rate_, node_->get_clock()), callback_fcn);
-  } else {
+  } else
+  {
     timer_ = std::make_shared<mrs_lib::ROSTimer>(opts, rclcpp::Rate(rate_, node_->get_clock()), callback_fcn);
   }
 
@@ -166,8 +181,8 @@ void Test::do_test(const bool use_threadtimer) {
     std::cout << "\tTesting callback period\n";
     timer_->start();
 
-    const rclcpp::Time start    = node_->get_clock()->now();
-    const double       test_dur = 1.0;
+    const rclcpp::Time start = node_->get_clock()->now();
+    const double test_dur = 1.0;
 
     rclcpp::sleep_for(std::chrono::milliseconds(int(1000 * test_dur)));
 
@@ -175,9 +190,9 @@ void Test::do_test(const bool use_threadtimer) {
 
     EXPECT_FALSE(cbk_running_);
 
-    const double expected_cbks              = test_dur * rate_;
-    const bool   callbacks_in_time          = cbks_in_time_;
-    const bool   callback_while_not_running = !cbks_ok_;
+    const double expected_cbks = test_dur * rate_;
+    const bool callbacks_in_time = cbks_in_time_;
+    const bool callback_while_not_running = !cbks_ok_;
 
     EXPECT_FALSE(callback_while_not_running);
     EXPECT_LE(std::abs(n_cbks_ - expected_cbks), 2);
@@ -193,12 +208,13 @@ void Test::do_test(const bool use_threadtimer) {
 
   {
     std::cout << "\tTesting stop from callback\n";
-    n_cbks_             = 0;
+    n_cbks_ = 0;
     test_stop_from_cbk_ = true;
     timer_->start();
 
     // wait for one callback to be called
-    while (!n_cbks_) {
+    while (!n_cbks_)
+    {
       rclcpp::sleep_for(1s);
     }
 
@@ -207,7 +223,7 @@ void Test::do_test(const bool use_threadtimer) {
     // wait for the callback to end
     {
       std::scoped_lock lck(cbk_running_mtx_);
-      n_cbks_                                = 0;
+      n_cbks_ = 0;
       const bool timer_stopped_from_callback = !timer_->running();
       EXPECT_TRUE(timer_stopped_from_callback);
     }
@@ -229,9 +245,9 @@ void Test::do_test(const bool use_threadtimer) {
     timer_->start();
     timer_ = nullptr;
 
-    const rclcpp::Time destroyed                  = node_->get_clock()->now();
-    const bool         callback_while_destroyed   = null_cbk_;
-    const bool         callback_while_not_running = !cbks_ok_;
+    const rclcpp::Time destroyed = node_->get_clock()->now();
+    const bool callback_while_destroyed = null_cbk_;
+    const bool callback_while_not_running = !cbks_ok_;
 
     EXPECT_FALSE(callback_while_destroyed);
     EXPECT_FALSE(callback_while_not_running);
@@ -243,7 +259,8 @@ void Test::do_test(const bool use_threadtimer) {
 
 /* TEST_F(Test, thread_timer) //{ */
 
-TEST_F(Test, thread_timer) {
+TEST_F(Test, thread_timer)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
@@ -253,7 +270,8 @@ TEST_F(Test, thread_timer) {
 
   bool use_threadtimer = true;
 
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 8; i++)
+  {
     do_test(use_threadtimer);
   }
 
@@ -266,8 +284,8 @@ TEST_F(Test, thread_timer) {
 
 /* TEST_F(Test, ros_timer) //{ */
 
-// The thread timer cuurrently fails due to 
-//    EXPECT_FALSE(cbk_running_); 
+// The thread timer cuurrently fails due to
+//    EXPECT_FALSE(cbk_running_);
 // .. the timer callback is still running after we cancel the timer...
 
 /* TEST_F(Test, ros_timer) { */

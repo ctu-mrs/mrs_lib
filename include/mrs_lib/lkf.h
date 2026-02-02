@@ -272,10 +272,10 @@ namespace mrs_lib
     using P_t = typename Base_class::P_t;
     using R_t = typename Base_class::R_t;
     using statecov_t = typename Base_class::statecov_t;
-    using A_t = typename Base_class::A_t;  // measurement mapping p*n
-    using B_t = typename Base_class::B_t;  // process covariance n*n
-    using H_t = typename Base_class::H_t;  // measurement mapping p*n
-    using Q_t = typename Base_class::Q_t;  // process covariance n*n
+    using A_t = typename Base_class::A_t; // measurement mapping p*n
+    using B_t = typename Base_class::B_t; // process covariance n*n
+    using H_t = typename Base_class::H_t; // measurement mapping p*n
+    using Q_t = typename Base_class::Q_t; // process covariance n*n
 
     using generateA_t = std::function<A_t(double)>;
     using generateB_t = std::function<B_t(double)>;
@@ -345,15 +345,15 @@ namespace mrs_lib
     using P_t = typename Base_class::P_t;
     using R_t = typename Base_class::R_t;
     using statecov_t = typename Base_class::statecov_t;
-    using A_t = typename Base_class::A_t;  // measurement mapping p*n
-    using B_t = typename Base_class::B_t;  // process covariance n*n
-    using H_t = typename Base_class::H_t;  // measurement mapping p*n
-    using Q_t = typename Base_class::Q_t;  // process covariance n*n
+    using A_t = typename Base_class::A_t; // measurement mapping p*n
+    using B_t = typename Base_class::B_t; // process covariance n*n
+    using H_t = typename Base_class::H_t; // measurement mapping p*n
+    using Q_t = typename Base_class::Q_t; // process covariance n*n
 
-    using coeff_A_t = A_t;                            // matrix of constant coefficients in matrix A
-    typedef Eigen::Matrix<unsigned, n, n> dtexp_A_t;  // matrix of dt exponents in matrix A
-    using coeff_B_t = B_t;                            // matrix of constant coefficients in matrix B
-    typedef Eigen::Matrix<unsigned, n, m> dtexp_B_t;  // matrix of dt exponents in matrix B
+    using coeff_A_t = A_t;                           // matrix of constant coefficients in matrix A
+    typedef Eigen::Matrix<unsigned, n, n> dtexp_A_t; // matrix of dt exponents in matrix A
+    using coeff_B_t = B_t;                           // matrix of constant coefficients in matrix B
+    typedef Eigen::Matrix<unsigned, n, m> dtexp_B_t; // matrix of dt exponents in matrix B
     //}
 
   public:
@@ -370,6 +370,6 @@ namespace mrs_lib
   };
   //}
 
-}  // namespace mrs_lib
+} // namespace mrs_lib
 
-#endif  // LKFSYSTEMMODELS_H
+#endif // LKFSYSTEMMODELS_H

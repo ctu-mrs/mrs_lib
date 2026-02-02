@@ -17,35 +17,46 @@ namespace mrs_lib
   template bool ParamProvider::getParam<std::vector<std::string>>(const std::string& name, std::vector<std::string>& out_value) const;
 
   ParamProvider::ParamProvider(const std::shared_ptr<rclcpp::Node>& node, const bool use_rosparam)
-  : m_node(node), m_node_name(m_node->get_name()), m_use_rosparam(use_rosparam)
+      : m_node(node), m_node_name(m_node->get_name()), m_use_rosparam(use_rosparam)
   {
   }
 
   std::ostream& operator<<(std::ostream& os, rclcpp::ParameterType& var)
   {
-    /* PARAMETER_NOT_SET */ 	
-    /* PARAMETER_BOOL */ 	
-    /* PARAMETER_INTEGER */ 	
-    /* PARAMETER_DOUBLE */ 	
-    /* PARAMETER_STRING */ 	
-    /* PARAMETER_BYTE_ARRAY */ 	
-    /* PARAMETER_BOOL_ARRAY */ 	
-    /* PARAMETER_INTEGER_ARRAY */ 	
-    /* PARAMETER_DOUBLE_ARRAY */ 	
-    /* PARAMETER_STRING_ARRAY */ 
+    /* PARAMETER_NOT_SET */
+    /* PARAMETER_BOOL */
+    /* PARAMETER_INTEGER */
+    /* PARAMETER_DOUBLE */
+    /* PARAMETER_STRING */
+    /* PARAMETER_BYTE_ARRAY */
+    /* PARAMETER_BOOL_ARRAY */
+    /* PARAMETER_INTEGER_ARRAY */
+    /* PARAMETER_DOUBLE_ARRAY */
+    /* PARAMETER_STRING_ARRAY */
     switch (var)
     {
-      case rclcpp::ParameterType::PARAMETER_NOT_SET: return os << "NOT_SET";
-      case rclcpp::ParameterType::PARAMETER_BOOL: return os << "BOOL";
-      case rclcpp::ParameterType::PARAMETER_INTEGER: return os << "PARAMETER_INTEGER";
-      case rclcpp::ParameterType::PARAMETER_DOUBLE: return os << "PARAMETER_DOUBLE";
-      case rclcpp::ParameterType::PARAMETER_STRING: return os << "PARAMETER_STRING";
-      case rclcpp::ParameterType::PARAMETER_BYTE_ARRAY: return os << "PARAMETER_BYTE_ARRAY";
-      case rclcpp::ParameterType::PARAMETER_BOOL_ARRAY: return os << "PARAMETER_BOOL_ARRAY";
-      case rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY: return os << "PARAMETER_INTEGER_ARRAY";
-      case rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY: return os << "PARAMETER_DOUBLE_ARRAY";
-      case rclcpp::ParameterType::PARAMETER_STRING_ARRAY: return os << "PARAMETER_STRING_ARRAY";
-      default: return os << "INVALID";
+    case rclcpp::ParameterType::PARAMETER_NOT_SET:
+      return os << "NOT_SET";
+    case rclcpp::ParameterType::PARAMETER_BOOL:
+      return os << "BOOL";
+    case rclcpp::ParameterType::PARAMETER_INTEGER:
+      return os << "PARAMETER_INTEGER";
+    case rclcpp::ParameterType::PARAMETER_DOUBLE:
+      return os << "PARAMETER_DOUBLE";
+    case rclcpp::ParameterType::PARAMETER_STRING:
+      return os << "PARAMETER_STRING";
+    case rclcpp::ParameterType::PARAMETER_BYTE_ARRAY:
+      return os << "PARAMETER_BYTE_ARRAY";
+    case rclcpp::ParameterType::PARAMETER_BOOL_ARRAY:
+      return os << "PARAMETER_BOOL_ARRAY";
+    case rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY:
+      return os << "PARAMETER_INTEGER_ARRAY";
+    case rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY:
+      return os << "PARAMETER_DOUBLE_ARRAY";
+    case rclcpp::ParameterType::PARAMETER_STRING_ARRAY:
+      return os << "PARAMETER_STRING_ARRAY";
+    default:
+      return os << "INVALID";
     }
   }
 
@@ -61,12 +72,14 @@ namespace mrs_lib
     }
     catch (const YAML::ParserException& e)
     {
-      RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node_name << "]: Failed to parse file \"" << filepath << "\"! Parameters will not be loaded: " << e.what());
+      RCLCPP_ERROR_STREAM(m_node->get_logger(),
+                          "[" << m_node_name << "]: Failed to parse file \"" << filepath << "\"! Parameters will not be loaded: " << e.what());
       return false;
     }
     catch (const YAML::BadFile& e)
     {
-      RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node_name << "]: File \"" << filepath << "\" does not exist! Parameters will not be loaded: " << e.what());
+      RCLCPP_ERROR_STREAM(m_node->get_logger(),
+                          "[" << m_node_name << "]: File \"" << filepath << "\" does not exist! Parameters will not be loaded: " << e.what());
       return false;
     }
     catch (const YAML::Exception& e)
@@ -104,7 +117,7 @@ namespace mrs_lib
           const auto start_pos = std::distance(std::cbegin(resolved_name.str), substr_start);
           const auto count = std::distance(substr_start, substr_end);
           const std::string param_substr = resolved_name.str.substr(start_pos, count);
-          substr_start = substr_end+1;
+          substr_start = substr_end + 1;
 
           bool found = false;
           for (auto node_it = std::cbegin(cur_node_it->second); node_it != std::cend(cur_node_it->second); ++node_it)
@@ -122,8 +135,7 @@ namespace mrs_lib
             loaded = false;
             break;
           }
-        }
-        while (substr_end != std::end(resolved_name.str) && cur_node_it->second.IsMap());
+        } while (substr_end != std::end(resolved_name.str) && cur_node_it->second.IsMap());
       }
 
       if (loaded)
@@ -159,8 +171,7 @@ namespace mrs_lib
     else if (sub_namespace == "/")
     {
       resolved_name = sub_namespace + param_name;
-    }
-    else
+    } else
     {
       resolved_name = sub_namespace + "/" + param_name;
       // reformat all '/' to '.' which is the new ROS2 delimeter

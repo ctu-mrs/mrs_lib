@@ -653,7 +653,7 @@ namespace mrs_lib
       const std::optional<Eigen::Vector3d> projectPoint(const Eigen::Vector3d& point) const;
     };
     //}
-  }  // namespace geometry
-}  // namespace mrs_lib
+  } // namespace geometry
+} // namespace mrs_lib
 
-#endif  // SHAPES_H
+#endif // SHAPES_H

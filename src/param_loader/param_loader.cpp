@@ -37,17 +37,17 @@ namespace mrs_lib
 
   bool ParamLoader::loadParam(const std::string& name, rclcpp::Duration& out, const rclcpp::Duration& default_value)
   {
-    double     secs;
+    double secs;
     const bool ret = loadParam<double>(name, secs, default_value.seconds());
-    out            = rclcpp::Duration::from_seconds(secs);
+    out = rclcpp::Duration::from_seconds(secs);
     return ret;
   }
 
   bool ParamLoader::loadParam(const std::string& name, rclcpp::Duration& out)
   {
-    double     secs;
+    double secs;
     const bool ret = loadParam<double>(name, secs);
-    out            = rclcpp::Duration::from_seconds(secs);
+    out = rclcpp::Duration::from_seconds(secs);
     return ret;
   }
 
@@ -58,11 +58,11 @@ namespace mrs_lib
   bool ParamLoader::loadParam(const std::string& name, std_msgs::msg::ColorRGBA& out, const std_msgs::msg::ColorRGBA& default_value)
   {
     std_msgs::msg::ColorRGBA res;
-    bool                     ret = true;
-    ret                          = ret & loadParam(name + "/r", res.r, default_value.r);
-    ret                          = ret & loadParam(name + "/g", res.g, default_value.g);
-    ret                          = ret & loadParam(name + "/b", res.b, default_value.b);
-    ret                          = ret & loadParam(name + "/a", res.a, default_value.a);
+    bool ret = true;
+    ret = ret & loadParam(name + "/r", res.r, default_value.r);
+    ret = ret & loadParam(name + "/g", res.g, default_value.g);
+    ret = ret & loadParam(name + "/b", res.b, default_value.b);
+    ret = ret & loadParam(name + "/a", res.a, default_value.a);
     if (ret)
       out = res;
     return ret;
@@ -79,7 +79,8 @@ namespace mrs_lib
 
   ParamLoader::ParamLoader(const std::shared_ptr<rclcpp::Node>& node, bool printValues, std::string_view node_name)
       : m_load_successful(true), m_print_values(printValues), m_node_name(node_name), m_node(node), m_pp(node)
-  {}
+  {
+  }
 
   /* Constructor overloads //{ */
   /*!
@@ -88,9 +89,9 @@ namespace mrs_lib
    * \param nh            The parameters will be loaded from rosparam using this node handle.
    * \param node_name     Optional node name used when printing the loaded values or loading errors.
    */
-  ParamLoader::ParamLoader(const std::shared_ptr<rclcpp::Node>& node, std::string node_name)
-    : ParamLoader(node, true, node_name)
-  {}
+  ParamLoader::ParamLoader(const std::shared_ptr<rclcpp::Node>& node, std::string node_name) : ParamLoader(node, true, node_name)
+  {
+  }
 
   //}
 
@@ -149,8 +150,7 @@ namespace mrs_lib
       printError(std::string("Tried to load parameter \"") + name.str + std::string("\" twice"));
       m_load_successful = false;
       return true;
-    }
-    else
+    } else
     {
       return false;
     }
@@ -173,4 +173,4 @@ namespace mrs_lib
   }
   //}
 
-}
+} // namespace mrs_lib

@@ -9,16 +9,19 @@
 
 using namespace std::chrono_literals;
 
-class Test : public ::testing::Test {
+class Test : public ::testing::Test
+{
 
 public:
   /* callback1() //{ */
 
-  void callback1(const std_msgs::msg::Int64::ConstSharedPtr msg) {
+  void callback1(const std_msgs::msg::Int64::ConstSharedPtr msg)
+  {
 
     RCLCPP_INFO(node_->get_logger(), "message received");
 
-    if (msg->data == num_to_send) {
+    if (msg->data == num_to_send)
+    {
       num_received++;
     }
   }
@@ -27,7 +30,8 @@ public:
 
   /* timeoutCallback() //{ */
 
-  void timeoutCallback([[maybe_unused]] const std::string& topic_name, [[maybe_unused]] const rclcpp::Time& last_msg) {
+  void timeoutCallback([[maybe_unused]] const std::string& topic_name, [[maybe_unused]] const rclcpp::Time& last_msg)
+  {
 
     timeouted_ = true;
   }
@@ -37,7 +41,8 @@ public:
 protected:
   /* SetUpTestCase() //{ */
 
-  static void SetUpTestCase() {
+  static void SetUpTestCase()
+  {
     rclcpp::init(0, nullptr);
   }
 
@@ -45,7 +50,8 @@ protected:
 
   /* TearDownTestCase() //{ */
 
-  static void TearDownTestCase() {
+  static void TearDownTestCase()
+  {
     rclcpp::shutdown();
   }
 
@@ -53,7 +59,8 @@ protected:
 
   /* initialize() //{ */
 
-  void initialize(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions()) {
+  void initialize(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions())
+  {
 
     node_ = std::make_shared<rclcpp::Node>("test_publisher_handler", node_options);
 
@@ -69,7 +76,8 @@ protected:
 
   /* spin() //{ */
 
-  void spin() {
+  void spin()
+  {
 
     RCLCPP_INFO(node_->get_logger(), "starting spinning");
 
@@ -82,7 +90,8 @@ protected:
 
   /* despin() //{ */
 
-  void despin() {
+  void despin()
+  {
     executor_->cancel();
 
     main_thread_.join();
@@ -90,7 +99,7 @@ protected:
 
   //}
 
-  rclcpp::Node::SharedPtr                              node_;
+  rclcpp::Node::SharedPtr node_;
   rclcpp::executors::SingleThreadedExecutor::SharedPtr executor_;
 
   std::thread main_thread_;
@@ -102,12 +111,13 @@ protected:
   int num_to_send = 1234;
 
   std::promise<bool> finished_promise_;
-  std::future<bool>  finished_future_;
+  std::future<bool> finished_future_;
 };
 
 /* TEST_F(Test, polled) //{ */
 
-TEST_F(Test, polled) {
+TEST_F(Test, polled)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
@@ -138,9 +148,11 @@ TEST_F(Test, polled) {
   {
     rclcpp::Rate rate(1.0, clock);
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 10; i++)
+    {
 
-      if (sh_int_.getNumPublishers() > 0) {
+      if (sh_int_.getNumPublishers() > 0)
+      {
         break;
       }
 
@@ -148,7 +160,8 @@ TEST_F(Test, polled) {
     }
   }
 
-  if (sh_int_.getNumPublishers() == 0) {
+  if (sh_int_.getNumPublishers() == 0)
+  {
     RCLCPP_ERROR(node_->get_logger(), "failed to connect publisher and subscriber");
     EXPECT_TRUE(false);
   }
@@ -179,7 +192,8 @@ TEST_F(Test, polled) {
 
 /* TEST_F(Test, callback) //{ */
 
-TEST_F(Test, callback) {
+TEST_F(Test, callback)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
@@ -210,9 +224,11 @@ TEST_F(Test, callback) {
   {
     rclcpp::Rate rate(1.0, clock);
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 10; i++)
+    {
 
-      if (sh_int_.getNumPublishers() > 0) {
+      if (sh_int_.getNumPublishers() > 0)
+      {
         break;
       }
 
@@ -220,7 +236,8 @@ TEST_F(Test, callback) {
     }
   }
 
-  if (sh_int_.getNumPublishers() == 0) {
+  if (sh_int_.getNumPublishers() == 0)
+  {
     RCLCPP_ERROR(node_->get_logger(), "failed to connect publisher and subscriber");
     EXPECT_TRUE(false);
   }
@@ -247,7 +264,8 @@ TEST_F(Test, callback) {
 
 /* TEST_F(Test, timeout) //{ */
 
-TEST_F(Test, timeout) {
+TEST_F(Test, timeout)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
@@ -265,7 +283,7 @@ TEST_F(Test, timeout) {
 
   mrs_lib::SubscriberHandlerOptions sh_opts(node_);
 
-  sh_opts.autostart          = true;
+  sh_opts.autostart = true;
   sh_opts.no_message_timeout = rclcpp::Duration(std::chrono::duration<double>(0.5));
 
   mrs_lib::SubscriberHandler<std_msgs::msg::Int64> sh_int_;
@@ -280,9 +298,11 @@ TEST_F(Test, timeout) {
   {
     rclcpp::Rate rate(0.1, clock);
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 10; i++)
+    {
 
-      if (sh_int_.getNumPublishers() > 0) {
+      if (sh_int_.getNumPublishers() > 0)
+      {
         break;
       }
 
@@ -290,7 +310,8 @@ TEST_F(Test, timeout) {
     }
   }
 
-  if (sh_int_.getNumPublishers() == 0) {
+  if (sh_int_.getNumPublishers() == 0)
+  {
     RCLCPP_ERROR(node_->get_logger(), "failed to connect publisher and subscriber");
     EXPECT_TRUE(false);
   }
@@ -300,7 +321,8 @@ TEST_F(Test, timeout) {
   {
     rclcpp::Rate rate(100.0, clock);
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 100; i++)
+    {
 
       std_msgs::msg::Int64 data;
       data.data = num_to_send;

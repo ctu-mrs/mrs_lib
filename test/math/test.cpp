@@ -22,7 +22,7 @@ TEST(TESTSuite, inv_cdf)
     if (in == 0.0 || in == 1.0)
       EXPECT_EQ(gt, val);
     else
-      EXPECT_LT(fabs(gt-val), eps);
+      EXPECT_LT(fabs(gt - val), eps);
   }
 
   EXPECT_TRUE(std::isnan(mrs_lib::probit(-0.1)));

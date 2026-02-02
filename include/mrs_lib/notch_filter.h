@@ -13,17 +13,18 @@
 namespace mrs_lib
 {
 
-class NotchFilter {
+  class NotchFilter
+  {
 
-public:
-  NotchFilter(const double& sample_rate, const double& frequency_in, const double& bandwidth_in);
+  public:
+    NotchFilter(const double& sample_rate, const double& frequency_in, const double& bandwidth_in);
 
-  double iterate(double& sample_in);
+    double iterate(double& sample_in);
 
-private:
-  std::unique_ptr<mrs_lib::IirFilter> filter;
-};
+  private:
+    std::unique_ptr<mrs_lib::IirFilter> filter;
+  };
 
-}  // namespace mrs_lib
+} // namespace mrs_lib
 
 #endif

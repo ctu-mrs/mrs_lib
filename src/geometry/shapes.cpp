@@ -361,42 +361,42 @@ namespace mrs_lib
       std::vector<Eigen::Vector3d> lookup;
       switch (face_idx)
       {
-        case Cuboid::FRONT:
-          lookup.push_back(points[0]);
-          lookup.push_back(points[1]);
-          lookup.push_back(points[2]);
-          lookup.push_back(points[3]);
-          break;
-        case Cuboid::BACK:
-          lookup.push_back(points[4]);
-          lookup.push_back(points[5]);
-          lookup.push_back(points[6]);
-          lookup.push_back(points[7]);
-          break;
-        case Cuboid::LEFT:
-          lookup.push_back(points[1]);
-          lookup.push_back(points[4]);
-          lookup.push_back(points[7]);
-          lookup.push_back(points[2]);
-          break;
-        case Cuboid::RIGHT:
-          lookup.push_back(points[5]);
-          lookup.push_back(points[0]);
-          lookup.push_back(points[3]);
-          lookup.push_back(points[6]);
-          break;
-        case Cuboid::BOTTOM:
-          lookup.push_back(points[5]);
-          lookup.push_back(points[4]);
-          lookup.push_back(points[1]);
-          lookup.push_back(points[0]);
-          break;
-        case Cuboid::TOP:
-          lookup.push_back(points[3]);
-          lookup.push_back(points[2]);
-          lookup.push_back(points[7]);
-          lookup.push_back(points[6]);
-          break;
+      case Cuboid::FRONT:
+        lookup.push_back(points[0]);
+        lookup.push_back(points[1]);
+        lookup.push_back(points[2]);
+        lookup.push_back(points[3]);
+        break;
+      case Cuboid::BACK:
+        lookup.push_back(points[4]);
+        lookup.push_back(points[5]);
+        lookup.push_back(points[6]);
+        lookup.push_back(points[7]);
+        break;
+      case Cuboid::LEFT:
+        lookup.push_back(points[1]);
+        lookup.push_back(points[4]);
+        lookup.push_back(points[7]);
+        lookup.push_back(points[2]);
+        break;
+      case Cuboid::RIGHT:
+        lookup.push_back(points[5]);
+        lookup.push_back(points[0]);
+        lookup.push_back(points[3]);
+        lookup.push_back(points[6]);
+        break;
+      case Cuboid::BOTTOM:
+        lookup.push_back(points[5]);
+        lookup.push_back(points[4]);
+        lookup.push_back(points[1]);
+        lookup.push_back(points[0]);
+        break;
+      case Cuboid::TOP:
+        lookup.push_back(points[3]);
+        lookup.push_back(points[2]);
+        lookup.push_back(points[7]);
+        lookup.push_back(points[6]);
+        break;
       }
       return lookup;
     }
@@ -535,14 +535,14 @@ namespace mrs_lib
       Eigen::Vector3d ellipse_center;
       switch (index)
       {
-        case Cylinder::BOTTOM:
-          ellipse_center = center() - orientation() * (Eigen::Vector3d::UnitZ() * (h() / 2.0));
-          e = Ellipse(ellipse_center, orientation(), r(), r());
-          break;
-        case Cylinder::TOP:
-          ellipse_center = center() + orientation() * (Eigen::Vector3d::UnitZ() * (h() / 2.0));
-          e = Ellipse(ellipse_center, orientation(), r(), r());
-          break;
+      case Cylinder::BOTTOM:
+        ellipse_center = center() - orientation() * (Eigen::Vector3d::UnitZ() * (h() / 2.0));
+        e = Ellipse(ellipse_center, orientation(), r(), r());
+        break;
+      case Cylinder::TOP:
+        ellipse_center = center() + orientation() * (Eigen::Vector3d::UnitZ() * (h() / 2.0));
+        e = Ellipse(ellipse_center, orientation(), r(), r());
+        break;
       }
       return e;
     }
@@ -630,7 +630,7 @@ namespace mrs_lib
       {
         return origin() + vec_point_on_cone * cos(beta) * point_vec.norm();
       } else if ((point_axis_angle >= this->angle) && (point_axis_angle - this->angle) <= M_PI / 2.0)
-      {  // TODO: is this condition correct?
+      { // TODO: is this condition correct?
         return origin() + vec_point_on_cone * cos(point_axis_angle - this->angle) * point_vec.norm();
       } else
       {
@@ -642,5 +642,5 @@ namespace mrs_lib
 
     //}
 
-  }  // namespace geometry
-}  // namespace mrs_lib
+  } // namespace geometry
+} // namespace mrs_lib

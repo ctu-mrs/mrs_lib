@@ -8,26 +8,31 @@
 
 using namespace std::chrono_literals;
 
-class Test : public ::testing::Test {
+class Test : public ::testing::Test
+{
 
 public:
   /* callback1() //{ */
 
-  void callback1(mrs_msgs::msg::ProfilerUpdate::ConstSharedPtr msg) {
+  void callback1(mrs_msgs::msg::ProfilerUpdate::ConstSharedPtr msg)
+  {
 
     RCLCPP_INFO(node_->get_logger(), "message received");
 
     received_ = true;
 
-    if (msg->duration > 0.5 && msg->duration < 1.5) {
+    if (msg->duration > 0.5 && msg->duration < 1.5)
+    {
       received_ = false;
     }
 
-    if (msg->node_name != "Test") {
+    if (msg->node_name != "Test")
+    {
       received_ = false;
     }
 
-    if (msg->routine_name != "test_routine") {
+    if (msg->routine_name != "test_routine")
+    {
       received_ = false;
     }
   }
@@ -37,7 +42,8 @@ public:
 protected:
   /* SetUpTestCase() //{ */
 
-  static void SetUpTestCase() {
+  static void SetUpTestCase()
+  {
     rclcpp::init(0, nullptr);
   }
 
@@ -45,7 +51,8 @@ protected:
 
   /* TearDownTestCase() //{ */
 
-  static void TearDownTestCase() {
+  static void TearDownTestCase()
+  {
     rclcpp::shutdown();
   }
 
@@ -53,7 +60,8 @@ protected:
 
   /* initialize() //{ */
 
-  void initialize(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions()) {
+  void initialize(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions())
+  {
 
     node_ = std::make_shared<rclcpp::Node>("test_publisher_handler", node_options);
 
@@ -69,7 +77,8 @@ protected:
 
   /* spin() //{ */
 
-  void spin() {
+  void spin()
+  {
 
     RCLCPP_INFO(node_->get_logger(), "starting spinning");
 
@@ -82,7 +91,8 @@ protected:
 
   /* despin() //{ */
 
-  void despin() {
+  void despin()
+  {
     executor_->cancel();
 
     main_thread_.join();
@@ -90,7 +100,7 @@ protected:
 
   //}
 
-  rclcpp::Node::SharedPtr                              node_;
+  rclcpp::Node::SharedPtr node_;
   rclcpp::executors::SingleThreadedExecutor::SharedPtr executor_;
 
   std::thread main_thread_;
@@ -98,14 +108,15 @@ protected:
   std::atomic<bool> received_ = false;
 
   std::promise<bool> finished_promise_;
-  std::future<bool>  finished_future_;
+  std::future<bool> finished_future_;
 
   mrs_lib::Profiler profiler_;
 };
 
 /* TEST_F(Test, test_basic) //{ */
 
-TEST_F(Test, test_basic) {
+TEST_F(Test, test_basic)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
@@ -148,7 +159,8 @@ TEST_F(Test, test_basic) {
 //
 /* TEST_F(Test, test_not_active) //{ */
 
-TEST_F(Test, test_not_active) {
+TEST_F(Test, test_not_active)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 

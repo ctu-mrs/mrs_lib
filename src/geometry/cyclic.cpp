@@ -12,5 +12,5 @@ namespace mrs_lib
     template struct cyclic<double, degrees>;
     template struct cyclic<double, sdegrees>;
 
-  }  // namespace geometry
-}  // namespace mrs_lib
+  } // namespace geometry
+} // namespace mrs_lib

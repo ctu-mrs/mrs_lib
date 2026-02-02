@@ -18,25 +18,26 @@ namespace mrs_lib
 
   template <class ServiceType>
   ServiceClientHandler<ServiceType>::ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos)
-    : impl_(std::make_shared<Impl>(node, address, qos, node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive)))
+      : impl_(std::make_shared<Impl>(node, address, qos, node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive)))
   {
   }
 
   template <class ServiceType>
-  ServiceClientHandler<ServiceType>::ServiceClientHandler()
-    : impl_(nullptr)
+  ServiceClientHandler<ServiceType>::ServiceClientHandler() : impl_(nullptr)
   {
   }
 
   template <class ServiceType>
-  ServiceClientHandler<ServiceType>::ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos, const rclcpp::CallbackGroup::SharedPtr& callback_group)
-    : impl_(std::make_shared<Impl>(node, address, qos, callback_group))
+  ServiceClientHandler<ServiceType>::ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos,
+                                                          const rclcpp::CallbackGroup::SharedPtr& callback_group)
+      : impl_(std::make_shared<Impl>(node, address, qos, callback_group))
   {
   }
 
   template <class ServiceType>
-  ServiceClientHandler<ServiceType>::ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::CallbackGroup::SharedPtr& callback_group)
-    : ServiceClientHandler(node, address, rclcpp::ServicesQoS(), callback_group)
+  ServiceClientHandler<ServiceType>::ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address,
+                                                          const rclcpp::CallbackGroup::SharedPtr& callback_group)
+      : ServiceClientHandler(node, address, rclcpp::ServicesQoS(), callback_group)
   {
   }
 
@@ -45,7 +46,8 @@ namespace mrs_lib
   /* callSync(const ServiceType::Request& request, ServiceType::Response& response) //{ */
 
   template <class ServiceType>
-  std::optional<std::shared_ptr<typename ServiceType::Response>> ServiceClientHandler<ServiceType>::callSync(const std::shared_ptr<typename ServiceType::Request>& request)
+  std::optional<std::shared_ptr<typename ServiceType::Response>>
+  ServiceClientHandler<ServiceType>::callSync(const std::shared_ptr<typename ServiceType::Request>& request)
   {
     if (!impl_)
     {
@@ -60,7 +62,8 @@ namespace mrs_lib
   /* callAsync(const ServiceType::Request& request, ServiceType::Response& response) //{ */
 
   template <class ServiceType>
-  std::optional<std::shared_future<std::shared_ptr<typename ServiceType::Response>>> ServiceClientHandler<ServiceType>::callAsync(const std::shared_ptr<typename ServiceType::Request>& request)
+  std::optional<std::shared_future<std::shared_ptr<typename ServiceType::Response>>>
+  ServiceClientHandler<ServiceType>::callAsync(const std::shared_ptr<typename ServiceType::Request>& request)
   {
     if (!impl_)
     {
@@ -82,10 +85,10 @@ namespace mrs_lib
    * @brief implementation of the service client handler
    */
   template <class ServiceType>
-  class ServiceClientHandler<ServiceType>::Impl {
+  class ServiceClientHandler<ServiceType>::Impl
+  {
 
   public:
-
     /**
      * @brief constructor
      *
@@ -95,8 +98,7 @@ namespace mrs_lib
      * @param callback_group callback group
      */
     Impl(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos, const rclcpp::CallbackGroup::SharedPtr& callback_group)
-      : callback_group_(callback_group),
-        service_client_(node->create_client<ServiceType>(address, qos, callback_group))
+        : callback_group_(callback_group), service_client_(node->create_client<ServiceType>(address, qos, callback_group))
     {
     }
 
@@ -155,4 +157,4 @@ namespace mrs_lib
 
   //}
 
-}  // namespace mrs_lib
+} // namespace mrs_lib

@@ -11,12 +11,14 @@
 
 using namespace std::chrono_literals;
 
-class Test : public ::testing::Test {
+class Test : public ::testing::Test
+{
 
 protected:
   /* SetUpTestCase() //{ */
 
-  static void SetUpTestCase() {
+  static void SetUpTestCase()
+  {
     rclcpp::init(0, nullptr);
   }
 
@@ -24,7 +26,8 @@ protected:
 
   /* TearDownTestCase() //{ */
 
-  static void TearDownTestCase() {
+  static void TearDownTestCase()
+  {
     rclcpp::shutdown();
   }
 
@@ -32,7 +35,8 @@ protected:
 
   /* initialize() //{ */
 
-  void initialize(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions()) {
+  void initialize(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions())
+  {
 
     node_ = std::make_shared<rclcpp::Node>("test_publisher_handler", node_options);
 
@@ -48,7 +52,8 @@ protected:
 
   /* spin() //{ */
 
-  void spin() {
+  void spin()
+  {
 
     RCLCPP_INFO(node_->get_logger(), "starting spinning");
 
@@ -61,7 +66,8 @@ protected:
 
   /* despin() //{ */
 
-  void despin() {
+  void despin()
+  {
     executor_->cancel();
 
     main_thread_.join();
@@ -69,23 +75,24 @@ protected:
 
   //}
 
-  rclcpp::Node::SharedPtr                              node_;
+  rclcpp::Node::SharedPtr node_;
   rclcpp::executors::SingleThreadedExecutor::SharedPtr executor_;
 
   std::thread main_thread_;
 
   std::promise<bool> finished_promise_;
-  std::future<bool>  finished_future_;
+  std::future<bool> finished_future_;
 
   mrs_lib::TransformBroadcaster tf_broadcaster_;
 
-  std::shared_ptr<tf2_ros::Buffer>            tf_buffer_;
+  std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 };
 
 /* TEST_F(Test, test_exception) //{ */
 
-TEST_F(Test, test_exception) {
+TEST_F(Test, test_exception)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
@@ -96,7 +103,7 @@ TEST_F(Test, test_exception) {
   geometry_msgs::msg::TransformStamped tf;
 
   tf.header.frame_id = "from";
-  tf.header.stamp    = rclcpp::Time(10, 0, RCL_ROS_TIME);
+  tf.header.stamp = rclcpp::Time(10, 0, RCL_ROS_TIME);
 
   tf.child_frame_id = "to";
 
@@ -111,7 +118,8 @@ TEST_F(Test, test_exception) {
 
 /* TEST_F(Test, test_broadcast) //{ */
 
-TEST_F(Test, test_broadcast) {
+TEST_F(Test, test_broadcast)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
@@ -131,13 +139,15 @@ TEST_F(Test, test_broadcast) {
   geometry_msgs::msg::TransformStamped tf;
 
   tf.header.frame_id = "from";
-  tf.header.stamp    = rclcpp::Time(10, 0, RCL_ROS_TIME);
+  tf.header.stamp = rclcpp::Time(10, 0, RCL_ROS_TIME);
 
   tf.child_frame_id = "to";
 
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < 100; i++)
+  {
 
-    if (i % 10 == 0) {
+    if (i % 10 == 0)
+    {
       tf.header.stamp = rclcpp::Time(10 + i / 10, 0, RCL_ROS_TIME);
     }
 
@@ -148,12 +158,14 @@ TEST_F(Test, test_broadcast) {
 
   // check for the transsform
 
-  try {
+  try
+  {
     const geometry_msgs::msg::TransformStamped transform_stamped = tf_buffer_->lookupTransform("from", "to", rclcpp::Time(0));
 
     EXPECT_TRUE(true);
   }
-  catch (tf2::TransformException& ex) {
+  catch (tf2::TransformException& ex)
+  {
 
     RCLCPP_WARN_STREAM(node_->get_logger(), "" << ex.what());
 

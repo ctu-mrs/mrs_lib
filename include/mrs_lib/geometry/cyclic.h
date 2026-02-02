@@ -116,14 +116,14 @@ namespace mrs_lib
         // these few ifs should cover most cases, improving speed and precision
         if (val >= minimum)
         {
-          if (val < supremum)  // value is actually in range and doesn't need to be wrapped
+          if (val < supremum) // value is actually in range and doesn't need to be wrapped
             return val;
           else if (val < supremum + range)
-            return val - range;  // to avoid unnecessary costly fmod operation for this case (assumed to be significantly more common than the general case)
+            return val - range; // to avoid unnecessary costly fmod operation for this case (assumed to be significantly more common than the general case)
         } else
         {
           if (val >= minimum - range)
-            return val + range;  // to avoid unnecessary costly fmod operation for this case (assumed to be significantly more common than the general case)
+            return val + range; // to avoid unnecessary costly fmod operation for this case (assumed to be significantly more common than the general case)
         }
 
         // general case
@@ -488,7 +488,7 @@ namespace mrs_lib
      */
     struct radians : public cyclic<double, radians>
     {
-      using cyclic<double, radians>::cyclic;  // necessary to inherit constructors
+      using cyclic<double, radians>::cyclic; // necessary to inherit constructors
       static constexpr double minimum = 0;
       static constexpr double supremum = 2 * M_PI;
     };
@@ -498,7 +498,7 @@ namespace mrs_lib
      */
     struct sradians : public cyclic<double, sradians>
     {
-      using cyclic<double, sradians>::cyclic;  // necessary to inherit constructors
+      using cyclic<double, sradians>::cyclic; // necessary to inherit constructors
       static constexpr double minimum = -M_PI;
       static constexpr double supremum = M_PI;
     };
@@ -508,7 +508,7 @@ namespace mrs_lib
      */
     struct degrees : public cyclic<double, degrees>
     {
-      using cyclic<double, degrees>::cyclic;  // necessary to inherit constructors
+      using cyclic<double, degrees>::cyclic; // necessary to inherit constructors
       static constexpr double minimum = 0;
       static constexpr double supremum = 360;
     };
@@ -518,11 +518,11 @@ namespace mrs_lib
      */
     struct sdegrees : public cyclic<double, sdegrees>
     {
-      using cyclic<double, sdegrees>::cyclic;  // necessary to inherit constructors
+      using cyclic<double, sdegrees>::cyclic; // necessary to inherit constructors
       static constexpr double minimum = -180;
       static constexpr double supremum = 180;
     };
-  }  // namespace geometry
-}  // namespace mrs_lib
+  } // namespace geometry
+} // namespace mrs_lib
 
-#endif  // CYCLIC_H
+#endif // CYCLIC_H

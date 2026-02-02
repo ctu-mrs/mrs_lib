@@ -21,7 +21,7 @@
 // Define the cyclic quantity we will be using (just a float redefinition of degrees)
 struct degrees : public mrs_lib::geometry::cyclic<float, degrees>
 {
-  using cyclic<float, degrees>::cyclic;  // necessary to inherit constructors
+  using cyclic<float, degrees>::cyclic; // necessary to inherit constructors
   static constexpr double minimum = -180;
   static constexpr double supremum = 180;
 };
@@ -56,14 +56,14 @@ int main()
 
   /* initialization, assignment, conversion //{ */
 
-  degrees a(721.0f);                                  // constructor (equal to 1 degree)
-  radians b(-M_PI_2);                                 // constructor (equal to -45 degrees)
-  radians c(b);                                       // copy constructor
-  radians d = 65;                                     // assignment operator using primitive types will automatically wrap the value to the valid interval
-  radians e = b;                                      // assignment operator (radians class)
-  degrees f = b.convert<degrees>();                   // conversion from radians to degrees
-  sradians g = b.convert<sradians>();                 // conversion from radians to signed radians
-  degrees h = radians::convert<degrees>(5 * M_PI_2);  // static conversion from radians to degrees
+  degrees a(721.0f);                                 // constructor (equal to 1 degree)
+  radians b(-M_PI_2);                                // constructor (equal to -45 degrees)
+  radians c(b);                                      // copy constructor
+  radians d = 65;                                    // assignment operator using primitive types will automatically wrap the value to the valid interval
+  radians e = b;                                     // assignment operator (radians class)
+  degrees f = b.convert<degrees>();                  // conversion from radians to degrees
+  sradians g = b.convert<sradians>();                // conversion from radians to signed radians
+  degrees h = radians::convert<degrees>(5 * M_PI_2); // static conversion from radians to degrees
 
   printit(a, "a");
   printit(b, "b");
@@ -217,4 +217,3 @@ int main()
 
   return 0;
 }
-

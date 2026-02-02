@@ -83,8 +83,7 @@ namespace mrs_lib
 
     quat_t quaternionFromEuler(const Eigen::Vector3d& euler)
     {
-      return anax_t(euler.x(), vec3_t::UnitX()) * anax_t(euler.y(), vec3_t::UnitY())
-             * anax_t(euler.z(), vec3_t::UnitZ());
+      return anax_t(euler.x(), vec3_t::UnitX()) * anax_t(euler.y(), vec3_t::UnitY()) * anax_t(euler.z(), vec3_t::UnitZ());
     }
     //}
 
@@ -181,5 +180,5 @@ namespace mrs_lib
 
     //}
 
-  }  // namespace geometry
-}  // namespace mrs_lib
+  } // namespace geometry
+} // namespace mrs_lib

@@ -469,10 +469,10 @@ namespace mrs_lib
   {
     object = Class(args...);
   }
-}  // namespace mrs_lib
+} // namespace mrs_lib
 
 #ifndef SUBSCRIBER_HANDLER_HPP
 #include <mrs_lib/impl/subscriber_handler.hpp>
-#endif  // SUBSCRIBER_HANDLER_HPP
+#endif // SUBSCRIBER_HANDLER_HPP
 
-#endif  // SUBRSCRIBER_HANDLER_H
+#endif // SUBRSCRIBER_HANDLER_H

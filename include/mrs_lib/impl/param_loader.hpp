@@ -32,7 +32,8 @@ namespace mrs_lib
   /* helper functions for loading dynamic Eigen matrices //{ */
   // loadMatrixX helper function for loading dynamic Eigen matrices //{
   template <typename T>
-  std::pair<ParamLoader::MatrixX<T>, bool> ParamLoader::loadMatrixX(const std::string& name, const MatrixX<T>& default_value, int rows, int cols, optional_t optional, unique_t unique, swap_t swap, bool printValues)
+  std::pair<ParamLoader::MatrixX<T>, bool> ParamLoader::loadMatrixX(const std::string& name, const MatrixX<T>& default_value, int rows, int cols,
+                                                                    optional_t optional, unique_t unique, swap_t swap, bool printValues)
   {
     const auto resolved_name = m_pp.resolveName(name);
     MatrixX<T> loaded = default_value;
@@ -42,25 +43,28 @@ namespace mrs_lib
       return {loaded, used_rosparam_value};
 
     // this function only accepts dynamic columns (you can always transpose the matrix afterward)
-    if (rows < 0) {
+    if (rows < 0)
+    {
       // if the parameter was compulsory, alert the user and set the flag
       printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved_name.str);
       m_load_successful = false;
       return {loaded, used_rosparam_value};
     }
     const bool expect_zero_matrix = rows == 0;
-    if (expect_zero_matrix) {
-      if (cols > 0) {
-        printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved_name.str +
-                   ". One dimension indicates zero matrix, but other expects non-zero.");
+    if (expect_zero_matrix)
+    {
+      if (cols > 0)
+      {
+        printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved_name.str
+                   + ". One dimension indicates zero matrix, but other expects non-zero.");
         m_load_successful = false;
         return {loaded, used_rosparam_value};
       }
     }
 
     bool cur_load_successful = true;
-    bool check_size_exact    = true;
-    if (cols <= 0)  // this means that the cols dimension is dynamic or a zero matrix is expected
+    bool check_size_exact = true;
+    if (cols <= 0) // this means that the cols dimension is dynamic or a zero matrix is expected
       check_size_exact = false;
 
     std::vector<T> tmp_vec;
@@ -69,32 +73,36 @@ namespace mrs_lib
     // check if the loaded vector has correct length
     bool correct_size = (int)tmp_vec.size() == rows * cols;
     if (!check_size_exact && !expect_zero_matrix)
-      correct_size = (int)tmp_vec.size() % rows == 0;  // if the cols dimension is dynamic, the size just has to be divisable by rows
+      correct_size = (int)tmp_vec.size() % rows == 0; // if the cols dimension is dynamic, the size just has to be divisable by rows
 
-    if (success && correct_size) {
+    if (success && correct_size)
+    {
       // if successfully loaded, everything is in order
       // transform the vector to the matrix
       if (cols <= 0 && rows > 0)
         cols = tmp_vec.size() / rows;
       if (swap)
         std::swap(rows, cols);
-      loaded              = Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Unaligned>(tmp_vec.data(), rows, cols);
+      loaded = Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Unaligned>(tmp_vec.data(), rows, cols);
       used_rosparam_value = true;
-    } else {
-      if (success && !correct_size) {
+    } else
+    {
+      if (success && !correct_size)
+      {
         // warn the user that this parameter was not successfully loaded because of wrong vector length (might be an oversight)
         std::string warning =
-            std::string("Matrix parameter ") + resolved_name.str +
-            std::string(" could not be loaded because the vector has a wrong length " + std::to_string(tmp_vec.size()) + " instead of expected ");
+            std::string("Matrix parameter ") + resolved_name.str
+            + std::string(" could not be loaded because the vector has a wrong length " + std::to_string(tmp_vec.size()) + " instead of expected ");
         // process the message correctly based on whether the loaded matrix should be dynamic or static
-        if (cols <= 0)  // for dynamic matrices
+        if (cols <= 0) // for dynamic matrices
           warning = warning + std::string("number divisible by ") + std::to_string(rows);
-        else  // for static matrices
+        else // for static matrices
           warning = warning + std::to_string(rows * cols);
         printWarning(warning);
       }
       // if it was not loaded, the default value is used (set at the beginning of the function)
-      if (!optional) {
+      if (!optional)
+      {
         // if the parameter was compulsory, alert the user and set the flag
         printError(std::string("Could not load non-optional parameter ") + resolved_name.str);
         cur_load_successful = false;
@@ -102,11 +110,13 @@ namespace mrs_lib
     }
 
     // check if load was a success
-    if (cur_load_successful) {
+    if (cur_load_successful)
+    {
       if (m_print_values && printValues)
         printValue(resolved_name, loaded);
       m_loaded_params.insert(resolved_name);
-    } else {
+    } else
+    {
       m_load_successful = false;
     }
     // finally, return the resulting value
@@ -116,7 +126,8 @@ namespace mrs_lib
 
   /* loadMatrixStatic_internal helper function for loading static Eigen matrices //{ */
   template <int rows, int cols, typename T>
-  std::pair<Eigen::Matrix<T, rows, cols>, bool> ParamLoader::loadMatrixStatic_internal(const std::string& name, const Eigen::Matrix<T, rows, cols>& default_value, optional_t optional, unique_t unique)
+  std::pair<Eigen::Matrix<T, rows, cols>, bool>
+  ParamLoader::loadMatrixStatic_internal(const std::string& name, const Eigen::Matrix<T, rows, cols>& default_value, optional_t optional, unique_t unique)
   {
     const auto [dynamic, loaded_ok] = loadMatrixX(name, MatrixX<T>(default_value), rows, cols, optional, unique, NO_SWAP);
     return {dynamic, loaded_ok};
@@ -125,11 +136,13 @@ namespace mrs_lib
 
   /* loadMatrixKnown_internal helper function for loading EigenXd matrices with known dimensions //{ */
   template <typename T>
-  std::pair<ParamLoader::MatrixX<T>, bool> ParamLoader::loadMatrixKnown_internal(const std::string& name, const MatrixX<T>& default_value, int rows, int cols, optional_t optional, unique_t unique)
+  std::pair<ParamLoader::MatrixX<T>, bool> ParamLoader::loadMatrixKnown_internal(const std::string& name, const MatrixX<T>& default_value, int rows, int cols,
+                                                                                 optional_t optional, unique_t unique)
   {
     MatrixX<T> loaded = default_value;
     // first, check that at least one dimension is set
-    if (rows <= 0 || cols <= 0) {
+    if (rows <= 0 || cols <= 0)
+    {
       printError(std::string("Invalid expected matrix dimensions for parameter ") + m_pp.resolveName(name).str + std::string(" (use loadMatrixDynamic?)"));
       m_load_successful = false;
       return {loaded, false};
@@ -141,20 +154,23 @@ namespace mrs_lib
 
   /* loadMatrixDynamic_internal helper function for loading Eigen matrices with one dynamic (unspecified) dimension //{ */
   template <typename T>
-  std::pair<ParamLoader::MatrixX<T>, bool> ParamLoader::loadMatrixDynamic_internal(const std::string& name, const MatrixX<T>& default_value, int rows, int cols, optional_t optional, unique_t unique)
+  std::pair<ParamLoader::MatrixX<T>, bool> ParamLoader::loadMatrixDynamic_internal(const std::string& name, const MatrixX<T>& default_value, int rows, int cols,
+                                                                                   optional_t optional, unique_t unique)
   {
     MatrixX<T> loaded = default_value;
 
     // next, check that at least one dimension is set
-    if (rows <= 0 && cols <= 0) {
-      printError(std::string("Invalid expected matrix dimensions for parameter ") + m_pp.resolveName(name).str +
-                 std::string(" (at least one dimension must be specified)"));
+    if (rows <= 0 && cols <= 0)
+    {
+      printError(std::string("Invalid expected matrix dimensions for parameter ") + m_pp.resolveName(name).str
+                 + std::string(" (at least one dimension must be specified)"));
       m_load_successful = false;
       return {loaded, false};
     }
 
     swap_t swap = NO_SWAP;
-    if (rows <= 0) {
+    if (rows <= 0)
+    {
       std::swap(rows, cols);
       swap = SWAP;
     }
@@ -164,7 +180,8 @@ namespace mrs_lib
 
   /* loadMatrixArray_internal helper function for loading an array of EigenXd matrices with known dimensions //{ */
   template <typename T>
-  std::vector<ParamLoader::MatrixX<T>> ParamLoader::loadMatrixArray_internal(const std::string& name, const std::vector<MatrixX<T>>& default_value, optional_t optional, unique_t unique)
+  std::vector<ParamLoader::MatrixX<T>> ParamLoader::loadMatrixArray_internal(const std::string& name, const std::vector<MatrixX<T>>& default_value,
+                                                                             optional_t optional, unique_t unique)
   {
     const auto resolved_name = m_pp.resolveName(name);
     int rows;
@@ -179,18 +196,22 @@ namespace mrs_lib
     int total_cols = 0;
     /* check correctness of loaded parameters so far calculate the total dimension //{ */
 
-    if (!success) {
+    if (!success)
+    {
       printError(std::string("Failed to load ") + resolved_name.str + std::string("/rows or ") + resolved_name.str + std::string("/cols"));
       m_load_successful = false;
       return default_value;
     }
-    if (rows < 0) {
+    if (rows < 0)
+    {
       printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved_name.str + std::string(" (rows and cols must be >= 0)"));
       m_load_successful = false;
       return default_value;
     }
-    for (const auto& col : cols) {
-      if (col < 0) {
+    for (const auto& col : cols)
+    {
+      if (col < 0)
+      {
         printError(std::string("Invalid expected matrix dimensions for parameter ") + resolved_name.str + std::string(" (rows and cols must be >= 0)"));
         m_load_successful = false;
         return default_value;
@@ -204,15 +225,17 @@ namespace mrs_lib
     /* std::cout << "loaded_matrix: " << loaded_matrix << std::endl; */
     /* std::cout << "loaded_matrix: " << loaded_matrix.rows() << "x" << loaded_matrix.cols() << std::endl; */
     /* std::cout << "expected dims: " << rows << "x" << total_cols << std::endl; */
-    if (loaded_matrix.rows() != rows || loaded_matrix.cols() != total_cols) {
+    if (loaded_matrix.rows() != rows || loaded_matrix.cols() != total_cols)
+    {
       m_load_successful = false;
       return default_value;
     }
 
     int cols_loaded = 0;
-    for (unsigned it = 0; it < cols.size(); it++) {
-      const int        cur_cols = cols.at(it);
-      const MatrixX<T> cur_mat  = loaded_matrix.block(0, cols_loaded, rows, cur_cols);
+    for (unsigned it = 0; it < cols.size(); it++)
+    {
+      const int cur_cols = cols.at(it);
+      const MatrixX<T> cur_mat = loaded_matrix.block(0, cols_loaded, rows, cur_cols);
       /* std::cout << "cur_mat: " << cur_mat << std::endl; */
       loaded.push_back(cur_mat);
       cols_loaded += cur_cols;
@@ -247,23 +270,27 @@ namespace mrs_lib
     bool cur_load_successful = true;
     // try to load the parameter
     const bool success = m_pp.getParam(resolved_name, loaded);
-    if (!success) {
+    if (!success)
+    {
       // if it was not loaded, set the default value
       loaded = default_value;
-      if (!optional) {
+      if (!optional)
+      {
         // if the parameter was compulsory, alert the user and set the flag
         printError(std::string("Could not load non-optional parameter ") + resolved_name.str);
         cur_load_successful = false;
       }
     }
 
-    if (cur_load_successful) {
+    if (cur_load_successful)
+    {
       // everything is fine and just print the resolved_name and value if required
       if (m_print_values)
         printValue(resolved_name, loaded);
       // mark the param resolved_name as successfully loaded
       m_loaded_params.insert(resolved_name);
-    } else {
+    } else
+    {
       m_load_successful = false;
     }
     // finally, return the resulting value
@@ -277,7 +304,7 @@ namespace mrs_lib
   bool ParamLoader::loadParam(const std::string& name, T& out_value, const T& default_value)
   {
     const auto [ret, success] = load<T>(name, default_value, OPTIONAL, UNIQUE);
-    out_value                 = ret;
+    out_value = ret;
     return success;
   }
   /*!
@@ -313,7 +340,7 @@ namespace mrs_lib
   bool ParamLoader::loadParamReusable(const std::string& name, T& out_value, const T& default_value)
   {
     const auto [ret, success] = load<T>(name, default_value, OPTIONAL, REUSABLE);
-    out_value                 = ret;
+    out_value = ret;
     return success;
   }
   /*!
@@ -351,7 +378,7 @@ namespace mrs_lib
   bool ParamLoader::loadParam(const std::string& name, T& out_value)
   {
     const auto [ret, success] = load<T>(name, T(), COMPULSORY, UNIQUE);
-    out_value                 = ret;
+    out_value = ret;
     return success;
   }
   /*!
@@ -385,7 +412,7 @@ namespace mrs_lib
   bool ParamLoader::loadParamReusable(const std::string& name, T& out_value)
   {
     const auto [ret, success] = load<T>(name, T(), COMPULSORY, REUSABLE);
-    out_value                 = ret;
+    out_value = ret;
     return success;
   }
   /*!
@@ -425,8 +452,8 @@ namespace mrs_lib
   template <typename T>
   bool ParamLoader::loadParam(const std::string& name, MatrixX<T>& mat, const MatrixX<T>& default_value)
   {
-    const int  rows      = default_value.rows();
-    const int  cols      = default_value.cols();
+    const int rows = default_value.rows();
+    const int cols = default_value.cols();
     const bool loaded_ok = loadMatrixDynamic(name, mat, default_value, rows, cols);
     return loaded_ok;
   }
@@ -477,7 +504,7 @@ namespace mrs_lib
   bool ParamLoader::loadMatrixStatic(const std::string& name, Eigen::Matrix<T, rows, cols>& mat)
   {
     const auto [ret, loaded_ok] = loadMatrixStatic_internal<rows, cols, T>(name, Eigen::Matrix<T, rows, cols>::Zero(), COMPULSORY, UNIQUE);
-    mat                         = ret;
+    mat = ret;
     return loaded_ok;
   }
 
@@ -502,7 +529,7 @@ namespace mrs_lib
   bool ParamLoader::loadMatrixStatic(const std::string& name, Eigen::Matrix<T, rows, cols>& mat, const Eigen::MatrixBase<Derived>& default_value)
   {
     const auto [ret, loaded_ok] = loadMatrixStatic_internal<rows, cols, T>(name, Eigen::Matrix<T, rows, cols>(default_value), OPTIONAL, UNIQUE);
-    mat                         = ret;
+    mat = ret;
     return loaded_ok;
   }
 
@@ -576,7 +603,7 @@ namespace mrs_lib
   bool ParamLoader::loadMatrixKnown(const std::string& name, MatrixX<T>& mat, int rows, int cols)
   {
     const auto [ret, loaded_ok] = loadMatrixKnown_internal(name, MatrixX<T>(), rows, cols, COMPULSORY, UNIQUE);
-    mat                         = ret;
+    mat = ret;
     return loaded_ok;
   }
 
@@ -599,7 +626,7 @@ namespace mrs_lib
   bool ParamLoader::loadMatrixKnown(const std::string& name, MatrixX<T>& mat, const Eigen::MatrixBase<Derived>& default_value, int rows, int cols)
   {
     const auto [ret, loaded_ok] = loadMatrixKnown_internal(name, MatrixX<T>(default_value), rows, cols, OPTIONAL, UNIQUE);
-    mat                         = ret;
+    mat = ret;
     return loaded_ok;
   }
 
@@ -669,7 +696,7 @@ namespace mrs_lib
   bool ParamLoader::loadMatrixDynamic(const std::string& name, MatrixX<T>& mat, int rows, int cols)
   {
     const auto [ret, loaded_ok] = loadMatrixDynamic_internal(name, MatrixX<T>(), rows, cols, COMPULSORY, UNIQUE);
-    mat                         = ret;
+    mat = ret;
     return loaded_ok;
   }
 
@@ -693,7 +720,7 @@ namespace mrs_lib
   bool ParamLoader::loadMatrixDynamic(const std::string& name, MatrixX<T>& mat, const Eigen::MatrixBase<Derived>& default_value, int rows, int cols)
   {
     const auto [ret, loaded_ok] = loadMatrixDynamic_internal(name, MatrixX<T>(default_value), rows, cols, OPTIONAL, UNIQUE);
-    mat                         = ret;
+    mat = ret;
     return loaded_ok;
   }
 
@@ -833,4 +860,4 @@ namespace mrs_lib
   }
   //}
 
-}  // namespace mrs_lib
+} // namespace mrs_lib
