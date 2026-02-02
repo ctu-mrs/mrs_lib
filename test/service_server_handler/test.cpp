@@ -8,65 +8,73 @@
 
 using namespace std::chrono_literals;
 
-class Test : public ::testing::Test {
+class Test : public ::testing::Test
+{
 
-  public:
-    void callbackService(const std::shared_ptr<std_srvs::srv::SetBool::Request> request, std::shared_ptr<std_srvs::srv::SetBool::Response> response);
-    void callbackRepeatedService(const std::shared_ptr<std_srvs::srv::SetBool::Request> request, std::shared_ptr<std_srvs::srv::SetBool::Response> response);
-    void callbackFailedService(const std::shared_ptr<std_srvs::srv::SetBool::Request> request, std::shared_ptr<std_srvs::srv::SetBool::Response> response);
+public:
+  void callbackService(const std::shared_ptr<std_srvs::srv::SetBool::Request> request, std::shared_ptr<std_srvs::srv::SetBool::Response> response);
+  void callbackRepeatedService(const std::shared_ptr<std_srvs::srv::SetBool::Request> request, std::shared_ptr<std_srvs::srv::SetBool::Response> response);
+  void callbackFailedService(const std::shared_ptr<std_srvs::srv::SetBool::Request> request, std::shared_ptr<std_srvs::srv::SetBool::Response> response);
 
-  protected:
-    /* SetUpTestCase() //{ */
+protected:
+  /* SetUpTestCase() //{ */
 
-    static void SetUpTestCase() {
-      rclcpp::init(0, nullptr);
-    }
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
 
-    //}
+  //}
 
-    /* TearDownTestCase() //{ */
+  /* TearDownTestCase() //{ */
 
-    static void TearDownTestCase() {
-      rclcpp::shutdown();
-    }
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
 
-    //}
+  //}
 
-    /* initialize() //{ */
+  /* initialize() //{ */
 
-    void initialize(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions()) {
+  void initialize(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions())
+  {
 
-      node_ = std::make_shared<rclcpp::Node>("test_service_server_handler", node_options);
+    node_ = std::make_shared<rclcpp::Node>("test_service_server_handler", node_options);
 
-      executor_ = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
-      executor_->add_node(node_);
-    }
+    executor_ = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
+    executor_->add_node(node_);
+  }
 
-    //}
+  //}
 
-    /* despin() //{ */
+  /* despin() //{ */
 
-    void despin() {
-      executor_->cancel();
-    }
+  void despin()
+  {
+    executor_->cancel();
+  }
 
-    //}
+  //}
 
-    rclcpp::Node::SharedPtr node_;
-    rclcpp::Executor::SharedPtr executor_;
+  rclcpp::Node::SharedPtr node_;
+  rclcpp::Executor::SharedPtr executor_;
 };
 
 /* callbackService() //{ */
 
-void Test::callbackService(const std::shared_ptr<std_srvs::srv::SetBool::Request> request, std::shared_ptr<std_srvs::srv::SetBool::Response> response) {
+void Test::callbackService(const std::shared_ptr<std_srvs::srv::SetBool::Request> request, std::shared_ptr<std_srvs::srv::SetBool::Response> response)
+{
 
   response->success = true;
 
   node_->get_clock()->sleep_for(1s);
 
-  if (request->data) {
+  if (request->data)
+  {
     response->message = "set";
-  } else {
+  } else
+  {
     response->message = "unset";
   }
 }
@@ -75,13 +83,16 @@ void Test::callbackService(const std::shared_ptr<std_srvs::srv::SetBool::Request
 
 /* callbackFailedService() //{ */
 
-void Test::callbackFailedService(const std::shared_ptr<std_srvs::srv::SetBool::Request> request, std::shared_ptr<std_srvs::srv::SetBool::Response> response) {
+void Test::callbackFailedService(const std::shared_ptr<std_srvs::srv::SetBool::Request> request, std::shared_ptr<std_srvs::srv::SetBool::Response> response)
+{
 
   response->success = true;
 
-  if (request->data) {
+  if (request->data)
+  {
     response->message = "set";
-  } else {
+  } else
+  {
     response->message = "unset";
   }
 }
@@ -90,7 +101,8 @@ void Test::callbackFailedService(const std::shared_ptr<std_srvs::srv::SetBool::R
 
 /* TEST_F(Test, test_call) //{ */
 
-TEST_F(Test, test_call) {
+TEST_F(Test, test_call)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
@@ -98,7 +110,8 @@ TEST_F(Test, test_call) {
 
   // | ----------------- create a service server ---------------- |
 
-  const auto sshandler = mrs_lib::ServiceServerHandler<std_srvs::srv::SetBool>(node_, "/service1", std::bind(&Test::callbackService, this, std::placeholders::_1, std::placeholders::_2));
+  const auto sshandler = mrs_lib::ServiceServerHandler<std_srvs::srv::SetBool>(
+      node_, "/service1", std::bind(&Test::callbackService, this, std::placeholders::_1, std::placeholders::_2));
 
   // | ----------------- create a service client ---------------- |
 
@@ -112,8 +125,7 @@ TEST_F(Test, test_call) {
 
   rclcpp::TimerBase::SharedPtr tim;
 
-  const auto test_fun = [&]()
-  {
+  const auto test_fun = [&]() {
     tim->cancel(); // just a one-shot timer
 
     auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
@@ -124,7 +136,8 @@ TEST_F(Test, test_call) {
       auto resp_fut = client->async_send_request(request);
       EXPECT_TRUE(resp_fut.valid());
 
-      while (rclcpp::ok()) {
+      while (rclcpp::ok())
+      {
 
         RCLCPP_INFO(node_->get_logger(), "waiting for the future response");
 

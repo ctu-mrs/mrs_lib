@@ -23,27 +23,31 @@ using namespace std::chrono_literals;
 using namespace mrs_lib;
 using namespace mrs_lib::geometry;
 
-class Test : public ::testing::Test {
+class Test : public ::testing::Test
+{
 
 public:
   /* callback1() //{ */
 
-  void callback1(visualization_msgs::msg::MarkerArray::SharedPtr msg) {
-    if (msg.get() != nullptr) {
+  void callback1(visualization_msgs::msg::MarkerArray::SharedPtr msg)
+  {
+    if (msg.get() != nullptr)
+    {
       RCLCPP_INFO(node_->get_logger(), "Message received");
       received_msg_ = msg;
-    }
-    else {
+    } else
+    {
       RCLCPP_WARN(node_->get_logger(), "Message empty");
     }
   }
 
-  
+
   //}
 protected:
   /* SetUpTestCase() //{ */
 
-  static void SetUpTestCase() {
+  static void SetUpTestCase()
+  {
     rclcpp::init(0, nullptr);
   }
 
@@ -51,7 +55,8 @@ protected:
 
   /* TearDownTestCase() //{ */
 
-  static void TearDownTestCase() {
+  static void TearDownTestCase()
+  {
     rclcpp::shutdown();
   }
 
@@ -59,7 +64,8 @@ protected:
 
   /* initialize() //{ */
 
-  void initialize(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions()) {
+  void initialize(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions())
+  {
 
     node_ = std::make_shared<rclcpp::Node>("test_batch_visualizer", node_options);
 
@@ -83,9 +89,11 @@ protected:
     // | ---------------------- start testing --------------------- |
 
     bv_ = BatchVisualizer(node_, viz_topic_name_, viz_ns_name_);
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 10; i++)
+    {
 
-      if (sub_->get_publisher_count() > 0) {
+      if (sub_->get_publisher_count() > 0)
+      {
         RCLCPP_INFO(node_->get_logger(), "Connected publisher and subscriber");
         break;
       }
@@ -93,14 +101,17 @@ protected:
       clock->sleep_for(100ms);
     }
 
-    if (sub_->get_publisher_count() == 0) {
+    if (sub_->get_publisher_count() == 0)
+    {
       RCLCPP_ERROR(node_->get_logger(), "Failed to connect publisher and subscriber");
       despin();
       return;
     }
     // clean the init msg published on object construction
-    for (int i = 0; i < 10; i++) {
-      if (received_msg_) {
+    for (int i = 0; i < 10; i++)
+    {
+      if (received_msg_)
+      {
         RCLCPP_INFO(node_->get_logger(), "Msg found at itr: %i", i);
         break;
       }
@@ -115,7 +126,8 @@ protected:
 
   /* spin() //{ */
 
-  void spin() {
+  void spin()
+  {
 
     RCLCPP_INFO(node_->get_logger(), "starting spinning");
 
@@ -128,7 +140,8 @@ protected:
 
   /* despin() //{ */
 
-  void despin() {
+  void despin()
+  {
     executor_->cancel();
 
     main_thread_.join();
@@ -136,7 +149,9 @@ protected:
 
   //}
 
-  void test_batch_visualizer_init(const std::string& viz_topic_name_, const std::string& viz_ns_name_, const double point_scale = 0.02, const double line_scale = 0.04) {
+  void test_batch_visualizer_init(const std::string& viz_topic_name_, const std::string& viz_ns_name_, const double point_scale = 0.02,
+                                  const double line_scale = 0.04)
+  {
     EXPECT_EQ(received_msg_->markers.size(), 3);
 
     EXPECT_EQ(received_msg_->markers[0].header.frame_id, viz_ns_name_);
@@ -161,7 +176,10 @@ protected:
     EXPECT_EQ(received_msg_->markers[2].colors.size(), 3);
   }
 
-  void test_batch_visualizer_msg(const int marker_idx, const std::vector<std::tuple<double, double, double>>& points, const std::vector<std::tuple<double, double, double, double>>& colors, std::size_t point_marker_vec_size = 1, std::size_t line_marker_vec_size = 2, std::size_t triangle_marker_vec_size = 3) {
+  void test_batch_visualizer_msg(const int marker_idx, const std::vector<std::tuple<double, double, double>>& points,
+                                 const std::vector<std::tuple<double, double, double, double>>& colors, std::size_t point_marker_vec_size = 1,
+                                 std::size_t line_marker_vec_size = 2, std::size_t triangle_marker_vec_size = 3)
+  {
 
     EXPECT_EQ(received_msg_->markers[0].points.size(), point_marker_vec_size);
     EXPECT_EQ(received_msg_->markers[0].colors.size(), point_marker_vec_size);
@@ -178,15 +196,18 @@ protected:
     EXPECT_TRUE(std::equal(tmp_colors.begin(), tmp_colors.end(), colors.begin(), colors.end(), compare_tuple4));
   }
 
-  std::tuple<double, double, double> point_to_tuple(const geometry_msgs::msg::Point& point) {
-      return std::make_tuple(point.x, point.y, point.z);
+  std::tuple<double, double, double> point_to_tuple(const geometry_msgs::msg::Point& point)
+  {
+    return std::make_tuple(point.x, point.y, point.z);
   }
 
-  std::tuple<double, double, double, double> color_to_tuple(const std_msgs::msg::ColorRGBA& color) {
-      return std::make_tuple(color.r, color.g, color.b, color.a);
+  std::tuple<double, double, double, double> color_to_tuple(const std_msgs::msg::ColorRGBA& color)
+  {
+    return std::make_tuple(color.r, color.g, color.b, color.a);
   }
 
-  std::vector<std::tuple<double, double, double>> make_vector_tuple(const std::vector<geometry_msgs::msg::Point>& points) {
+  std::vector<std::tuple<double, double, double>> make_vector_tuple(const std::vector<geometry_msgs::msg::Point>& points)
+  {
     std::vector<std::tuple<double, double, double>> output;
     output.reserve(points.size());
 
@@ -194,7 +215,8 @@ protected:
     return output;
   }
 
-  std::vector<std::tuple<double, double, double, double>> make_vector_tuple(const std::vector<std_msgs::msg::ColorRGBA>& colors) {
+  std::vector<std::tuple<double, double, double, double>> make_vector_tuple(const std::vector<std_msgs::msg::ColorRGBA>& colors)
+  {
     std::vector<std::tuple<double, double, double, double>> output;
     output.reserve(colors.size());
 
@@ -202,33 +224,34 @@ protected:
     return output;
   }
 
-  static bool compare_tuple3(const std::tuple<double, double, double>& lhs, const std::tuple<double, double, double>& rhs) {
-  const double epsilon = 1e-6;  // Tolerance for floating-point comparison
-    
-    return std::abs(std::get<0>(lhs) - std::get<0>(rhs)) < epsilon && std::abs(std::get<1>(lhs) - std::get<1>(rhs)) < epsilon && std::abs(std::get<2>(lhs) - std::get<2>(rhs)) < epsilon;
+  static bool compare_tuple3(const std::tuple<double, double, double>& lhs, const std::tuple<double, double, double>& rhs)
+  {
+    const double epsilon = 1e-6; // Tolerance for floating-point comparison
+
+    return std::abs(std::get<0>(lhs) - std::get<0>(rhs)) < epsilon && std::abs(std::get<1>(lhs) - std::get<1>(rhs)) < epsilon
+           && std::abs(std::get<2>(lhs) - std::get<2>(rhs)) < epsilon;
   }
 
-  static bool compare_tuple4(const std::tuple<double, double, double, double>& lhs, const std::tuple<double, double, double, double>& rhs) {
-  const double epsilon = 1e-4;  // Tolerance for floating-point comparison
-    
-    return std::abs(std::get<0>(lhs) - std::get<0>(rhs)) < epsilon
-     && std::abs(std::get<1>(lhs) - std::get<1>(rhs)) < epsilon
-     && std::abs(std::get<2>(lhs) - std::get<2>(rhs)) < epsilon
-     && std::abs(std::get<3>(lhs) - std::get<3>(rhs)) < epsilon;
+  static bool compare_tuple4(const std::tuple<double, double, double, double>& lhs, const std::tuple<double, double, double, double>& rhs)
+  {
+    const double epsilon = 1e-4; // Tolerance for floating-point comparison
+
+    return std::abs(std::get<0>(lhs) - std::get<0>(rhs)) < epsilon && std::abs(std::get<1>(lhs) - std::get<1>(rhs)) < epsilon
+           && std::abs(std::get<2>(lhs) - std::get<2>(rhs)) < epsilon && std::abs(std::get<3>(lhs) - std::get<3>(rhs)) < epsilon;
   }
 
-  rclcpp::Node::SharedPtr                              node_;
+  rclcpp::Node::SharedPtr node_;
   rclcpp::executors::SingleThreadedExecutor::SharedPtr executor_;
 
   std::thread main_thread_;
 
   std::promise<bool> finished_promise_;
-  std::future<bool>  finished_future_;
+  std::future<bool> finished_future_;
 
   double range_min_ = -20.0;
   double range_max_ = 20.0;
 
-  std::mt19937                           generator_{10};
+  std::mt19937 generator_{10};
   std::uniform_real_distribution<> rand_dbl_{range_min_, range_max_};
   std::uniform_real_distribution<> rand_percent_{0.0, 1.0};
 
@@ -240,7 +263,8 @@ protected:
   int batch_size_ = 4;
 };
 
-TEST_F(Test, batch_visualize_init) {
+TEST_F(Test, batch_visualize_init)
+{
 
   // use_intra_process_comms() reduces connection latency when subscribers and publishers belong to the same context
   initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
@@ -250,8 +274,10 @@ TEST_F(Test, batch_visualize_init) {
   EXPECT_FALSE(received_msg_);
   bv_.publish();
   // the callback is not called instantly
-  for (int i = 0; i < 10; i++) {
-    if (received_msg_) {
+  for (int i = 0; i < 10; i++)
+  {
+    if (received_msg_)
+    {
       RCLCPP_INFO(node_->get_logger(), "Msg found at itr: %i", i);
       break;
     }
@@ -266,8 +292,10 @@ TEST_F(Test, batch_visualize_init) {
   EXPECT_FALSE(received_msg_);
   bv_.setParentFrame("cat");
   bv_.publish();
-  for (int i = 0; i < 10; i++) {
-    if (received_msg_) {
+  for (int i = 0; i < 10; i++)
+  {
+    if (received_msg_)
+    {
       RCLCPP_INFO(node_->get_logger(), "Msg found at itr: %i", i);
       break;
     }
@@ -283,7 +311,8 @@ TEST_F(Test, batch_visualize_init) {
   clock->sleep_for(1s);
 }
 
-TEST_F(Test, batch_visualize_points) {
+TEST_F(Test, batch_visualize_points)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
 
@@ -295,23 +324,26 @@ TEST_F(Test, batch_visualize_points) {
   RCLCPP_INFO(node_->get_logger(), "Generating random points");
   std::vector<std::tuple<double, double, double>> points;
   std::vector<std::tuple<double, double, double, double>> colors;
-  for (int i = 0; i < 100; i++) {
-    double          x = rand_dbl_(generator_);
-    double          y = rand_dbl_(generator_);
-    double          z = rand_dbl_(generator_);
+  for (int i = 0; i < 100; i++)
+  {
+    double x = rand_dbl_(generator_);
+    double y = rand_dbl_(generator_);
+    double z = rand_dbl_(generator_);
     Eigen::Vector3d point(x, y, z);
-    double          r = (x - range_min_) / (range_max_ - range_min_);
-    double          g = (y - range_min_) / (range_max_ - range_min_);
-    double          b = (z - range_min_) / (range_max_ - range_min_);
-    double          a = rand_percent_(generator_);
+    double r = (x - range_min_) / (range_max_ - range_min_);
+    double g = (y - range_min_) / (range_max_ - range_min_);
+    double b = (z - range_min_) / (range_max_ - range_min_);
+    double a = rand_percent_(generator_);
     bv_.addPoint(point, r, g, b, a, rclcpp::Duration{std::chrono::nanoseconds(1s)});
     points.emplace_back(std::make_tuple(x, y, z));
     colors.emplace_back(std::make_tuple(r, g, b, a));
   }
   bv_.publish();
 
-  for (int i = 0; i < 10; i++) {
-    if (received_msg_) {
+  for (int i = 0; i < 10; i++)
+  {
+    if (received_msg_)
+    {
       RCLCPP_INFO(node_->get_logger(), "Msg found at itr: %i", i);
       break;
     }
@@ -328,7 +360,8 @@ TEST_F(Test, batch_visualize_points) {
   clock->sleep_for(1s);
 }
 
-TEST_F(Test, batch_visualize_lines) {
+TEST_F(Test, batch_visualize_lines)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
 
@@ -340,20 +373,21 @@ TEST_F(Test, batch_visualize_lines) {
   RCLCPP_INFO(node_->get_logger(), "Generating random rays");
   std::vector<std::tuple<double, double, double>> points;
   std::vector<std::tuple<double, double, double, double>> colors;
-  for (int i = 0; i < batch_size_; i++) {
-    double          x1 = rand_dbl_(generator_);
-    double          y1 = rand_dbl_(generator_);
-    double          z1 = rand_dbl_(generator_);
+  for (int i = 0; i < batch_size_; i++)
+  {
+    double x1 = rand_dbl_(generator_);
+    double y1 = rand_dbl_(generator_);
+    double z1 = rand_dbl_(generator_);
     Eigen::Vector3d point1(x1, y1, z1);
-    double          x2 = rand_dbl_(generator_);
-    double          y2 = rand_dbl_(generator_);
-    double          z2 = rand_dbl_(generator_);
+    double x2 = rand_dbl_(generator_);
+    double y2 = rand_dbl_(generator_);
+    double z2 = rand_dbl_(generator_);
     Eigen::Vector3d point2(x2, y2, z2);
-    Ray             ray = Ray::twopointCast(point1, point2);
-    double          r   = ((x1 * x2) - range_min_) / (range_max_ - range_min_);
-    double          g   = ((y1 * y2) - range_min_) / (range_max_ - range_min_);
-    double          b   = ((z1 * z2) - range_min_) / (range_max_ - range_min_);
-    double          a   = rand_percent_(generator_);
+    Ray ray = Ray::twopointCast(point1, point2);
+    double r = ((x1 * x2) - range_min_) / (range_max_ - range_min_);
+    double g = ((y1 * y2) - range_min_) / (range_max_ - range_min_);
+    double b = ((z1 * z2) - range_min_) / (range_max_ - range_min_);
+    double a = rand_percent_(generator_);
     bv_.addRay(ray, r, g, b, a, rclcpp::Duration{std::chrono::nanoseconds(1s)});
     points.emplace_back(std::make_tuple(x1, y1, z1));
     colors.emplace_back(std::make_tuple(r, g, b, a));
@@ -362,8 +396,10 @@ TEST_F(Test, batch_visualize_lines) {
   }
   bv_.publish();
 
-  for (int i = 0; i < 10; i++) {
-    if (received_msg_) {
+  for (int i = 0; i < 10; i++)
+  {
+    if (received_msg_)
+    {
       RCLCPP_INFO(node_->get_logger(), "Msg found at itr: %i", i);
       break;
     }
@@ -381,16 +417,17 @@ TEST_F(Test, batch_visualize_lines) {
   EXPECT_FALSE(received_msg_);
 
   RCLCPP_INFO(node_->get_logger(), "Generating random rays starting from origin");
-  for (int i = 0; i < batch_size_; i++) {
-    double          x1 = rand_dbl_(generator_);
-    double          y1 = rand_dbl_(generator_);
-    double          z1 = rand_dbl_(generator_);
+  for (int i = 0; i < batch_size_; i++)
+  {
+    double x1 = rand_dbl_(generator_);
+    double y1 = rand_dbl_(generator_);
+    double z1 = rand_dbl_(generator_);
     Eigen::Vector3d point(x1, y1, z1);
-    Ray             ray = Ray::twopointCast(Eigen::Vector3d::Zero(), point);
-    double          r   = ((x1 * 0.0) - range_min_) / (range_max_ - range_min_);
-    double          g   = ((y1 * 0.0) - range_min_) / (range_max_ - range_min_);
-    double          b   = ((z1 * 0.0) - range_min_) / (range_max_ - range_min_);
-    double          a   = rand_percent_(generator_);
+    Ray ray = Ray::twopointCast(Eigen::Vector3d::Zero(), point);
+    double r = ((x1 * 0.0) - range_min_) / (range_max_ - range_min_);
+    double g = ((y1 * 0.0) - range_min_) / (range_max_ - range_min_);
+    double b = ((z1 * 0.0) - range_min_) / (range_max_ - range_min_);
+    double a = rand_percent_(generator_);
     bv_.addRay(ray, r, g, b, a, rclcpp::Duration{std::chrono::nanoseconds(1s)});
     points.emplace_back(std::make_tuple(0.0, 0.0, 0.0));
     colors.emplace_back(std::make_tuple(r, g, b, a));
@@ -399,8 +436,10 @@ TEST_F(Test, batch_visualize_lines) {
   }
   bv_.publish();
 
-  for (int i = 0; i < 10; i++) {
-    if (received_msg_) {
+  for (int i = 0; i < 10; i++)
+  {
+    if (received_msg_)
+    {
       RCLCPP_INFO(node_->get_logger(), "Msg found at itr: %i", i);
       break;
     }
@@ -417,7 +456,8 @@ TEST_F(Test, batch_visualize_lines) {
   clock->sleep_for(1s);
 }
 
-TEST_F(Test, batch_visualize_triangles) {
+TEST_F(Test, batch_visualize_triangles)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
 
@@ -430,24 +470,25 @@ TEST_F(Test, batch_visualize_triangles) {
   bv_.clearBuffers();
 
   RCLCPP_INFO(node_->get_logger(), "Generating random filled triangles");
-  for (int i = 0; i < batch_size_; i++) {
-    double          x1 = rand_dbl_(generator_);
-    double          y1 = rand_dbl_(generator_);
-    double          z1 = rand_dbl_(generator_);
+  for (int i = 0; i < batch_size_; i++)
+  {
+    double x1 = rand_dbl_(generator_);
+    double y1 = rand_dbl_(generator_);
+    double z1 = rand_dbl_(generator_);
     Eigen::Vector3d point1(x1, y1, z1);
-    double          x2 = rand_dbl_(generator_);
-    double          y2 = rand_dbl_(generator_);
-    double          z2 = rand_dbl_(generator_);
+    double x2 = rand_dbl_(generator_);
+    double y2 = rand_dbl_(generator_);
+    double z2 = rand_dbl_(generator_);
     Eigen::Vector3d point2(x2, y2, z2);
-    double          x3 = rand_dbl_(generator_);
-    double          y3 = rand_dbl_(generator_);
-    double          z3 = rand_dbl_(generator_);
+    double x3 = rand_dbl_(generator_);
+    double y3 = rand_dbl_(generator_);
+    double z3 = rand_dbl_(generator_);
     Eigen::Vector3d point3(x3, y3, z3);
-    double          r = x1 * x2 * x3;
-    double          g = y1 * y2 * y3;
-    double          b = z1 * z2 * z3;
-    double          a = rand_percent_(generator_);
-    Triangle        tri(point1, point2, point3);
+    double r = x1 * x2 * x3;
+    double g = y1 * y2 * y3;
+    double b = z1 * z2 * z3;
+    double a = rand_percent_(generator_);
+    Triangle tri(point1, point2, point3);
     bv_.addTriangle(tri, r, g, b, a, true, rclcpp::Duration{std::chrono::nanoseconds(1s)});
     points.emplace_back(std::make_tuple(x1, y1, z1));
     points.emplace_back(std::make_tuple(x2, y2, z2));
@@ -458,8 +499,10 @@ TEST_F(Test, batch_visualize_triangles) {
   }
   bv_.publish();
 
-  for (int i = 0; i < 10; i++) {
-    if (received_msg_) {
+  for (int i = 0; i < 10; i++)
+  {
+    if (received_msg_)
+    {
       RCLCPP_INFO(node_->get_logger(), "Msg found at itr: %i", i);
       break;
     }
@@ -476,24 +519,25 @@ TEST_F(Test, batch_visualize_triangles) {
 
   EXPECT_FALSE(received_msg_);
   RCLCPP_INFO(node_->get_logger(), "Generating random outlined triangles");
-  for (int i = 0; i < batch_size_; i++) {
-    double          x1 = rand_dbl_(generator_);
-    double          y1 = rand_dbl_(generator_);
-    double          z1 = rand_dbl_(generator_);
+  for (int i = 0; i < batch_size_; i++)
+  {
+    double x1 = rand_dbl_(generator_);
+    double y1 = rand_dbl_(generator_);
+    double z1 = rand_dbl_(generator_);
     Eigen::Vector3d point1(x1, y1, z1);
-    double          x2 = rand_dbl_(generator_);
-    double          y2 = rand_dbl_(generator_);
-    double          z2 = rand_dbl_(generator_);
+    double x2 = rand_dbl_(generator_);
+    double y2 = rand_dbl_(generator_);
+    double z2 = rand_dbl_(generator_);
     Eigen::Vector3d point2(x2, y2, z2);
-    double          x3 = rand_dbl_(generator_);
-    double          y3 = rand_dbl_(generator_);
-    double          z3 = rand_dbl_(generator_);
+    double x3 = rand_dbl_(generator_);
+    double y3 = rand_dbl_(generator_);
+    double z3 = rand_dbl_(generator_);
     Eigen::Vector3d point3(x3, y3, z3);
-    double          r = x1 * x2 * x3;
-    double          g = y1 * y2 * y3;
-    double          b = z1 * z2 * z3;
-    double          a = rand_percent_(generator_);
-    Triangle        tri(point1, point2, point3);
+    double r = x1 * x2 * x3;
+    double g = y1 * y2 * y3;
+    double b = z1 * z2 * z3;
+    double a = rand_percent_(generator_);
+    Triangle tri(point1, point2, point3);
     bv_.addTriangle(tri, r, g, b, a, false, rclcpp::Duration{std::chrono::nanoseconds(1s)});
 
     points.emplace_back(std::make_tuple(x1, y1, z1));
@@ -513,8 +557,10 @@ TEST_F(Test, batch_visualize_triangles) {
   }
   bv_.publish();
 
-  for (int i = 0; i < 10; i++) {
-    if (received_msg_) {
+  for (int i = 0; i < 10; i++)
+  {
+    if (received_msg_)
+    {
       RCLCPP_INFO(node_->get_logger(), "Msg found at itr: %i", i);
       break;
     }
@@ -531,7 +577,8 @@ TEST_F(Test, batch_visualize_triangles) {
   clock->sleep_for(1s);
 }
 
-TEST_F(Test, batch_visualize_rectangles) {
+TEST_F(Test, batch_visualize_rectangles)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
 
@@ -540,35 +587,38 @@ TEST_F(Test, batch_visualize_rectangles) {
   EXPECT_FALSE(received_msg_);
 
   RCLCPP_INFO(node_->get_logger(), "Generating random filled triangles");
-  for (int i = 0; i < batch_size_; i++) {
-    double          x1 = rand_dbl_(generator_);
-    double          y1 = rand_dbl_(generator_);
-    double          z1 = rand_dbl_(generator_);
+  for (int i = 0; i < batch_size_; i++)
+  {
+    double x1 = rand_dbl_(generator_);
+    double y1 = rand_dbl_(generator_);
+    double z1 = rand_dbl_(generator_);
     Eigen::Vector3d point1(x1, y1, z1);
-    double          x2 = rand_dbl_(generator_);
-    double          y2 = rand_dbl_(generator_);
-    double          z2 = rand_dbl_(generator_);
+    double x2 = rand_dbl_(generator_);
+    double y2 = rand_dbl_(generator_);
+    double z2 = rand_dbl_(generator_);
     Eigen::Vector3d point2(x2, y2, z2);
-    double          plane_x = rand_dbl_(generator_);
-    double          plane_y = rand_dbl_(generator_);
-    double          plane_z = rand_dbl_(generator_);
+    double plane_x = rand_dbl_(generator_);
+    double plane_y = rand_dbl_(generator_);
+    double plane_z = rand_dbl_(generator_);
     Eigen::Vector3d plane_anchor(plane_x, plane_y, plane_z);
-    double          side_length2 = rand_dbl_(generator_) / 2.0;
-    Eigen::Vector3d point3       = point2 + side_length2 * (((point2 - point1).cross(plane_anchor - point1)).normalized());
-    Eigen::Vector3d point4       = point1 + side_length2 * (((point2 - point1).cross(plane_anchor - point1)).normalized());
+    double side_length2 = rand_dbl_(generator_) / 2.0;
+    Eigen::Vector3d point3 = point2 + side_length2 * (((point2 - point1).cross(plane_anchor - point1)).normalized());
+    Eigen::Vector3d point4 = point1 + side_length2 * (((point2 - point1).cross(plane_anchor - point1)).normalized());
 
-    double    r = x1 * x2;
-    double    g = y1 * y2;
-    double    b = z1 * z2;
-    double    a = rand_percent_(generator_);
+    double r = x1 * x2;
+    double g = y1 * y2;
+    double b = z1 * z2;
+    double a = rand_percent_(generator_);
     Rectangle rect(point1, point2, point3, point4);
-    bv_.addRectangle(rect, r, g, b, a, true, rclcpp::Duration{std::chrono::nanoseconds(1s)});   // draw colored faces
-    bv_.addRectangle(rect, 0, 0, 0, 1, false, rclcpp::Duration{std::chrono::nanoseconds(1s)});  // draw outlines
+    bv_.addRectangle(rect, r, g, b, a, true, rclcpp::Duration{std::chrono::nanoseconds(1s)});  // draw colored faces
+    bv_.addRectangle(rect, 0, 0, 0, 1, false, rclcpp::Duration{std::chrono::nanoseconds(1s)}); // draw outlines
   }
   bv_.publish();
 
-  for (int i = 0; i < 10; i++) {
-    if (received_msg_) {
+  for (int i = 0; i < 10; i++)
+  {
+    if (received_msg_)
+    {
       RCLCPP_INFO(node_->get_logger(), "Msg found at itr: %i", i);
       break;
     }
@@ -585,7 +635,8 @@ TEST_F(Test, batch_visualize_rectangles) {
   clock->sleep_for(1s);
 }
 
-TEST_F(Test, batch_visualize_cuboid) {
+TEST_F(Test, batch_visualize_cuboid)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
 
@@ -594,16 +645,17 @@ TEST_F(Test, batch_visualize_cuboid) {
   EXPECT_FALSE(received_msg_);
 
   RCLCPP_INFO(node_->get_logger(), "Generating random cubes");
-  for (int i = 0; i < batch_size_; i++) {
-    double             x1 = rand_dbl_(generator_);
-    double             y1 = rand_dbl_(generator_);
-    double             z1 = rand_dbl_(generator_);
-    Eigen::Vector3d    center(x1, y1, z1);
-    double             s = 0.4 * rand_dbl_(generator_);
-    Eigen::Vector3d    scale(s, s, s);
-    double             x2          = rand_dbl_(generator_);
-    double             y2          = rand_dbl_(generator_);
-    double             z2          = rand_dbl_(generator_);
+  for (int i = 0; i < batch_size_; i++)
+  {
+    double x1 = rand_dbl_(generator_);
+    double y1 = rand_dbl_(generator_);
+    double z1 = rand_dbl_(generator_);
+    Eigen::Vector3d center(x1, y1, z1);
+    double s = 0.4 * rand_dbl_(generator_);
+    Eigen::Vector3d scale(s, s, s);
+    double x2 = rand_dbl_(generator_);
+    double y2 = rand_dbl_(generator_);
+    double z2 = rand_dbl_(generator_);
     Eigen::Quaterniond orientation = mrs_lib::geometry::quaternionFromEuler(x2, y2, z2);
 
     double r = (x1 - range_min_) / (range_max_ - range_min_);
@@ -612,13 +664,15 @@ TEST_F(Test, batch_visualize_cuboid) {
     double a = rand_percent_(generator_);
     Cuboid cub(center, scale, orientation);
 
-    bv_.addCuboid(cub, r, g, b, a, true, rclcpp::Duration{std::chrono::nanoseconds(1s)});   // draw colored faces
-    bv_.addCuboid(cub, 0, 0, 0, 1, false, rclcpp::Duration{std::chrono::nanoseconds(1s)});  // draw outlines
+    bv_.addCuboid(cub, r, g, b, a, true, rclcpp::Duration{std::chrono::nanoseconds(1s)});  // draw colored faces
+    bv_.addCuboid(cub, 0, 0, 0, 1, false, rclcpp::Duration{std::chrono::nanoseconds(1s)}); // draw outlines
   }
   bv_.publish();
 
-  for (int i = 0; i < 10; i++) {
-    if (received_msg_) {
+  for (int i = 0; i < 10; i++)
+  {
+    if (received_msg_)
+    {
       RCLCPP_INFO(node_->get_logger(), "Msg found at itr: %i", i);
       break;
     }
@@ -635,7 +689,8 @@ TEST_F(Test, batch_visualize_cuboid) {
   clock->sleep_for(1s);
 }
 
-TEST_F(Test, batch_visualize_ellipse) {
+TEST_F(Test, batch_visualize_ellipse)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
 
@@ -644,31 +699,34 @@ TEST_F(Test, batch_visualize_ellipse) {
   EXPECT_FALSE(received_msg_);
 
   RCLCPP_INFO(node_->get_logger(), "Generating random ellipses");
-  for (int i = 0; i < batch_size_; i++) {
-    double             x1 = rand_dbl_(generator_);
-    double             y1 = rand_dbl_(generator_);
-    double             z1 = rand_dbl_(generator_);
-    Eigen::Vector3d    center(x1, y1, z1);
-    double             major       = 0.4 * rand_dbl_(generator_);
-    double             minor       = 0.1 * rand_dbl_(generator_);
-    double             x2          = rand_dbl_(generator_);
-    double             y2          = rand_dbl_(generator_);
-    double             z2          = rand_dbl_(generator_);
+  for (int i = 0; i < batch_size_; i++)
+  {
+    double x1 = rand_dbl_(generator_);
+    double y1 = rand_dbl_(generator_);
+    double z1 = rand_dbl_(generator_);
+    Eigen::Vector3d center(x1, y1, z1);
+    double major = 0.4 * rand_dbl_(generator_);
+    double minor = 0.1 * rand_dbl_(generator_);
+    double x2 = rand_dbl_(generator_);
+    double y2 = rand_dbl_(generator_);
+    double z2 = rand_dbl_(generator_);
     Eigen::Quaterniond orientation = mrs_lib::geometry::quaternionFromEuler(x2, y2, z2);
 
-    double  r = (x1 - range_min_) / (range_max_ - range_min_);
-    double  g = (y1 - range_min_) / (range_max_ - range_min_);
-    double  b = (z1 - range_min_) / (range_max_ - range_min_);
-    double  a = rand_percent_(generator_);
+    double r = (x1 - range_min_) / (range_max_ - range_min_);
+    double g = (y1 - range_min_) / (range_max_ - range_min_);
+    double b = (z1 - range_min_) / (range_max_ - range_min_);
+    double a = rand_percent_(generator_);
     Ellipse el(center, orientation, major, minor);
 
-    bv_.addEllipse(el, r, g, b, a, true, 64, rclcpp::Duration{std::chrono::nanoseconds(1s)});           // colored face
-    bv_.addEllipse(el, 0.0, 0.0, 0.0, 1.0, false, 64, rclcpp::Duration{std::chrono::nanoseconds(1s)});  // black outline
+    bv_.addEllipse(el, r, g, b, a, true, 64, rclcpp::Duration{std::chrono::nanoseconds(1s)});          // colored face
+    bv_.addEllipse(el, 0.0, 0.0, 0.0, 1.0, false, 64, rclcpp::Duration{std::chrono::nanoseconds(1s)}); // black outline
   }
   bv_.publish();
 
-  for (int i = 0; i < 10; i++) {
-    if (received_msg_) {
+  for (int i = 0; i < 10; i++)
+  {
+    if (received_msg_)
+    {
       RCLCPP_INFO(node_->get_logger(), "Msg found at itr: %i", i);
       break;
     }
@@ -685,7 +743,8 @@ TEST_F(Test, batch_visualize_ellipse) {
   clock->sleep_for(1s);
 }
 
-TEST_F(Test, batch_visualize_cylinders) {
+TEST_F(Test, batch_visualize_cylinders)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
 
@@ -694,14 +753,15 @@ TEST_F(Test, batch_visualize_cylinders) {
   EXPECT_FALSE(received_msg_);
 
   RCLCPP_INFO(node_->get_logger(), "Generating random cylinders");
-  for (int i = 0; i < batch_size_; i++) {
-    double             x1 = rand_dbl_(generator_);
-    double             y1 = rand_dbl_(generator_);
-    double             z1 = rand_dbl_(generator_);
-    Eigen::Vector3d    center(x1, y1, z1);
-    double             x2          = rand_dbl_(generator_);
-    double             y2          = rand_dbl_(generator_);
-    double             z2          = rand_dbl_(generator_);
+  for (int i = 0; i < batch_size_; i++)
+  {
+    double x1 = rand_dbl_(generator_);
+    double y1 = rand_dbl_(generator_);
+    double z1 = rand_dbl_(generator_);
+    Eigen::Vector3d center(x1, y1, z1);
+    double x2 = rand_dbl_(generator_);
+    double y2 = rand_dbl_(generator_);
+    double z2 = rand_dbl_(generator_);
     Eigen::Quaterniond orientation = mrs_lib::geometry::quaternionFromEuler(x2, y2, z2);
 
     double radius = 0.3 * rand_dbl_(generator_);
@@ -718,8 +778,10 @@ TEST_F(Test, batch_visualize_cylinders) {
   }
   bv_.publish();
 
-  for (int i = 0; i < 10; i++) {
-    if (received_msg_) {
+  for (int i = 0; i < 10; i++)
+  {
+    if (received_msg_)
+    {
       RCLCPP_INFO(node_->get_logger(), "Msg found at itr: %i", i);
       break;
     }
@@ -736,7 +798,8 @@ TEST_F(Test, batch_visualize_cylinders) {
   clock->sleep_for(1s);
 }
 
-TEST_F(Test, batch_visualize_cones) {
+TEST_F(Test, batch_visualize_cones)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
 
@@ -745,17 +808,18 @@ TEST_F(Test, batch_visualize_cones) {
   EXPECT_FALSE(received_msg_);
 
   RCLCPP_INFO(node_->get_logger(), "Generating random cones");
-  for (int i = 0; i < batch_size_; i++) {
-    double          x1 = rand_dbl_(generator_);
-    double          y1 = rand_dbl_(generator_);
-    double          z1 = rand_dbl_(generator_);
+  for (int i = 0; i < batch_size_; i++)
+  {
+    double x1 = rand_dbl_(generator_);
+    double y1 = rand_dbl_(generator_);
+    double z1 = rand_dbl_(generator_);
     Eigen::Vector3d origin(x1, y1, z1);
-    double          x2 = rand_dbl_(generator_);
-    double          y2 = rand_dbl_(generator_);
-    double          z2 = rand_dbl_(generator_);
+    double x2 = rand_dbl_(generator_);
+    double y2 = rand_dbl_(generator_);
+    double z2 = rand_dbl_(generator_);
     Eigen::Vector3d direction(x2, y2, z2);
 
-    double angle  = 0.02 * rand_dbl_(generator_);
+    double angle = 0.02 * rand_dbl_(generator_);
     double height = rand_dbl_(generator_);
 
     double r = (x1 - range_min_) / (range_max_ - range_min_);
@@ -769,8 +833,10 @@ TEST_F(Test, batch_visualize_cones) {
   }
   bv_.publish();
 
-  for (int i = 0; i < 10; i++) {
-    if (received_msg_) {
+  for (int i = 0; i < 10; i++)
+  {
+    if (received_msg_)
+    {
       RCLCPP_INFO(node_->get_logger(), "Msg found at itr: %i", i);
       break;
     }
@@ -787,7 +853,8 @@ TEST_F(Test, batch_visualize_cones) {
   clock->sleep_for(1s);
 }
 
-TEST_F(Test, batch_visualize_trajectories) {
+TEST_F(Test, batch_visualize_trajectories)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
 
@@ -796,12 +863,14 @@ TEST_F(Test, batch_visualize_trajectories) {
   EXPECT_FALSE(received_msg_);
 
   RCLCPP_INFO(node_->get_logger(), "Generating random trajectories");
-  for (int i = 0; i < batch_size_; i++) {
+  for (int i = 0; i < batch_size_; i++)
+  {
     mrs_msgs::msg::TrajectoryReference traj;
-    for (int n = 0; n < 10; n++) {
-      double              x = rand_dbl_(generator_);
-      double              y = rand_dbl_(generator_);
-      double              z = rand_dbl_(generator_);
+    for (int n = 0; n < 10; n++)
+    {
+      double x = rand_dbl_(generator_);
+      double y = rand_dbl_(generator_);
+      double z = rand_dbl_(generator_);
       mrs_msgs::msg::Reference ref;
       ref.position.x = x;
       ref.position.y = y;
@@ -813,8 +882,10 @@ TEST_F(Test, batch_visualize_trajectories) {
   }
   bv_.publish();
 
-  for (int i = 0; i < 10; i++) {
-    if (received_msg_) {
+  for (int i = 0; i < 10; i++)
+  {
+    if (received_msg_)
+    {
       RCLCPP_INFO(node_->get_logger(), "Msg found at itr: %i", i);
       break;
     }
@@ -831,7 +902,8 @@ TEST_F(Test, batch_visualize_trajectories) {
   clock->sleep_for(1s);
 }
 
-TEST_F(Test, batch_visualize_rays_and_triangles) {
+TEST_F(Test, batch_visualize_rays_and_triangles)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
 
@@ -840,43 +912,48 @@ TEST_F(Test, batch_visualize_rays_and_triangles) {
   EXPECT_FALSE(received_msg_);
 
   RCLCPP_INFO(node_->get_logger(), "Generating random rays and triangles");
-  for (int i = 0; i < batch_size_; i++) {
-    double          x1 = rand_dbl_(generator_);
-    double          y1 = rand_dbl_(generator_);
-    double          z1 = rand_dbl_(generator_);
+  for (int i = 0; i < batch_size_; i++)
+  {
+    double x1 = rand_dbl_(generator_);
+    double y1 = rand_dbl_(generator_);
+    double z1 = rand_dbl_(generator_);
     Eigen::Vector3d point1(x1, y1, z1);
-    double          x2 = rand_dbl_(generator_);
-    double          y2 = rand_dbl_(generator_);
-    double          z2 = rand_dbl_(generator_);
+    double x2 = rand_dbl_(generator_);
+    double y2 = rand_dbl_(generator_);
+    double z2 = rand_dbl_(generator_);
     Eigen::Vector3d point2(x2, y2, z2);
-    double          x3 = rand_dbl_(generator_);
-    double          y3 = rand_dbl_(generator_);
-    double          z3 = rand_dbl_(generator_);
+    double x3 = rand_dbl_(generator_);
+    double y3 = rand_dbl_(generator_);
+    double z3 = rand_dbl_(generator_);
     Eigen::Vector3d point3(3 * x3, 3 * y3, 3 * z3);
-    Triangle        tri(point1, point2, point3);
+    Triangle tri(point1, point2, point3);
 
-    double          rx1 = rand_dbl_(generator_);
-    double          ry1 = rand_dbl_(generator_);
-    double          rz1 = rand_dbl_(generator_);
+    double rx1 = rand_dbl_(generator_);
+    double ry1 = rand_dbl_(generator_);
+    double rz1 = rand_dbl_(generator_);
     Eigen::Vector3d ray_point1(4 * rx1, 4 * ry1, 4 * rz1);
-    double          rx2 = rand_dbl_(generator_);
-    double          ry2 = rand_dbl_(generator_);
-    double          rz2 = rand_dbl_(generator_);
+    double rx2 = rand_dbl_(generator_);
+    double ry2 = rand_dbl_(generator_);
+    double rz2 = rand_dbl_(generator_);
     Eigen::Vector3d ray_point2(4 * rx2, 4 * ry2, 4 * rz2);
-    Ray             ray = Ray::twopointCast(ray_point1, ray_point2);
+    Ray ray = Ray::twopointCast(ray_point1, ray_point2);
     bv_.addRay(ray, 1.0, 0.5, 0.0, 1.0, rclcpp::Duration{std::chrono::nanoseconds(1s)});
 
-    if (!tri.intersectionRay(ray).has_value()) {
+    if (!tri.intersectionRay(ray).has_value())
+    {
       bv_.addTriangle(tri, 1.0, 0.0, 0.0, 1.0, true, rclcpp::Duration{std::chrono::nanoseconds(1s)});
-    } else {
+    } else
+    {
       bv_.addTriangle(tri, 0.0, 1.0, 0.3, 1.0, true, rclcpp::Duration{std::chrono::nanoseconds(1s)});
       bv_.addPoint(tri.intersectionRay(ray).value(), 1, 1, 0, 1, rclcpp::Duration{std::chrono::nanoseconds(1s)});
     }
   }
   bv_.publish();
 
-  for (int i = 0; i < 10; i++) {
-    if (received_msg_) {
+  for (int i = 0; i < 10; i++)
+  {
+    if (received_msg_)
+    {
       RCLCPP_INFO(node_->get_logger(), "Msg found at itr: %i", i);
       break;
     }

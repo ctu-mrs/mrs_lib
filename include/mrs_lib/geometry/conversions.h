@@ -4,4 +4,4 @@
 
 #include <mrs_lib/geometry/conversions_eigen.h>
 
-#endif  // GEOMETRY_CONVERSIONS_H
+#endif // GEOMETRY_CONVERSIONS_H

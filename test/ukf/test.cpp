@@ -14,7 +14,7 @@ namespace mrs_lib
   const int n_measurements = 2;
 
   using ukf_t = UKF<n_states, n_inputs, n_measurements>;
-}  // namespace mrs_lib
+} // namespace mrs_lib
 
 // Some helpful aliases to make writing of types shorter
 using namespace mrs_lib;

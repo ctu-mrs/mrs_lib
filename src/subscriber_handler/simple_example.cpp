@@ -18,7 +18,7 @@
 #include <mrs_lib/subscribe_handler.h>
 #include <std_msgs/String.h>
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   /* Set up ROS. */
   const std::string node_name = "subscribe_handler_simple_example";
@@ -27,19 +27,16 @@ int main(int argc, char **argv)
 
   /* Basic configuration of the SubscribeHandler. */
   mrs_lib::SubscribeHandlerOptions shopts(nh);
-  shopts.node_name = node_name;                       //< used for the ROS logging from inside the SubscribeHandler (ROS_INFO, ROS_WARN etc.)
-  shopts.no_message_timeout = ros::Duration(3.0);     //< SubscribeHandler warns if no messages arrive for this duration
+  shopts.node_name = node_name;                   //< used for the ROS logging from inside the SubscribeHandler (ROS_INFO, ROS_WARN etc.)
+  shopts.no_message_timeout = ros::Duration(3.0); //< SubscribeHandler warns if no messages arrive for this duration
 
   /* name of the topic to be handled */
   const std::string topic_name = "test_topic";
 
-  /* This is how a new SubscribeHandler object is initialized. */ 
-  mrs_lib::SubscribeHandler<std_msgs::String> handler(
-            shopts,
-            topic_name
-            );
+  /* This is how a new SubscribeHandler object is initialized. */
+  mrs_lib::SubscribeHandler<std_msgs::String> handler(shopts, topic_name);
 
-  /* Now let's just spin to process calbacks until the user decides to stop the program. */ 
+  /* Now let's just spin to process calbacks until the user decides to stop the program. */
   ros::Duration d(0.1);
   while (ros::ok())
   {
@@ -51,4 +48,3 @@ int main(int argc, char **argv)
     d.sleep();
   }
 }
-

@@ -78,7 +78,7 @@ namespace mrs_lib
       const R_t W_inv = Base_class::invert_W(W);
       const K_t K_orig = sc.P * H.transpose() * W_inv;
 
-      const z_t inn = z - (H * sc.x);  // innovation
+      const z_t inn = z - (H * sc.x); // innovation
       const x_t x = sc.x + K_orig * inn;
       const double inn_scale = inn.transpose() * W_inv * inn;
 
@@ -263,7 +263,7 @@ namespace mrs_lib
         const Kq_t K_orig = select_rows(K, norm_indices);
         const xq_t xq = select_indices(sc.x, norm_indices);
         const Hq_t Hq = select_cols(H, norm_indices);
-        const z_t inn = z - (Hq * xq);  // innovation
+        const z_t inn = z - (Hq * xq); // innovation
         const xq_t x = xq + K_orig * inn;
         const double inn_scale = inn.transpose() * W_inv * inn;
 
@@ -289,21 +289,21 @@ namespace mrs_lib
     static const int p = n_measurements;
     using Base_class = UKF<n, m, p>;
 
-    using x_t = typename Base_class::x_t;                // state vector n*1
-    using u_t = typename Base_class::u_t;                // input vector m*1
-    using z_t = typename Base_class::z_t;                // measurement vector p*1
-    using P_t = typename Base_class::P_t;                // state covariance n*n
-    using R_t = typename Base_class::R_t;                // measurement covariance p*p
-    using Q_t = typename Base_class::Q_t;                // measurement covariance p*p
-    using statecov_t = typename Base_class::statecov_t;  // helper struct for state and covariance
+    using x_t = typename Base_class::x_t;               // state vector n*1
+    using u_t = typename Base_class::u_t;               // input vector m*1
+    using z_t = typename Base_class::z_t;               // measurement vector p*1
+    using P_t = typename Base_class::P_t;               // state covariance n*n
+    using R_t = typename Base_class::R_t;               // measurement covariance p*p
+    using Q_t = typename Base_class::Q_t;               // measurement covariance p*p
+    using statecov_t = typename Base_class::statecov_t; // helper struct for state and covariance
 
     using transition_model_t = typename Base_class::transition_model_t;
     using observation_model_t = typename Base_class::observation_model_t;
 
-    using X_t = typename Base_class::X_t;      // state sigma points matrix n*w
-    using Z_t = typename Base_class::Z_t;      // measurement sigma points matrix p*w
-    using Pzz_t = typename Base_class::Pzz_t;  // Pzz helper matrix p*n
-    using K_t = typename Base_class::K_t;      // kalman gain n*p
+    using X_t = typename Base_class::X_t;     // state sigma points matrix n*w
+    using Z_t = typename Base_class::Z_t;     // measurement sigma points matrix p*w
+    using Pzz_t = typename Base_class::Pzz_t; // Pzz helper matrix p*n
+    using K_t = typename Base_class::K_t;     // kalman gain n*p
     //}
 
   public:
@@ -351,7 +351,7 @@ namespace mrs_lib
       }
 
       // compute Kalman gain
-      const z_t inn = (z - z_exp);  // innovation
+      const z_t inn = (z - z_exp); // innovation
       const K_t K = computeKalmanGain(sc.x, inn, Pxz, Pzz);
 
       // check whether the inverse produced valid numbers
@@ -391,7 +391,6 @@ namespace mrs_lib
   };
   //}
 
-}  // namespace mrs_lib
+} // namespace mrs_lib
 
-#endif  // NCKFSYSTEMMODELS_H
-
+#endif // NCKFSYSTEMMODELS_H

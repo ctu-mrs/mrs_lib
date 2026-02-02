@@ -83,6 +83,6 @@ namespace mrs_lib
     virtual statecov_t predict(const statecov_t& sc, const u_t& u, const Q_t& Q, double dt) const = 0;
   };
   //}
-}  // namespace mrs_lib
+} // namespace mrs_lib
 
-#endif  // SYSTEMMODEL_H
+#endif // SYSTEMMODEL_H

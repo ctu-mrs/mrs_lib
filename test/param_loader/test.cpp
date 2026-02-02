@@ -13,13 +13,15 @@
 
 using namespace std::chrono_literals;
 
-class Test : public ::testing::Test {
+class Test : public ::testing::Test
+{
 
 public:
 protected:
   /* SetUpTestCase() //{ */
 
-  static void SetUpTestCase() {
+  static void SetUpTestCase()
+  {
     rclcpp::init(0, nullptr);
   }
 
@@ -27,7 +29,8 @@ protected:
 
   /* TearDownTestCase() //{ */
 
-  static void TearDownTestCase() {
+  static void TearDownTestCase()
+  {
     rclcpp::shutdown();
   }
 
@@ -35,7 +38,8 @@ protected:
 
   /* initialize() //{ */
 
-  void initialize(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions()) {
+  void initialize(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions())
+  {
 
     node_ = std::make_shared<rclcpp::Node>("test_param_provider", node_options);
 
@@ -51,7 +55,8 @@ protected:
 
   /* spin() //{ */
 
-  void spin() {
+  void spin()
+  {
 
     RCLCPP_INFO(node_->get_logger(), "starting spinning");
 
@@ -64,7 +69,8 @@ protected:
 
   /* despin() //{ */
 
-  void despin() {
+  void despin()
+  {
     executor_->cancel();
 
     main_thread_.join();
@@ -72,20 +78,21 @@ protected:
 
   //}
 
-  rclcpp::Node::SharedPtr                              node_;
+  rclcpp::Node::SharedPtr node_;
   rclcpp::executors::SingleThreadedExecutor::SharedPtr executor_;
 
   std::thread main_thread_;
 
   std::promise<bool> finished_promise_;
-  std::future<bool>  finished_future_;
+  std::future<bool> finished_future_;
 
   rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
 };
 
 /* TEST_F(Test, param_loader_load_from_file) //{ */
 
-TEST_F(Test, param_loader_load_from_file) {
+TEST_F(Test, param_loader_load_from_file)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false).allow_undeclared_parameters(true));
 
@@ -113,15 +120,18 @@ TEST_F(Test, param_loader_load_from_file) {
   EXPECT_TRUE(pl.loadedSuccessfully());
   EXPECT_LE(std::abs(loaded_radians - M_PI), 1e-6);
 
-  if (pl.loadedSuccessfully()) {
+  if (pl.loadedSuccessfully())
+  {
     RCLCPP_INFO(node_->get_logger(), "[%s]: parameter loaded OK", node_->get_name());
     int it = 0;
-    for (const auto& mat : loaded_nd_matrix) {
+    for (const auto& mat : loaded_nd_matrix)
+    {
       std::cout << "matrix #" << it << std::endl;
       std::cout << mat << std::endl;
       it++;
     }
-  } else {
+  } else
+  {
     RCLCPP_ERROR(node_->get_logger(), "[%s]: parameter loading failure", node_->get_name());
   }
 
@@ -258,7 +268,8 @@ TEST_F(Test, param_loader_load_from_file) {
 
 /* TEST_F(Test, param_loader_load_from_file2) //{ */
 
-TEST_F(Test, param_loader_load_from_file2) {
+TEST_F(Test, param_loader_load_from_file2)
+{
 
   rclcpp::NodeOptions options;
   options.parameter_overrides({
@@ -288,15 +299,18 @@ TEST_F(Test, param_loader_load_from_file2) {
   std::vector<Eigen::MatrixXd> loaded_nd_matrix = pl.loadMatrixArray2("test_namespace/test_param_nd_matrix");
   EXPECT_TRUE(pl.loadedSuccessfully());
 
-  if (pl.loadedSuccessfully()) {
+  if (pl.loadedSuccessfully())
+  {
     RCLCPP_INFO(node_->get_logger(), "[%s]: parameter loaded OK", node_->get_name());
     int it = 0;
-    for (const auto& mat : loaded_nd_matrix) {
+    for (const auto& mat : loaded_nd_matrix)
+    {
       std::cout << "matrix #" << it << std::endl;
       std::cout << mat << std::endl;
       it++;
     }
-  } else {
+  } else
+  {
     RCLCPP_ERROR(node_->get_logger(), "[%s]: parameter loading failure", node_->get_name());
   }
 

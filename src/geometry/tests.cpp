@@ -49,14 +49,12 @@ double interpolateAngles(const double& a1, const double& a2, const double& coeff
 int main()
 {
   std::function correct(interpolateAngles);
-  auto totest = std::bind<double(double, double,double)>(sradians::interpUnwrapped, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+  auto totest = std::bind<double(double, double, double)>(sradians::interpUnwrapped, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
-  const std::vector<double> tst {-0.0, 0.0, 1, -1, M_PI, -M_PI, 2*M_PI, -2*M_PI};
-  std::cout <<
-    "┌────────────┬────────────┬────────────┐\n"
-    "│  correct   │  mrs_lib   │ difference │\n"
-    "├────────────┼────────────┼────────────┤\n"
-    ;
+  const std::vector<double> tst{-0.0, 0.0, 1, -1, M_PI, -M_PI, 2 * M_PI, -2 * M_PI};
+  std::cout << "┌────────────┬────────────┬────────────┐\n"
+               "│  correct   │  mrs_lib   │ difference │\n"
+               "├────────────┼────────────┼────────────┤\n";
   for (const auto& a : tst)
   {
     for (const auto& b : tst)
@@ -69,16 +67,15 @@ int main()
         const bool ok = dif < 1e-9;
         if (!ok)
           std::cout << "\033[1;31m";
-        std::cout << std::left << std::showpos << std::setprecision(4)
-        << "│ " << std::setw(10) << cor << " │ " << std::setw(10) << res << " │ " << std::setw(10) << dif << " |";
+        std::cout << std::left << std::showpos << std::setprecision(4) << "│ " << std::setw(10) << cor << " │ " << std::setw(10) << res << " │ "
+                  << std::setw(10) << dif << " |";
         if (!ok)
           std::cout << "\tfor values: " << std::left << std::showpos << std::setprecision(4) << a << "\tand\t" << b << "\tand\t" << c << "\033[0m";
         std::cout << std::endl;
       }
     }
   }
-  std::cout <<
-  "└────────────┴────────────┴────────────┘" << std::endl;
+  std::cout << "└────────────┴────────────┴────────────┘" << std::endl;
 
   constexpr int N = 1e4;
   const auto start1 = std::chrono::high_resolution_clock::now();
@@ -113,12 +110,8 @@ int main()
   }
   const auto stop2 = std::chrono::high_resolution_clock::now();
 
-  std::cout << "dur1: " << std::chrono::duration_cast<std::chrono::microseconds>(stop1-start1).count()/double(N) << "us" << std::endl;
-  std::cout << "dur2: " << std::chrono::duration_cast<std::chrono::microseconds>(stop2-start2).count()/double(N) << "us" << std::endl;
+  std::cout << "dur1: " << std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1).count() / double(N) << "us" << std::endl;
+  std::cout << "dur2: " << std::chrono::duration_cast<std::chrono::microseconds>(stop2 - start2).count() / double(N) << "us" << std::endl;
 
   return 0;
 }
-
-
-
-

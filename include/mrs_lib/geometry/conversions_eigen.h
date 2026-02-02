@@ -32,7 +32,7 @@ namespace mrs_lib
 
     //}
 
-  }  // namespace geometry
-}  // namespace mrs_lib
+  } // namespace geometry
+} // namespace mrs_lib
 
-#endif  // GEOMETRY_CONVERSIONS_EIGEN_H
+#endif // GEOMETRY_CONVERSIONS_EIGEN_H

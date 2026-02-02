@@ -14,43 +14,43 @@ namespace mrs_lib
 {
 
   /**
-  * \brief Implementation of the Unscented Kalman filter \cite UKF.
-  *
-  * The Unscented Kalman filter (abbreviated UKF, \cite UKF) is a variant of the Kalman filter, which may be used
-  * for state filtration or estimation of non-linear systems as opposed to the Linear Kalman Filter
-  * (which is implemented in \ref LKF). The UKF tends to be more accurate than the simpler Extended Kalman Filter,
-  * espetially for highly non-linear systems. However, it is generally less stable than the LKF because of the extra
-  * matrix square root in the sigma points calculation, so it is recommended to use LKF for linear systems.
-  *
-  * The UKF C++ class itself is templated. This has its advantages and disadvantages. Main disadvantage is that it
-  * may be harder to use if you're not familiar with C++ templates, which, admittedly, can get somewhat messy,
-  * espetially during compilation. Another disadvantage is that if used unwisely, the compilation times can get
-  * much higher when using templates. The main advantage is compile-time checking (if it compiles, then it has
-  * a lower chance of crashing at runtime) and enabling more effective optimalizations during compilation. Also in case
-  * of Eigen, the code is arguably more readable when you use aliases to the specific Matrix instances instead of
-  * having Eigen::MatrixXd and Eigen::VectorXd everywhere.
-  *
-  * \tparam n_states         number of states of the system (length of the \f$ \mathbf{x} \f$ vector).
-  * \tparam n_inputs         number of inputs of the system (length of the \f$ \mathbf{u} \f$ vector).
-  * \tparam n_measurements   number of measurements of the system (length of the \f$ \mathbf{z} \f$ vector).
-  *
-  */
+   * \brief Implementation of the Unscented Kalman filter \cite UKF.
+   *
+   * The Unscented Kalman filter (abbreviated UKF, \cite UKF) is a variant of the Kalman filter, which may be used
+   * for state filtration or estimation of non-linear systems as opposed to the Linear Kalman Filter
+   * (which is implemented in \ref LKF). The UKF tends to be more accurate than the simpler Extended Kalman Filter,
+   * espetially for highly non-linear systems. However, it is generally less stable than the LKF because of the extra
+   * matrix square root in the sigma points calculation, so it is recommended to use LKF for linear systems.
+   *
+   * The UKF C++ class itself is templated. This has its advantages and disadvantages. Main disadvantage is that it
+   * may be harder to use if you're not familiar with C++ templates, which, admittedly, can get somewhat messy,
+   * espetially during compilation. Another disadvantage is that if used unwisely, the compilation times can get
+   * much higher when using templates. The main advantage is compile-time checking (if it compiles, then it has
+   * a lower chance of crashing at runtime) and enabling more effective optimalizations during compilation. Also in case
+   * of Eigen, the code is arguably more readable when you use aliases to the specific Matrix instances instead of
+   * having Eigen::MatrixXd and Eigen::VectorXd everywhere.
+   *
+   * \tparam n_states         number of states of the system (length of the \f$ \mathbf{x} \f$ vector).
+   * \tparam n_inputs         number of inputs of the system (length of the \f$ \mathbf{u} \f$ vector).
+   * \tparam n_measurements   number of measurements of the system (length of the \f$ \mathbf{z} \f$ vector).
+   *
+   */
   template <int n_states, int n_inputs, int n_measurements>
   class UKF : KalmanFilter<n_states, n_inputs, n_measurements>
   {
   protected:
     /* protected UKF definitions (typedefs, constants etc) //{ */
-    static constexpr int n = n_states;            /*!< \brief Length of the state vector of the system. */
-    static constexpr int m = n_inputs;            /*!< \brief Length of the input vector of the system. */
-    static constexpr int p = n_measurements;      /*!< \brief Length of the measurement vector of the system. */
-    static constexpr int w = 2 * n + 1;           /*!< \brief Number of sigma points/weights. */
+    static constexpr int n = n_states;       /*!< \brief Length of the state vector of the system. */
+    static constexpr int m = n_inputs;       /*!< \brief Length of the input vector of the system. */
+    static constexpr int p = n_measurements; /*!< \brief Length of the measurement vector of the system. */
+    static constexpr int w = 2 * n + 1;      /*!< \brief Number of sigma points/weights. */
 
     using Base_class = KalmanFilter<n, m, p>; /*!< \brief Base class of this class. */
 
-    using X_t = typename Eigen::Matrix<double, n, w>;    /*!< \brief State sigma points matrix. */
-    using Z_t = typename Eigen::Matrix<double, p, w>;    /*!< \brief Measurement sigma points matrix. */
-    using Pzz_t = typename Eigen::Matrix<double, p, p>;  /*!< \brief Pzz helper matrix. */
-    using K_t = typename Eigen::Matrix<double, n, p>;    /*!< \brief Kalman gain matrix. */
+    using X_t = typename Eigen::Matrix<double, n, w>;   /*!< \brief State sigma points matrix. */
+    using Z_t = typename Eigen::Matrix<double, p, w>;   /*!< \brief Measurement sigma points matrix. */
+    using Pzz_t = typename Eigen::Matrix<double, p, p>; /*!< \brief Pzz helper matrix. */
+    using K_t = typename Eigen::Matrix<double, n, p>;   /*!< \brief Kalman gain matrix. */
     //}
 
   public:
@@ -97,77 +97,78 @@ namespace mrs_lib
 
   public:
     /* UKF constructor //{ */
-  /*!
-    * \brief Convenience default constructor.
-    *
-    * This constructor should not be used if applicable. If used, the main constructor has to be called afterwards,
-    * otherwise the UKF object is invalid (not initialized).
-    */
+    /*!
+     * \brief Convenience default constructor.
+     *
+     * This constructor should not be used if applicable. If used, the main constructor has to be called afterwards,
+     * otherwise the UKF object is invalid (not initialized).
+     */
     UKF();
 
-  /*!
-    * \brief The main constructor.
-    *
-    * \param alpha             Scaling parameter of the sigma generation (a small positive value, e.g. 1e-3).
-    * \param kappa             Secondary scaling parameter of the sigma generation (usually set to 0 or 1).
-    * \param beta              Incorporates prior knowledge about the distribution (for Gaussian distribution, 2 is optimal).
-    * \param transition_model  State transition model function.
-    * \param observation_model Observation model function.
-    */
-    UKF(const transition_model_t& transition_model, const observation_model_t& observation_model, const double alpha = 1e-3, const double kappa = 1, const double beta = 2);
+    /*!
+     * \brief The main constructor.
+     *
+     * \param alpha             Scaling parameter of the sigma generation (a small positive value, e.g. 1e-3).
+     * \param kappa             Secondary scaling parameter of the sigma generation (usually set to 0 or 1).
+     * \param beta              Incorporates prior knowledge about the distribution (for Gaussian distribution, 2 is optimal).
+     * \param transition_model  State transition model function.
+     * \param observation_model Observation model function.
+     */
+    UKF(const transition_model_t& transition_model, const observation_model_t& observation_model, const double alpha = 1e-3, const double kappa = 1,
+        const double beta = 2);
     //}
 
     /* correct() method //{ */
-  /*!
-    * \brief Implements the state correction step (measurement update).
-    *
-    * \param sc     Previous estimate of the state and covariance.
-    * \param z      Measurement vector.
-    * \param R      Measurement covariance matrix.
-    * \returns      The state and covariance after applying the correction step.
-    */
+    /*!
+     * \brief Implements the state correction step (measurement update).
+     *
+     * \param sc     Previous estimate of the state and covariance.
+     * \param z      Measurement vector.
+     * \param R      Measurement covariance matrix.
+     * \returns      The state and covariance after applying the correction step.
+     */
     virtual statecov_t correct(const statecov_t& sc, const z_t& z, const R_t& R) const override;
     //}
 
     /* predict() method //{ */
-  /*!
-    * \brief Implements the state prediction step (time update).
-    *
-    * \param sc     Previous estimate of the state and covariance.
-    * \param u      Input vector.
-    * \param Q      Process noise covariance matrix.
-    * \param dt     Duration since the previous estimate.
-    * \returns      The state and covariance after applying the correction step.
-    */
+    /*!
+     * \brief Implements the state prediction step (time update).
+     *
+     * \param sc     Previous estimate of the state and covariance.
+     * \param u      Input vector.
+     * \param Q      Process noise covariance matrix.
+     * \param dt     Duration since the previous estimate.
+     * \returns      The state and covariance after applying the correction step.
+     */
     virtual statecov_t predict(const statecov_t& sc, const u_t& u, const Q_t& Q, double dt) const override;
     //}
 
     /* setConstants() method //{ */
-  /*!
-    * \brief Changes the Unscented Transform parameters.
-    *
-    * \param alpha  Scaling parameter of the sigma generation (a small positive value - e.g. 1e-3).
-    * \param kappa  Secondary scaling parameter of the sigma generation (usually set to 0 or 1).
-    * \param beta   Incorporates prior knowledge about the distribution (for Gaussian distribution, 2 is optimal).
-    */
+    /*!
+     * \brief Changes the Unscented Transform parameters.
+     *
+     * \param alpha  Scaling parameter of the sigma generation (a small positive value - e.g. 1e-3).
+     * \param kappa  Secondary scaling parameter of the sigma generation (usually set to 0 or 1).
+     * \param beta   Incorporates prior knowledge about the distribution (for Gaussian distribution, 2 is optimal).
+     */
     void setConstants(const double alpha, const double kappa, const double beta);
     //}
 
     /* setTransitionModel() method //{ */
-  /*!
-    * \brief Changes the transition model function.
-    *
-    * \param transition_model   the new transition model
-    */
+    /*!
+     * \brief Changes the transition model function.
+     *
+     * \param transition_model   the new transition model
+     */
     void setTransitionModel(const transition_model_t& transition_model);
     //}
 
     /* setObservationModel() method //{ */
-  /*!
-    * \brief Changes the observation model function.
-    *
-    * \param observation_model   the new observation model
-    */
+    /*!
+     * \brief Changes the observation model function.
+     *
+     * \param observation_model   the new observation model
+     */
     void setObservationModel(const observation_model_t& observation_model);
     //}
 
@@ -194,7 +195,7 @@ namespace mrs_lib
     //}
   };
 
-}  // namespace mrs_lib
+} // namespace mrs_lib
 
 
 #ifndef UKF_HPP

@@ -115,17 +115,17 @@ namespace mrs_lib
   {
 
   public:
-  /**
-   * \brief The constructor. Sets the flag \p in to \p true.
-   *
-   * \param in  The flag to be set on construction of this object and reset (set to \p false) on its destruction.
-   *
-   */
+    /**
+     * \brief The constructor. Sets the flag \p in to \p true.
+     *
+     * \param in  The flag to be set on construction of this object and reset (set to \p false) on its destruction.
+     *
+     */
     AtomicScopeFlag(std::atomic<bool>& in);
-  /**
-   * \brief The destructor. Resets the variable given in the constructor to \p false.
-   *
-   */
+    /**
+     * \brief The destructor. Resets the variable given in the constructor to \p false.
+     *
+     */
     ~AtomicScopeFlag();
 
   private:
@@ -140,6 +140,6 @@ namespace mrs_lib
     return (T(0) < val) - (val < T(0));
   }
 
-}  // namespace mrs_lib
+} // namespace mrs_lib
 
 #endif

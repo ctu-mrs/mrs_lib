@@ -14,7 +14,7 @@ namespace mrs_lib
   const int n_measurements = 2;
 
   using lkf_t = LKF<n_states, n_inputs, n_measurements>;
-}  // namespace mrs_lib
+} // namespace mrs_lib
 
 // Some helpful aliases to make writing of types shorter
 using namespace mrs_lib;
@@ -78,7 +78,8 @@ Eigen::Matrix<double, rows, 1> normal_randmat(const Eigen::Matrix<double, rows, 
 
 /* TEST(TESTSuite, set_mutexed_single) //{ */
 
-TEST(TESTSuite, set_mutexed_single) {
+TEST(TESTSuite, set_mutexed_single)
+{
 
   // dt will be constant in this example
   const double dt = 1.0;
@@ -157,7 +158,8 @@ TEST(TESTSuite, set_mutexed_single) {
 
 //}
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
+{
   testing::InitGoogleTest(&argc, argv);
 
   return RUN_ALL_TESTS();

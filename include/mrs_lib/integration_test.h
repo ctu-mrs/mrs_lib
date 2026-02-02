@@ -9,12 +9,13 @@
 
 #include <thread>
 
-class IntegrationTest {
+class IntegrationTest
+{
 
 public:
   IntegrationTest();
 
-  rclcpp::Node::SharedPtr                              node_;
+  rclcpp::Node::SharedPtr node_;
   rclcpp::executors::SingleThreadedExecutor::SharedPtr executor_;
 
   rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr publisher_result_;
@@ -29,9 +30,10 @@ public:
 };
 
 // constructor
-IntegrationTest::IntegrationTest() {
+IntegrationTest::IntegrationTest()
+{
 
-  node_     = rclcpp::Node::make_shared("test");
+  node_ = rclcpp::Node::make_shared("test");
   executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
 
   executor_->add_node(node_);
@@ -41,7 +43,8 @@ IntegrationTest::IntegrationTest() {
   main_thread_ = std::thread(&IntegrationTest::spin, this);
 }
 
-void IntegrationTest::reportTesResult(const bool result) {
+void IntegrationTest::reportTesResult(const bool result)
+{
 
   printf("[IntegrationTest]: publishing result %s", result ? "SUCCESS" : "FAILED");
 
@@ -51,18 +54,20 @@ void IntegrationTest::reportTesResult(const bool result) {
   publisher_result_->publish(result_msg);
 }
 
-void IntegrationTest::spin() {
+void IntegrationTest::spin()
+{
 
   printf("[IntegrationTest]: spinning");
 
   executor_->spin();
 }
 
-void IntegrationTest::join() {
+void IntegrationTest::join()
+{
 
   printf("[IntegrationTest]: joined");
 
   main_thread_.join();
 }
 
-#endif  // INTEGRATION_TEST_H
+#endif // INTEGRATION_TEST_H

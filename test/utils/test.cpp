@@ -10,22 +10,25 @@ using namespace std;
 
 /* TEST(TESTSuite, container_to_string) //{ */
 
-TEST(TESTSuite, container_to_string) {
+TEST(TESTSuite, container_to_string)
+{
 
   int result = 1;
 
   std::vector<int> vec = {1, 2, 666};
-  std::string      str = mrs_lib::containerToString(std::begin(vec) + 1, std::end(vec), ";");
+  std::string str = mrs_lib::containerToString(std::begin(vec) + 1, std::end(vec), ";");
   std::cout << str << std::endl;
 
-  if (str != "2;666") {
+  if (str != "2;666")
+  {
     result *= 0;
   }
 
-  boost::array<int, 3> arr  = {6, 6, 6};
-  std::string          str2 = mrs_lib::containerToString(arr, ", ");
+  boost::array<int, 3> arr = {6, 6, 6};
+  std::string str2 = mrs_lib::containerToString(arr, ", ");
 
-  if (str2 != "6, 6, 6") {
+  if (str2 != "6, 6, 6")
+  {
     result *= 0;
   }
   std::cout << str2 << std::endl;
@@ -35,7 +38,8 @@ TEST(TESTSuite, container_to_string) {
 
 //}
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
+{
 
   testing::InitGoogleTest(&argc, argv);
 

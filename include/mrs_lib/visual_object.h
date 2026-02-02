@@ -14,85 +14,91 @@
 namespace mrs_lib
 {
 
-enum MarkerType
-{
-  POINT    = 0,
-  LINE     = 1,
-  TRIANGLE = 2
-};
+  enum MarkerType
+  {
+    POINT = 0,
+    LINE = 1,
+    TRIANGLE = 2
+  };
 
-class VisualObject {
-
-
-public:
-  VisualObject(const Eigen::Vector3d& point, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout,
-               const unsigned long& id, const rclcpp::Node::SharedPtr& node);
-
-  VisualObject(const mrs_lib::geometry::Ray& ray, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout,
-               const unsigned long& id, const rclcpp::Node::SharedPtr& node);
-
-  VisualObject(const mrs_lib::geometry::Triangle& triangle, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout,
-               const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node);
-
-  VisualObject(const mrs_lib::geometry::Rectangle& rectangle, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout,
-               const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node);
-
-  VisualObject(const mrs_lib::geometry::Cuboid& cuboid, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout,
-               const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node);
-
-  VisualObject(const mrs_lib::geometry::Ellipse& ellipse, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout,
-               const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node, const int num_points = DEFAULT_ELLIPSE_POINTS);
-
-  VisualObject(const mrs_lib::geometry::Cylinder& cylinder, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout,
-               const bool filled, const bool capped, const unsigned long& id, const rclcpp::Node::SharedPtr& node, const int num_sides = DEFAULT_ELLIPSE_POINTS);
-
-  VisualObject(const mrs_lib::geometry::Cone& cone, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout,
-               const bool filled, const bool capped, const unsigned long& id, const rclcpp::Node::SharedPtr& node, const int num_sides = DEFAULT_ELLIPSE_POINTS);
-
-  VisualObject(const mrs_msgs::msg::Path& p, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout, const bool filled,
-               const unsigned long& id, const rclcpp::Node::SharedPtr& node);
-
-  VisualObject(const mrs_msgs::msg::TrajectoryReference& traj, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout,
-               const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node);
+  class VisualObject
+  {
 
 
-public:
-  unsigned long getID() const;
-  int           getType() const;
-  bool          isTimedOut() const;
+  public:
+    VisualObject(const Eigen::Vector3d& point, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout,
+                 const unsigned long& id, const rclcpp::Node::SharedPtr& node);
 
-  const std::vector<geometry_msgs::msg::Point> getPoints() const;
-  const std::vector<std_msgs::msg::ColorRGBA>  getColors() const;
+    VisualObject(const mrs_lib::geometry::Ray& ray, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout,
+                 const unsigned long& id, const rclcpp::Node::SharedPtr& node);
 
-  bool operator<(const VisualObject& other) const {
-    return id_ < other.id_;
-  }
+    VisualObject(const mrs_lib::geometry::Triangle& triangle, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout,
+                 const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node);
 
-  bool operator>(const VisualObject& other) const {
-    return id_ > other.id_;
-  }
+    VisualObject(const mrs_lib::geometry::Rectangle& rectangle, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout,
+                 const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node);
 
-  bool operator==(const VisualObject& other) const {
-    return id_ == other.id_;
-  }
+    VisualObject(const mrs_lib::geometry::Cuboid& cuboid, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout,
+                 const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node);
 
-private:
-  const unsigned long               id_;
-  MarkerType                        type_;
-  std::vector<geometry_msgs::msg::Point> points_;
-  std::vector<std_msgs::msg::ColorRGBA>  colors_;
-  rclcpp::Time                         timeout_time_;
-  rclcpp::Node::SharedPtr node_;
+    VisualObject(const mrs_lib::geometry::Ellipse& ellipse, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout,
+                 const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node, const int num_points = DEFAULT_ELLIPSE_POINTS);
 
-  void addRay(const mrs_lib::geometry::Ray& ray, const double r, const double g, const double b, const double a);
+    VisualObject(const mrs_lib::geometry::Cylinder& cylinder, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout,
+                 const bool filled, const bool capped, const unsigned long& id, const rclcpp::Node::SharedPtr& node,
+                 const int num_sides = DEFAULT_ELLIPSE_POINTS);
 
-  void addTriangle(const mrs_lib::geometry::Triangle& triangle, const double r, const double g, const double b, const double a, const bool filled);
+    VisualObject(const mrs_lib::geometry::Cone& cone, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout,
+                 const bool filled, const bool capped, const unsigned long& id, const rclcpp::Node::SharedPtr& node,
+                 const int num_sides = DEFAULT_ELLIPSE_POINTS);
 
-  void addEllipse(const mrs_lib::geometry::Ellipse& ellipse, const double r, const double g, const double b, const double a, const bool filled,
-                  const int num_points);
+    VisualObject(const mrs_msgs::msg::Path& p, const double r, const double g, const double b, const double a, const rclcpp::Duration& timeout,
+                 const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node);
 
-};  // namespace batch_visualizer
+    VisualObject(const mrs_msgs::msg::TrajectoryReference& traj, const double r, const double g, const double b, const double a,
+                 const rclcpp::Duration& timeout, const bool filled, const unsigned long& id, const rclcpp::Node::SharedPtr& node);
 
-}  // namespace mrs_lib
+
+  public:
+    unsigned long getID() const;
+    int getType() const;
+    bool isTimedOut() const;
+
+    const std::vector<geometry_msgs::msg::Point> getPoints() const;
+    const std::vector<std_msgs::msg::ColorRGBA> getColors() const;
+
+    bool operator<(const VisualObject& other) const
+    {
+      return id_ < other.id_;
+    }
+
+    bool operator>(const VisualObject& other) const
+    {
+      return id_ > other.id_;
+    }
+
+    bool operator==(const VisualObject& other) const
+    {
+      return id_ == other.id_;
+    }
+
+  private:
+    const unsigned long id_;
+    MarkerType type_;
+    std::vector<geometry_msgs::msg::Point> points_;
+    std::vector<std_msgs::msg::ColorRGBA> colors_;
+    rclcpp::Time timeout_time_;
+    rclcpp::Node::SharedPtr node_;
+
+    void addRay(const mrs_lib::geometry::Ray& ray, const double r, const double g, const double b, const double a);
+
+    void addTriangle(const mrs_lib::geometry::Triangle& triangle, const double r, const double g, const double b, const double a, const bool filled);
+
+    void addEllipse(const mrs_lib::geometry::Ellipse& ellipse, const double r, const double g, const double b, const double a, const bool filled,
+                    const int num_points);
+
+  }; // namespace batch_visualizer
+
+} // namespace mrs_lib
 
 #endif
