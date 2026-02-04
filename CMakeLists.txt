@@ -28,6 +28,7 @@ if(ENABLE_COVERAGE)
 endif()
 
 find_package(ament_cmake_python REQUIRED)
+find_package(mrs_cmake REQUIRED)
 
 set(DEPENDENCIES
   geometry_msgs
@@ -236,6 +237,8 @@ if(ENABLE_TESTS)
   ament_clang_format(CONFIG_FILE "${PROJECT_SOURCE_DIR}/.clang-format")
   find_package(ament_cmake_xmllint REQUIRED)
   ament_xmllint()
+
+  mrs_verify_interface_header_sets(mrs_lib_mrs_lib)
 
 endif()
 
