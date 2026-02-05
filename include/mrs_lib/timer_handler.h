@@ -4,6 +4,9 @@
 #include <rclcpp/rclcpp.hpp>
 #include <mutex>
 
+#include <mrs_lib/coro/runners.hpp>
+#include <mrs_lib/coro/task.hpp>
+#include <mrs_lib/internal/coroutine_callback_helpers.hpp>
 #include <mrs_lib/utils.h>
 
 namespace mrs_lib
@@ -102,6 +105,20 @@ namespace mrs_lib
 
     ROSTimer(const mrs_lib::TimerHandlerOptions& opts, const rclcpp::Rate& rate, const std::function<void()>& callback);
 
+    template <typename C>
+    ROSTimer(const mrs_lib::TimerHandlerOptions& opts, const rclcpp::Rate& rate, Task<> (C::*method)(), C* instance)
+        : ROSTimer(opts, rate, [method, instance]() -> void { start_task(method, instance); })
+    {
+      internal::require_callback_group_coro_compatible(opts.callback_group.value_or(nullptr));
+    }
+
+    template <typename C>
+    ROSTimer(const mrs_lib::TimerHandlerOptions& opts, const rclcpp::Rate& rate, Task<> (C::*method)(), std::shared_ptr<C> instance)
+        : ROSTimer(opts, rate, [method, instance]() -> void { start_task(method, instance); })
+    {
+      internal::require_callback_group_coro_compatible(opts.callback_group.value_or(nullptr));
+    }
+
     /**
      * @brief stop the timer
      */
@@ -177,6 +194,20 @@ namespace mrs_lib
     ThreadTimer(const rclcpp::Node::SharedPtr& node, const rclcpp::Rate& rate, const std::function<void()>& callback);
 
     ThreadTimer(const mrs_lib::TimerHandlerOptions& opts, const rclcpp::Rate& rate, const std::function<void()>& callback);
+
+    template <typename C>
+    ThreadTimer(const mrs_lib::TimerHandlerOptions& opts, const rclcpp::Rate& rate, Task<> (C::*method)(), C* instance)
+        : ThreadTimer(opts, rate, [method, instance]() -> void { start_task(method, instance); })
+    {
+      internal::require_callback_group_coro_compatible(opts.callback_group.value_or(nullptr));
+    }
+
+    template <typename C>
+    ThreadTimer(const mrs_lib::TimerHandlerOptions& opts, const rclcpp::Rate& rate, Task<> (C::*method)(), std::shared_ptr<C> instance)
+        : ThreadTimer(opts, rate, [method, instance]() -> void { start_task(method, instance); })
+    {
+      internal::require_callback_group_coro_compatible(opts.callback_group.value_or(nullptr));
+    }
 
     /**
      * @brief stop the timer
