@@ -75,6 +75,47 @@ namespace mrs_lib
 
   //}
 
+  /* getService() //{ */
+
+  template <class ServiceType>
+  const char* ServiceClientHandler<ServiceType>::getService() const
+  {
+    if (!impl_)
+    {
+      RCLCPP_ERROR(rclcpp::get_logger("ServiceClientHandler"), "Not initialized, cannot use getService()!");
+      return nullptr;
+    }
+    return impl_->getService();
+  }
+
+  //}
+
+  /* waitForService() //{ */
+
+  template <class ServiceType>
+  bool ServiceClientHandler<ServiceType>::waitForService(std::chrono::duration<int64_t, std::milli> timeout)
+  {
+    if (!impl_)
+    {
+      RCLCPP_ERROR(rclcpp::get_logger("ServiceClientHandler"), "Not initialized, cannot use waitForService()!");
+      return false;
+    }
+    return impl_->waitForService(timeout);
+  }
+
+  //}
+
+  /* isServiceReady() //{ */
+  template <class ServiceType>
+  bool ServiceClientHandler<ServiceType>::isServiceReady() const
+  {
+    if (!impl_)
+      return false;
+    return impl_->isServiceReady();
+  }
+
+  //}
+
   // --------------------------------------------------------------
   // |                 ServiceClientHandler::Impl                 |
   // --------------------------------------------------------------
@@ -148,6 +189,33 @@ namespace mrs_lib
         return std::nullopt;
 
       return future;
+    }
+
+    /**
+     * @brief Returns the name of the service this client connects to
+     *
+     * @return service name as const char*
+     */
+    const char* getService() const
+    {
+      return service_client_->get_service_name();
+    }
+
+    // template <typename RepT = int64_t, typename RatioT = std::milli>
+    // bool waitForService(std::chrono::duration<RepT, RatioT> timeout)
+    // {
+    //   return service_client_->wait_for_service(timeout);
+    // }
+
+    template <typename RepT = int64_t, typename RatioT = std::milli>
+    bool waitForService(std::chrono::duration<RepT, RatioT> timeout)
+    {
+      return service_client_->wait_for_service(timeout);
+    }
+
+    bool isServiceReady() const
+    {
+      return service_client_->service_is_ready();
     }
 
   private:
