@@ -27,6 +27,7 @@ struct TimerTestData
   rclcpp::NodeOptions node_options;
   double rate;
   std::chrono::nanoseconds callback_sleep_time;
+  std::chrono::nanoseconds max_drift;
 };
 
 class Test : public ::testing::TestWithParam<TimerTestData>
@@ -61,6 +62,7 @@ protected:
     const rclcpp::NodeOptions& node_options = GetParam().node_options;
     rate_ = GetParam().rate;
     callback_sleep_time_ = GetParam().callback_sleep_time;
+    max_drift_ = GetParam().max_drift;
 
     node_ = std::make_shared<rclcpp::Node>("test_timer_handler", node_options);
 
@@ -139,9 +141,9 @@ protected:
     n_cbks_ = 0;
     cbks_in_time_ = true;
     null_cbk_ = false;
-    cbks_ok_ = true;
+    callback_called_after_stopped_ = false;
 
-    timer_stop_called_ = false;
+    timer_stop_called_from_callback_ = false;
 
     last_time_callback_ = std::nullopt;
   }
@@ -158,13 +160,15 @@ protected:
 
   double rate_;
   std::chrono::nanoseconds callback_sleep_time_;
-  int n_cbks_ = 0;
+  std::chrono::nanoseconds max_drift_;
+
+  std::atomic<int> n_cbks_ = 0;
   bool cbks_in_time_ = true;
   bool null_cbk_ = false;
-  bool cbks_ok_ = true;
+  std::atomic<bool> callback_called_after_stopped_ = false;
 
   std::mutex cbk_running_mtx_;
-  bool timer_stop_called_ = false;
+  bool timer_stop_called_from_callback_ = false;
 
   std::atomic<bool> test_stop_from_cbk_ = false;
 
@@ -192,7 +196,9 @@ void Test::timerCallback()
     rclcpp::Duration dt = now - expected_time;
     last_time_callback_.value() = expected_time;
 
-    if (std::abs(dt.seconds()) > (period / 10.0))
+    double max_dt = std::chrono::duration<double>(max_drift_).count();
+
+    if (std::abs(dt.seconds()) > max_dt)
     {
       RCLCPP_ERROR_STREAM(node_->get_logger(), "Callback did not come in time! Expected: " << expected_time.seconds() << ", received: " << now.seconds()
                                                                                            << " (period: " << period << ", difference: " << dt.seconds()
@@ -215,10 +221,10 @@ void Test::timerCallback()
     return;
   }
 
-  if (timer_stop_called_)
+  if (timer_stop_called_from_callback_)
   {
     RCLCPP_ERROR_STREAM(node_->get_logger(), "Callback called while timer is not running!");
-    cbks_ok_ = false;
+    callback_called_after_stopped_ = true;
   }
 
   if (test_stop_from_cbk_)
@@ -226,7 +232,7 @@ void Test::timerCallback()
     timer_->stop();
     std::cout << "\tStopping timer from callback." << std::endl;
     // Mark the timer stopped to test that there are no further callback
-    timer_stop_called_ = true;
+    timer_stop_called_from_callback_ = true;
   }
 
   rclcpp::sleep_for(callback_sleep_time_);
@@ -252,29 +258,19 @@ TEST_P(Test, TestCallbackPeriod)
 
     timer_->stop();
     // There may be a callback running while calling the stop.
-    // Wait for it to end and then enable checking for unwanted callbacks
-    {
-      std::scoped_lock lck(cbk_running_mtx_);
-      timer_stop_called_ = true;
-    }
+    const int callbacks_at_stop = n_cbks_.exchange(0);
     // Wait to see if there are more callbacks after stop
     const size_t wait_periods = 4;
-    rclcpp::sleep_for(wait_periods * std::chrono::milliseconds(static_cast<int>(1 / rate_)));
+    rclcpp::sleep_for(wait_periods * std::chrono::milliseconds(static_cast<int>(1000 / rate_)));
 
     const double expected_cbks = test_dur * rate_;
     const bool callbacks_in_time = cbks_in_time_;
-    const bool callback_while_not_running = !cbks_ok_;
+    // There may have been one callback about to fire at the time of resetting the counter.
+    const bool no_callbacks_after_stopped = n_cbks_ <= 1;
 
-    EXPECT_FALSE(callback_while_not_running);
-    EXPECT_LE(std::abs(n_cbks_ - expected_cbks), 2);
-    EXPECT_TRUE(callbacks_in_time);
-
-    n_cbks_ = 0;
-
-    rclcpp::sleep_for(std::chrono::milliseconds(int(1000 * (1.0 / rate_) * 2)));
-
-    const bool no_callbacks_after_stopped = n_cbks_ == 0;
     EXPECT_TRUE(no_callbacks_after_stopped);
+    EXPECT_LE(std::abs(callbacks_at_stop - expected_cbks), 2);
+    EXPECT_TRUE(callbacks_in_time);
   }
 
   destroyTimer();
@@ -308,6 +304,8 @@ TEST_P(Test, StopFromCallback)
 
     node_->get_clock()->sleep_for(std::chrono::duration<double>(double(2.0 / rate_)));
 
+    EXPECT_TRUE(timer_stop_called_from_callback_);
+    EXPECT_FALSE(callback_called_after_stopped_);
     const bool no_callbacks_after_stopped = n_cbks_ == 0;
     EXPECT_TRUE(no_callbacks_after_stopped);
   }
@@ -332,10 +330,11 @@ TEST_P(Test, Destructor)
 
     const rclcpp::Time destroyed = node_->get_clock()->now();
     const bool callback_while_destroyed = null_cbk_;
-    const bool callback_while_not_running = !cbks_ok_;
+    // There may have been one callback about to fire at the time of resetting the counter.
+    const bool no_callbacks_after_stopped = n_cbks_ <= 1;
 
     EXPECT_FALSE(callback_while_destroyed);
-    EXPECT_FALSE(callback_while_not_running);
+    EXPECT_TRUE(no_callbacks_after_stopped);
     EXPECT_LE((destroyed - start).seconds(), 1.0);
   }
 }
@@ -346,6 +345,7 @@ INSTANTIATE_TEST_SUITE_P(ThreadTimerInstance, Test,
                              .node_options = rclcpp::NodeOptions().use_intra_process_comms(false),
                              .rate = 50,
                              .callback_sleep_time = std::chrono::milliseconds(10),
+                             .max_drift = std::chrono::milliseconds(10),
                          }));
 
 
@@ -355,4 +355,5 @@ INSTANTIATE_TEST_SUITE_P(RosTimerInstance, Test,
                              .node_options = rclcpp::NodeOptions().use_intra_process_comms(false),
                              .rate = 50,
                              .callback_sleep_time = std::chrono::milliseconds(10),
+                             .max_drift = std::chrono::milliseconds(10),
                          }));
