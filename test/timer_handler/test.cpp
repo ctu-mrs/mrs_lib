@@ -27,6 +27,7 @@ struct TimerTestData
   rclcpp::NodeOptions node_options;
   double rate;
   std::chrono::nanoseconds callback_sleep_time;
+  std::chrono::nanoseconds max_drift;
 };
 
 class Test : public ::testing::TestWithParam<TimerTestData>
@@ -61,6 +62,7 @@ protected:
     const rclcpp::NodeOptions& node_options = GetParam().node_options;
     rate_ = GetParam().rate;
     callback_sleep_time_ = GetParam().callback_sleep_time;
+    max_drift_ = GetParam().max_drift;
 
     node_ = std::make_shared<rclcpp::Node>("test_timer_handler", node_options);
 
@@ -158,6 +160,8 @@ protected:
 
   double rate_;
   std::chrono::nanoseconds callback_sleep_time_;
+  std::chrono::nanoseconds max_drift_;
+
   std::atomic<int> n_cbks_ = 0;
   bool cbks_in_time_ = true;
   bool null_cbk_ = false;
@@ -192,7 +196,9 @@ void Test::timerCallback()
     rclcpp::Duration dt = now - expected_time;
     last_time_callback_.value() = expected_time;
 
-    if (std::abs(dt.seconds()) > (period / 10.0))
+    double max_dt = std::chrono::duration<double>(max_drift_).count();
+
+    if (std::abs(dt.seconds()) > max_dt)
     {
       RCLCPP_ERROR_STREAM(node_->get_logger(), "Callback did not come in time! Expected: " << expected_time.seconds() << ", received: " << now.seconds()
                                                                                            << " (period: " << period << ", difference: " << dt.seconds()
@@ -339,6 +345,7 @@ INSTANTIATE_TEST_SUITE_P(ThreadTimerInstance, Test,
                              .node_options = rclcpp::NodeOptions().use_intra_process_comms(false),
                              .rate = 50,
                              .callback_sleep_time = std::chrono::milliseconds(10),
+                             .max_drift = std::chrono::milliseconds(10),
                          }));
 
 
@@ -348,4 +355,5 @@ INSTANTIATE_TEST_SUITE_P(RosTimerInstance, Test,
                              .node_options = rclcpp::NodeOptions().use_intra_process_comms(false),
                              .rate = 50,
                              .callback_sleep_time = std::chrono::milliseconds(10),
+                             .max_drift = std::chrono::milliseconds(10),
                          }));
