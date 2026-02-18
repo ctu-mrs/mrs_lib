@@ -38,7 +38,7 @@ public:
 
   static void SetUpTestSuite()
   {
-    std::cout << "Ros initialized.\n";
+    std::cout << "Ros initialized.\n" << std::flush;
     rclcpp::init(0, nullptr);
   }
 
@@ -49,7 +49,7 @@ public:
   static void TearDownTestSuite()
   {
     rclcpp::shutdown();
-    std::cout << "Ros shut down.\n";
+    std::cout << "Ros shut down.\n" << std::flush;
   }
 
   //}
@@ -74,7 +74,7 @@ protected:
     main_thread_ = std::thread(&Test::spin, this);
     while (!executor_->is_spinning())
     {
-      std::cout << "Waiting for executor to start...\n";
+      std::cout << "Waiting for executor to start...\n" << std::flush;
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
   }
@@ -230,7 +230,7 @@ void Test::timerCallback()
   if (test_stop_from_cbk_)
   {
     timer_->stop();
-    std::cout << "\tStopping timer from callback." << std::endl;
+    std::cout << "\tStopping timer from callback.\n" << std::flush;
     // Mark the timer stopped to test that there are no further callback
     timer_stop_called_from_callback_ = true;
   }
@@ -246,7 +246,7 @@ TEST_P(Test, TestCallbackPeriod)
 
   for (int i = 0; i < test_repetitions_count; i++)
   {
-    std::cout << "\tTesting callback period\n";
+    std::cout << "\tTesting callback period\n" << std::flush;
     resetTestState();
 
     timer_->start();
@@ -284,7 +284,7 @@ TEST_P(Test, StopFromCallback)
 
   for (int i = 0; i < test_repetitions_count; i++)
   {
-    std::cout << "\tTesting stop from callback\n";
+    std::cout << "\tTesting stop from callback\n" << std::flush;
     resetTestState();
     timer_->start();
 
@@ -318,7 +318,7 @@ TEST_P(Test, Destructor)
   for (int i = 0; i < test_repetitions_count; i++)
   {
     initializeTimer();
-    std::cout << "\tTesting destructor\n";
+    std::cout << "\tTesting destructor\n" << std::flush;
 
     resetTestState();
 
@@ -357,3 +357,121 @@ INSTANTIATE_TEST_SUITE_P(RosTimerInstance, Test,
                              .callback_sleep_time = std::chrono::milliseconds(10),
                              .max_drift = std::chrono::milliseconds(10),
                          }));
+
+class NoAutostart : public ::testing::TestWithParam<TestTimerType>
+{
+public:
+  static void SetUpTestSuite()
+  {
+    std::cout << "Ros initialized.\n" << std::flush;
+    rclcpp::init(0, nullptr);
+  }
+
+
+  static void TearDownTestSuite()
+  {
+    rclcpp::shutdown();
+    std::cout << "Ros shut down.\n" << std::flush;
+  }
+
+  void SetUp() override
+  {
+    node_ = std::make_shared<rclcpp::Node>("test_timer_handler", rclcpp::NodeOptions{});
+
+    executor_ = std::make_unique<rclcpp::executors::SingleThreadedExecutor>();
+    executor_->add_node(node_);
+
+    spinning_thread_ = std::jthread(&NoAutostart::spin, this);
+
+    while (!executor_->is_spinning())
+    {
+      std::cout << "Waiting for executor to start...\n" << std::flush;
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+  }
+
+  void TearDown() override
+  {
+    executor_->cancel();
+
+    spinning_thread_.join();
+    RCLCPP_INFO(node_->get_logger(), "thread joined");
+  }
+
+  std::shared_ptr<mrs_lib::MRSTimer> create_timer(const mrs_lib::TimerHandlerOptions& opts, const rclcpp::Rate& rate)
+  {
+    switch (GetParam())
+    {
+    case TestTimerType::ros:
+      return std::make_shared<mrs_lib::ROSTimer>(opts, rate, [this]() { callback(); });
+    case TestTimerType::thread:
+      return std::make_shared<mrs_lib::ThreadTimer>(opts, rate, [this]() { callback(); });
+    default:
+      throw std::logic_error("Unhandled timer type");
+    }
+  }
+
+private:
+  void spin()
+  {
+
+    RCLCPP_INFO(node_->get_logger(), "starting spinning");
+
+    executor_->spin();
+
+    RCLCPP_INFO(node_->get_logger(), "stopped spinning");
+  }
+
+
+  void callback()
+  {
+    callbacks_count_++;
+  }
+
+
+  std::unique_ptr<rclcpp::Executor> executor_;
+  std::jthread spinning_thread_;
+
+protected:
+  std::shared_ptr<rclcpp::Node> node_;
+
+  std::atomic<size_t> callbacks_count_ = 0;
+};
+
+TEST_P(NoAutostart, NoAutostart)
+{
+  mrs_lib::TimerHandlerOptions opts;
+  opts.node = node_;
+  opts.oneshot = false;
+  opts.autostart = false;
+
+  for (int i = 0; i < test_repetitions_count; i++)
+  {
+    std::cout << "\tTesting disabled autostart\n" << std::flush;
+
+    const std::chrono::microseconds wait_time = 100ms;
+
+    callbacks_count_ = 0;
+    auto timer = create_timer(opts, rclcpp::Rate(10'000'000'000));
+
+    rclcpp::sleep_for(wait_time);
+
+    EXPECT_FALSE(timer->running());
+    EXPECT_EQ(callbacks_count_, 0);
+  }
+}
+
+
+INSTANTIATE_TEST_SUITE_P(I, NoAutostart, ::testing::Values(TestTimerType::ros, TestTimerType::thread),
+                         [](const ::testing::TestParamInfo<TestTimerType>& info) -> std::string {
+                           TestTimerType val = info.param;
+                           switch (val)
+                           {
+                           case TestTimerType::ros:
+                             return "ros";
+                           case TestTimerType::thread:
+                             return "thread";
+                           default:
+                             throw std::format("unknown_at_idx_{}", info.index);
+                           }
+                         });
