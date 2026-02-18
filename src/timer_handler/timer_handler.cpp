@@ -26,18 +26,8 @@ namespace mrs_lib
 
     this->callback = callback;
 
-    if (this->callback_group_)
-    {
-      this->timer_ = node_->create_timer(std::chrono::nanoseconds(rate.period()), callback, opts.callback_group.value());
-    } else
-    {
-      this->timer_ = node_->create_timer(std::chrono::nanoseconds(rate.period()), callback);
-    }
-
-    if (!opts.autostart)
-    {
-      this->timer_->cancel();
-    }
+    this->timer_ = rclcpp::create_timer(node_->get_node_base_interface(), node_->get_node_timers_interface(), node_->get_clock(),
+                                        std::chrono::nanoseconds(rate.period()), callback, opts.callback_group.value_or(nullptr), opts.autostart);
   }
 
 
