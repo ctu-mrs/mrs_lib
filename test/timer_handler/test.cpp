@@ -107,13 +107,19 @@ protected:
 
   //}
 
-  void initializeTimer()
+  mrs_lib::TimerHandlerOptions default_options()
   {
-    RCLCPP_INFO(node_->get_logger(), "Constructing timer");
     mrs_lib::TimerHandlerOptions opts;
-
     opts.node = node_;
     opts.autostart = false;
+    return opts;
+  }
+
+  void initializeTimer(std::optional<mrs_lib::TimerHandlerOptions> opts_arg = {})
+  {
+    RCLCPP_INFO(node_->get_logger(), "Constructing timer");
+
+    mrs_lib::TimerHandlerOptions opts = opts_arg.value_or(default_options());
 
     std::function<void()> callback_fcn = [this]() { this->timerCallback(); };
 
@@ -336,6 +342,52 @@ TEST_P(Test, Destructor)
     EXPECT_FALSE(callback_while_destroyed);
     EXPECT_TRUE(no_callbacks_after_stopped);
     EXPECT_LE((destroyed - start).seconds(), 1.0);
+  }
+}
+
+TEST_P(Test, Oneshot)
+{
+  if (GetParam().timer_type == TestTimerType::ros)
+  {
+    GTEST_SKIP() << "Ros timer does not currently handle oneshot!";
+  }
+
+  for (int i = 0; i < test_repetitions_count; i++)
+  {
+    std::cout << "\tTesting oneshot timer\n" << std::flush;
+
+    const size_t wait_periods = 4;
+    const auto period = rclcpp::Rate(rate_).period();
+
+    mrs_lib::TimerHandlerOptions opts;
+    opts.node = node_;
+    opts.autostart = true;
+    opts.oneshot = true;
+
+    resetTestState();
+    initializeTimer(opts);
+
+    rclcpp::sleep_for(period * wait_periods);
+
+    EXPECT_FALSE(timer_->running());
+    EXPECT_EQ(n_cbks_, 1);
+    resetTestState();
+
+    rclcpp::sleep_for(period * wait_periods);
+
+    EXPECT_FALSE(timer_->running());
+    EXPECT_EQ(n_cbks_, 0);
+    resetTestState();
+
+    timer_->start();
+
+    rclcpp::sleep_for(period * wait_periods);
+
+    EXPECT_FALSE(timer_->running());
+    EXPECT_EQ(n_cbks_, 1);
+    resetTestState();
+
+    destroyTimer();
   }
 }
 
