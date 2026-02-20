@@ -323,6 +323,9 @@ std::vector<Point2d> Prism::getPoints() {
     points.emplace_back(point);
   }
 
+  // Remove the last point because it is identical to the first one
+  points.pop_back();
+
   return points;
 }
 //}
