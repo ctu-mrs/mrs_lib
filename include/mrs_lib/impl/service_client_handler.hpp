@@ -67,7 +67,7 @@ namespace mrs_lib
   {
     if (!impl_)
     {
-      RCLCPP_ERROR(rclcpp::get_logger("ServiceClientHandler"), "Not initialized, cannot use callSync()!");
+      RCLCPP_ERROR(rclcpp::get_logger("ServiceClientHandler"), "Not initialized, cannot use callAsync()!");
       return std::nullopt;
     }
     return impl_->callAsync(request);
@@ -93,7 +93,8 @@ namespace mrs_lib
   /* waitForService() //{ */
 
   template <class ServiceType>
-  bool ServiceClientHandler<ServiceType>::waitForService(std::chrono::duration<int64_t, std::milli> timeout)
+  template <typename RepT, typename RatioT>
+  bool ServiceClientHandler<ServiceType>::waitForService(std::chrono::duration<RepT, RatioT> timeout)
   {
     if (!impl_)
     {
@@ -200,12 +201,6 @@ namespace mrs_lib
     {
       return service_client_->get_service_name();
     }
-
-    // template <typename RepT = int64_t, typename RatioT = std::milli>
-    // bool waitForService(std::chrono::duration<RepT, RatioT> timeout)
-    // {
-    //   return service_client_->wait_for_service(timeout);
-    // }
 
     template <typename RepT = int64_t, typename RatioT = std::milli>
     bool waitForService(std::chrono::duration<RepT, RatioT> timeout)

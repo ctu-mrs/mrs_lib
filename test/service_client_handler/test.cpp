@@ -278,3 +278,155 @@ TEST_F(Test, test_bad_address)
 }
 
 //}
+
+/* TEST_F(Test, test_get_service) //{ */
+
+TEST_F(Test, test_get_service)
+{
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  // | ----------------- create a service client ---------------- |
+
+  mrs_lib::ServiceClientHandler<std_srvs::srv::SetBool> client = mrs_lib::ServiceClientHandler<std_srvs::srv::SetBool>(node_, "/my_service");
+
+  RCLCPP_INFO(node_->get_logger(), "initialized");
+
+  rclcpp::TimerBase::SharedPtr tim;
+
+  const auto test_fun = [&]() {
+    tim->cancel();
+
+    const char* name = client.getService();
+
+    ASSERT_NE(name, nullptr);
+    EXPECT_STREQ(name, "/my_service");
+
+    RCLCPP_INFO(node_->get_logger(), "finished");
+
+    despin();
+  };
+
+  tim = node_->create_timer(0s, test_fun);
+  executor_->spin();
+}
+
+//}
+
+/* TEST_F(Test, test_is_service_ready) //{ */
+
+TEST_F(Test, test_is_service_ready)
+{
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  // | ----------------- create a service client ---------------- |
+
+  mrs_lib::ServiceClientHandler<std_srvs::srv::SetBool> client = mrs_lib::ServiceClientHandler<std_srvs::srv::SetBool>(node_, "/readiness_service");
+
+  RCLCPP_INFO(node_->get_logger(), "initialized");
+
+  rclcpp::TimerBase::SharedPtr tim;
+
+  const auto test_fun = [&]() {
+    tim->cancel();
+
+    // no server is running — should not be ready
+    EXPECT_FALSE(client.isServiceReady());
+
+    // | ------------ start a service server and re-check ---------- |
+
+    const auto svr_grp = node_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    const auto service_server = node_->create_service<std_srvs::srv::SetBool>(
+        "/readiness_service", std::bind(&Test::callbackFailedService, this, std::placeholders::_1, std::placeholders::_2),
+        rclcpp::ServicesQoS(), svr_grp);
+
+    // give the executor a moment to register the server
+    node_->get_clock()->sleep_for(100ms);
+
+    EXPECT_TRUE(client.isServiceReady());
+
+    RCLCPP_INFO(node_->get_logger(), "finished");
+
+    despin();
+  };
+
+  tim = node_->create_timer(0s, test_fun);
+  executor_->spin();
+}
+
+//}
+
+/* TEST_F(Test, test_wait_for_service) //{ */
+
+TEST_F(Test, test_wait_for_service)
+{
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  // | ----------------- create a service client ---------------- |
+
+  mrs_lib::ServiceClientHandler<std_srvs::srv::SetBool> client = mrs_lib::ServiceClientHandler<std_srvs::srv::SetBool>(node_, "/wait_service");
+
+  RCLCPP_INFO(node_->get_logger(), "initialized");
+
+  rclcpp::TimerBase::SharedPtr tim;
+
+  const auto test_fun = [&]() {
+    tim->cancel();
+
+    // no server running — should time out
+    EXPECT_FALSE(client.waitForService(200ms));
+
+    // | ------------ start a server and wait again ---------------- |
+
+    const auto svr_grp = node_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    const auto service_server = node_->create_service<std_srvs::srv::SetBool>(
+        "/wait_service", std::bind(&Test::callbackFailedService, this, std::placeholders::_1, std::placeholders::_2),
+        rclcpp::ServicesQoS(), svr_grp);
+
+    // should become available well within 2 seconds
+    EXPECT_TRUE(client.waitForService(2s));
+
+    RCLCPP_INFO(node_->get_logger(), "finished");
+
+    despin();
+  };
+
+  tim = node_->create_timer(0s, test_fun);
+  executor_->spin();
+}
+
+//}
+
+/* TEST_F(Test, test_uninitialized_new_methods) //{ */
+
+TEST_F(Test, test_uninitialized_new_methods)
+{
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  // default-constructed handler — all new methods must degrade gracefully
+  mrs_lib::ServiceClientHandler<std_srvs::srv::SetBool> client;
+
+  RCLCPP_INFO(node_->get_logger(), "initialized");
+
+  rclcpp::TimerBase::SharedPtr tim;
+
+  const auto test_fun = [&]() {
+    tim->cancel();
+
+    EXPECT_EQ(client.getService(), nullptr);
+    EXPECT_FALSE(client.isServiceReady());
+    EXPECT_FALSE(client.waitForService(100ms));
+
+    RCLCPP_INFO(node_->get_logger(), "finished");
+
+    despin();
+  };
+
+  tim = node_->create_timer(0s, test_fun);
+  executor_->spin();
+}
+
+//}

@@ -93,20 +93,26 @@ namespace mrs_lib
     std::optional<std::shared_future<std::shared_ptr<typename ServiceType::Response>>> callAsync(const std::shared_ptr<typename ServiceType::Request>& request);
 
     /**
-     * @brief Returns the name of the service this client connects to
+     * @brief Returns the name of the service this client connects to.
      *
-     * @return service name as const char*
+     * @return service name as const char*, or nullptr if the handler is not initialized
+     *
+     * @warning Returns nullptr when called on a default-constructed (uninitialized) handler.
+     *          Do not pass the result directly into string operations without a null check.
      */
     const char* getService() const;
 
     /**
      * @brief Waits for the service to be available.
      *
+     * @tparam RepT   arithmetic type representing the number of ticks (deduced automatically)
+     * @tparam RatioT std::ratio representing the tick period (deduced automatically)
      * @param timeout maximum time to wait for the service to be available
      *
-     * @return true if the service is available, false otherwise
+     * @return true if the service became available within the timeout, false otherwise
      */
-    bool waitForService(std::chrono::duration<int64_t, std::milli> timeout = std::chrono::seconds(1));
+    template <typename RepT = int64_t, typename RatioT = std::milli>
+    bool waitForService(std::chrono::duration<RepT, RatioT> timeout = std::chrono::seconds(1));
 
     /**
      * @brief Checks if the service is available.
