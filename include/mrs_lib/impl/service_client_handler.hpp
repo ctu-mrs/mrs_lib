@@ -81,7 +81,10 @@ namespace mrs_lib
   std::string ServiceClientHandler<ServiceType>::getServiceName() const
   {
     if (!impl_)
+    {
+      RCLCPP_ERROR(rclcpp::get_logger("ServiceClientHandler"), "Not initialized, cannot use getServiceName()!");
       return {};
+    }
     return impl_->getServiceName();
   }
 
@@ -108,7 +111,10 @@ namespace mrs_lib
   bool ServiceClientHandler<ServiceType>::isServiceReady() const
   {
     if (!impl_)
+    {
+      RCLCPP_ERROR(rclcpp::get_logger("ServiceClientHandler"), "Not initialized, cannot use isServiceReady()!");
       return false;
+    }
     return impl_->isServiceReady();
   }
 
@@ -199,12 +205,24 @@ namespace mrs_lib
       return service_client_->get_service_name();
     }
 
+    /**
+     * @brief Waits for the service to be available
+     *
+     * @param timeout maximum time to wait for the service
+     *
+     * @return true if the service is available, false otherwise
+     */
     template <typename RepT = int64_t, typename RatioT = std::milli>
     bool waitForService(std::chrono::duration<RepT, RatioT> timeout)
     {
       return service_client_->wait_for_service(timeout);
     }
 
+    /**
+     * @brief Checks if the service is available
+     *
+     * @return true if the service is available, false otherwise
+     */
     bool isServiceReady() const
     {
       return service_client_->service_is_ready();
