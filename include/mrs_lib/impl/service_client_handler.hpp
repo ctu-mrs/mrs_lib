@@ -75,17 +75,14 @@ namespace mrs_lib
 
   //}
 
-  /* getService() //{ */
+  /* getServiceName() //{ */
 
   template <class ServiceType>
-  const char* ServiceClientHandler<ServiceType>::getService() const
+  std::string ServiceClientHandler<ServiceType>::getServiceName() const
   {
     if (!impl_)
-    {
-      RCLCPP_ERROR(rclcpp::get_logger("ServiceClientHandler"), "Not initialized, cannot use getService()!");
-      return nullptr;
-    }
-    return impl_->getService();
+      return {};
+    return impl_->getServiceName();
   }
 
   //}
@@ -195,9 +192,9 @@ namespace mrs_lib
     /**
      * @brief Returns the name of the service this client connects to
      *
-     * @return service name as const char*
+     * @return service name
      */
-    const char* getService() const
+    std::string getServiceName() const
     {
       return service_client_->get_service_name();
     }

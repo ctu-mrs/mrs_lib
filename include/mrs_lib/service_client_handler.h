@@ -95,12 +95,9 @@ namespace mrs_lib
     /**
      * @brief Returns the name of the service this client connects to.
      *
-     * @return service name as const char*, or nullptr if the handler is not initialized
-     *
-     * @warning Returns nullptr when called on a default-constructed (uninitialized) handler.
-     *          Do not pass the result directly into string operations without a null check.
+     * @return service name, or an empty string if the handler is not initialized
      */
-    const char* getService() const;
+    std::string getServiceName() const;
 
     /**
      * @brief Waits for the service to be available.

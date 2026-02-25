@@ -297,10 +297,9 @@ TEST_F(Test, test_get_service)
   const auto test_fun = [&]() {
     tim->cancel();
 
-    const char* name = client.getService();
+    const std::string name = client.getServiceName();
 
-    ASSERT_NE(name, nullptr);
-    EXPECT_STREQ(name, "/my_service");
+    EXPECT_EQ(name, "/my_service");
 
     RCLCPP_INFO(node_->get_logger(), "finished");
 
@@ -338,8 +337,7 @@ TEST_F(Test, test_is_service_ready)
 
     const auto svr_grp = node_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
     const auto service_server = node_->create_service<std_srvs::srv::SetBool>(
-        "/readiness_service", std::bind(&Test::callbackFailedService, this, std::placeholders::_1, std::placeholders::_2),
-        rclcpp::ServicesQoS(), svr_grp);
+        "/readiness_service", std::bind(&Test::callbackFailedService, this, std::placeholders::_1, std::placeholders::_2), rclcpp::ServicesQoS(), svr_grp);
 
     // give the executor a moment to register the server
     node_->get_clock()->sleep_for(100ms);
@@ -382,8 +380,7 @@ TEST_F(Test, test_wait_for_service)
 
     const auto svr_grp = node_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
     const auto service_server = node_->create_service<std_srvs::srv::SetBool>(
-        "/wait_service", std::bind(&Test::callbackFailedService, this, std::placeholders::_1, std::placeholders::_2),
-        rclcpp::ServicesQoS(), svr_grp);
+        "/wait_service", std::bind(&Test::callbackFailedService, this, std::placeholders::_1, std::placeholders::_2), rclcpp::ServicesQoS(), svr_grp);
 
     // should become available well within 2 seconds
     EXPECT_TRUE(client.waitForService(2s));
@@ -416,7 +413,7 @@ TEST_F(Test, test_uninitialized_new_methods)
   const auto test_fun = [&]() {
     tim->cancel();
 
-    EXPECT_EQ(client.getService(), nullptr);
+    EXPECT_EQ(client.getServiceName(), "");
     EXPECT_FALSE(client.isServiceReady());
     EXPECT_FALSE(client.waitForService(100ms));
 
