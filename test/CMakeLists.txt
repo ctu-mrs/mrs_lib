@@ -7,6 +7,7 @@ function(add_ros_isolated_launch_test path)
   add_launch_test("${path}" RUNNER "${RUNNER}" ${ARGN})
 endfunction()
 
+add_subdirectory(errorgraph)
 add_subdirectory(attitude_converter)
 add_subdirectory(batch_visualizer)
 add_subdirectory(dynparam_mgr)

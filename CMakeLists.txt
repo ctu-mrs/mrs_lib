@@ -114,6 +114,9 @@ target_sources(mrs_lib_mrs_lib
     "src/transform_broadcaster/transform_broadcaster.cpp"
     # src/transformer
     "src/transformer/transformer.cpp"
+    # src/errorgraph
+    "src/errorgraph/errorgraph.cpp"
+    "src/errorgraph/error_publisher.cpp"
     # src/utils
     "src/utils/utils.cpp"
   PUBLIC FILE_SET HEADERS BASE_DIRS "include"
@@ -172,6 +175,10 @@ target_sources(mrs_lib_mrs_lib
     "include/mrs_lib/impl/timer_handler.hpp"
     "include/mrs_lib/impl/transformer.hpp"
     "include/mrs_lib/impl/ukf.hpp"
+    # include/mrs_lib/errorgraph
+    "include/mrs_lib/errorgraph/node_id.h"
+    "include/mrs_lib/errorgraph/errorgraph.h"
+    "include/mrs_lib/errorgraph/error_publisher.h"
     # include/mrs_lib/safety_zone
     "include/mrs_lib/safety_zone/line_operations.h"
     "include/mrs_lib/safety_zone/polygon.h"
