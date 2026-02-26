@@ -83,5 +83,5 @@ namespace mrs_lib
 
     //}
 
-  }  // namespace geometry
-}  // namespace mrs_lib
+  } // namespace geometry
+} // namespace mrs_lib

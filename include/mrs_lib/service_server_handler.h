@@ -19,7 +19,6 @@ namespace mrs_lib
   {
 
   public:
-
     using callback_t = typename rclcpp::Service<ServiceType>::CallbackType;
 
     /**
@@ -53,7 +52,8 @@ namespace mrs_lib
      * @param qos QOS         Communication quality of service profile.
      * @param callback_group  Callback group used internally by the node for the response callback. Set to nullptr to use the default one.
      */
-    ServiceServerHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const callback_t& cbk, const rclcpp::QoS& qos, const rclcpp::CallbackGroup::SharedPtr& callback_group);
+    ServiceServerHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const callback_t& cbk, const rclcpp::QoS& qos,
+                         const rclcpp::CallbackGroup::SharedPtr& callback_group);
 
     /**
      * @brief A convenience constructor.
@@ -64,7 +64,8 @@ namespace mrs_lib
      * @param address         Name of the service.
      * @param callback_group  Callback group used internally by the node for the response callback. Set to nullptr to use the default one.
      */
-    ServiceServerHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const callback_t& cbk, const rclcpp::CallbackGroup::SharedPtr& callback_group);
+    ServiceServerHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const callback_t& cbk,
+                         const rclcpp::CallbackGroup::SharedPtr& callback_group);
 
   private:
     rclcpp::CallbackGroup::SharedPtr callback_group_;
@@ -73,6 +74,6 @@ namespace mrs_lib
 
   //}
 
-}  // namespace mrs_lib
+} // namespace mrs_lib
 
 #include <mrs_lib/impl/service_server_handler.hpp>

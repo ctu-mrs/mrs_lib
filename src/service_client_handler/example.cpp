@@ -17,7 +17,8 @@ mrs_lib::ServiceClientHandler<std_srvs::Trigger> client2;
 int counter_1 = 0;
 int counter_2 = 0;
 
-bool callbackService1([[maybe_unused]] std_srvs::Trigger::Request& req, [[maybe_unused]] std_srvs::Trigger::Response& res) {
+bool callbackService1([[maybe_unused]] std_srvs::Trigger::Request& req, [[maybe_unused]] std_srvs::Trigger::Response& res)
+{
 
   ROS_INFO("[%s]: service call 1 received", ros::this_node::getName().c_str());
 
@@ -30,7 +31,8 @@ bool callbackService1([[maybe_unused]] std_srvs::Trigger::Request& req, [[maybe_
   return true;
 }
 
-bool callbackService2([[maybe_unused]] std_srvs::Trigger::Request& req, [[maybe_unused]] std_srvs::Trigger::Response& res) {
+bool callbackService2([[maybe_unused]] std_srvs::Trigger::Request& req, [[maybe_unused]] std_srvs::Trigger::Response& res)
+{
 
   ROS_INFO("[%s]: service call 2 received", ros::this_node::getName().c_str());
 
@@ -43,9 +45,11 @@ bool callbackService2([[maybe_unused]] std_srvs::Trigger::Request& req, [[maybe_
   return true;
 }
 
-void threadMain(void) {
+void threadMain(void)
+{
 
-  while (ros::ok()) {
+  while (ros::ok())
+  {
 
     ROS_INFO_ONCE("[%s]: thread spinning", ros::this_node::getName().c_str());
 
@@ -56,7 +60,8 @@ void threadMain(void) {
   }
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
 
   const std::string node_name("service_client_handler_example");
 

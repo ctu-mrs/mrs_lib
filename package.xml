@@ -12,6 +12,7 @@
   <license>BSD 3-Clause</license>
 
   <buildtool_depend>ament_cmake_python</buildtool_depend>
+  <buildtool_depend>mrs_cmake</buildtool_depend>
 
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
@@ -25,6 +26,7 @@
   <depend>visualization_msgs</depend>
   <depend>eigen</depend>
   <depend>yaml-cpp</depend>
+  <depend>nav_msgs</depend>
 
   <test_depend>ament_cmake_ros</test_depend>
   <test_depend>launch</test_depend>
@@ -32,6 +34,10 @@
   <test_depend>launch_testing</test_depend>
   <test_depend>launch_testing_ament_cmake</test_depend>
   <test_depend>rclpy</test_depend>
+
+  <!-- Linters -->
+  <test_depend>ament_cmake_clang_format</test_depend>
+  <test_depend>ament_cmake_xmllint</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

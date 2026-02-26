@@ -13,13 +13,15 @@
 
 using namespace std::chrono_literals;
 
-class Test : public ::testing::Test {
+class Test : public ::testing::Test
+{
 
 public:
 protected:
   /* SetUpTestCase() //{ */
 
-  static void SetUpTestCase() {
+  static void SetUpTestCase()
+  {
     rclcpp::init(0, nullptr);
   }
 
@@ -27,7 +29,8 @@ protected:
 
   /* TearDownTestCase() //{ */
 
-  static void TearDownTestCase() {
+  static void TearDownTestCase()
+  {
     rclcpp::shutdown();
   }
 
@@ -35,7 +38,8 @@ protected:
 
   /* initialize() //{ */
 
-  void initialize(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions()) {
+  void initialize(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions())
+  {
 
     node_ = std::make_shared<rclcpp::Node>("test_param_provider", node_options);
 
@@ -51,7 +55,8 @@ protected:
 
   /* spin() //{ */
 
-  void spin() {
+  void spin()
+  {
 
     RCLCPP_INFO(node_->get_logger(), "starting spinning");
 
@@ -64,7 +69,8 @@ protected:
 
   /* despin() //{ */
 
-  void despin() {
+  void despin()
+  {
     executor_->cancel();
 
     main_thread_.join();
@@ -72,20 +78,21 @@ protected:
 
   //}
 
-  rclcpp::Node::SharedPtr                              node_;
+  rclcpp::Node::SharedPtr node_;
   rclcpp::executors::SingleThreadedExecutor::SharedPtr executor_;
 
   std::thread main_thread_;
 
   std::promise<bool> finished_promise_;
-  std::future<bool>  finished_future_;
+  std::future<bool> finished_future_;
 
   rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
 };
 
 /* TEST_F(Test, param_provider_declare) //{ */
 
-TEST_F(Test, param_provider_declare) {
+TEST_F(Test, param_provider_declare)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
@@ -117,7 +124,8 @@ TEST_F(Test, param_provider_declare) {
 
 /* TEST_F(Test, param_provider_load) //{ */
 
-TEST_F(Test, param_provider_load) {
+TEST_F(Test, param_provider_load)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 
@@ -168,7 +176,8 @@ TEST_F(Test, param_provider_load) {
 
 /* TEST_F(Test, param_provider_set) //{ */
 
-TEST_F(Test, param_provider_set) {
+TEST_F(Test, param_provider_set)
+{
 
   initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
 

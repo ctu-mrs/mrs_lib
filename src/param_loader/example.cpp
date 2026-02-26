@@ -24,7 +24,7 @@
 /* Include the ParamLoader header */
 #include <mrs_lib/param_loader.h>
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   /* Set up ROS. */
   const std::string node_name("param_loader_example");
@@ -40,23 +40,23 @@ int main(int argc, char **argv)
   /* nh.setParam("test_param_matrix_3x3", std::vector<int>({0, 1, 2, 3, 4, 5, 6, 7, 8})); */
 
   /* Initialize the param loader with a NodeHandle and optionally the name of this node. */
-  ROS_INFO_STREAM("[" << node_name <<" ]: loading parameters using ParamLoader");
+  ROS_INFO_STREAM("[" << node_name << " ]: loading parameters using ParamLoader");
   mrs_lib::ParamLoader pl(nh, node_name);
-  
-  /* Most basic way to load a parameter to a variable, which could be a class member */ 
+
+  /* Most basic way to load a parameter to a variable, which could be a class member */
   double test_param_double;
   pl.loadParam("test_param_double", test_param_double);
 
-  /* Load a parameter and return it */ 
+  /* Load a parameter and return it */
   const auto test_param_vector = pl.loadParam2<std::vector<int>>("test_param_vector");
 
   /* Load a parameter with a default value, which will be used in this case
    * unless you manually push the parameter 'test_param_int' to the rosparam server
-   * (e.g. using 'rosparam set test_param_int 15'). */ 
+   * (e.g. using 'rosparam set test_param_int 15'). */
   const auto test_param_int = pl.loadParam2<int>("test_param_int", 4);
 
   /* Load a compulsory parameter - without a default value. This will fail in this
-   * case, unless you manually push the parameter to the server. */ 
+   * case, unless you manually push the parameter to the server. */
   const auto test_param_bool = pl.loadParam2<bool>("test_param_bool");
 
   Eigen::MatrixXd matxd;
@@ -76,16 +76,16 @@ int main(int argc, char **argv)
   /* Then, you can load parameters specified in the file normally. */
   const auto string_from_yaml = pl.loadParam2<std::string>("string_from_yaml");
 
-  /* Check if all parameters were loaded successfully */ 
+  /* Check if all parameters were loaded successfully */
   if (!pl.loadedSuccessfully())
   {
-    /* If not, alert the user and shut the node down */ 
+    /* If not, alert the user and shut the node down */
     ROS_ERROR_STREAM("[" << node_name << "]: parameter loading failure! Ending the node");
     ros::shutdown();
     return 1;
   }
 
-  /* Otherwise, continue the program and happily use the loaded parameters! */ 
+  /* Otherwise, continue the program and happily use the loaded parameters! */
   /* This is just some nonsense usage for demonstration. */
   if (test_param_bool)
   {
@@ -95,6 +95,4 @@ int main(int argc, char **argv)
   }
 
   return 0;
-
 }
-

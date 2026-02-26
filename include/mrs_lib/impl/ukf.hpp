@@ -27,12 +27,7 @@ namespace mrs_lib
   template <int n_states, int n_inputs, int n_measurements>
   UKF<n_states, n_inputs, n_measurements>::UKF(const transition_model_t& transition_model, const observation_model_t& observation_model, const double alpha,
                                                const double kappa, const double beta)
-      : m_alpha(alpha),
-        m_kappa(kappa),
-        m_beta(beta),
-        m_Wm(W_t::Zero()),
-        m_Wc(W_t::Zero()),
-        m_transition_model(transition_model),
+      : m_alpha(alpha), m_kappa(kappa), m_beta(beta), m_Wm(W_t::Zero()), m_Wc(W_t::Zero()), m_transition_model(transition_model),
         m_observation_model(observation_model)
   {
     assert(alpha > 0.0);
@@ -271,13 +266,14 @@ namespace mrs_lib
     }
 
     // compute Kalman gain
-    const z_t inn = (z - z_exp);  // innovation
+    const z_t inn = (z - z_exp); // innovation
     const K_t K = computeKalmanGain(sc.x, inn, Pxz, Pzz);
 
     // check whether the inverse produced valid numbers
     if (!K.array().isFinite().all())
     {
-      std::cout << "UKF: inverting of Pzz in correction update produced non-finite numbers!!! Fix your covariances (the measurement's is probably too low...)" << std::endl;
+      std::cout << "UKF: inverting of Pzz in correction update produced non-finite numbers!!! Fix your covariances (the measurement's is probably too low...)"
+                << std::endl;
       throw inverse_exception();
     }
 
@@ -290,6 +286,6 @@ namespace mrs_lib
 
   //}
 
-}  // namespace mrs_lib
+} // namespace mrs_lib
 
 #endif

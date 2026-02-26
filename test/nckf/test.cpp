@@ -8,14 +8,14 @@
 
 namespace mrs_lib
 {
-const int n_states                  = -1;
-const int n_states_norm_constrained = 2;
-const int n_inputs                  = 1;
-const int n_measurements            = 4;
+  const int n_states = -1;
+  const int n_states_norm_constrained = 2;
+  const int n_inputs = 1;
+  const int n_measurements = 4;
 
-/* using ukf_t = NCUKF<n_states, n_inputs, n_measurements>; */
-using lkf_t = NCLKF_partial<n_states, n_inputs, n_measurements, n_states_norm_constrained>;
-}  // namespace mrs_lib
+  /* using ukf_t = NCUKF<n_states, n_inputs, n_measurements>; */
+  using lkf_t = NCLKF_partial<n_states, n_inputs, n_measurements, n_states_norm_constrained>;
+} // namespace mrs_lib
 
 constexpr int n = 4;
 
@@ -37,26 +37,29 @@ H_t H;
 
 
 // This function implements the state transition
-x_t tra_model_f(const x_t& x, const u_t& u, [[maybe_unused]] const double dt) {
+x_t tra_model_f(const x_t& x, const u_t& u, [[maybe_unused]] const double dt)
+{
   x_t ret;
-  ret                   = A * x + B * u;
-  auto xq               = ret.block<2, 1>(0, 0);
-  xq                    = xq / xq.norm();
+  ret = A * x + B * u;
+  auto xq = ret.block<2, 1>(0, 0);
+  xq = xq / xq.norm();
   ret.block<2, 1>(2, 0) = xq;
   return ret;
 }
 
 // This function implements the observation generation from a state
-z_t obs_model_f(const x_t& x) {
+z_t obs_model_f(const x_t& x)
+{
   return H * x;
 }
 
 template <int rows>
-Eigen::Matrix<double, rows, 1> normal_randmat(const Eigen::Matrix<double, rows, rows>& cov) {
-  static std::random_device         rd{};
-  static std::mt19937               gen{rd()};
+Eigen::Matrix<double, rows, 1> normal_randmat(const Eigen::Matrix<double, rows, rows>& cov)
+{
+  static std::random_device rd{};
+  static std::mt19937 gen{rd()};
   static std::normal_distribution<> d{0, 1};
-  Eigen::Matrix<double, rows, 1>    ret(n, 1);
+  Eigen::Matrix<double, rows, 1> ret(n, 1);
   for (int row = 0; row < rows; row++)
     ret(row, 0) = d(gen);
   return cov * ret;
@@ -64,7 +67,8 @@ Eigen::Matrix<double, rows, 1> normal_randmat(const Eigen::Matrix<double, rows, 
 
 /* TEST(TESTSuite, main) //{ */
 
-TEST(TESTSuite, main) {
+TEST(TESTSuite, main)
+{
 
   srand(std::time(0));
   const double l = 3.0;
@@ -92,18 +96,18 @@ TEST(TESTSuite, main) {
   H << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
 
   // Generate initial state and covariance
-  x_t x0                        = 100.0 * x_t::Random(n);
-  x0(2)                         = 0.0;
-  x0(3)                         = 10.0;
-  x0                            = x0 / x0.norm();
-  P_t                     P_tmp = P_t::Random(n, n);
-  const P_t               P0    = 10.0 * P_tmp * P_tmp.transpose();
+  x_t x0 = 100.0 * x_t::Random(n);
+  x0(2) = 0.0;
+  x0(3) = 10.0;
+  x0 = x0 / x0.norm();
+  P_t P_tmp = P_t::Random(n, n);
+  const P_t P0 = 10.0 * P_tmp * P_tmp.transpose();
   const lkf_t::statecov_t sc0({x0, P0});
 
-  const lkf_t::indices_t nconst_idxs = {0, 1};  // these are the norm-constrained states
-  lkf_t                  lkf(A, B, H, l, nconst_idxs);
+  const lkf_t::indices_t nconst_idxs = {0, 1}; // these are the norm-constrained states
+  lkf_t lkf(A, B, H, l, nconst_idxs);
 
-  const int                      n_its = 1e1;
+  const int n_its = 1e1;
   std::vector<lkf_t::statecov_t> lscs;
   std::vector<lkf_t::statecov_t> scs;
 
@@ -113,7 +117,8 @@ TEST(TESTSuite, main) {
   lscs.push_back(sc0);
   scs.push_back(sc0);
 
-  for (int it = 0; it < n_its; it++) {
+  for (int it = 0; it < n_its; it++)
+  {
 
     std::cout << "step: " << it << std::endl;
 
@@ -123,8 +128,8 @@ TEST(TESTSuite, main) {
 
     // Generate a new state according to the model and noise parameters
     auto sc = scs.back();
-    sc.x    = tra_model_f(sc.x, u, dt) + normal_randmat(Q);
-    sc.x    = sc.x / sc.x.norm();
+    sc.x = tra_model_f(sc.x, u, dt) + normal_randmat(Q);
+    sc.x = sc.x / sc.x.norm();
 
     // Generate a new observation according to the model and noise parameters
     const z_t z = obs_model_f(sc.x) + normal_randmat(R);
@@ -135,7 +140,8 @@ TEST(TESTSuite, main) {
 
     {
       auto lsc = lscs.back();
-      try {
+      try
+      {
         std::cout << "lkf_new  state:" << std::endl << lsc.x.transpose() << std::endl;
         lsc = lkf.predict(lsc, u, Q, dt);
         std::cout << "lkf_new  predi:" << std::endl << lsc.x.transpose() << std::endl;
@@ -148,7 +154,8 @@ TEST(TESTSuite, main) {
         std::cout << "lkf_new  corre norm:" << std::sqrt(sum2) << std::endl;
         lscs.push_back(lsc);
       }
-      catch (const std::exception& e) {
+      catch (const std::exception& e)
+      {
         printf("NEW LKF failed: %s", e.what());
       }
     }
@@ -157,8 +164,9 @@ TEST(TESTSuite, main) {
   double x_diff = 0.0;
   double P_diff = 0.0;
 
-  for (int it = 0; it < n_its; it++) {
-    const auto lsc        = lscs.at(it);
+  for (int it = 0; it < n_its; it++)
+  {
+    const auto lsc = lscs.at(it);
     const auto cur_x_diff = (lsc.x - lsc.x).norm();
     const auto cur_P_diff = (lsc.P - lsc.P).norm();
     x_diff += cur_x_diff;
@@ -173,7 +181,8 @@ TEST(TESTSuite, main) {
 
 //}
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
+{
   testing::InitGoogleTest(&argc, argv);
 
   return RUN_ALL_TESTS();

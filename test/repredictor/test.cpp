@@ -17,7 +17,7 @@ namespace mrs_lib
   using lkf_t = varstepLKF<n_states, n_inputs, n_measurements>;
   using rep_t = Repredictor<lkf_t>;
   using dumbrep_t = Repredictor<lkf_t, true>;
-}  // namespace mrs_lib
+} // namespace mrs_lib
 
 // Some helpful aliases to make writing of types shorter
 using namespace mrs_lib;
@@ -211,7 +211,7 @@ TEST(TESTSuite, lkf_comparison)
 
   // Fill the buffer of the Repredictor
   auto meas_remaining = measurements;
-  int u_it = 1;  // the first input is already used for initialization, skip it
+  int u_it = 1; // the first input is already used for initialization, skip it
   for (int it = 1; it < n_meass + n_gts; it++)
   {
     const bool use_meas = (d(gen) > 0.0 || u_it == n_gts) && !meas_remaining.empty();
@@ -347,7 +347,7 @@ TEST(TESTSuite, dumblkf_comparison)
 
   // Run the LKF and dumb repredictor
   auto meas_remaining = measurements;
-  int u_it = 1;  // the first input is already used for initialization, skip it
+  int u_it = 1; // the first input is already used for initialization, skip it
   for (int it = 1; it < n_gts; it++)
   {
 

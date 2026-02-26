@@ -19,10 +19,10 @@ namespace mrs_lib
    * @brief user wrapper of the service client handler implementation
    */
   template <class ServiceType>
-  class ServiceClientHandler {
+  class ServiceClientHandler
+  {
 
   public:
-
     /**
      * @brief The main constructor with all the options.
      *
@@ -54,7 +54,8 @@ namespace mrs_lib
      * @param qos QOS         Communication quality of service profile.
      * @param callback_group  Callback group used internally by the node for the response callback. Set to nullptr to use the default one.
      */
-    ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos, const rclcpp::CallbackGroup::SharedPtr& callback_group);
+    ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos,
+                         const rclcpp::CallbackGroup::SharedPtr& callback_group);
 
     /**
      * @brief A convenience constructor.
@@ -98,6 +99,6 @@ namespace mrs_lib
 
   //}
 
-}  // namespace mrs_lib
+} // namespace mrs_lib
 
 #include <mrs_lib/impl/service_client_handler.hpp>

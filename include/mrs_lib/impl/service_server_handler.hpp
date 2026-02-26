@@ -16,8 +16,9 @@ namespace mrs_lib
   /* ServiceServerHandler() constructors //{ */
 
   template <class ServiceType>
-  ServiceServerHandler<ServiceType>::ServiceServerHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const callback_t& cbk, const rclcpp::QoS& qos)
-    : ServiceServerHandler(node, address, cbk, qos, node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive))
+  ServiceServerHandler<ServiceType>::ServiceServerHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const callback_t& cbk,
+                                                          const rclcpp::QoS& qos)
+      : ServiceServerHandler(node, address, cbk, qos, node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive))
   {
   }
 
@@ -27,18 +28,19 @@ namespace mrs_lib
   }
 
   template <class ServiceType>
-  ServiceServerHandler<ServiceType>::ServiceServerHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const callback_t& cbk, const rclcpp::QoS& qos, const rclcpp::CallbackGroup::SharedPtr& callback_group)
-    : callback_group_(callback_group),
-      service_server_(node->create_service<ServiceType>(address, cbk, qos, callback_group))
+  ServiceServerHandler<ServiceType>::ServiceServerHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const callback_t& cbk,
+                                                          const rclcpp::QoS& qos, const rclcpp::CallbackGroup::SharedPtr& callback_group)
+      : callback_group_(callback_group), service_server_(node->create_service<ServiceType>(address, cbk, qos, callback_group))
   {
   }
 
   template <class ServiceType>
-  ServiceServerHandler<ServiceType>::ServiceServerHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const callback_t& cbk, const rclcpp::CallbackGroup::SharedPtr& callback_group)
-    : ServiceServerHandler(node, address, cbk, rclcpp::ServicesQoS(), callback_group)
+  ServiceServerHandler<ServiceType>::ServiceServerHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const callback_t& cbk,
+                                                          const rclcpp::CallbackGroup::SharedPtr& callback_group)
+      : ServiceServerHandler(node, address, cbk, rclcpp::ServicesQoS(), callback_group)
   {
   }
 
   //}
 
-}  // namespace mrs_lib
+} // namespace mrs_lib

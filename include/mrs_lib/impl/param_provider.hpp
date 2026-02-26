@@ -27,7 +27,8 @@ namespace mrs_lib
   std::ostream& operator<<(std::ostream& os, const std::map<Key, Value>& var)
   {
     size_t it = 0;
-    for (const auto& pair : var) {
+    for (const auto& pair : var)
+    {
       os << pair.first << ": " << pair.second;
       if (it < var.size() - 1)
         os << std::endl;
@@ -37,14 +38,18 @@ namespace mrs_lib
   }
 
   /* ParamProvider::resolved_name_t //{ */
-  
+
   struct ParamProvider::resolved_name_t
   {
     std::string str;
 
     resolved_name_t() = default;
-    resolved_name_t(std::string&& s) : str(s) {}
-    resolved_name_t(const std::string& s) : str(s) {}
+    resolved_name_t(std::string&& s) : str(s)
+    {
+    }
+    resolved_name_t(const std::string& s) : str(s)
+    {
+    }
 
     // Explicit conversion
     explicit operator std::string() const
@@ -62,7 +67,7 @@ namespace mrs_lib
       return lhs.str == rhs.str;
     }
   };
-  
+
   //}
 
   /* to_param_type() method //{ */
@@ -195,18 +200,17 @@ namespace mrs_lib
         if constexpr (!numeric<T>)
         {
           // if the type is not numerical, print an error to let the user know and fail
-          RCLCPP_ERROR_STREAM(m_node->get_logger(), "Error when declaring parameter \"" << resolved_name << "\": Range cannot be set for non-numerical values! Ignoring range.");
+          RCLCPP_ERROR_STREAM(m_node->get_logger(),
+                              "Error when declaring parameter \"" << resolved_name << "\": Range cannot be set for non-numerical values! Ignoring range.");
           return false;
-        }
-        else if constexpr (std::integral<T>)
+        } else if constexpr (std::integral<T>)
         {
           // integer range for integral types
           rcl_interfaces::msg::IntegerRange range;
           range.from_value = opt_range.minimum;
           range.to_value = opt_range.maximum;
           descriptor.integer_range.push_back(range);
-        }
-        else if constexpr (std::floating_point<T>)
+        } else if constexpr (std::floating_point<T>)
         {
           // floating-point range for floating-point types
           rcl_interfaces::msg::FloatingPointRange range;
@@ -220,8 +224,7 @@ namespace mrs_lib
       if (opts.default_value.has_value())
       {
         m_node->declare_parameter(resolved_name.str, opts.default_value.value(), descriptor);
-      }
-      else
+      } else
       {
         // a hack to allow declaring a strong-typed parameter without a default value
         // because ROS2 apparently fell on its head when it was a litle baby
@@ -252,17 +255,18 @@ namespace mrs_lib
   bool ParamProvider::loadFromYaml(const resolved_name_t& resolved_name, T& value_out, const get_options_t<T>& opts) const
   {
     T loaded_value;
-  
-    const auto found_node = findYamlNode(resolved_name);
-    if (!found_node.has_value())
+
+    const auto found_node_opt = findYamlNode(resolved_name);
+    if (!found_node_opt.has_value())
     {
       return false;
     }
-  
+
+    const auto& found_node = found_node_opt.value();
     try
     {
       // try catch is the only type-generic option...
-      loaded_value = found_node.value().as<T>();
+      loaded_value = applyTag<T>(found_node);
     }
     catch (const YAML::BadConversion& e)
     {
@@ -274,13 +278,13 @@ namespace mrs_lib
       RCLCPP_ERROR_STREAM(m_node->get_logger(), "[" << m_node_name << "]: YAML-CPP threw an unknown exception: " << e.what());
       return false;
     }
-  
+
     // declare the parameter if the options specify to always define it
     if (opts.always_declare)
     {
       auto declare_opts_local = opts.declare_options;
       declare_opts_local.default_value = loaded_value;
-  
+
       // see https://docs.ros.org/en/jazzy/Concepts/Basic/About-Parameters.html#parameters
       if (!m_node->has_parameter(resolved_name.str) && !declareParam<T>(resolved_name, declare_opts_local))
       {
@@ -288,11 +292,32 @@ namespace mrs_lib
         return false;
       }
     }
-  
+
     // if all is OK, set the output value
     value_out = loaded_value;
     // the parameter value was successfully loaded and the parameter was declared if required, everything is done, return true
     return true;
+  }
+  //}
+
+  /* degrees2radians() method //{ */
+  template <typename T>
+  inline T ParamProvider::degrees2radians(const T degrees)
+  {
+    return degrees / T(180) * T(M_PI);
+  }
+  //}
+
+  /* applyTag() method //{ */
+  template <typename T>
+  T ParamProvider::applyTag(const YAML::Node& node) const
+  {
+    if constexpr (std::is_floating_point_v<T>)
+    {
+      if (node.Tag() == "!degrees")
+        return degrees2radians(node.as<T>());
+    }
+    return node.as<T>();
   }
   //}
 
@@ -308,7 +333,7 @@ namespace mrs_lib
         if (desc_range.from_value != declare_range.minimum || desc_range.to_value != declare_range.maximum)
           return false;
       }
-  
+
       if (!descriptor.integer_range.empty())
       {
         const auto& desc_range = descriptor.integer_range.front();
@@ -321,7 +346,7 @@ namespace mrs_lib
     return false;
   }
 
-//}
+  //}
 
   /* loadFromROS() method //{ */
   template <typename T>
@@ -329,7 +354,7 @@ namespace mrs_lib
   {
     std::optional<T> loaded_value;
     const bool was_declared = m_node->has_parameter(resolved_name.str);
-  
+
     // check if the current declaration is compatible with the desired declaration
     if (was_declared)
     {
@@ -339,14 +364,15 @@ namespace mrs_lib
         RCLCPP_ERROR_STREAM(m_node->get_logger(), "Parameter \"" << resolved_name << "\" already declared as read-only, cannot re-declare as reconfigurable!");
         return false;
       }
-  
+
       if (opts.declare_options.range.has_value() && !ranges_match(descriptor, opts.declare_options.range.value()))
       {
-        RCLCPP_ERROR_STREAM(m_node->get_logger(), "Parameter \"" << resolved_name << "\" already declared with a range, cannot re-declare with a different one!");
+        RCLCPP_ERROR_STREAM(m_node->get_logger(),
+                            "Parameter \"" << resolved_name << "\" already declared with a range, cannot re-declare with a different one!");
         return false;
       }
     }
-  
+
     // if the parameter is not declared yet, check if it is available in ROS by declaring it as dynamically-typed and read-writable
     if (!was_declared)
     {
@@ -364,7 +390,7 @@ namespace mrs_lib
         return false;
       }
     }
-  
+
     // now try loading the parameter
     try
     {
@@ -378,17 +404,17 @@ namespace mrs_lib
     {
       RCLCPP_ERROR_STREAM(m_node->get_logger(), "Could not get param '" << resolved_name << "' from ROS: " << e.what());
     }
-  
+
     // if the parameter was not declared before, undecalre it:
     // 1. either it was loaded successfully and has to be re-declared with the correct options
     // 2. or it was not loaded and has to be un-declared
     if (!was_declared)
       m_node->undeclare_parameter(resolved_name.str);
-  
+
     // loading from ROS was not successful, just return false
     if (!loaded_value.has_value())
       return false;
-  
+
     // if the parameter was not declared before, redeclare it with the correct parameters
     if (!was_declared)
     {
@@ -400,14 +426,14 @@ namespace mrs_lib
         return false;
       }
     }
-  
+
     // if all went good, set the value and return true
     value_out = std::move(loaded_value.value());
     return true;
   }
   //}
 
-}  // namespace mrs_lib
+} // namespace mrs_lib
 
 namespace std
 {
@@ -419,4 +445,4 @@ namespace std
       return std::hash<std::string>{}(r.str);
     }
   };
-}
+} // namespace std

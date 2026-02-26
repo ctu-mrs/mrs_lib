@@ -6,7 +6,8 @@
 
 /* TEST(TESTSuite, point_position) //{ */
 
-TEST(TESTSuite, point_position) {
+TEST(TESTSuite, point_position)
+{
 
   geometry_msgs::msg::Point msg;
 
@@ -25,7 +26,8 @@ TEST(TESTSuite, point_position) {
 
 /* TEST(TESTSuite, point_sharedptr_position) //{ */
 
-TEST(TESTSuite, point_sharedptr_position) {
+TEST(TESTSuite, point_sharedptr_position)
+{
 
   geometry_msgs::msg::Point::SharedPtr msg = std::make_shared<geometry_msgs::msg::Point>();
 
@@ -44,7 +46,8 @@ TEST(TESTSuite, point_sharedptr_position) {
 
 /* TEST(TESTSuite, vector3_position) //{ */
 
-TEST(TESTSuite, vector_position) {
+TEST(TESTSuite, vector_position)
+{
 
   geometry_msgs::msg::Vector3 msg;
 
@@ -63,7 +66,8 @@ TEST(TESTSuite, vector_position) {
 
 /* TEST(TESTSuite, vector3_sharedptr_position) //{ */
 
-TEST(TESTSuite, vector3_sharedptr_position) {
+TEST(TESTSuite, vector3_sharedptr_position)
+{
 
   geometry_msgs::msg::Vector3::SharedPtr msg = std::make_shared<geometry_msgs::msg::Vector3>();
 
@@ -82,7 +86,8 @@ TEST(TESTSuite, vector3_sharedptr_position) {
 
 /* TEST(TESTSuite, pose) //{ */
 
-TEST(TESTSuite, pose) {
+TEST(TESTSuite, pose)
+{
 
   geometry_msgs::msg::Pose msg;
 
@@ -113,7 +118,8 @@ TEST(TESTSuite, pose) {
 
 /* TEST(TESTSuite, pose_shared_ptr) //{ */
 
-TEST(TESTSuite, pose_shared_ptr) {
+TEST(TESTSuite, pose_shared_ptr)
+{
 
   geometry_msgs::msg::Pose::SharedPtr msg = std::make_shared<geometry_msgs::msg::Pose>();
 
@@ -144,7 +150,8 @@ TEST(TESTSuite, pose_shared_ptr) {
 
 /* TEST(TESTSuite, pose_with_covariance) //{ */
 
-TEST(TESTSuite, pose_with_covariance) {
+TEST(TESTSuite, pose_with_covariance)
+{
 
   geometry_msgs::msg::PoseWithCovariance msg;
 
@@ -175,7 +182,8 @@ TEST(TESTSuite, pose_with_covariance) {
 
 /* TEST(TESTSuite, pose_with_covariance_shared_ptr) //{ */
 
-TEST(TESTSuite, pose_with_covariance_shared_ptr) {
+TEST(TESTSuite, pose_with_covariance_shared_ptr)
+{
 
   geometry_msgs::msg::PoseWithCovariance::SharedPtr msg = std::make_shared<geometry_msgs::msg::PoseWithCovariance>();
 
@@ -206,7 +214,8 @@ TEST(TESTSuite, pose_with_covariance_shared_ptr) {
 
 /* TEST(TESTSuite, twist) //{ */
 
-TEST(TESTSuite, twist) {
+TEST(TESTSuite, twist)
+{
 
   geometry_msgs::msg::Twist msg;
 
@@ -225,7 +234,8 @@ TEST(TESTSuite, twist) {
 
 /* TEST(TESTSuite, twist_ptr) //{ */
 
-TEST(TESTSuite, twist_ptr) {
+TEST(TESTSuite, twist_ptr)
+{
 
   std::shared_ptr<geometry_msgs::msg::Twist> msg = std::make_shared<geometry_msgs::msg::Twist>();
 
@@ -244,7 +254,8 @@ TEST(TESTSuite, twist_ptr) {
 
 /* TEST(TESTSuite, twist_with_covariance) //{ */
 
-TEST(TESTSuite, twist_with_covariance) {
+TEST(TESTSuite, twist_with_covariance)
+{
 
   geometry_msgs::msg::TwistWithCovariance msg;
 
@@ -263,7 +274,8 @@ TEST(TESTSuite, twist_with_covariance) {
 
 /* TEST(TESTSuite, twist_with_covariance_ptr) //{ */
 
-TEST(TESTSuite, twist_with_covariance_ptr) {
+TEST(TESTSuite, twist_with_covariance_ptr)
+{
 
   std::shared_ptr<geometry_msgs::msg::TwistWithCovariance> msg = std::make_shared<geometry_msgs::msg::TwistWithCovariance>();
 
@@ -282,7 +294,8 @@ TEST(TESTSuite, twist_with_covariance_ptr) {
 
 /* TEST(TESTSuite, odometry) //{ */
 
-TEST(TESTSuite, odometry) {
+TEST(TESTSuite, odometry)
+{
 
   nav_msgs::msg::Odometry msg;
 
@@ -331,7 +344,8 @@ TEST(TESTSuite, odometry) {
 
 /* TEST(TESTSuite, odometry_ptr) //{ */
 
-TEST(TESTSuite, odometry_ptr) {
+TEST(TESTSuite, odometry_ptr)
+{
 
   nav_msgs::msg::Odometry::SharedPtr msg = std::make_shared<nav_msgs::msg::Odometry>();
 
@@ -380,7 +394,8 @@ TEST(TESTSuite, odometry_ptr) {
 
 /* TEST(TESTSuite, tracker_command) //{ */
 
-TEST(TESTSuite, tracker_command) {
+TEST(TESTSuite, tracker_command)
+{
 
   mrs_msgs::msg::TrackerCommand msg;
 
@@ -409,7 +424,7 @@ TEST(TESTSuite, tracker_command) {
   }
 
   {
-    msg.use_heading     = true;
+    msg.use_heading = true;
     msg.use_orientation = false;
 
     msg.heading = 0.1;
@@ -420,7 +435,7 @@ TEST(TESTSuite, tracker_command) {
   }
 
   {
-    msg.use_heading     = false;
+    msg.use_heading = false;
     msg.use_orientation = true;
 
     msg.orientation = mrs_lib::AttitudeConverter(0.1, 0.2, 0.3).setHeading(0.15);
@@ -435,7 +450,8 @@ TEST(TESTSuite, tracker_command) {
 
 /* TEST(TESTSuite, tracker_command_ptr) //{ */
 
-TEST(TESTSuite, tracker_command_ptr) {
+TEST(TESTSuite, tracker_command_ptr)
+{
 
   mrs_msgs::msg::TrackerCommand::SharedPtr msg = std::make_shared<mrs_msgs::msg::TrackerCommand>();
 
@@ -466,7 +482,7 @@ TEST(TESTSuite, tracker_command_ptr) {
   }
 
   {
-    msg->use_heading     = true;
+    msg->use_heading = true;
     msg->use_orientation = false;
 
     msg->heading = 0.1;
@@ -477,7 +493,7 @@ TEST(TESTSuite, tracker_command_ptr) {
   }
 
   {
-    msg->use_heading     = false;
+    msg->use_heading = false;
     msg->use_orientation = true;
 
     msg->orientation = mrs_lib::AttitudeConverter(0.1, 0.2, 0.3).setHeading(0.15);
@@ -492,7 +508,8 @@ TEST(TESTSuite, tracker_command_ptr) {
 
 /* TEST(TESTSuite, reference) //{ */
 
-TEST(TESTSuite, reference) {
+TEST(TESTSuite, reference)
+{
 
   mrs_msgs::msg::Reference msg;
 
@@ -521,7 +538,8 @@ TEST(TESTSuite, reference) {
 
 /* TEST(TESTSuite, reference_ptr) //{ */
 
-TEST(TESTSuite, reference_ptr) {
+TEST(TESTSuite, reference_ptr)
+{
 
   mrs_msgs::msg::Reference::SharedPtr msg = std::make_shared<mrs_msgs::msg::Reference>();
 
@@ -550,7 +568,8 @@ TEST(TESTSuite, reference_ptr) {
 
 /* TEST(TESTSuite, reference_stamped) //{ */
 
-TEST(TESTSuite, reference_stamped) {
+TEST(TESTSuite, reference_stamped)
+{
 
   mrs_msgs::msg::ReferenceStamped msg;
 
@@ -579,7 +598,8 @@ TEST(TESTSuite, reference_stamped) {
 
 /* TEST(TESTSuite, reference_stamped_ptr) //{ */
 
-TEST(TESTSuite, reference_stamped_ptr) {
+TEST(TESTSuite, reference_stamped_ptr)
+{
 
   mrs_msgs::msg::ReferenceStamped::SharedPtr msg = std::make_shared<mrs_msgs::msg::ReferenceStamped>();
 
@@ -606,7 +626,8 @@ TEST(TESTSuite, reference_stamped_ptr) {
 
 //}
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
+{
 
   testing::InitGoogleTest(&argc, argv);
 

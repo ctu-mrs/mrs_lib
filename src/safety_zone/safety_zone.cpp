@@ -256,7 +256,6 @@ namespace mrs_lib
     }
     //}
 
-
     /* addObstacle //{ */
     int SafetyZone::addObstacle(std::unique_ptr<Prism> obstacle)
     {
@@ -284,4 +283,5 @@ namespace mrs_lib
     //}
 
   } // namespace safety_zone
+
 } // namespace mrs_lib
