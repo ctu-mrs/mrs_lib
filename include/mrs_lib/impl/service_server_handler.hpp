@@ -32,6 +32,7 @@ namespace mrs_lib
                                                           const rclcpp::QoS& qos, const rclcpp::CallbackGroup::SharedPtr& callback_group)
       : callback_group_(callback_group), service_server_(node->create_service<ServiceType>(address, cbk, qos, callback_group))
   {
+      RCLCPP_INFO_STREAM(node->get_logger(), "Created service: " << service_server_->get_service_name());
   }
 
   template <class ServiceType>
