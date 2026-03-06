@@ -67,10 +67,55 @@ namespace mrs_lib
   {
     if (!impl_)
     {
-      RCLCPP_ERROR(rclcpp::get_logger("ServiceClientHandler"), "Not initialized, cannot use callSync()!");
+      RCLCPP_ERROR(rclcpp::get_logger("ServiceClientHandler"), "Not initialized, cannot use callAsync()!");
       return std::nullopt;
     }
     return impl_->callAsync(request);
+  }
+
+  //}
+
+  /* getServiceName() //{ */
+
+  template <class ServiceType>
+  std::string ServiceClientHandler<ServiceType>::getServiceName() const
+  {
+    if (!impl_)
+    {
+      RCLCPP_ERROR(rclcpp::get_logger("ServiceClientHandler"), "Not initialized, cannot use getServiceName()!");
+      return {};
+    }
+    return impl_->getServiceName();
+  }
+
+  //}
+
+  /* waitForService() //{ */
+
+  template <class ServiceType>
+  template <typename RepT, typename RatioT>
+  bool ServiceClientHandler<ServiceType>::waitForService(std::chrono::duration<RepT, RatioT> timeout)
+  {
+    if (!impl_)
+    {
+      RCLCPP_ERROR(rclcpp::get_logger("ServiceClientHandler"), "Not initialized, cannot use waitForService()!");
+      return false;
+    }
+    return impl_->waitForService(timeout);
+  }
+
+  //}
+
+  /* isServiceReady() //{ */
+  template <class ServiceType>
+  bool ServiceClientHandler<ServiceType>::isServiceReady() const
+  {
+    if (!impl_)
+    {
+      RCLCPP_ERROR(rclcpp::get_logger("ServiceClientHandler"), "Not initialized, cannot use isServiceReady()!");
+      return false;
+    }
+    return impl_->isServiceReady();
   }
 
   //}
@@ -100,6 +145,7 @@ namespace mrs_lib
     Impl(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos, const rclcpp::CallbackGroup::SharedPtr& callback_group)
         : callback_group_(callback_group), service_client_(node->create_client<ServiceType>(address, qos, callback_group))
     {
+      RCLCPP_INFO_STREAM(node->get_logger(), "Created client '" << address << "' -> '" << service_client_->get_service_name() << "'");
     }
 
     /**
@@ -148,6 +194,39 @@ namespace mrs_lib
         return std::nullopt;
 
       return future;
+    }
+
+    /**
+     * @brief Returns the name of the service this client connects to
+     *
+     * @return service name
+     */
+    std::string getServiceName() const
+    {
+      return service_client_->get_service_name();
+    }
+
+    /**
+     * @brief Waits for the service to be available
+     *
+     * @param timeout maximum time to wait for the service
+     *
+     * @return true if the service is available, false otherwise
+     */
+    template <typename RepT = int64_t, typename RatioT = std::milli>
+    bool waitForService(std::chrono::duration<RepT, RatioT> timeout)
+    {
+      return service_client_->wait_for_service(timeout);
+    }
+
+    /**
+     * @brief Checks if the service is available
+     *
+     * @return true if the service is available, false otherwise
+     */
+    bool isServiceReady() const
+    {
+      return service_client_->service_is_ready();
     }
 
   private:

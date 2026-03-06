@@ -57,10 +57,6 @@ namespace mrs_lib
         // register the timeout callback with the TimeoutManager
         m_timeout_id = m_timeout_manager->registerNew(options.no_message_timeout, m_timeout_mgr_callback, m_node->get_clock()->now());
       }
-
-      const std::string msg = "Subscribed to topic '" + m_topic_name + "' -> '" + m_topic_name + "'";
-
-      RCLCPP_INFO_STREAM(m_node->get_logger(), msg);
     }
     //}
 
@@ -144,7 +140,7 @@ namespace mrs_lib
 
       if (ret.empty())
       {
-        ret = m_node->get_node_topics_interface()->resolve_topic_name(ret);
+        ret = m_node->get_node_topics_interface()->resolve_topic_name(m_topic_name);
       }
 
       return ret;
@@ -193,6 +189,7 @@ namespace mrs_lib
       const std::function<void(const typename MessageType::SharedPtr)> cbk = std::bind(&Impl::data_callback, this, std::placeholders::_1);
 
       m_sub = m_node->create_subscription<MessageType>(m_topic_name, m_qos, cbk, m_sub_opts);
+      RCLCPP_INFO_STREAM(m_node->get_logger(), "Subscribed to topic '" << m_topic_name << "' -> '" << m_sub->get_topic_name() << "'");
     }
     //}
 

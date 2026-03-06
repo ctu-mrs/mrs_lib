@@ -92,6 +92,32 @@ namespace mrs_lib
      */
     std::optional<std::shared_future<std::shared_ptr<typename ServiceType::Response>>> callAsync(const std::shared_ptr<typename ServiceType::Request>& request);
 
+    /**
+     * @brief Returns the name of the service this client connects to.
+     *
+     * @return service name, or an empty string if the handler is not initialized
+     */
+    std::string getServiceName() const;
+
+    /**
+     * @brief Waits for the service to be available.
+     *
+     * @tparam RepT   arithmetic type representing the number of ticks (deduced automatically)
+     * @tparam RatioT std::ratio representing the tick period (deduced automatically)
+     * @param timeout maximum time to wait for the service to be available
+     *
+     * @return true if the service became available within the timeout, false otherwise
+     */
+    template <typename RepT = int64_t, typename RatioT = std::milli>
+    bool waitForService(std::chrono::duration<RepT, RatioT> timeout = std::chrono::seconds(1));
+
+    /**
+     * @brief Checks if the service is available.
+     *
+     * @return true if the service is available, false otherwise
+     */
+    bool isServiceReady() const;
+
   private:
     class Impl;
     std::shared_ptr<Impl> impl_;
