@@ -287,12 +287,11 @@ namespace mrs_lib
       TaskAwaitable(TaskAwaitable&&) = delete;
       TaskAwaitable& operator=(TaskAwaitable&&) = delete;
 
-    protected:
+    private:
       TaskAwaitable(std::coroutine_handle<Promise> task_handle) : task_handle_(task_handle)
       {
       }
 
-    protected:
       std::coroutine_handle<Promise> task_handle_;
 
       friend class Task<T>;
