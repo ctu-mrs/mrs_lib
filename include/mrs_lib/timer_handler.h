@@ -86,6 +86,39 @@ namespace mrs_lib
   protected:
     MRSTimer() = default;
 
+    /**
+     * @brief Create a callback for coroutine that should only run once at a time.
+     *
+     * Since coroutine callbacks are only allowed for reentrant groups,
+     * the callback could be called while the previous is still in progress.
+     * This helper function creates a callback that is skipped if the previous
+     * one is still running.
+     */
+    template <typename C>
+    static std::function<void()> createNonReentrantCallback(Task<> (C::*method)(), C* instance)
+    {
+      auto is_running = std::make_shared<std::atomic<bool>>(false);
+      return [is_running, method, instance]() -> void {
+        bool was_running = is_running->exchange(true);
+
+        if (!was_running)
+        {
+          // The callback was not running and we have set it as running, we start it here.
+          start_task(
+              // Capturing lambdas should not be used as coroutines.
+              // Pass the values as arguments instead.
+              [](std::shared_ptr<std::atomic<bool>> is_running, Task<> (C::*method)(), C* instance) -> mrs_lib::Task<> {
+                // Run the user specified callback.
+                co_await std::invoke(method, instance);
+                // The task finished so we store false to allow another callback to start.
+                is_running->store(false);
+                co_return;
+              },
+              is_running, method, instance);
+        }
+      };
+    }
+
     rclcpp::Node::SharedPtr node_;
   };
 
@@ -105,16 +138,34 @@ namespace mrs_lib
 
     ROSTimer(const mrs_lib::TimerHandlerOptions& opts, const rclcpp::Rate& rate, const std::function<void()>& callback);
 
+    /**
+     * @brief Create Ros timer with coroutine callback.
+     *
+     * Using coroutine callbacks is only allowed with reentrant callback group.
+     * If the specified callback group is not reentrant, this throws an exception.
+     *
+     * To make the callback design simpler, the coroutine itself will not run
+     * again until the previous one completely finished.
+     */
     template <typename C>
     ROSTimer(const mrs_lib::TimerHandlerOptions& opts, const rclcpp::Rate& rate, Task<> (C::*method)(), C* instance)
-        : ROSTimer(opts, rate, [method, instance]() -> void { start_task(method, instance); })
+        : ROSTimer(opts, rate, createNonReentrantCallback(method, instance))
     {
       internal::require_callback_group_coro_compatible(opts.callback_group.value_or(nullptr));
     }
 
+    /**
+     * @brief Create Ros timer with coroutine callback.
+     *
+     * Using coroutine callbacks is only allowed with reentrant callback group.
+     * If the specified callback group is not reentrant, this throws an exception.
+     *
+     * To make the callback design simpler, the coroutine itself will not run
+     * again until the previous one completely finished.
+     */
     template <typename C>
     ROSTimer(const mrs_lib::TimerHandlerOptions& opts, const rclcpp::Rate& rate, Task<> (C::*method)(), std::shared_ptr<C> instance)
-        : ROSTimer(opts, rate, [method, instance]() -> void { start_task(method, instance); })
+        : ROSTimer(opts, rate, createNonReentrantCallback(method, instance))
     {
       internal::require_callback_group_coro_compatible(opts.callback_group.value_or(nullptr));
     }
@@ -195,16 +246,34 @@ namespace mrs_lib
 
     ThreadTimer(const mrs_lib::TimerHandlerOptions& opts, const rclcpp::Rate& rate, const std::function<void()>& callback);
 
+    /**
+     * @brief Create thread timer with coroutine callback.
+     *
+     * Using coroutine callbacks is only allowed with reentrant callback group.
+     * If the specified callback group is not reentrant, this throws an exception.
+     *
+     * To make the callback design simpler, the coroutine itself will not run
+     * again until the previous one completely finished.
+     */
     template <typename C>
     ThreadTimer(const mrs_lib::TimerHandlerOptions& opts, const rclcpp::Rate& rate, Task<> (C::*method)(), C* instance)
-        : ThreadTimer(opts, rate, [method, instance]() -> void { start_task(method, instance); })
+        : ThreadTimer(opts, rate, createNonReentrantCallback(method, instance))
     {
       internal::require_callback_group_coro_compatible(opts.callback_group.value_or(nullptr));
     }
 
+    /**
+     * @brief Create thread timer with coroutine callback.
+     *
+     * Using coroutine callbacks is only allowed with reentrant callback group.
+     * If the specified callback group is not reentrant, this throws an exception.
+     *
+     * To make the callback design simpler, the coroutine itself will not run
+     * again until the previous one completely finished.
+     */
     template <typename C>
     ThreadTimer(const mrs_lib::TimerHandlerOptions& opts, const rclcpp::Rate& rate, Task<> (C::*method)(), std::shared_ptr<C> instance)
-        : ThreadTimer(opts, rate, [method, instance]() -> void { start_task(method, instance); })
+        : ThreadTimer(opts, rate, createNonReentrantCallback(method, instance))
     {
       internal::require_callback_group_coro_compatible(opts.callback_group.value_or(nullptr));
     }
