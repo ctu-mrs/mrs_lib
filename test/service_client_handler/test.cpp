@@ -294,7 +294,7 @@ TEST_F(Test, CoroCall)
     despin();
   };
 
-  tim = node_->create_timer(0s, [test_fun]() -> void { mrs_lib::start_task(test_fun); }, callback_group_);
+  tim = node_->create_timer(0s, [test_fun]() -> void { mrs_lib::internal::start_task(test_fun); }, callback_group_);
   executor_->spin();
 
   ASSERT_TRUE(completed);
