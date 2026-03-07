@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include <mrs_lib/coro/runners.hpp>
 #include <mrs_lib/service_client_handler.h>
 
 #include <std_srvs/srv/set_bool.hpp>
@@ -37,12 +38,13 @@ protected:
 
   /* initialize() //{ */
 
+  template <typename ExecutorType = rclcpp::executors::MultiThreadedExecutor>
   void initialize(const rclcpp::NodeOptions& node_options = rclcpp::NodeOptions())
   {
 
     node_ = std::make_shared<rclcpp::Node>("test_service_client_handler", node_options);
 
-    executor_ = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
+    executor_ = std::make_shared<ExecutorType>();
     executor_->add_node(node_);
   }
 
@@ -227,6 +229,76 @@ TEST_F(Test, asynctest_call)
 }
 
 //}
+
+mrs_lib::Task<std::optional<std::shared_ptr<typename std_srvs::srv::SetBool::Response>>>
+call_indirect(mrs_lib::ServiceClientHandler<std_srvs::srv::SetBool>& client, std::shared_ptr<std_srvs::srv::SetBool::Request> request, size_t depth)
+{
+  if (depth == 0)
+  {
+    co_return co_await client.callAwaitable(request);
+  } else
+  {
+    co_return co_await call_indirect(client, std::move(request), depth - 1);
+  }
+}
+
+
+TEST_F(Test, CoroCall)
+{
+  // Coroutine based callbacks should handle waiting on single threaded executor
+  initialize<rclcpp::executors::SingleThreadedExecutor>(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  auto clock = node_->get_clock();
+
+  // | ----------------- create a service server ---------------- |
+
+  const auto callback_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+  const auto service_server = node_->create_service<std_srvs::srv::SetBool>(
+      "/service1", std::bind(&Test::callbackService, this, std::placeholders::_1, std::placeholders::_2), rclcpp::ServicesQoS(), callback_group_);
+
+  // | ----------------- create a service client ---------------- |
+
+  mrs_lib::ServiceClientHandler<std_srvs::srv::SetBool> client1 = mrs_lib::ServiceClientHandler<std_srvs::srv::SetBool>(node_, "service1");
+
+  RCLCPP_INFO(node_->get_logger(), "initialized");
+
+  std::atomic<bool> completed = false;
+  rclcpp::TimerBase::SharedPtr tim;
+
+  const auto test_fun = [&]() -> mrs_lib::Task<> {
+    tim->cancel(); // just a one-shot timer
+
+    auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
+
+    {
+      request->data = true;
+
+      auto opt_response = co_await call_indirect(client1, request, 5);
+
+      EXPECT_TRUE(opt_response.has_value());
+      if (!opt_response.has_value())
+      {
+        co_return;
+      }
+
+      auto response = opt_response.value();
+
+      EXPECT_TRUE(response);
+      EXPECT_TRUE(response->success);
+      EXPECT_EQ(response->message, "set");
+    }
+
+    RCLCPP_INFO(node_->get_logger(), "finished");
+
+    completed = true;
+    despin();
+  };
+
+  tim = node_->create_timer(0s, [test_fun]() -> void { mrs_lib::start_task(test_fun); }, callback_group_);
+  executor_->spin();
+
+  ASSERT_TRUE(completed);
+}
 
 /* TEST_F(Test, test_bad_address) //{ */
 

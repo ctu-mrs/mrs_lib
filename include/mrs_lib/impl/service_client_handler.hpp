@@ -10,6 +10,167 @@
 namespace mrs_lib
 {
 
+  namespace internal
+  {
+
+    template <typename ServiceType>
+      requires(rosidl_generator_traits::is_service<ServiceType>::value)
+    class [[nodiscard("This service call is only performed when `co_await`ed.")]] ServiceAwaitable
+    {
+      using Client = rclcpp::Client<ServiceType>;
+      using Response = ServiceType::Response;
+      using Request = ServiceType::Request;
+
+    public:
+      ServiceAwaitable(const ServiceAwaitable&) = delete;
+      ServiceAwaitable& operator=(const ServiceAwaitable&) = delete;
+      ServiceAwaitable(ServiceAwaitable&&) = delete;
+      ServiceAwaitable& operator=(ServiceAwaitable&&) = delete;
+
+      bool await_ready()
+      {
+        return false;
+      }
+
+      bool await_suspend(std::coroutine_handle<> continuation)
+      {
+        // Store the continuation into the awaitable.
+        // It will either be invoked when the service completes or destroyed if it is cancelled.
+        data_.continuation = continuation;
+        std::shared_ptr<Client> client = data_.client.lock();
+        if (client == nullptr || !client->service_is_ready())
+        {
+          data_.response = std::nullopt;
+          // Do not suspend
+          return false;
+        }
+        client->async_send_request(data_.request,
+                                   std::function([data_handle = DataHandle(data_)](std::shared_future<std::shared_ptr<Response>> future) mutable {
+                                     auto data = data_handle.leak();
+                                     data->response = future.get();
+                                     (*data).response = future.get();
+                                     auto continuation = std::exchange(data->continuation, nullptr);
+                                     internal::resume_coroutine(continuation);
+                                   }));
+        return true;
+      }
+
+      std::optional<std::shared_ptr<Response>> await_resume()
+      {
+        return data_.response;
+      }
+
+    private:
+      ServiceAwaitable(std::weak_ptr<Client> client, std::shared_ptr<Request> request)
+          : data_{
+                .client = std::move(client),
+                .request = std::move(request),
+            }
+      {
+      }
+
+      struct Data
+      {
+        std::weak_ptr<Client> client;
+        std::shared_ptr<Request> request;
+        std::optional<std::shared_ptr<Response>> response = std::nullopt;
+        std::coroutine_handle<> continuation = nullptr;
+        // Intrusive ref counting - used to destroy continuation in case of cancellation
+        std::atomic<size_t> ref_count = 0;
+      };
+
+      class DataHandle
+      {
+      public:
+        DataHandle(Data& data) : data_(&data)
+        {
+          size_t prev_ref_count = data_->ref_count.fetch_add(1);
+          // This constructor is called when awaiting the result.
+          // We do not allow multiple awaits, thus, this should always be zero.
+          assert(prev_ref_count == 0);
+        }
+
+        DataHandle(const DataHandle& other) : data_(other.data_)
+        {
+          data_->ref_count++;
+        }
+
+        DataHandle& operator=(const DataHandle& other)
+        {
+          decrement_ref_count_();
+          data_ = other.data_;
+          return *this;
+        }
+
+        DataHandle(DataHandle&& other) : data_(other.data_)
+        {
+          data_->ref_count++;
+        }
+
+        DataHandle& operator=(DataHandle&& other)
+        {
+          decrement_ref_count_();
+          data_ = other.data_;
+          return *this;
+        }
+
+        ~DataHandle()
+        {
+          decrement_ref_count_();
+        }
+
+        Data& operator*() const
+        {
+          assert(data_);
+          return *data_;
+        }
+
+        Data* operator->() const
+        {
+          assert(data_);
+          return data_;
+        }
+
+        Data* leak()
+        {
+          assert(data_);
+          return std::exchange(data_, nullptr);
+        }
+
+      private:
+        void decrement_ref_count_()
+        {
+          if (data_ == nullptr)
+          {
+            return;
+          }
+
+          size_t prev_ref_count = data_->ref_count.fetch_sub(1);
+          // This is the last instance - we need to destroy the continuation
+          if (prev_ref_count == 1)
+          {
+            // Copy coroutine handle into the current frame
+            // (`*data_` is stored in the coroutine it will be destroying)
+            auto continuation = data_->continuation;
+            // The continuation may be null if it was reset or not set at all
+            if (continuation != nullptr)
+            {
+              // Destroy the non finished coroutine
+              continuation.destroy();
+            }
+          }
+        }
+
+        Data* data_;
+      };
+
+      Data data_;
+
+      friend class ServiceClientHandler<ServiceType>;
+    };
+
+  } // namespace internal
+
   // --------------------------------------------------------------
   // |                    ServiceClientHandler                    |
   // --------------------------------------------------------------
@@ -74,6 +235,19 @@ namespace mrs_lib
   }
 
   //}
+
+  template <class ServiceType>
+  Task<std::optional<std::shared_ptr<typename ServiceType::Response>>>
+  ServiceClientHandler<ServiceType>::callAwaitable(std::shared_ptr<typename ServiceType::Request> request)
+  {
+    if (!impl_)
+    {
+      RCLCPP_ERROR(rclcpp::get_logger("ServiceClientHandler"), "Not initialized, cannot use callAwaitable()!");
+      co_return std::nullopt;
+    }
+
+    co_return co_await impl_->callAwaitable(request);
+  }
 
   /* getServiceName() //{ */
 
@@ -194,6 +368,11 @@ namespace mrs_lib
         return std::nullopt;
 
       return future;
+    }
+
+    internal::ServiceAwaitable<ServiceType> callAwaitable(const std::shared_ptr<typename ServiceType::Request>& request)
+    {
+      return internal::ServiceAwaitable<ServiceType>(service_client_, request);
     }
 
     /**

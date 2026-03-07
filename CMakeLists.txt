@@ -75,6 +75,8 @@ target_sources(mrs_lib_mrs_lib
     # src/batch_visualizer
     "src/batch_visualizer/batch_visualizer.cpp"
     "src/batch_visualizer/visual_object.cpp"
+    # src/coro/internal
+    "src/coro/internal/thread_local_continuation_scheduler.cpp"
     # src/dynparam_mgr
     "src/dynparam_mgr/dynparam_mgr.cpp"
     # src/geometry
@@ -155,6 +157,13 @@ target_sources(mrs_lib_mrs_lib
     "include/mrs_lib/ukf.h"
     "include/mrs_lib/utils.h"
     "include/mrs_lib/visual_object.h"
+    # include/mrs_lib/coro
+    "include/mrs_lib/coro/runners.hpp"
+    "include/mrs_lib/coro/task.hpp"
+    "include/mrs_lib/coro/task.impl.hpp"
+    # include/mrs_lib/coro/internal
+    "include/mrs_lib/coro/internal/attributes.hpp"
+    "include/mrs_lib/coro/internal/thread_local_continuation_scheduler.hpp"
     # include/mrs_lib/geometry
     "include/mrs_lib/geometry/conversions_eigen.h"
     "include/mrs_lib/geometry/conversions.h"
@@ -172,6 +181,8 @@ target_sources(mrs_lib_mrs_lib
     "include/mrs_lib/impl/timer_handler.hpp"
     "include/mrs_lib/impl/transformer.hpp"
     "include/mrs_lib/impl/ukf.hpp"
+    # include/mrs_lib/internal
+    "include/mrs_lib/internal/coroutine_callback_helpers.hpp"
     # include/mrs_lib/safety_zone
     "include/mrs_lib/safety_zone/line_operations.h"
     "include/mrs_lib/safety_zone/polygon.h"

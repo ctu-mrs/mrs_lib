@@ -1,0 +1,14 @@
+#ifndef MRS_LIB_CORO_INTERNAL_ATTRIBUTES_HPP_
+#define MRS_LIB_CORO_INTERNAL_ATTRIBUTES_HPP_
+
+#ifdef __clang__
+#define MRS_LIB_INTERNAL_CORO_RETURN_TYPE [[clang::coro_return_type]]
+#define MRS_LIB_INTERNAL_CORO_WRAPPER [[clang::coro_wrapper]]
+#define MRS_LIB_INTERNAL_CORO_LIFETIMEBOUND [[clang::coro_lifetimebound]]
+#else
+#define MRS_LIB_INTERNAL_CORO_RETURN_TYPE
+#define MRS_LIB_INTERNAL_CORO_WRAPPER
+#define MRS_LIB_INTERNAL_CORO_LIFETIMEBOUND
+#endif
+
+#endif // MRS_LIB_CORO_INTERNAL_ATTRIBUTES_HPP_

@@ -9,6 +9,7 @@ endfunction()
 
 add_subdirectory(attitude_converter)
 add_subdirectory(batch_visualizer)
+add_subdirectory(coro)
 add_subdirectory(dynparam_mgr)
 add_subdirectory(geometry)
 add_subdirectory(lkf)

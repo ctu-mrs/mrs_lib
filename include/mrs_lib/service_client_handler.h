@@ -10,8 +10,20 @@
 #include <string>
 #include <future>
 
+#include <mrs_lib/coro/internal/thread_local_continuation_scheduler.hpp>
+#include <mrs_lib/coro/task.hpp>
+
 namespace mrs_lib
 {
+  template <class ServiceType>
+  class ServiceClientHandler;
+
+  namespace internal
+  {
+    template <typename ServiceType>
+      requires(rosidl_generator_traits::is_service<ServiceType>::value)
+    class [[nodiscard("This service call is only performed when `co_await`ed.")]] ServiceAwaitable;
+  }
 
   /* class ServiceClientHandler //{ */
 
@@ -91,6 +103,24 @@ namespace mrs_lib
      * @return Optional shared pointer to the result or std::nullopt if the call failed
      */
     std::optional<std::shared_future<std::shared_ptr<typename ServiceType::Response>>> callAsync(const std::shared_ptr<typename ServiceType::Request>& request);
+
+    /**
+     * @brief Awaitable call of the service.
+     *
+     * This function can be used inside coroutine callbacks (mrs_lib::Task) to
+     * suspend the coroutine until the service completes. The advantage of this
+     * method compared to callSync is that this can run on single threaded
+     * executor - the calling coroutine is suspended and the executor can work
+     * on other tasks. Once the service responds, the calling coroutine is
+     * resumed and the co_await expression returns
+     * `std::optional<std::shared_ptr<Response>>` where `Response` is the
+     * service response type.
+     *
+     * @param request The service request to be sent with the call
+     *
+     * @return Awaitable type that calls the service and returns the result when awaited.
+     */
+    Task<std::optional<std::shared_ptr<typename ServiceType::Response>>> callAwaitable(std::shared_ptr<typename ServiceType::Request> request);
 
     /**
      * @brief Returns the name of the service this client connects to.
