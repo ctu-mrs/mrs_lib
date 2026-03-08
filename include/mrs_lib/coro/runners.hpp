@@ -67,25 +67,25 @@ namespace mrs_lib
       co_await std::invoke(decay_copy(std::forward<F>(task)), decay_copy(std::forward<Args>(args))...);
     }
 
-  } // namespace internal
+    /**
+     * @brief Start execution of a task from outside of a coroutine.
+     *
+     * This function starts the execution of the coroutine using the provided
+     * arguments. The passed arguments are decay-copied into the coroutine frame
+     * (similarly to std::thread).
+     *
+     * Using this function from user code is not usually necessary. It can be
+     * avoided by `co_await`ing the tasks and using callbacks that support passing
+     * coroutine callbacks.
+     */
+    template <typename F, typename... Args>
+      requires std::invocable<std::decay_t<F>, std::decay_t<Args>...> && std::same_as<Task<void>, std::invoke_result_t<std::decay_t<F>, std::decay_t<Args>...>>
+    void start_task(F&& task, Args&&... args)
+    {
+      internal::start_task_impl(std::forward<F>(task), std::forward<Args>(args)...);
+    }
 
-  /**
-   * @brief Start execution of a task from outside of a coroutine.
-   *
-   * This function starts the execution of the coroutine using the provided
-   * arguments. The passed arguments are decay-copied into the coroutine frame
-   * (similarly to std::thread).
-   *
-   * Using this function from user code is not usually necessary. It can be
-   * avoided by `co_await`ing the tasks and using callbacks that support passing
-   * coroutine callbacks.
-   */
-  template <typename F, typename... Args>
-    requires std::invocable<std::decay_t<F>, std::decay_t<Args>...> && std::same_as<Task<void>, std::invoke_result_t<std::decay_t<F>, std::decay_t<Args>...>>
-  void start_task(F&& task, Args&&... args)
-  {
-    internal::start_task_impl(std::forward<F>(task), std::forward<Args>(args)...);
-  }
+  } // namespace internal
 
 } // namespace mrs_lib
 

@@ -104,7 +104,7 @@ namespace mrs_lib
         if (!was_running)
         {
           // The callback was not running and we have set it as running, we start it here.
-          start_task(
+          internal::start_task(
               // Capturing lambdas should not be used as coroutines.
               // Pass the values as arguments instead.
               [](std::shared_ptr<std::atomic<bool>> is_running, Task<> (C::*method)(), C* instance) -> mrs_lib::Task<> {

@@ -268,19 +268,19 @@ namespace
     int lval_int = 42;
     std::unique_ptr<int> lval_uptr = std::make_unique<int>(42);
     // function reference
-    mrs_lib::start_task(co_takes_val, 42);
-    mrs_lib::start_task(co_takes_lval_ref, std::ref(lval_int));
-    mrs_lib::start_task(co_takes_rval_ref, 42);
-    mrs_lib::start_task(co_takes_move_only, std::make_unique<int>(42));
-    mrs_lib::start_task(co_takes_move_only_lval_ref, std::ref(lval_uptr));
-    mrs_lib::start_task(co_takes_move_only_rval_ref, std::make_unique<int>(42));
+    mrs_lib::internal::start_task(co_takes_val, 42);
+    mrs_lib::internal::start_task(co_takes_lval_ref, std::ref(lval_int));
+    mrs_lib::internal::start_task(co_takes_rval_ref, 42);
+    mrs_lib::internal::start_task(co_takes_move_only, std::make_unique<int>(42));
+    mrs_lib::internal::start_task(co_takes_move_only_lval_ref, std::ref(lval_uptr));
+    mrs_lib::internal::start_task(co_takes_move_only_rval_ref, std::make_unique<int>(42));
     // function pointer
-    mrs_lib::start_task(&co_takes_val, 42);
-    mrs_lib::start_task(&co_takes_lval_ref, std::ref(lval_int));
-    mrs_lib::start_task(&co_takes_rval_ref, 42);
-    mrs_lib::start_task(&co_takes_move_only, std::make_unique<int>(42));
-    mrs_lib::start_task(&co_takes_move_only_lval_ref, std::ref(lval_uptr));
-    mrs_lib::start_task(&co_takes_move_only_rval_ref, std::make_unique<int>(42));
+    mrs_lib::internal::start_task(&co_takes_val, 42);
+    mrs_lib::internal::start_task(&co_takes_lval_ref, std::ref(lval_int));
+    mrs_lib::internal::start_task(&co_takes_rval_ref, 42);
+    mrs_lib::internal::start_task(&co_takes_move_only, std::make_unique<int>(42));
+    mrs_lib::internal::start_task(&co_takes_move_only_lval_ref, std::ref(lval_uptr));
+    mrs_lib::internal::start_task(&co_takes_move_only_rval_ref, std::make_unique<int>(42));
   }
 
   TEST(MrsLibCoro, StartCopyDecays)
@@ -302,12 +302,12 @@ namespace
     int val = 0;
 
     // This call should copy the value and invoke the `int &&` overload
-    mrs_lib::start_task(Func{}, val);
+    mrs_lib::internal::start_task(Func{}, val);
 
     EXPECT_EQ(val, 0);
 
     // The reference wrapper should be able to keep the reference and call the `int&` overload
-    mrs_lib::start_task(Func{}, std::ref(val));
+    mrs_lib::internal::start_task(Func{}, std::ref(val));
 
     EXPECT_EQ(val, 42);
   }
@@ -316,7 +316,7 @@ namespace
   {
     bool finished = false;
 
-    mrs_lib::start_task(
+    mrs_lib::internal::start_task(
         [](bool& finished) -> mrs_lib::Task<> {
           finished = true;
           co_return;
@@ -331,7 +331,7 @@ namespace
     int result = 0;
 
     // No ampersand in front of function name - passing function reference
-    mrs_lib::start_task(co_set_42, std::ref(result));
+    mrs_lib::internal::start_task(co_set_42, std::ref(result));
 
     EXPECT_EQ(result, 42);
   }
@@ -341,7 +341,7 @@ namespace
     int result = 0;
 
     // Ampersand in front of function name - passing function pointer
-    mrs_lib::start_task(&co_set_42, std::ref(result));
+    mrs_lib::internal::start_task(&co_set_42, std::ref(result));
 
     EXPECT_EQ(result, 42);
   }
@@ -362,7 +362,7 @@ namespace
   {
     bool finished = false;
 
-    mrs_lib::start_task(
+    mrs_lib::internal::start_task(
         [](bool& finished) -> mrs_lib::Task<> {
           int val = co_await co_42();
           EXPECT_EQ(val, 42);
@@ -378,7 +378,7 @@ namespace
   {
     bool finished = false;
 
-    mrs_lib::start_task(
+    mrs_lib::internal::start_task(
         [](bool& finished) -> mrs_lib::Task<> {
           std::unique_ptr<int> val = co_await co_uptr_42();
           EXPECT_EQ(*val, 42);
@@ -394,7 +394,7 @@ namespace
   {
     bool finished = false;
 
-    mrs_lib::start_task(
+    mrs_lib::internal::start_task(
         [](bool& finished) -> mrs_lib::Task<> {
           int val = co_await co_2_times_42();
           EXPECT_EQ(val, 84);
@@ -410,7 +410,7 @@ namespace
   {
     bool finished = false;
 
-    mrs_lib::start_task(
+    mrs_lib::internal::start_task(
         [](bool& finished) -> mrs_lib::Task<> {
           bool val = co_await co_check_throws(co_throws_logic_error);
           EXPECT_TRUE(val);
@@ -428,7 +428,7 @@ namespace
     {
       bool finished = false;
 
-      mrs_lib::start_task(
+      mrs_lib::internal::start_task(
           [](bool& finished, size_t level) -> mrs_lib::Task<> {
             bool val = co_await co_check_throws(co_call_throwning, level);
             EXPECT_TRUE(val);
@@ -445,7 +445,7 @@ namespace
   {
     bool finished = false;
 
-    mrs_lib::start_task(
+    mrs_lib::internal::start_task(
         [](bool& finished) -> mrs_lib::Task<> {
           bool val = co_await co_check_throws(co_throws_logic_error_non_void);
           EXPECT_TRUE(val);
@@ -463,7 +463,7 @@ namespace
     {
       bool finished = false;
 
-      mrs_lib::start_task(
+      mrs_lib::internal::start_task(
           [](bool& finished, size_t level) -> mrs_lib::Task<> {
             bool val = co_await co_check_throws(co_call_throwning_non_void, level);
             EXPECT_TRUE(val);
@@ -480,7 +480,7 @@ namespace
   {
     bool finished = false;
 
-    mrs_lib::start_task(
+    mrs_lib::internal::start_task(
         [](bool& finished) -> mrs_lib::Task<> {
           bool val = co_await co_check_throws(co_get_error_on_move);
           EXPECT_TRUE(val);
@@ -496,7 +496,7 @@ namespace
   {
     bool finished = false;
 
-    mrs_lib::start_task(
+    mrs_lib::internal::start_task(
         [](bool& finished) -> mrs_lib::Task<> {
           bool val = co_await check_get_exception_ptr();
           EXPECT_TRUE(val);
@@ -545,7 +545,7 @@ namespace
 
     bool finished = false;
 
-    mrs_lib::start_task(
+    mrs_lib::internal::start_task(
         [](bool& finished, size_t iterations) -> mrs_lib::Task<> {
           size_t val = co_await co_test_long_loop(iterations);
           EXPECT_EQ(val, iterations);
