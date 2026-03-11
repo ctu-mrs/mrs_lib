@@ -28,7 +28,6 @@ if(ENABLE_COVERAGE)
 endif()
 
 find_package(ament_cmake_python REQUIRED)
-find_package(mrs_cmake REQUIRED)
 
 set(DEPENDENCIES
   geometry_msgs
