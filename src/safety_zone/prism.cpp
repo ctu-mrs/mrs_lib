@@ -393,7 +393,7 @@ namespace mrs_lib
     //}
 
     /* getPoints() //{ */
-    std::vector<Point2d> Prism::getPoints()
+    std::vector<Point2d> Prism::getPoints() const
     {
       std::vector<Point2d> points;
       const auto& outer_ring = polygon_.outer();
