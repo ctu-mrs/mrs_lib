@@ -21,7 +21,9 @@
 #include <cstdlib>
 #include <string>
 
-namespace mrs_lib
+#include <mrs_lib/internal/version_macros.hpp>
+
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
 
   const double RADIANS_PER_DEGREE = M_PI / 180.0;
@@ -313,6 +315,6 @@ namespace mrs_lib
     UTMtoLL(UTMNorthing, UTMEasting, UTMZone.c_str(), Lat, Long);
   }
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1
 
 #endif // _UTM_H

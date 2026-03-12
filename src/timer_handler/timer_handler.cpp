@@ -1,6 +1,7 @@
 #include <mrs_lib/timer_handler.h>
+#include <mrs_lib/internal/version_macros.hpp>
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
 
   // | ------------------------ ROSTimer ------------------------ |
@@ -394,4 +395,4 @@ namespace mrs_lib
 
   //}
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1

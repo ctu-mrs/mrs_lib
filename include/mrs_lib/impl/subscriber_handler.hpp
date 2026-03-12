@@ -9,10 +9,11 @@
 
 #include <mrs_lib/subscriber_handler.h>
 #include <mrs_lib/timer_handler.h>
+#include <mrs_lib/internal/version_macros.hpp>
 #include <mutex>
 #include <condition_variable>
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
   /* SubscriberHandler::Impl class //{ */
   // implements the constructor, getMsg() method and data_callback method (non-thread-safe)
@@ -370,6 +371,6 @@ namespace mrs_lib
   };
   //}
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1
 
 #endif // SUBSCRIBER_HANDLER_HPP

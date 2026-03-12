@@ -1,7 +1,8 @@
 // clang: MatousFormat
 #include <mrs_lib/geometry/cyclic.h>
+#include <mrs_lib/internal/version_macros.hpp>
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
   namespace geometry
   {
@@ -13,4 +14,4 @@ namespace mrs_lib
     template struct cyclic<double, sdegrees>;
 
   } // namespace geometry
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1

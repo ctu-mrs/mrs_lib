@@ -10,7 +10,9 @@
 #include <Eigen/Dense>
 #include <rclcpp/rclcpp.hpp>
 
-namespace mrs_lib
+#include <mrs_lib/internal/version_macros.hpp>
+
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
   /* KalmanFilter virtual class //{ */
   /**
@@ -83,6 +85,6 @@ namespace mrs_lib
     virtual statecov_t predict(const statecov_t& sc, const u_t& u, const Q_t& Q, double dt) const = 0;
   };
   //}
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1
 
 #endif // SYSTEMMODEL_H

@@ -12,8 +12,9 @@
 #include <rclcpp/time_source.hpp>
 
 #include <mrs_lib/timeout_manager.h>
+#include <mrs_lib/internal/version_macros.hpp>
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
 
   static const rclcpp::Duration no_timeout = rclcpp::Duration(0, 0);
@@ -469,7 +470,7 @@ namespace mrs_lib
   {
     object = Class(args...);
   }
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1
 
 #ifndef SUBSCRIBER_HANDLER_HPP
 #include <mrs_lib/impl/subscriber_handler.hpp>

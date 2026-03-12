@@ -8,8 +8,9 @@
 #define MATH_H
 
 #include <cmath>
+#include <mrs_lib/internal/version_macros.hpp>
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
   /* probit() function //{ */
   //
@@ -32,6 +33,6 @@ namespace mrs_lib
   double probit(const double quantile);
 
   //}
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1
 
 #endif

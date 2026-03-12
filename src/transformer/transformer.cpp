@@ -5,6 +5,7 @@
 
 #include <mrs_lib/geometry/conversions.h>
 #include <mutex>
+#include <mrs_lib/internal/version_macros.hpp>
 
 using test_t = mrs_msgs::msg::ReferenceStamped;
 /* using test_t = pcl::PointCloud<pcl::PointXYZ>; */
@@ -31,7 +32,7 @@ namespace tf2
 } // namespace tf2
 #endif
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
 
   // | ----------------------- Transformer ---------------------- |
@@ -613,4 +614,4 @@ namespace mrs_lib
   }
   //}
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1

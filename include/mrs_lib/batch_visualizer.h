@@ -9,10 +9,11 @@
 #include <mrs_msgs/msg/trajectory_reference.hpp>
 #include <mrs_lib/visual_object.h>
 #include <set>
+#include <mrs_lib/internal/version_macros.hpp>
 
 #define DEFAULT_ELLIPSE_POINTS 64
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
 
   /**
@@ -263,6 +264,6 @@ namespace mrs_lib
     unsigned long uuid = 0; // create unique ID for items in object buffer
   };
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1
 
 #endif

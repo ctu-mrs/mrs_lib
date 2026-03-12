@@ -4,7 +4,9 @@
 #include <coroutine>
 #include <cstddef>
 
-namespace mrs_lib::internal
+#include <mrs_lib/internal/version_macros.hpp>
+
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V2 v2::internal
 {
 
   namespace
@@ -85,4 +87,4 @@ namespace mrs_lib::internal
   }
 
 
-} // namespace mrs_lib::internal
+} // namespace mrs_lib::inline v2::internal

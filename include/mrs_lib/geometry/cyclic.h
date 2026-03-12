@@ -10,7 +10,9 @@
 #include <cmath>
 #include <ostream>
 
-namespace mrs_lib
+#include <mrs_lib/internal/version_macros.hpp>
+
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
   namespace geometry
   {
@@ -523,6 +525,6 @@ namespace mrs_lib
       static constexpr double supremum = 180;
     };
   } // namespace geometry
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1
 
 #endif // CYCLIC_H

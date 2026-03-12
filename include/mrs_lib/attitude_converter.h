@@ -19,8 +19,9 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include <mrs_lib/geometry/misc.h>
+#include <mrs_lib/internal/version_macros.hpp>
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
 
   // type of the object we are grasping
@@ -507,28 +508,28 @@ namespace mrs_lib
     }
   }
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1
 
 template <>
-struct std::tuple_size<mrs_lib::AttitudeConverter>
+struct std::tuple_size<mrs_lib::v1::AttitudeConverter>
 {
   static constexpr int value = 3;
 };
 
 template <>
-struct std::tuple_element<0, mrs_lib::AttitudeConverter>
+struct std::tuple_element<0, mrs_lib::v1::AttitudeConverter>
 {
   using type = double;
 };
 
 template <>
-struct std::tuple_element<1, mrs_lib::AttitudeConverter>
+struct std::tuple_element<1, mrs_lib::v1::AttitudeConverter>
 {
   using type = double;
 };
 
 template <>
-struct std::tuple_element<2, mrs_lib::AttitudeConverter>
+struct std::tuple_element<2, mrs_lib::v1::AttitudeConverter>
 {
   using type = double;
 };

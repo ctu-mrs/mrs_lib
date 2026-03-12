@@ -36,6 +36,7 @@
 
 #include <mutex>
 #include <experimental/type_traits>
+#include <mrs_lib/internal/version_macros.hpp>
 
 //}
 
@@ -56,7 +57,7 @@ namespace tf2
 
 #endif
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
 
   static const std::string UTM_ORIGIN = "utm_origin";
@@ -708,7 +709,7 @@ namespace mrs_lib
 
   //}
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1
 
 #ifndef TRANSFORMER_HPP
 #include <mrs_lib/impl/transformer.hpp>

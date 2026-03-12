@@ -7,8 +7,9 @@
 #pragma once
 
 #include <mrs_lib/param_provider.h>
+#include <mrs_lib/internal/version_macros.hpp>
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
 
   template <typename T>
@@ -433,12 +434,12 @@ namespace mrs_lib
   }
   //}
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1
 
 namespace std
 {
   template <>
-  struct hash<mrs_lib::ParamProvider::resolved_name_t>
+  struct hash<mrs_lib::v1::ParamProvider::resolved_name_t>
   {
     std::size_t operator()(const mrs_lib::ParamProvider::resolved_name_t& r) const noexcept
     {

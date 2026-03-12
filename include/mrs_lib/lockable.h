@@ -1,8 +1,9 @@
 #pragma once
 
 #include <mutex>
+#include <mrs_lib/internal/version_macros.hpp>
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
   template <typename LockedVarT, typename MutexT>
   class Unlocker;
@@ -91,4 +92,4 @@ namespace mrs_lib
     Lockable<LockedVarT>& lockable;
   };
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1

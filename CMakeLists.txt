@@ -183,6 +183,7 @@ target_sources(mrs_lib_mrs_lib
     "include/mrs_lib/impl/ukf.hpp"
     # include/mrs_lib/internal
     "include/mrs_lib/internal/coroutine_callback_helpers.hpp"
+    "include/mrs_lib/internal/version_macros.hpp"
     # include/mrs_lib/safety_zone
     "include/mrs_lib/safety_zone/line_operations.h"
     "include/mrs_lib/safety_zone/polygon.h"
