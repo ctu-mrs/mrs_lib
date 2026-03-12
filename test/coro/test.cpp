@@ -29,23 +29,24 @@ namespace
     };
   };
 
-  static_assert(noexcept(std::declval<mrs_lib::internal::ResultStorage<int>>().set_value(10)),
+  static_assert(noexcept(std::declval<mrs_lib::v2::internal::ResultStorage<int>>().set_value(10)),
                 "ResultStorage::set_value should be noexcept when stored type is noexcept move constructible");
-  static_assert(noexcept(std::declval<mrs_lib::internal::ResultStorage<std::string>>().set_value(std::declval<std::string>())),
+  static_assert(noexcept(std::declval<mrs_lib::v2::internal::ResultStorage<std::string>>().set_value(std::declval<std::string>())),
                 "ResultStorage::set_value should be noexcept when stored type is noexcept move constructible");
-  static_assert(!noexcept(std::declval<mrs_lib::internal::ResultStorage<PotentiallyThrowingMoveOnly>>().set_value(std::declval<PotentiallyThrowingMoveOnly>())),
-                "ResultStorage::set_value should NOT be noexcept when stored type is NOT noexcept move constructible");
+  static_assert(
+      !noexcept(std::declval<mrs_lib::v2::internal::ResultStorage<PotentiallyThrowingMoveOnly>>().set_value(std::declval<PotentiallyThrowingMoveOnly>())),
+      "ResultStorage::set_value should NOT be noexcept when stored type is NOT noexcept move constructible");
 
-  static_assert(noexcept(std::declval<mrs_lib::internal::ResultStorage<int>>().set_exception(std::declval<std::exception_ptr>())),
+  static_assert(noexcept(std::declval<mrs_lib::v2::internal::ResultStorage<int>>().set_exception(std::declval<std::exception_ptr>())),
                 "ResultStorage::set_exception should be noexcept");
-  static_assert(noexcept(std::declval<mrs_lib::internal::ResultStorage<std::string>>().set_exception(std::declval<std::exception_ptr>())),
+  static_assert(noexcept(std::declval<mrs_lib::v2::internal::ResultStorage<std::string>>().set_exception(std::declval<std::exception_ptr>())),
                 "ResultStorage::set_exception should be noexcept");
-  static_assert(noexcept(std::declval<mrs_lib::internal::ResultStorage<PotentiallyThrowingMoveOnly>>().set_exception(std::declval<std::exception_ptr>())),
+  static_assert(noexcept(std::declval<mrs_lib::v2::internal::ResultStorage<PotentiallyThrowingMoveOnly>>().set_exception(std::declval<std::exception_ptr>())),
                 "ResultStorage::set_exception should be noexcept");
 
   consteval bool result_storage_test_default_ctor_dtor()
   {
-    mrs_lib::internal::ResultStorage<int> storage;
+    mrs_lib::v2::internal::ResultStorage<int> storage;
 
     return true;
   }
@@ -53,7 +54,7 @@ namespace
 
   consteval bool result_storage_test_int()
   {
-    mrs_lib::internal::ResultStorage<int> storage;
+    mrs_lib::v2::internal::ResultStorage<int> storage;
     storage.set_value(10);
     assert(std::move(storage).get_value() == 10);
 
@@ -64,7 +65,7 @@ namespace
   consteval bool result_storage_test_string()
   {
     std::string s = "asdf";
-    mrs_lib::internal::ResultStorage<std::string> storage;
+    mrs_lib::v2::internal::ResultStorage<std::string> storage;
     storage.set_value(std::move(s));
     assert(std::move(storage).get_value() == "asdf");
 

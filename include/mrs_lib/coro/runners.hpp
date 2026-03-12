@@ -6,9 +6,10 @@
 
 #include <mrs_lib/coro/internal/thread_local_continuation_scheduler.hpp>
 #include <mrs_lib/coro/task.hpp>
+#include <mrs_lib/internal/version_macros.hpp>
 
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V2 v2
 {
 
   namespace internal
@@ -87,6 +88,15 @@ namespace mrs_lib
 
   } // namespace internal
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v2
+
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1::internal
+{
+
+  // Backport start_task to v1 interfaces
+  using ::mrs_lib::v2::internal::start_task;
+
+} // namespace mrs_lib::inline v1::internal
+
 
 #endif // MRS_LIB_CORO_RUNNERS_HPP_

@@ -8,8 +8,9 @@
 #include <mrs_lib/coro/task.hpp>
 #include <mrs_lib/internal/coroutine_callback_helpers.hpp>
 #include <mrs_lib/utils.h>
+#include <mrs_lib/internal/version_macros.hpp>
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
 
   struct TimerHandlerOptions
@@ -338,12 +339,11 @@ namespace mrs_lib
     class Impl;
 
     std::unique_ptr<Impl> impl_;
-
-  }; // namespace mrs_lib
+  };
 
   //}
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1
 
 #ifndef MRS_TIMER_HPP
 #include <mrs_lib/impl/timer_handler.hpp>

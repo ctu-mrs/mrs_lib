@@ -11,6 +11,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include <mrs_lib/timer_handler.h>
+#include <mrs_lib/internal/version_macros.hpp>
 
 #if USE_ROS_TIMER == 1
 typedef mrs_lib::ROSTimer TimerType;
@@ -18,7 +19,7 @@ typedef mrs_lib::ROSTimer TimerType;
 typedef mrs_lib::ThreadTimer TimerType;
 #endif
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
   class TimeoutManager
   {
@@ -85,6 +86,6 @@ namespace mrs_lib
     //}
   };
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1
 
 #endif // TIMEOUT_MANAGER_H

@@ -4,7 +4,9 @@
 
 #include <coroutine>
 
-namespace mrs_lib::internal
+#include <mrs_lib/internal/version_macros.hpp>
+
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V2 v2::internal
 {
 
   // This is a workaround to GCC generated code overflowing stack when using symmetric transfer
@@ -39,7 +41,14 @@ namespace mrs_lib::internal
     }
   };
 
-} // namespace mrs_lib::internal
+} // namespace mrs_lib::inline v2::internal
 
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1::internal
+{
+
+  // Backport resume_coroutine to v1 interfaces
+  using ::mrs_lib::v2::internal::resume_coroutine;
+
+} // namespace mrs_lib::inline v1::internal
 
 #endif // MRS_LIB_CORO_INTERNAL_THREAD_LOCAL_CONTINUATION_SCHEDULER_HPP_

@@ -183,6 +183,7 @@ target_sources(mrs_lib_mrs_lib
     "include/mrs_lib/impl/ukf.hpp"
     # include/mrs_lib/internal
     "include/mrs_lib/internal/coroutine_callback_helpers.hpp"
+    "include/mrs_lib/internal/version_macros.hpp"
     # include/mrs_lib/safety_zone
     "include/mrs_lib/safety_zone/line_operations.h"
     "include/mrs_lib/safety_zone/polygon.h"
@@ -211,7 +212,7 @@ target_link_libraries(mrs_lib_mrs_lib
 # Dynamic param manager tests
 
 add_executable(dynparam_tests
-  src/dynparam_mgr/dynparam_tests.cpp
+  examples/dynparam_mgr/dynparam_tests.cpp
 )
 
 target_link_libraries(dynparam_tests
@@ -224,7 +225,7 @@ target_link_libraries(dynparam_tests
 
 # TODO why is it built from all these different files?
 add_executable(subscribe_handler_example
-  src/subscriber_handler/example.cpp
+  examples/subscriber_handler/example.cpp
   src/timeout_manager/timeout_manager.cpp
   src/timer_handler/timer_handler.cpp
 )

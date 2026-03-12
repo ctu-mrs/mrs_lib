@@ -3,8 +3,9 @@
 
 #include <mrs_lib/coro/internal/thread_local_continuation_scheduler.hpp>
 #include <mrs_lib/coro/task.hpp>
+#include <mrs_lib/internal/version_macros.hpp>
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V2 v2
 {
   namespace internal
   {
@@ -79,7 +80,7 @@ namespace mrs_lib
     }
 
   } // namespace internal
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v2
 
 
 #endif // MRS_LIB_CORO_TASK_IMPL_HPP_

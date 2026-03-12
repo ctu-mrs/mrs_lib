@@ -3,9 +3,10 @@
 
 
 #include <rclcpp/callback_group.hpp>
+#include <mrs_lib/internal/version_macros.hpp>
 
 
-namespace mrs_lib::internal
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1::internal
 {
 
   /**
@@ -43,6 +44,6 @@ namespace mrs_lib::internal
     }
   }
 
-} // namespace mrs_lib::internal
+} // namespace mrs_lib::inline v1::internal
 
 #endif // MRS_LIB_INTERNAL_COROUTINE_CALLBACK_HELPERS_HPP_

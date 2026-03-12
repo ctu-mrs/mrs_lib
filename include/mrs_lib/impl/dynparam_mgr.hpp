@@ -6,9 +6,10 @@
 #pragma once
 
 #include <mrs_lib/dynparam_mgr.h>
+#include <mrs_lib/internal/version_macros.hpp>
 #include <any>
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
 
   /* register_param() method //{ */
@@ -172,4 +173,4 @@ namespace mrs_lib
 
   //}
 
-}; // namespace mrs_lib
+}; // namespace mrs_lib::inline v1

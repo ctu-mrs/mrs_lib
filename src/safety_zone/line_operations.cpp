@@ -1,6 +1,7 @@
 #include <mrs_lib/safety_zone/line_operations.h>
+#include <mrs_lib/internal/version_macros.hpp>
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
 
   namespace safety_zone
@@ -69,4 +70,4 @@ namespace mrs_lib
 
   } // namespace safety_zone
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1

@@ -1,8 +1,9 @@
 #include <string>
 #include <mrs_lib/batch_visualizer.h>
 #include <mrs_lib/geometry/shapes.h>
+#include <mrs_lib/internal/version_macros.hpp>
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
 
   /* constructors */ //{
@@ -395,4 +396,4 @@ namespace mrs_lib
   }
   //}
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1

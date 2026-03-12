@@ -9,9 +9,10 @@
 
 #include <mrs_lib/lkf.h>
 #include <mrs_lib/geometry/misc.h>
+#include <mrs_lib/internal/version_macros.hpp>
 #include <iostream>
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
 
   /* class DKF //{ */
@@ -156,6 +157,6 @@ namespace mrs_lib
   };
   //}
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1
 
 #endif // DKF_H

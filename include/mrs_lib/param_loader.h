@@ -7,8 +7,9 @@
 #include <Eigen/Dense>
 #include <std_msgs/msg/color_rgba.hpp>
 #include <mrs_lib/param_provider.h>
+#include <mrs_lib/internal/version_macros.hpp>
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
 
   /*!
@@ -799,6 +800,6 @@ namespace mrs_lib
   template <>
   rclcpp::Duration ParamLoader::loadParam2<rclcpp::Duration>(const std::string& name);
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1
 
 #include <mrs_lib/impl/param_loader.hpp>

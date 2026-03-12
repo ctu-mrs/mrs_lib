@@ -6,8 +6,9 @@
 #include <mrs_lib/safety_zone/prism.h>
 #include <vector>
 #include <Eigen/Dense>
+#include <mrs_lib/internal/version_macros.hpp>
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
 
   namespace safety_zone
@@ -75,6 +76,6 @@ namespace mrs_lib
     }; // class SafetyZone
 
   } // namespace safety_zone
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1
 
 #endif // MRS_LIB_SAFETYZONE_H

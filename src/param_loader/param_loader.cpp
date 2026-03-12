@@ -1,7 +1,8 @@
 // clang: MatousFormat
 #include <mrs_lib/param_loader.h>
+#include <mrs_lib/internal/version_macros.hpp>
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
 
   // Explicit instantiation of the tepmplated functions to precompile them into mrs_lib and speed up compilation of user program.
@@ -173,4 +174,4 @@ namespace mrs_lib
   }
   //}
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1

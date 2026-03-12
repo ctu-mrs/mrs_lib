@@ -12,8 +12,9 @@
 
 #include <yaml-cpp/yaml.h>
 #include <rclcpp/rclcpp.hpp>
+#include <mrs_lib/internal/version_macros.hpp>
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
 
   /*!
@@ -308,7 +309,7 @@ namespace mrs_lib
   };
   //}
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1
 
 #ifndef PARAM_PROVIDER_HPP
 #include <mrs_lib/impl/param_provider.hpp>

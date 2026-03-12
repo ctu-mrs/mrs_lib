@@ -10,6 +10,7 @@
 #include <utility>
 
 #include <mrs_lib/coro/internal/attributes.hpp>
+#include <mrs_lib/internal/version_macros.hpp>
 
 // Note on ownership semantics:
 // Since we want to support cancellation at any point in the coroutine stacks,
@@ -18,7 +19,7 @@
 // either suspend and become continuation of some other task thus transferring
 // ownership or destruct itself once completed.
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V2 v2
 {
 
   template <typename T = void>
@@ -335,7 +336,15 @@ namespace mrs_lib
     friend class internal::PromiseType<T>;
   };
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v2
+
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
+{
+
+  // Backport Task to v1 interfaces
+  using ::mrs_lib::v2::Task;
+
+} // namespace mrs_lib::inline v1
 
 #ifndef MRS_LIB_CORO_TASK_IMPL_HPP_
 #include <mrs_lib/coro/task.impl.hpp> // IWYU pragma: export

@@ -5,8 +5,9 @@
 #pragma once
 
 #include <rclcpp/rclcpp.hpp>
+#include <mrs_lib/internal/version_macros.hpp>
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
 
   /* class ServiceServerHandler //{ */
@@ -74,6 +75,6 @@ namespace mrs_lib
 
   //}
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1
 
 #include <mrs_lib/impl/service_server_handler.hpp>

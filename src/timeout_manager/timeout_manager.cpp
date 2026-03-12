@@ -1,8 +1,9 @@
 // clang: MatousFormat
 
 #include <mrs_lib/timeout_manager.h>
+#include <mrs_lib/internal/version_macros.hpp>
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
 
   TimeoutManager::TimeoutManager(const rclcpp::Node::SharedPtr& node, const rclcpp::Rate& update_rate) : m_last_id(0)
@@ -119,4 +120,4 @@ namespace mrs_lib
       }
     }
   }
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1

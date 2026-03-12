@@ -8,10 +8,11 @@
 #include <mrs_lib/geometry/shapes.h>
 #include <mrs_msgs/msg/path.hpp>
 #include <mrs_msgs/msg/trajectory_reference.hpp>
+#include <mrs_lib/internal/version_macros.hpp>
 
 #define DEFAULT_ELLIPSE_POINTS 64
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
 
   enum MarkerType
@@ -96,9 +97,8 @@ namespace mrs_lib
 
     void addEllipse(const mrs_lib::geometry::Ellipse& ellipse, const double r, const double g, const double b, const double a, const bool filled,
                     const int num_points);
+  };
 
-  }; // namespace batch_visualizer
-
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1
 
 #endif

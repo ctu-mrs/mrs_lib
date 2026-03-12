@@ -4,10 +4,11 @@
 #include <iostream>
 #include <mrs_lib/attitude_converter.h>
 #include <mrs_lib/utils.h>
+#include <mrs_lib/internal/version_macros.hpp>
 
 using quat_t = Eigen::Quaterniond;
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
 
   /* class EulerAttitude //{ */
@@ -502,4 +503,4 @@ namespace mrs_lib
 
   //}
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1

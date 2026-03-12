@@ -39,4 +39,8 @@ KeepEmptyLinesAtTheStartOfBlocks: true
 NamespaceIndentation: All
 SortIncludes: false
 SpaceBeforeParens: ControlStatements
+
+Macros:
+  - MRS_LIB_INTERNAL_INLINE_API_V1=inline
+  - MRS_LIB_INTERNAL_INLINE_API_V2=inline
 ...

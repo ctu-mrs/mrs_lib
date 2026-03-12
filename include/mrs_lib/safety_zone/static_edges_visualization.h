@@ -13,7 +13,9 @@
 #include <rclcpp/rclcpp.hpp>
 #include <atomic>
 
-namespace mrs_lib
+#include <mrs_lib/internal/version_macros.hpp>
+
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
   class StaticEdgesVisualization final : public safety_zone::Subscriber
   {
@@ -58,7 +60,7 @@ namespace mrs_lib
     visualization_msgs::msg::MarkerArray last_coordinates_;
 
   }; // class StaticEdgesVisualization
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1
 
 
 #endif

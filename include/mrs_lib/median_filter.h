@@ -12,8 +12,9 @@
 #include <cmath>
 #include <vector>
 #include <optional>
+#include <mrs_lib/internal/version_macros.hpp>
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
   /**
    * \brief Implementation of a median filter with a fixed-length buffer.
@@ -201,6 +202,6 @@ namespace mrs_lib
     double m_max_diff;
   };
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1
 
 #endif

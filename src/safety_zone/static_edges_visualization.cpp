@@ -2,8 +2,9 @@
 #include <mrs_lib/attitude_converter.h>
 #include <geometry_msgs/msg/point.h>
 #include <atomic>
+#include <mrs_lib/internal/version_macros.hpp>
 
-namespace mrs_lib
+namespace mrs_lib::MRS_LIB_INTERNAL_INLINE_API_V1 v1
 {
 
   std::atomic<int> StaticEdgesVisualization::id_generator_ = 0;
@@ -265,4 +266,4 @@ namespace mrs_lib
 
   //}
 
-} // namespace mrs_lib
+} // namespace mrs_lib::inline v1
