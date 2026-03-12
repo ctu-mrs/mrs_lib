@@ -103,7 +103,7 @@ namespace mrs_lib
       void subscribe(Subscriber* entity);
       void unsubscribe(Subscriber* entity);
 
-      std::vector<Point2d> getPoints();
+      std::vector<Point2d> getPoints() const;
       double getMaxZ() const;
       double getMinZ() const;
       std::string getHorizontalFrame() const;
