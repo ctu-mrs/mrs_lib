@@ -405,6 +405,7 @@ TEST(TESTSuite, transform_single)
     const vec3_t tv(pt->point.x, pt->point.y, pt->point.z);
     
     const auto rv_opt = tfr.transformSingle(pt, to);
+    EXPECT_TRUE(rv_opt.has_value());
     if (!rv_opt)
     {
       ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: Failed to transform vector [" << tv.transpose() << "]");
@@ -415,12 +416,7 @@ TEST(TESTSuite, transform_single)
       const vec3_t rv(rv_opt.value()->point.x, rv_opt.value()->point.y, rv_opt.value()->point.z);
       const vec3_t gt = fcu2cam.inverse()*tv;
       const vec3_t vect_diff = rv - gt;
-      if (vect_diff.norm() > 1e-6)
-      {
-        ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: transformed vector [" << gt.transpose() << "] with value of ["
-                                           << rv.transpose() << "] does not match the expected value of [" << gt.transpose() << "]");
-        result *= 0;
-      }
+      EXPECT_LT(vect_diff.norm(), 1e-6);
     }
   }
 
@@ -435,6 +431,7 @@ TEST(TESTSuite, transform_single)
     geometry_msgs::Quaternion::ConstPtr cq = q;
     
     const auto rv_opt = tfr.transformSingle(from, cq, to, t);
+    EXPECT_TRUE(rv_opt.has_value());
     if (!rv_opt)
     {
       ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: Failed to transform vector [" << tv.vec() << ", " << tv.w() << "]");
@@ -445,10 +442,46 @@ TEST(TESTSuite, transform_single)
       const quat_t rv(rv_opt.value()->w, rv_opt.value()->x, rv_opt.value()->y, rv_opt.value()->z);
       const quat_t gt(fcu2cam.inverse().rotation()*tv);
       const double ang_diff = rv.angularDistance(gt);
-      if (ang_diff > 1e-6)
+      EXPECT_LT(ang_diff, 1e-6);
+    }
+  }
+
+  // test transforming a mrs_msgs::Reference
+  {
+    const double heading = 6;
+    const vec3_t tv(0, 2, 5);
+    mrs_msgs::Reference ref;
+    ref.position.x = tv.x();
+    ref.position.y = tv.y();
+    ref.position.z = tv.z();
+    ref.heading = heading;
+    
+    const auto rv_opt = tfr.transformSingle(from, ref, to, t);
+    EXPECT_TRUE(rv_opt.has_value());
+    if (!rv_opt)
+    {
+      ROS_ERROR_STREAM_THROTTLE(1.0, "[" << ros::this_node::getName() << "]: Failed to transform reference " << ref);
+      result *= 0;
+    }
+    else
+    {
+      ROS_INFO_STREAM("[" << ros::this_node::getName().c_str() << "]: original: " << ref << ", transformed " << rv_opt.value());
       {
-        ROS_ERROR_STREAM("Transformed quaternion doesn't match (angular difference is " << ang_diff << ")");
-        result *= 0;
+        const vec3_t rv(rv_opt.value().position.x, rv_opt.value().position.y, rv_opt.value().position.z);
+        const vec3_t gt = fcu2cam.inverse()*tv;
+        const vec3_t vect_diff = rv - gt;
+        EXPECT_LT(vect_diff.norm(), 1e-6);
+      }
+
+      {
+        const quat_t tv( anax_t(heading, vec3_t::UnitZ()) );
+        const vec3_t rot_gt = fcu2cam.inverse().rotation()*tv * vec3_t::UnitX();
+        const double hdg_gt = std::atan2(rot_gt.y(), rot_gt.x());
+
+        const quat_t gt( anax_t(hdg_gt, vec3_t::UnitZ()) );
+        const quat_t rv( anax_t(rv_opt.value().heading, vec3_t::UnitZ()) );
+        const double ang_diff = rv.angularDistance(gt);
+        EXPECT_LT(ang_diff, 1e-6);
       }
     }
   }
@@ -688,6 +721,40 @@ bool compare_gt_latlon(const geometry_msgs::Point& tv, const geometry_msgs::Poin
   return true;
 }
 
+bool compare_gt_latlon(const mrs_msgs::Reference& tv, const mrs_msgs::Reference& rv, const char utm_zone[10], const bool ll2local)
+{
+  vec3_t gt;
+  if (ll2local)
+  {
+    // convert LAT-LON to UTM
+    Eigen::Vector3d utm;
+    mrs_lib::UTM(tv.position.x, tv.position.y, &(utm.x()), &(utm.y()));
+    // copy the height from the input
+    utm.z() = tv.position.z;
+    const vec3_t local = local2utm.inverse()*utm;
+    gt = local;
+  }
+  else
+  {
+    const vec3_t utm = local2utm*mrs_lib::geometry::toEigen(tv.position);
+    Eigen::Vector3d latlon;
+    mrs_lib::UTMtoLL(utm.y(), utm.x(), utm_zone, latlon.x(), latlon.y());
+    latlon.z() = utm.z();
+    gt = latlon;
+  }
+
+  const Eigen::Vector3d vect_diff = mrs_lib::geometry::toEigen(rv.position) - gt;
+  if (vect_diff.norm() > 1e-6)
+  {
+    ROS_ERROR_STREAM("<< Transformed [" << tv << "] with value of ["
+                                       << rv << "] does not match the expected value of [" << gt.transpose() << "]");
+    return false;
+  }
+
+  std::cout << "<< Expected success happened\n";
+  return true;
+}
+
 bool compare_gt_latlon([[maybe_unused]] const quat_t& tv, [[maybe_unused]] const quat_t& rv, [[maybe_unused]] const char utm_zone[10], [[maybe_unused]] const bool ll2local)
 {
   ROS_ERROR_STREAM("this should never happen");
@@ -774,6 +841,16 @@ TEST(TESTSuite, latlon_test)
   // after latlon is set, lookup from utm to latlon should be OK
   ROS_INFO("[%s]: Setting lattitude and longitude to Transformer, UTM->latlon should be fine now.", ros::this_node::getName().c_str());
   tfr.setLatLon(1, 2);
+
+  mrs_msgs::Reference tr;
+  tr.position.x = 5;
+  tr.position.y = 6;
+  tr.position.z = 7;
+  tr.heading = 1;
+
+  // try transforming a reference from latlon to local frame and expect everything OK
+  ROS_INFO("[%s]: Testing transformation of vector from local to latlon, expecting all OK >>", ros::this_node::getName().c_str());
+  result = result && trytransform_latlon(tr, tfr, utm_zone_, false, true);
 
   // try transforming a vector from latlon to local frame and expect everything OK
   ROS_INFO("[%s]: Testing transformation of vector from local to latlon, expecting all OK >>", ros::this_node::getName().c_str());
