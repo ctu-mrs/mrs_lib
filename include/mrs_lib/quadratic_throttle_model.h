@@ -34,7 +34,7 @@ namespace mrs_lib
       {}
 
       motor_params_t(int n_motors, double a, double b, double c)
-        : n_motors(n_motors), a(a), b(b), c(c), type(type_t::legacy), an(a / n_motors), bn(b / n_motors), cn(c / n_motors)
+        : n_motors(n_motors), a(a), b(b), c(c), type(type_t::full_quadratic), an(a / n_motors), bn(b / n_motors), cn(c / n_motors)
       {}
 
       void initialize(mrs_lib::ParamLoader& pl)
