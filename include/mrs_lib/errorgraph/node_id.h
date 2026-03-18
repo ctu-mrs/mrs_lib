@@ -19,8 +19,8 @@ namespace mrs_lib
      */
     struct node_id_t
     {
-      std::string node;       ///< Name of the ROS node (e.g. "EstimationManager", "HwApiManager").
-      std::string component;  ///< Name of the logical component within the node (e.g. "lat_gps", "main").
+      std::string node;      ///< Name of the ROS node (e.g. "EstimationManager", "HwApiManager").
+      std::string component; ///< Name of the logical component within the node (e.g. "lat_gps", "main").
 
       /// \brief Equality comparison by both node and component.
       inline bool operator==(const node_id_t& other) const
