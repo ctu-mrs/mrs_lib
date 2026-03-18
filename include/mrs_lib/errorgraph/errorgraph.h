@@ -199,7 +199,7 @@ namespace mrs_lib
       bool graph_up_to_date_ = false;
       rclcpp::Clock::SharedPtr clock_;
 
-      std::vector<element_t*> find_elements_waited_for(const element_t& element);
+      std::vector<element_t*> find_elements_waited_for(const element_t& by_element);
 
       element_t* find_element_mutable(const std::string& topic_name);
 

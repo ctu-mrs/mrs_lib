@@ -77,6 +77,8 @@ target_sources(mrs_lib_mrs_lib
     "src/batch_visualizer/visual_object.cpp"
     # src/coro/internal
     "src/coro/internal/thread_local_continuation_scheduler.cpp"
+    # src/dynparam_mgr
+    "src/dynparam_mgr/dynparam_mgr.cpp"
     # src/errorgraph
     "src/errorgraph/errorgraph.cpp"
     "src/errorgraph/error_publisher.cpp"

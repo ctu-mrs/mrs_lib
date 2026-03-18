@@ -119,11 +119,11 @@ namespace mrs_lib
       return leaves;
     }
 
-    std::vector<Errorgraph::element_t*> Errorgraph::find_elements_waited_for(const element_t& element)
+    std::vector<Errorgraph::element_t*> Errorgraph::find_elements_waited_for(const element_t& by_element)
     {
       std::vector<element_t*> waited_for_elements;
 
-      const auto waited_for_node_ids = element.waited_for_nodes();
+      const auto waited_for_node_ids = by_element.waited_for_nodes();
       for (const auto& node_id_ptr : waited_for_node_ids)
       {
         element_t* const previous_el = find_element_mutable(*node_id_ptr);
@@ -132,7 +132,7 @@ namespace mrs_lib
           waited_for_elements.push_back(previous_el);
       }
 
-      const auto waited_for_topic_names = element.waited_for_topics();
+      const auto waited_for_topic_names = by_element.waited_for_topics();
       for (const auto& topic_name_ptr : waited_for_topic_names)
       {
         element_t* const previous_el = find_element_mutable(*topic_name_ptr);
@@ -195,7 +195,7 @@ namespace mrs_lib
             add_new_element(*node_id_ptr);
         }
 
-        // initialize all nodes this node is waiting for if they do not exist
+        // initialize all topics this node is waiting for if they do not exist
         for (const auto& topic_name_ptr : el_ptr->waited_for_topics())
         {
           const element_t* previous_el = find_element(*topic_name_ptr);

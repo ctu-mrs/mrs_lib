@@ -1,17 +1,12 @@
 #pragma once
 
+#include <type_traits>
+
 #include <rclcpp/rclcpp.hpp>
 
 #include <mrs_lib/errorgraph/node_id.h>
 #include <mrs_msgs/msg/errorgraph_element.hpp>
-#include <mrs_lib/publisher_handler.h>
 #include <mrs_lib/timer_handler.h>
-
-#if USE_ROS_TIMER == 1
-typedef mrs_lib::ROSTimer TimerType;
-#else
-typedef mrs_lib::ThreadTimer TimerType;
-#endif
 
 namespace mrs_lib
 {
@@ -80,6 +75,7 @@ namespace mrs_lib
        * \param description      A short and succinct description of the error.
        */
       template <typename enum_T>
+        requires(std::is_enum_v<enum_T> && sizeof(std::underlying_type_t<enum_T>) <= sizeof(error_id_t))
       void addGeneralError(const enum_T id, const std::string& description)
       {
         addGeneralError(static_cast<error_id_t>(id), description);
@@ -126,11 +122,9 @@ namespace mrs_lib
 
       rclcpp::CallbackGroup::SharedPtr cbkgrp_timers_;
 
-      std::mutex pub_mtx_;
+      rclcpp::Publisher<mrs_msgs::msg::ErrorgraphElement>::SharedPtr publisher_;
 
-      mrs_lib::PublisherHandler<mrs_msgs::msg::ErrorgraphElement> publisher_;
-
-      std::shared_ptr<TimerType> timer_publisher_;
+      std::unique_ptr<mrs_lib::MRSTimer> timer_publisher_;
 
       void publishErrors();
     };

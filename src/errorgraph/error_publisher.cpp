@@ -1,5 +1,11 @@
 #include <mrs_lib/errorgraph/error_publisher.h>
 
+#if USE_ROS_TIMER == 1
+using TimerType = mrs_lib::ROSTimer;
+#else
+using TimerType = mrs_lib::ThreadTimer;
+#endif
+
 namespace mrs_lib
 {
   namespace errorgraph
@@ -9,7 +15,7 @@ namespace mrs_lib
                                    const std::string& component_name, const rclcpp::Rate& publish_period)
         : node_(node), clock_(clock), node_name_(node_name), component_name_(component_name)
     {
-      publisher_ = mrs_lib::PublisherHandler<mrs_msgs::msg::ErrorgraphElement>(node_, "~/errors");
+      publisher_ = node_->create_publisher<mrs_msgs::msg::ErrorgraphElement>("~/errors", 10);
 
       cbkgrp_timers_ = node_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 
@@ -22,7 +28,7 @@ namespace mrs_lib
       {
         auto callback_fcn = [this]() { publishErrors(); };
 
-        timer_publisher_ = std::make_shared<TimerType>(timer_opts_start, publish_period, callback_fcn);
+        timer_publisher_ = std::make_unique<TimerType>(timer_opts_start, publish_period, callback_fcn);
       }
     };
 
@@ -106,14 +112,14 @@ namespace mrs_lib
 
     void ErrorPublisher::publishErrors()
     {
-      std::scoped_lock lck(errors_mtx_, pub_mtx_);
+      std::scoped_lock lck(errors_mtx_);
       mrs_msgs::msg::ErrorgraphElement msg;
       msg.stamp = clock_->now();
       msg.source_node.node = node_name_;
       msg.source_node.component = component_name_;
       for (const auto& error_wrapper : errors_)
         msg.errors.emplace_back(error_wrapper.msg);
-      publisher_.publish(msg);
+      publisher_->publish(msg);
       errors_.clear();
     }
   } // namespace errorgraph
