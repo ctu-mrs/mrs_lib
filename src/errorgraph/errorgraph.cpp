@@ -1,5 +1,6 @@
 #include <mrs_lib/errorgraph/errorgraph.h>
 #include <rclcpp/clock.hpp>
+#include <algorithm>
 
 namespace mrs_lib
 {
@@ -146,8 +147,7 @@ namespace mrs_lib
 
     Errorgraph::element_t* Errorgraph::find_element_mutable(const std::string& topic_name)
     {
-      const auto elem_it =
-          std::find_if(std::begin(elements_), std::end(elements_), [topic_name](const auto& el_ptr) { return el_ptr->topic_name == topic_name; });
+      const auto elem_it = std::ranges::find(elements_, topic_name, [](const auto& el_ptr) { return el_ptr->topic_name; });
       if (elem_it == std::end(elements_))
         return nullptr;
       else
@@ -156,7 +156,7 @@ namespace mrs_lib
 
     Errorgraph::element_t* Errorgraph::find_element_mutable(const node_id_t& node_id)
     {
-      const auto elem_it = std::find_if(std::begin(elements_), std::end(elements_), [node_id](const auto& el_ptr) { return el_ptr->source_node == node_id; });
+      const auto elem_it = std::ranges::find(elements_, node_id, [](const auto& el_ptr) { return el_ptr->source_node; });
       if (elem_it == std::end(elements_))
         return nullptr;
       else
