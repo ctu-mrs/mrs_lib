@@ -21,58 +21,92 @@ namespace mrs_lib
     using errorgraph_error_msg_t = mrs_msgs::msg::ErrorgraphError;
     using errorgraph_element_msg_t = mrs_msgs::msg::ErrorgraphElement;
 
-    inline std::ostream& operator<<(std::ostream& os, const node_id_t& node_id)
-    {
-      return os << node_id.node << "." << node_id.component;
-    }
-
+    /**
+     * \brief A directed graph representing error dependencies between ROS nodes and topics.
+     *
+     * The Errorgraph aggregates error reports from nodes in the system (published as
+     * \ref errorgraph_element_msg_t messages) and builds a dependency graph. Nodes report
+     * which other nodes or topics they are waiting for, allowing the graph to trace error
+     * propagation and identify root causes.
+     *
+     * Typical usage:
+     * 1. Subscribe to error messages from all nodes in the system.
+     * 2. Feed each received message to \ref add_element_from_msg().
+     * 3. Query the graph using \ref find_error_roots(), \ref find_dependency_roots(), etc.
+     * 4. Optionally export the graph in DOT format using \ref write_dot() for visualization.
+     *
+     * \note **Ownership and lifetime:** Query methods return non-owning pointers (or vectors of
+     * non-owning pointers) to internally managed \ref element_t objects. The Errorgraph retains
+     * sole ownership of all elements. Returned pointers remain valid for the lifetime of the
+     * Errorgraph instance — elements are never deleted, only added or updated. Do not retain
+     * pointers beyond the Errorgraph's lifetime.
+     *
+     * \see ErrorPublisher for the publishing side that nodes use to report errors.
+     * \see https://github.com/ctu-mrs/mrs_errorgraph for the full errorgraph package.
+     */
     class Errorgraph
     {
     public:
+      /**
+       * \brief Construct an empty Errorgraph.
+       * \param clock  Clock used for timestamping and staleness detection.
+       */
       explicit Errorgraph(rclcpp::Clock::SharedPtr clock) : clock_(clock)
       {
       }
-      ~Errorgraph() = default;
 
       /* error_t //{ */
 
+      /**
+       * \brief Represents a single error reported by a node.
+       *
+       * An error can be a general description, or a dependency indicator
+       * (waiting for a specific node or topic).
+       */
       struct error_t
       {
-        rclcpp::Time stamp;
-        std::string type;
-        std::optional<std::string> waited_for_topic;
-        std::optional<node_id_t> waited_for_node;
+        rclcpp::Time stamp;                          ///< Timestamp when the error was reported.
+        std::string type;                            ///< Error type string (see ErrorgraphError message constants).
+        std::optional<std::string> waited_for_topic; ///< Topic name if this is a "waiting for topic" error.
+        std::optional<node_id_t> waited_for_node;    ///< Node ID if this is a "waiting for node" error.
 
+        /// \brief Returns true if this error indicates a dependency (waiting for a topic or node).
         inline bool is_waiting_for() const
         {
           return is_waiting_for_topic() || is_waiting_for_node();
         }
 
+        /// \brief Returns true if this error is waiting for a topic.
         inline bool is_waiting_for_topic() const
         {
           return type == errorgraph_error_msg_t::TYPE_WAITING_FOR_TOPIC;
         }
 
+        /// \brief Returns true if this error is waiting for a node.
         inline bool is_waiting_for_node() const
         {
           return type == errorgraph_error_msg_t::TYPE_WAITING_FOR_NODE;
         }
 
+        /// \brief Returns true if this error is waiting for the given topic.
         inline bool is_waiting_for(const std::string& topic) const
         {
           return type == errorgraph_error_msg_t::TYPE_WAITING_FOR_TOPIC && waited_for_topic.has_value() && waited_for_topic.value() == topic;
         }
 
+        /// \brief Returns true if this error is waiting for the given node.
         inline bool is_waiting_for(const node_id_t& node_id) const
         {
           return type == errorgraph_error_msg_t::TYPE_WAITING_FOR_NODE && waited_for_node.has_value() && waited_for_node.value() == node_id;
         }
 
+        /// \brief Returns true if this represents a "no error" state.
         inline bool is_no_error() const
         {
           return type == errorgraph_error_msg_t::TYPE_NO_ERROR;
         }
 
+        /// \brief Construct from a ROS message.
         error_t(const errorgraph_error_msg_t& msg) : type(msg.type)
         {
           if (msg.type == errorgraph_error_msg_t::TYPE_WAITING_FOR_NODE)
@@ -82,6 +116,7 @@ namespace mrs_lib
           stamp = msg.stamp;
         }
 
+        /// \brief Convert to a ROS message.
         errorgraph_error_msg_t to_msg() const
         {
           errorgraph_error_msg_t ret;
@@ -99,44 +134,49 @@ namespace mrs_lib
 
       /* element_t //{ */
 
+      /**
+       * \brief Represents a node or topic in the error dependency graph.
+       *
+       * Each element is either a ROS node (identified by \ref node_id_t) or a topic
+       * (identified by name). Node elements carry a list of errors; topic elements
+       * serve as intermediate vertices connecting nodes in the dependency graph.
+       */
       struct element_t
       {
+        /// \brief Whether this element represents a node or a topic.
         enum class type_t
         {
           node,
           topic
         };
 
-        size_t element_id;
-        type_t type;
+        size_t element_id; ///< Unique ID of this element within the graph.
+        type_t type;       ///< Whether this is a node or topic element.
 
-        // name of the topic (if this element is a topic)
-        std::string topic_name;
-        // name of this node (if this element is a node) or of the node
-        // expected to publish this topic (if known)
-        node_id_t source_node;
+        std::string topic_name; ///< Topic name (only meaningful if type == topic).
+        node_id_t source_node;  ///< Source node ID, or expected publisher for a topic.
 
-        // a list of errors related to this element (if it is a node)
-        std::vector<error_t> errors;
-        // last time this was updated from a message
-        rclcpp::Time stamp;
+        std::vector<error_t> errors; ///< List of errors reported by this element (nodes only).
+        rclcpp::Time stamp;          ///< Last time this element was updated from a message.
         static constexpr double DEFAULT_NOT_REPORTING_DELAY_SECONDS = 3.0;
         rclcpp::Duration not_reporting_delay = rclcpp::Duration::from_seconds(DEFAULT_NOT_REPORTING_DELAY_SECONDS);
 
-        // graph-related variables used by the build_graph() and find_dependency_roots() methods
-        std::vector<element_t*> parents;
-        std::vector<element_t*> children;
-        bool visited = false;
+        std::vector<element_t*> parents;  ///< Parent elements in the dependency graph.
+        std::vector<element_t*> children; ///< Child elements in the dependency graph.
+        bool visited = false;             ///< Visited flag used during graph traversal.
 
         rclcpp::Clock::SharedPtr clock_;
 
+        /// \brief Construct a node element.
         element_t(size_t element_id, const node_id_t& source_node, rclcpp::Clock::SharedPtr clock)
             : element_id(element_id), type(type_t::node), source_node(source_node), stamp(static_cast<int64_t>(0), clock->get_clock_type()), clock_(clock){};
 
+        /// \brief Construct a topic element.
         element_t(size_t element_id, const std::string& topic_name, const node_id_t& source_node, rclcpp::Clock::SharedPtr clock)
             : element_id(element_id), type(type_t::topic), topic_name(topic_name), source_node(source_node),
               stamp(static_cast<int64_t>(0), clock->get_clock_type()), clock_(clock){};
 
+        /// \brief Returns pointers to topic names this element is waiting for.
         inline std::vector<const std::string*> waited_for_topics() const
         {
           std::vector<const std::string*> ret;
@@ -149,6 +189,7 @@ namespace mrs_lib
           return ret;
         }
 
+        /// \brief Returns pointers to node IDs this element is waiting for.
         inline std::vector<const node_id_t*> waited_for_nodes() const
         {
           std::vector<const node_id_t*> ret;
@@ -161,26 +202,31 @@ namespace mrs_lib
           return ret;
         }
 
+        /// \brief Returns true if this element has any dependency errors.
         inline bool is_waiting_for() const
         {
           return std::any_of(std::begin(errors), std::end(errors), [](const auto& error) { return error.is_waiting_for(); });
         }
 
+        /// \brief Returns true if this element is waiting for the given node.
         inline bool is_waiting_for(const node_id_t& node_id) const
         {
           return std::any_of(std::begin(errors), std::end(errors), [node_id](const auto& error) { return error.is_waiting_for(node_id); });
         }
 
+        /// \brief Returns true if this element has no errors and is actively reporting.
         inline bool is_no_error() const
         {
           return !is_not_reporting() && std::all_of(std::begin(errors), std::end(errors), [](const auto& error) { return error.is_no_error(); });
         }
 
+        /// \brief Returns true if this node element has stopped reporting (stale).
         inline bool is_not_reporting() const
         {
           return type != type_t::topic && clock_->now() - stamp > not_reporting_delay;
         }
 
+        /// \brief Convert to a ROS message.
         errorgraph_element_msg_t to_msg() const
         {
           errorgraph_element_msg_t ret;
@@ -218,34 +264,84 @@ namespace mrs_lib
       size_t last_element_id = 0;
 
     public:
+      /**
+       * \brief Write the graph in Graphviz DOT format.
+       * \param os  Output stream to write the DOT representation to.
+       */
       void write_dot(std::ostream& os);
 
+      /**
+       * \brief Find the root-cause elements blocking the given node.
+       *
+       * Traverses the dependency graph from the specified node to find leaf elements
+       * (elements with errors that don't depend on anything else).
+       *
+       * \param node_id             The node to trace dependencies for.
+       * \param loop_detected_out   If non-null, set to true when a cycle is detected.
+       * \return  Non-owning pointers to root-cause elements, valid for the lifetime of this Errorgraph.
+       */
       std::vector<const element_t*> find_dependency_roots(const node_id_t& node_id, bool* loop_detected_out = nullptr);
 
+      /**
+       * \brief Find all root-cause elements across the entire graph.
+       * \return  Non-owning pointers to elements that have errors and are not blocked by other elements.
+       */
       std::vector<const element_t*> find_error_roots();
 
+      /**
+       * \brief Find all root elements (elements with no parents in the dependency graph).
+       * \return  Non-owning pointers to root elements, valid for the lifetime of this Errorgraph.
+       */
       std::vector<const element_t*> find_roots();
 
+      /**
+       * \brief Find all leaf elements (elements with no children in the dependency graph).
+       * \return  Non-owning pointers to leaf elements, valid for the lifetime of this Errorgraph.
+       */
       std::vector<const element_t*> find_leaves();
 
+      /**
+       * \brief Find an element by topic name.
+       * \param topic_name  The topic name to search for.
+       * \return  Non-owning pointer to the element, or nullptr if not found. Valid for the lifetime of this Errorgraph.
+       */
       const element_t* find_element(const std::string& topic_name);
 
+      /**
+       * \brief Find an element by node ID.
+       * \param node_id  The node ID to search for.
+       * \return  Non-owning pointer to the element, or nullptr if not found. Valid for the lifetime of this Errorgraph.
+       */
       const element_t* find_element(const node_id_t& node_id);
 
+      /**
+       * \brief Add or update an element from a received ROS message.
+       *
+       * If an element with the same source node already exists, its errors and timestamp
+       * are updated. Otherwise, a new element is created and any dependency edges implied
+       * by the errors are added to the graph.
+       *
+       * \param msg  The received ErrorgraphElement message.
+       * \return  Non-owning pointer to the added or updated element, valid for the lifetime of this Errorgraph.
+       */
       const element_t* add_element_from_msg(const errorgraph_element_msg_t& msg);
 
+      /// \brief Iterator to the first element (for range-based for loops).
       auto begin() const
       {
         return elements_.begin();
       }
+      /// \brief Iterator past the last element.
       auto end() const
       {
         return elements_.end();
       }
+      /// \brief Const iterator to the first element.
       auto cbegin() const
       {
         return elements_.cbegin();
       }
+      /// \brief Const iterator past the last element.
       auto cend() const
       {
         return elements_.cend();
