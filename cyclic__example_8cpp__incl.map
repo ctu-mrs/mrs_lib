@@ -1,0 +1,13 @@
+<map id="src/geometry/cyclic_example.cpp" name="src/geometry/cyclic_example.cpp">
+<area shape="rect" id="Node000001" title="Example file for the cyclical values implementation (see the cyclic class)" alt="" coords="182,5,331,45"/>
+<area shape="rect" id="Node000002" href="$cyclic_8h.html" title="Defines the cyclic class for calculations with cyclic quantities." alt="" coords="5,93,196,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="220,48,137,89,135,85,218,43"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="221,93,293,119"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="259,46,259,79,254,79,254,46"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="317,93,396,119"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="283,43,332,82,329,87,279,48"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="23,167,85,192"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="95,120,71,157,67,154,91,118"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="109,167,185,192"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="111,118,134,154,130,157,106,120"/>
+</map>
