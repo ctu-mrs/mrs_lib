@@ -21,12 +21,10 @@ protected:
     clock_ = node_->get_clock();
 
     // Subscribe to the errors topic published by ErrorPublisher
-    sub_ = node_->create_subscription<mrs_msgs::msg::ErrorgraphElement>(
-        "~/errors", 10,
-        [this](const mrs_msgs::msg::ErrorgraphElement::SharedPtr msg) {
-          std::scoped_lock lck(mtx_);
-          received_msgs_.push_back(*msg);
-        });
+    sub_ = node_->create_subscription<mrs_msgs::msg::ErrorgraphElement>("~/errors", 10, [this](const mrs_msgs::msg::ErrorgraphElement::SharedPtr msg) {
+      std::scoped_lock lck(mtx_);
+      received_msgs_.push_back(*msg);
+    });
   }
 
   void TearDown() override
