@@ -7,7 +7,7 @@ namespace mrs_lib
   namespace errorgraph
   {
 
-    std::vector<const Errorgraph::element_t*> Errorgraph::find_dependency_roots(const node_id_t& node_id, bool* loop_detected_out)
+    std::vector<Errorgraph::element_info_t> Errorgraph::find_dependency_roots(const node_id_t& node_id, bool* loop_detected_out)
     {
       // first, make sure that the elements are connected as the graph
       prepare_graph();
@@ -15,7 +15,12 @@ namespace mrs_lib
       if (elem == nullptr)
         return {};
 
-      return DFS(elem, loop_detected_out);
+      const auto raw_roots = DFS(elem, loop_detected_out);
+      std::vector<element_info_t> roots;
+      roots.reserve(raw_roots.size());
+      for (const auto* el : raw_roots)
+        roots.push_back(el->to_info());
+      return roots;
     }
 
     std::vector<const Errorgraph::element_t*> Errorgraph::DFS(element_t* from, bool* loop_detected_out)
@@ -83,39 +88,39 @@ namespace mrs_lib
       graph_up_to_date_ = true;
     }
 
-    std::vector<const Errorgraph::element_t*> Errorgraph::find_error_roots()
+    std::vector<Errorgraph::element_info_t> Errorgraph::find_error_roots()
     {
       build_graph();
-      std::vector<const element_t*> roots;
+      std::vector<element_info_t> roots;
       for (const auto& el_ptr : elements_)
       {
         if (!el_ptr->is_waiting_for() && !el_ptr->is_no_error())
-          roots.push_back(el_ptr.get());
+          roots.push_back(el_ptr->to_info());
       }
       return roots;
     }
 
-    std::vector<const Errorgraph::element_t*> Errorgraph::find_roots()
+    std::vector<Errorgraph::element_info_t> Errorgraph::find_roots()
     {
       build_graph();
-      std::vector<const element_t*> roots;
+      std::vector<element_info_t> roots;
       for (const auto& el_ptr : elements_)
       {
         if (!el_ptr->is_waiting_for())
-          roots.push_back(el_ptr.get());
+          roots.push_back(el_ptr->to_info());
       }
       return roots;
     }
 
-    std::vector<const Errorgraph::element_t*> Errorgraph::find_leaves()
+    std::vector<Errorgraph::element_info_t> Errorgraph::find_leaves()
     {
       build_graph(); // Ensures parent/child relationships are built
-      std::vector<const element_t*> leaves;
+      std::vector<element_info_t> leaves;
       for (const auto& el_ptr : elements_)
       {
         // A leaf has no children (no one waits for it)
         if (el_ptr->parents.empty())
-          leaves.push_back(el_ptr.get());
+          leaves.push_back(el_ptr->to_info());
       }
       return leaves;
     }
@@ -163,14 +168,20 @@ namespace mrs_lib
         return elem_it->get();
     }
 
-    const Errorgraph::element_t* Errorgraph::find_element(const std::string& topic_name)
+    std::optional<Errorgraph::element_info_t> Errorgraph::find_element(const std::string& topic_name)
     {
-      return find_element_mutable(topic_name);
+      const auto* elem = find_element_mutable(topic_name);
+      if (elem == nullptr)
+        return std::nullopt;
+      return elem->to_info();
     }
 
-    const Errorgraph::element_t* Errorgraph::find_element(const node_id_t& node_id)
+    std::optional<Errorgraph::element_info_t> Errorgraph::find_element(const node_id_t& node_id)
     {
-      return find_element_mutable(node_id);
+      const auto* elem = find_element_mutable(node_id);
+      if (elem == nullptr)
+        return std::nullopt;
+      return elem->to_info();
     }
 
     void Errorgraph::prepare_graph()
@@ -189,7 +200,7 @@ namespace mrs_lib
         // initialize all nodes this node is waiting for if they do not exist
         for (const auto& node_id_ptr : el_ptr->waited_for_nodes())
         {
-          const element_t* previous_el = find_element(*node_id_ptr);
+          const element_t* previous_el = find_element_mutable(*node_id_ptr);
           // if the element was not found, it may have not reported yet, initialize it
           if (previous_el == nullptr)
             add_new_element(*node_id_ptr);
@@ -198,7 +209,7 @@ namespace mrs_lib
         // initialize all topics this node is waiting for if they do not exist
         for (const auto& topic_name_ptr : el_ptr->waited_for_topics())
         {
-          const element_t* previous_el = find_element(*topic_name_ptr);
+          const element_t* previous_el = find_element_mutable(*topic_name_ptr);
           // if the element was not found, it may have not reported yet, initialize it
           if (previous_el == nullptr)
             add_new_element(*topic_name_ptr);
@@ -223,7 +234,7 @@ namespace mrs_lib
       return element;
     }
 
-    const Errorgraph::element_t* Errorgraph::add_element_from_msg(const errorgraph_element_msg_t& msg)
+    Errorgraph::element_info_t Errorgraph::add_element_from_msg(const errorgraph_element_msg_t& msg)
     {
       const node_id_t& source_node_id = node_id_t::from_msg(msg.source_node);
       element_t* element = find_element_mutable(source_node_id);
@@ -237,7 +248,33 @@ namespace mrs_lib
         element->errors.emplace_back(error_msg);
 
       graph_up_to_date_ = false;
-      return element;
+      return element->to_info();
+    }
+
+    Errorgraph::element_info_t Errorgraph::element_t::to_info() const
+    {
+      if (type == type_t::topic)
+        return topic_info_t{topic_name, source_node, stamp, is_not_reporting()};
+      else
+        return node_info_t{source_node, errors, stamp, is_not_reporting()};
+    }
+
+    errorgraph_element_msg_t Errorgraph::node_info_t::to_msg() const
+    {
+      errorgraph_element_msg_t ret;
+      ret.stamp = stamp;
+      ret.source_node = source_node.to_msg();
+      for (const auto& error : errors)
+        ret.errors.push_back(error.to_msg());
+      return ret;
+    }
+
+    errorgraph_element_msg_t Errorgraph::topic_info_t::to_msg() const
+    {
+      errorgraph_element_msg_t ret;
+      ret.stamp = stamp;
+      ret.source_node = source_node.to_msg();
+      return ret;
     }
 
     void Errorgraph::write_dot(std::ostream& os)

@@ -87,8 +87,9 @@ TEST_F(ErrorgraphTest, find_error_roots_single_node_with_error)
 
   auto roots = graph_->find_error_roots();
   ASSERT_EQ(roots.size(), 1);
-  EXPECT_EQ(roots[0]->source_node.node, "test_node");
-  EXPECT_EQ(roots[0]->source_node.component, "test_component");
+  const auto& info = std::get<Errorgraph::node_info_t>(roots[0]);
+  EXPECT_EQ(info.source_node.node, "test_node");
+  EXPECT_EQ(info.source_node.component, "test_component");
 }
 
 //}
@@ -128,8 +129,9 @@ TEST_F(ErrorgraphTest, find_error_roots_node_waiting_for_dependency)
   // Node2 should NOT be a root because it's waiting for node1
   // Node1 should be a root because it has an error and isn't waiting for anything
   ASSERT_EQ(roots.size(), 1);
-  EXPECT_EQ(roots[0]->source_node.node, "node1");
-  EXPECT_EQ(roots[0]->source_node.component, "component1");
+  const auto& info = std::get<Errorgraph::node_info_t>(roots[0]);
+  EXPECT_EQ(info.source_node.node, "node1");
+  EXPECT_EQ(info.source_node.component, "component1");
 }
 
 //}
@@ -156,13 +158,14 @@ TEST_F(ErrorgraphTest, find_error_roots_excludes_no_error_nodes)
   bool found_node_error2 = false;
   bool found_node_ok = false;
 
-  for (const auto* root : roots)
+  for (const auto& root : roots)
   {
-    if (root->source_node.node == "node_error")
+    const auto& info = std::get<Errorgraph::node_info_t>(root);
+    if (info.source_node.node == "node_error")
       found_node_error = true;
-    if (root->source_node.node == "node_ok")
+    if (info.source_node.node == "node_ok")
       found_node_ok = true;
-    if (root->source_node.node == "node_error2")
+    if (info.source_node.node == "node_error2")
       found_node_error2 = true;
   }
 
@@ -191,7 +194,8 @@ TEST_F(ErrorgraphTest, find_error_roots_chain_of_dependencies)
 
   // Only node1 should be an error root because it has error and isn't waiting
   ASSERT_EQ(roots.size(), 1);
-  EXPECT_EQ(roots[0]->source_node.node, "node1");
+  const auto& info = std::get<Errorgraph::node_info_t>(roots[0]);
+  EXPECT_EQ(info.source_node.node, "node1");
 }
 
 //}
@@ -241,8 +245,9 @@ TEST_F(ErrorgraphTest, find_error_roots_multiple_errors_same_node)
   // "other_node" becomes a root because it doesn't exist (not reporting)
   // "multi_error_node" is NOT a root because it's waiting
   ASSERT_EQ(roots.size(), 1);
-  EXPECT_EQ(roots[0]->source_node.node, "other_node");
-  EXPECT_EQ(roots[0]->source_node.component, "other_comp");
+  const auto& info = std::get<Errorgraph::node_info_t>(roots[0]);
+  EXPECT_EQ(info.source_node.node, "other_node");
+  EXPECT_EQ(info.source_node.component, "other_comp");
 }
 
 //}
@@ -281,7 +286,8 @@ TEST_F(ErrorgraphTest, find_dependency_roots_simple_chain)
 
   // Should trace back to node1
   ASSERT_EQ(roots.size(), 1);
-  EXPECT_EQ(roots[0]->source_node.node, "node1");
+  const auto& info = std::get<Errorgraph::node_info_t>(roots[0]);
+  EXPECT_EQ(info.source_node.node, "node1");
 }
 
 //}
@@ -347,13 +353,15 @@ TEST_F(ErrorgraphTest, find_leaves_identifies_leaf_nodes)
 
   // node1 is a leaf (nobody depends on it)
   ASSERT_EQ(leaves.size(), 1);
-  EXPECT_EQ(leaves[0]->source_node.node, "node1");
+  const auto& leaf_info = std::get<Errorgraph::node_info_t>(leaves[0]);
+  EXPECT_EQ(leaf_info.source_node.node, "node1");
 
   // Find roots should return node3
   // node3 is a root (nobody it waits for has error)
   auto roots = graph_->find_roots();
   ASSERT_EQ(roots.size(), 1);
-  EXPECT_EQ(roots[0]->source_node.node, "node3");
+  const auto& root_info = std::get<Errorgraph::node_info_t>(roots[0]);
+  EXPECT_EQ(root_info.source_node.node, "node3");
 }
 
 //}
@@ -371,9 +379,10 @@ TEST_F(ErrorgraphTest, waiting_for_topic_creates_topic_element)
 
   // Check that topic element was created
   auto topic_elem = graph_->find_element("/test/topic");
-  ASSERT_NE(topic_elem, nullptr);
-  EXPECT_EQ(topic_elem->type, Errorgraph::element_t::type_t::topic);
-  EXPECT_EQ(topic_elem->topic_name, "/test/topic");
+  ASSERT_TRUE(topic_elem.has_value());
+  ASSERT_TRUE(std::holds_alternative<Errorgraph::topic_info_t>(topic_elem.value()));
+  const auto& topic = std::get<Errorgraph::topic_info_t>(topic_elem.value());
+  EXPECT_EQ(topic.topic_name, "/test/topic");
 }
 
 //}
@@ -387,13 +396,17 @@ TEST_F(ErrorgraphTest, node_becomes_not_reporting_after_delay)
   graph_->add_element_from_msg(msg);
   // Trigger graph building
   auto elem = graph_->find_element(node_id_t{"old_node", "comp"});
-  ASSERT_NE(elem, nullptr);
-  EXPECT_TRUE(elem->is_not_reporting());
+  ASSERT_TRUE(elem.has_value());
+  const auto& info = std::get<Errorgraph::node_info_t>(elem.value());
+  EXPECT_TRUE(info.not_reporting);
 
   // Now add a recent message
   auto recent_msg = create_element_msg("old_node", "comp", {{errorgraph_error_msg_t::TYPE_NO_ERROR, ""}});
   graph_->add_element_from_msg(recent_msg);
-  EXPECT_FALSE(elem->is_not_reporting());
+  auto elem2 = graph_->find_element(node_id_t{"old_node", "comp"});
+  ASSERT_TRUE(elem2.has_value());
+  const auto& info2 = std::get<Errorgraph::node_info_t>(elem2.value());
+  EXPECT_FALSE(info2.not_reporting);
 }
 
 //}
@@ -418,15 +431,15 @@ TEST_F(ErrorgraphTest, graph_rebuilds_after_updates)
 
 //}
 
-/* TEST: find_element returns nullptr for nonexistent elements //{ */
+/* TEST: find_element returns nullopt for nonexistent elements //{ */
 
-TEST_F(ErrorgraphTest, find_element_returns_null_for_nonexistent)
+TEST_F(ErrorgraphTest, find_element_returns_nullopt_for_nonexistent)
 {
   auto elem = graph_->find_element(node_id_t{"nonexistent", "node"});
-  EXPECT_EQ(elem, nullptr);
+  EXPECT_FALSE(elem.has_value());
 
   auto topic = graph_->find_element("/nonexistent/topic");
-  EXPECT_EQ(topic, nullptr);
+  EXPECT_FALSE(topic.has_value());
 }
 
 //}

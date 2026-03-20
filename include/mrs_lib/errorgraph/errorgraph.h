@@ -2,6 +2,7 @@
 
 #include <string>
 #include <optional>
+#include <variant>
 #include <vector>
 #include <memory>
 #include <algorithm>
@@ -35,14 +36,13 @@ namespace mrs_lib
      * 3. Query the graph using \ref find_error_roots(), \ref find_dependency_roots(), etc.
      * 4. Optionally export the graph in DOT format using \ref write_dot() for visualization.
      *
-     * \note **Ownership and lifetime:** Query methods return non-owning pointers (or vectors of
-     * non-owning pointers) to internally managed \ref element_t objects. The Errorgraph retains
-     * sole ownership of all elements. Returned pointers remain valid for the lifetime of the
-     * Errorgraph instance — elements are never deleted, only added or updated. Do not retain
-     * pointers beyond the Errorgraph's lifetime.
+     * \note **Return types:** Query methods return \ref element_info_t (a `std::variant<node_info_t, topic_info_t>`)
+     * which contains a copy of the element's data.
+     * Use std::get<node_info_t>(element_info) or std::get<topic_info_t>(element_info) to access the specific type.
      *
      * \see ErrorPublisher for the publishing side that nodes use to report errors.
-     * \see https://github.com/ctu-mrs/mrs_errorgraph for the full errorgraph package.
+     * \see ErroGraphViewer at https://github.com/ctu-mrs/mrs_errorgraph_viewer/blob/ros2/src/errorgraph_viewer.cpp
+     * for an example of using the Errorgraph and visualizing it.
      */
     class Errorgraph
     {
@@ -132,14 +132,62 @@ namespace mrs_lib
 
       //}
 
+      /* node_info_t //{ */
+
+      /**
+       * \brief Public view of a node element, returned by query methods.
+       *
+       * Contains a copy of the relevant data from the internal element representation,
+       * without exposing graph-traversal internals.
+       */
+      struct node_info_t
+      {
+        node_id_t source_node;       ///< Node ID of this element.
+        std::vector<error_t> errors; ///< List of errors reported by this node.
+        rclcpp::Time stamp;          ///< Last time this element was updated.
+        bool not_reporting;          ///< Whether this node has stopped reporting (stale).
+
+        /// \brief Convert to a ROS message.
+        errorgraph_element_msg_t to_msg() const;
+      };
+
+      //}
+
+      /* topic_info_t //{ */
+
+      /**
+       * \brief Public view of a topic element, returned by query methods.
+       *
+       * Contains a copy of the relevant data from the internal element representation,
+       * without exposing graph-traversal internals.
+       */
+      struct topic_info_t
+      {
+        std::string topic_name; ///< Topic name.
+        node_id_t source_node;  ///< Expected publisher node for this topic.
+        rclcpp::Time stamp;     ///< Last time this element was updated.
+        bool not_reporting;     ///< Whether this topic's publisher has stopped reporting.
+
+        /// \brief Convert to a ROS message.
+        errorgraph_element_msg_t to_msg() const;
+      };
+
+      //}
+
+      /// \brief Type-safe variant representing either a node or topic element info.
+      using element_info_t = std::variant<node_info_t, topic_info_t>;
+
       /* element_t //{ */
 
       /**
-       * \brief Represents a node or topic in the error dependency graph.
+       * \brief Internal representation of a node or topic in the error dependency graph.
        *
        * Each element is either a ROS node (identified by \ref node_id_t) or a topic
        * (identified by name). Node elements carry a list of errors; topic elements
        * serve as intermediate vertices connecting nodes in the dependency graph.
+       *
+       * \note This type is used internally for graph operations. Public API methods
+       * return \ref element_info_t instead.
        */
       struct element_t
       {
@@ -236,6 +284,9 @@ namespace mrs_lib
             ret.errors.push_back(error.to_msg());
           return ret;
         }
+
+        /// \brief Convert to a public element_info_t variant.
+        element_info_t to_info() const;
       };
 
       //}
@@ -278,41 +329,41 @@ namespace mrs_lib
        *
        * \param node_id             The node to trace dependencies for.
        * \param loop_detected_out   If non-null, set to true when a cycle is detected.
-       * \return  Non-owning pointers to root-cause elements, valid for the lifetime of this Errorgraph.
+       * \return  Copies of root-cause element info as type-safe variants.
        */
-      std::vector<const element_t*> find_dependency_roots(const node_id_t& node_id, bool* loop_detected_out = nullptr);
+      std::vector<element_info_t> find_dependency_roots(const node_id_t& node_id, bool* loop_detected_out = nullptr);
 
       /**
        * \brief Find all root-cause elements across the entire graph.
-       * \return  Non-owning pointers to elements that have errors and are not blocked by other elements.
+       * \return  Copies of elements that have errors and are not blocked by other elements.
        */
-      std::vector<const element_t*> find_error_roots();
+      std::vector<element_info_t> find_error_roots();
 
       /**
        * \brief Find all root elements (elements with no parents in the dependency graph).
-       * \return  Non-owning pointers to root elements, valid for the lifetime of this Errorgraph.
+       * \return  Copies of root element info as type-safe variants.
        */
-      std::vector<const element_t*> find_roots();
+      std::vector<element_info_t> find_roots();
 
       /**
        * \brief Find all leaf elements (elements with no children in the dependency graph).
-       * \return  Non-owning pointers to leaf elements, valid for the lifetime of this Errorgraph.
+       * \return  Copies of leaf element info as type-safe variants.
        */
-      std::vector<const element_t*> find_leaves();
+      std::vector<element_info_t> find_leaves();
 
       /**
        * \brief Find an element by topic name.
        * \param topic_name  The topic name to search for.
-       * \return  Non-owning pointer to the element, or nullptr if not found. Valid for the lifetime of this Errorgraph.
+       * \return  A copy of the element info, or std::nullopt if not found.
        */
-      const element_t* find_element(const std::string& topic_name);
+      std::optional<element_info_t> find_element(const std::string& topic_name);
 
       /**
        * \brief Find an element by node ID.
        * \param node_id  The node ID to search for.
-       * \return  Non-owning pointer to the element, or nullptr if not found. Valid for the lifetime of this Errorgraph.
+       * \return  A copy of the element info, or std::nullopt if not found.
        */
-      const element_t* find_element(const node_id_t& node_id);
+      std::optional<element_info_t> find_element(const node_id_t& node_id);
 
       /**
        * \brief Add or update an element from a received ROS message.
@@ -322,30 +373,9 @@ namespace mrs_lib
        * by the errors are added to the graph.
        *
        * \param msg  The received ErrorgraphElement message.
-       * \return  Non-owning pointer to the added or updated element, valid for the lifetime of this Errorgraph.
+       * \return  A copy of the added or updated element info.
        */
-      const element_t* add_element_from_msg(const errorgraph_element_msg_t& msg);
-
-      /// \brief Iterator to the first element (for range-based for loops).
-      auto begin() const
-      {
-        return elements_.begin();
-      }
-      /// \brief Iterator past the last element.
-      auto end() const
-      {
-        return elements_.end();
-      }
-      /// \brief Const iterator to the first element.
-      auto cbegin() const
-      {
-        return elements_.cbegin();
-      }
-      /// \brief Const iterator past the last element.
-      auto cend() const
-      {
-        return elements_.cend();
-      }
+      element_info_t add_element_from_msg(const errorgraph_element_msg_t& msg);
     };
 
   } // namespace errorgraph
