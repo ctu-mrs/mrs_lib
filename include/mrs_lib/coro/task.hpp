@@ -10,6 +10,7 @@
 #include <utility>
 
 #include <mrs_lib/coro/internal/attributes.hpp>
+#include <variant>
 
 // Note on ownership semantics:
 // Since we want to support cancellation at any point in the coroutine stacks,
@@ -123,15 +124,16 @@ namespace mrs_lib
     class ResultStorage
     {
     private:
-      enum class State
+      // Not enum class to allow usage in functions like std::get
+      enum State : size_t
       {
-        empty,
-        value,
-        exception,
+        empty = 0,
+        value = 1,
+        exception = 2,
       };
 
     public:
-      constexpr ResultStorage() noexcept : state_(State::empty)
+      constexpr ResultStorage() noexcept : data_()
       {
       }
 
@@ -142,9 +144,8 @@ namespace mrs_lib
        */
       constexpr void set_value(T&& val) noexcept(std::is_nothrow_move_constructible_v<T>)
       {
-        assert(state_ == State::empty);
-        std::construct_at(&value_, std::move(val));
-        state_ = State::value;
+        assert(data_.index() == State::empty);
+        data_.template emplace<State::value>(std::move(val));
       }
 
       /**
@@ -154,9 +155,8 @@ namespace mrs_lib
        */
       void set_exception(std::exception_ptr eptr) noexcept
       {
-        assert(state_ == State::empty);
-        std::construct_at(&exception_, std::move(eptr));
-        state_ = State::exception;
+        assert(data_.index() == State::empty || data_.valueless_by_exception());
+        data_.template emplace<State::exception>(std::move(eptr));
       }
 
       /**
@@ -169,36 +169,17 @@ namespace mrs_lib
        */
       constexpr T get_value() &&
       {
-        if (state_ == State::exception)
+        size_t state = data_.index();
+        if (state == State::exception)
         {
-          std::rethrow_exception(exception_);
+          std::rethrow_exception(std::get<State::exception>(data_));
         }
-        assert(state_ == State::value);
-        return std::move(value_);
-      }
-
-      constexpr ~ResultStorage()
-      {
-        switch (state_)
-        {
-        case State::empty:
-          break;
-        case State::value:
-          std::destroy_at(&value_);
-          break;
-        case State::exception:
-          std::destroy_at(&exception_);
-          break;
-        }
+        assert(state == State::value);
+        return std::get<State::value>(std::move(data_));
       }
 
     private:
-      union
-      {
-        T value_;
-        std::exception_ptr exception_;
-      };
-      State state_;
+      std::variant<std::monostate, T, std::exception_ptr> data_;
     };
 
     /**
