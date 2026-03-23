@@ -211,7 +211,7 @@ target_link_libraries(mrs_lib_mrs_lib
 # Dynamic param manager tests
 
 add_executable(dynparam_tests
-  src/dynparam_mgr/dynparam_tests.cpp
+  examples/dynparam_mgr/dynparam_tests.cpp
 )
 
 target_link_libraries(dynparam_tests
@@ -224,7 +224,7 @@ target_link_libraries(dynparam_tests
 
 # TODO why is it built from all these different files?
 add_executable(subscribe_handler_example
-  src/subscriber_handler/example.cpp
+  examples/subscriber_handler/example.cpp
   src/timeout_manager/timeout_manager.cpp
   src/timer_handler/timer_handler.cpp
 )
