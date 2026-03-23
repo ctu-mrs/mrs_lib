@@ -1,0 +1,13 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" title=" " alt="" coords="41,55,142,80"/>
+<area shape="rect" id="Node000001" href="$classErrorPublisherTest.html" title=" " alt="" coords="225,5,364,31"/>
+<area shape="poly" id="edge36_Node000000_Node000001" title=" " alt="" coords="155,49,241,28,242,33,156,54"/>
+<area shape="rect" id="Node000002" href="$classErrorgraphTest.html" title=" " alt="" coords="237,55,353,80"/>
+<area shape="poly" id="edge37_Node000000_Node000002" title=" " alt="" coords="156,65,236,65,236,70,156,70"/>
+<area shape="rect" id="Node000003" href="$classTest.html" title=" " alt="" coords="271,104,319,129"/>
+<area shape="poly" id="edge38_Node000000_Node000003" title=" " alt="" coords="156,80,271,108,270,114,155,85"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="5,128,177,153"/>
+<area shape="poly" id="edge40_Node000004_Node000003" title=" " alt="" coords="191,126,270,117,271,122,192,132"/>
+<area shape="rect" id="Node000005" href="$classNoAutostart.html" title=" " alt="" coords="245,153,345,179"/>
+<area shape="poly" id="edge39_Node000004_Node000005" title=" " alt="" coords="191,150,244,157,244,162,191,156"/>
+</map>

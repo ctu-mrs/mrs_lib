@@ -1,0 +1,5 @@
+<map id="mrs_lib::geometry::degrees" name="mrs_lib::geometry::degrees">
+<area shape="rect" id="Node000001" title="Convenience specialization of the cyclic class for unsigned degrees (from $0$ to $360$)." alt="" coords="28,93,176,133"/>
+<area shape="rect" id="Node000002" href="$structmrs__lib_1_1geometry_1_1cyclic.html" title=" " alt="" coords="5,5,199,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="105,59,105,93,99,93,99,59"/>
+</map>

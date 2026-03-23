@@ -1,0 +1,39 @@
+<map id="include/mrs_lib/impl/service_client_handler.hpp" name="include/mrs_lib/impl/service_client_handler.hpp">
+<area shape="rect" id="Node000001" title="Implements ServiceClientHandler and related convenience classes for upgrading the ROS service client." alt="" coords="176,5,375,45"/>
+<area shape="rect" id="Node000002" href="$service__client__handler_8h.html" title="Defines ServiceClientHandler and related convenience classes for upgrading the ROS service client." alt="" coords="193,93,357,133"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="270,46,269,80,264,80,265,46"/>
+<area shape="poly" id="edge20_Node000002_Node000001" title=" " alt="" coords="280,93,281,59,287,59,286,93"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,181,137,207"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="227,136,115,179,113,174,226,131"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="162,181,221,207"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="257,136,216,174,212,170,253,132"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="245,181,306,207"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="278,134,278,167,273,167,273,134"/>
+<area shape="rect" id="Node000006" href="$thread__local__continuation__scheduler_8hpp_source.html" title=" " alt="" coords="1265,343,1459,397"/>
+<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="291,132,320,180,333,214,339,244,348,269,370,293,389,301,417,309,502,324,615,335,745,345,1020,358,1251,364,1251,369,1020,363,745,350,614,341,502,329,416,314,387,306,367,297,343,272,334,245,328,216,316,183,286,135"/>
+<area shape="rect" id="Node000008" href="$task_8hpp_source.html" title=" " alt="" coords="806,181,969,207"/>
+<area shape="poly" id="edge7_Node000002_Node000008" title=" " alt="" coords="358,123,793,178,792,183,358,128"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="1387,445,1470,471"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="1384,396,1413,433,1409,436,1380,399"/>
+<area shape="poly" id="edge10_Node000008_Node000007" title=" " alt="" coords="969,195,1107,201,1265,212,1401,228,1447,239,1473,253,1487,270,1495,288,1497,321,1488,357,1474,398,1464,419,1451,437,1447,433,1460,416,1469,396,1483,355,1492,321,1489,289,1482,273,1470,257,1446,244,1400,234,1265,217,1107,206,969,200"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="381,262,450,287"/>
+<area shape="poly" id="edge8_Node000008_Node000009" title=" " alt="" coords="806,203,646,221,554,237,463,257,454,260,452,255,461,252,553,232,645,216,806,198"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="474,262,554,287"/>
+<area shape="poly" id="edge9_Node000008_Node000010" title=" " alt="" coords="806,209,692,229,567,257,557,260,555,255,565,252,691,224,806,204"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="579,262,665,287"/>
+<area shape="poly" id="edge11_Node000008_Node000011" title=" " alt="" coords="846,209,679,257,669,260,668,255,677,252,844,204"/>
+<area shape="rect" id="Node000012" title=" " alt="" coords="690,262,767,287"/>
+<area shape="poly" id="edge12_Node000008_Node000012" title=" " alt="" coords="865,209,765,258,763,254,863,204"/>
+<area shape="rect" id="Node000013" title=" " alt="" coords="792,262,884,287"/>
+<area shape="poly" id="edge13_Node000008_Node000013" title=" " alt="" coords="882,208,855,252,850,249,878,205"/>
+<area shape="rect" id="Node000014" title=" " alt="" coords="908,262,968,287"/>
+<area shape="poly" id="edge14_Node000008_Node000014" title=" " alt="" coords="897,205,925,249,921,252,893,208"/>
+<area shape="rect" id="Node000015" href="$attributes_8hpp_source.html" title=" " alt="" coords="992,255,1148,295"/>
+<area shape="poly" id="edge15_Node000008_Node000015" title=" " alt="" coords="915,204,1015,247,1013,252,913,209"/>
+<area shape="rect" id="Node000016" title=" " alt="" coords="1172,262,1240,287"/>
+<area shape="poly" id="edge16_Node000008_Node000016" title=" " alt="" coords="955,204,1052,224,1160,252,1168,255,1166,260,1159,257,1051,229,954,209"/>
+<area shape="rect" id="Node000017" href="$task_8impl_8hpp_source.html" title=" " alt="" coords="1265,262,1459,287"/>
+<area shape="poly" id="edge17_Node000008_Node000017" title=" " alt="" coords="949,204,1240,252,1270,257,1269,262,1239,257,948,209"/>
+<area shape="poly" id="edge18_Node000017_Node000006" title=" " alt="" coords="1365,287,1365,329,1359,329,1359,287"/>
+<area shape="poly" id="edge19_Node000017_Node000008" title=" " alt="" coords="1306,265,1263,257,980,211,981,206,1264,252,1307,259"/>
+</map>
