@@ -1,0 +1,5 @@
+<map id="mrs_lib::geometry::radians" name="mrs_lib::geometry::radians">
+<area shape="rect" id="Node000001" title="Convenience specialization of the cyclic class for unsigned radians (from $0$ to $2\pi$)." alt="" coords="26,93,174,133"/>
+<area shape="rect" id="Node000002" href="$structmrs__lib_1_1geometry_1_1cyclic.html" title=" " alt="" coords="5,5,195,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="103,59,103,93,97,93,97,59"/>
+</map>

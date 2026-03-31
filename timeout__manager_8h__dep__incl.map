@@ -1,0 +1,11 @@
+<map id="include/mrs_lib/timeout_manager.h" name="include/mrs_lib/timeout_manager.h">
+<area shape="rect" id="Node000001" title="TODO." alt="" coords="63,5,239,45"/>
+<area shape="rect" id="Node000002" href="$subscriber__handler_8h.html" title="Defines SubscriberHandler and related convenience classes for subscribing to ROS topics." alt="" coords="55,93,247,133"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="154,59,154,93,149,93,149,59"/>
+<area shape="rect" id="Node000003" href="$examples_2subscriber__handler_2example_8cpp.html" title="Example file for the SubscribeHandler convenience class." alt="" coords="5,269,172,309"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="94,143,71,160,54,182,49,204,53,227,63,249,75,268,71,271,58,252,48,229,43,204,49,180,67,156,91,138"/>
+<area shape="rect" id="Node000004" href="$subscriber__handler_8hpp_source.html" title=" " alt="" coords="63,181,239,221"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="145,147,146,181,141,181,140,147"/>
+<area shape="poly" id="edge5_Node000004_Node000002" title=" " alt="" coords="157,168,156,134,162,134,163,168"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="131,234,105,271,100,268,127,231"/>
+</map>

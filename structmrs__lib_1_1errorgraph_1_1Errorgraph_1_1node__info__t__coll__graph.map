@@ -1,0 +1,5 @@
+<map id="mrs_lib::errorgraph::Errorgraph::node_info_t" name="mrs_lib::errorgraph::Errorgraph::node_info_t">
+<area shape="rect" id="Node000001" title="Public view of a node element, returned by query methods." alt="" coords="5,108,188,148"/>
+<area shape="rect" id="Node000002" href="$structmrs__lib_1_1errorgraph_1_1node__id__t.html" title="Identifies a specific component within a ROS node for error reporting." alt="" coords="23,5,170,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="99,59,99,108,94,108,94,59"/>
+</map>

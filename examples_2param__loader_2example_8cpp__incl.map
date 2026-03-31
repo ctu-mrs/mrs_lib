@@ -1,0 +1,32 @@
+<map id="examples/param_loader/example.cpp" name="examples/param_loader/example.cpp">
+<area shape="rect" id="Node000001" title="Example file for the ParamLoader convenience class." alt="" coords="286,5,466,45"/>
+<area shape="rect" id="Node000002" href="$param__loader_8h_source.html" title=" " alt="" coords="288,93,463,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="378,46,378,79,373,79,373,46"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="86,262,218,287"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="288,112,210,117,129,127,59,144,33,155,16,168,9,181,9,194,16,206,28,217,63,238,102,255,100,260,60,243,25,222,12,209,4,195,4,180,12,165,31,150,57,139,128,122,210,111,288,106"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="26,174,85,199"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="302,121,204,141,98,169,92,171,90,166,96,164,202,135,301,116"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="109,174,224,199"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="346,121,211,172,209,167,344,116"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="248,174,351,199"/>
+<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="366,121,322,166,318,162,362,117"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="376,167,528,207"/>
+<area shape="poly" id="edge6_Node000002_Node000007" title=" " alt="" coords="389,117,426,155,422,159,385,121"/>
+<area shape="rect" id="Node000008" href="$param__provider_8h.html" title="Defines ParamProvider &#45; a convenience class for seamlessly loading parameters from YAML or ROS." alt="" coords="552,174,740,199"/>
+<area shape="poly" id="edge7_Node000002_Node000008" title=" " alt="" coords="416,116,595,168,593,173,414,121"/>
+<area shape="rect" id="Node000014" href="$param__loader_8hpp_source.html" title=" " alt="" coords="765,167,914,207"/>
+<area shape="poly" id="edge15_Node000002_Node000014" title=" " alt="" coords="448,116,741,164,752,166,751,171,740,169,447,121"/>
+<area shape="poly" id="edge12_Node000008_Node000003" title=" " alt="" coords="582,202,540,209,231,262,231,257,539,204,581,197"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="340,262,420,287"/>
+<area shape="poly" id="edge8_Node000008_Node000009" title=" " alt="" coords="608,202,432,257,425,260,423,255,431,252,607,197"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="444,262,521,287"/>
+<area shape="poly" id="edge9_Node000008_Node000010" title=" " alt="" coords="625,202,518,258,515,253,623,197"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="545,262,620,287"/>
+<area shape="poly" id="edge10_Node000008_Node000011" title=" " alt="" coords="640,201,601,252,597,249,635,198"/>
+<area shape="rect" id="Node000012" title=" " alt="" coords="644,262,776,287"/>
+<area shape="poly" id="edge11_Node000008_Node000012" title=" " alt="" coords="657,198,695,249,691,252,653,201"/>
+<area shape="rect" id="Node000013" href="$param__provider_8hpp.html" title="Implements ParamProvider &#45; a convenience class for seamlessly loading parameters from YAML or ROS." alt="" coords="801,255,950,295"/>
+<area shape="poly" id="edge13_Node000008_Node000013" title=" " alt="" coords="672,197,806,248,804,253,670,202"/>
+<area shape="poly" id="edge14_Node000013_Node000008" title=" " alt="" coords="832,257,695,206,697,201,834,252"/>
+<area shape="poly" id="edge16_Node000014_Node000002" title=" " alt="" coords="765,169,764,169,476,123,477,118,765,164,766,164"/>
+</map>

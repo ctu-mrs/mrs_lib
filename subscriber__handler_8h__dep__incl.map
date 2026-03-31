@@ -1,0 +1,9 @@
+<map id="include/mrs_lib/subscriber_handler.h" name="include/mrs_lib/subscriber_handler.h">
+<area shape="rect" id="Node000001" title="Defines SubscriberHandler and related convenience classes for subscribing to ROS topics." alt="" coords="55,5,247,45"/>
+<area shape="rect" id="Node000002" href="$examples_2subscriber__handler_2example_8cpp.html" title="Example file for the SubscribeHandler convenience class." alt="" coords="5,181,172,221"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="94,55,71,72,54,94,49,116,53,139,63,161,75,180,71,183,58,164,48,141,43,116,49,92,67,68,91,50"/>
+<area shape="rect" id="Node000003" href="$subscriber__handler_8hpp_source.html" title=" " alt="" coords="63,93,239,133"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="145,59,146,93,141,93,140,59"/>
+<area shape="poly" id="edge4_Node000003_Node000001" title=" " alt="" coords="157,80,156,46,162,46,163,80"/>
+<area shape="poly" id="edge3_Node000003_Node000002" title=" " alt="" coords="131,146,105,183,100,180,127,143"/>
+</map>
