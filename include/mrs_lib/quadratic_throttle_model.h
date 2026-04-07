@@ -73,7 +73,7 @@ namespace mrs_lib
         return motor_params.n_motors * pow((throttle - motor_params.b) / motor_params.a, 2);
     }
 
-    double inline forceToThrottle(const motor_params_t& motor_params, const double force)
+    double inline forceToThrottle(const motor_params_t& motor_params, const double force, const rclcpp::Node& node)
     {
       if (motor_params.type == motor_params_t::type_t::linear || motor_params.a < 1e-6)
       {
@@ -83,7 +83,7 @@ namespace mrs_lib
         // T = ( F - c*N ) / ( b*N )
         if (motor_params.bn < 1e-6)
         {
-          // RCLCPP_ERROR_THROTTLE(1.0, "forceToThrottle: The N*b parameter is too small!");
+          RCLCPP_ERROR_THROTTLE(node.get_logger(), *node.get_clock(), 1000, "forceToThrottle: The N*b parameter is too small!");
           return 0.0;
         }
         return (force - motor_params.cn) / motor_params.bn;
@@ -99,7 +99,7 @@ namespace mrs_lib
         // TODO: add some warning here
         if (discriminant < 0.0)
         {
-          // RCLCPP_ERROR_THROTTLE(1.0, "forceToThrottle: Discriminant of throttle solution is negative, setting zero!");
+          RCLCPP_ERROR_THROTTLE(node.get_logger(), *node.get_clock(), 1000, "forceToThrottle: Discriminant of throttle solution is negative, setting zero!");
           discriminant = 0;
         }
         // only the right half of the parabole is used, so only root1 is necessary
