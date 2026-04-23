@@ -21,6 +21,8 @@
 #include <cstdlib>
 #include <string>
 
+#include <GeographicLib/UTMUPS.hpp>
+
 namespace mrs_lib
 {
 
@@ -232,6 +234,43 @@ namespace mrs_lib
     UTMZone = zone_buf;
   }
 
+  static inline bool GL_LLtoUTM(const double latitude, const double longitude, double* out_UTMNorthing, double* out_UTMEasting, int* out_UTMZone, bool* out_northp)
+  {
+    try
+    {
+      GeographicLib::UTMUPS::Forward(
+          latitude,
+          longitude,
+          *out_UTMZone,
+          *out_northp,
+          *out_UTMEasting,
+          *out_UTMNorthing
+        );
+      return true;
+    }
+    catch (const std::exception& e)
+    {
+      return false;
+    }
+  }
+
+
+  static inline void GL_UTMtoLL(const double UTMNorthing, const double UTMEasting, const int UTMZone, const bool northp, double* out_latitude, double* out_longitude)
+  {
+    try
+    {
+      GeographicLib::UTMUPS::Reverse(
+          UTMZone,
+          northp,
+          UTMEasting,
+          UTMNorthing,
+          *out_latitude,
+          *out_longitude
+        );
+    }
+    catch (const std::exception& e)
+    {}
+  }
 
   /**
    * Converts UTM coords to lat/long.  Equations from USGS Bulletin 1532

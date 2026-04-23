@@ -516,8 +516,12 @@ namespace mrs_lib
     ros::Duration lookup_timeout_ = ros::Duration(0);
     bool retry_lookup_newest_ = false;
 
-    bool got_utm_zone_ = false;
-    std::array<char, 10> utm_zone_ = {};
+    struct utm_zone_info_t
+    {
+      int zone;
+      bool north_hemisphere;
+    };
+    std::optional<utm_zone_info_t> utm_zone_info_;
 
     // returns the first namespace prefix of the frame (if any) includin the forward slash
     std::string getFramePrefix(const std::string& frame_id);

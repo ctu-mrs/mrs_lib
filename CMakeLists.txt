@@ -55,6 +55,22 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(yaml-cpp REQUIRED)
 
+find_path(GEOGRAPHICLIB_INCLUDE_DIR
+  NAMES GeographicLib/UTMUPS.hpp
+)
+
+find_library(GEOGRAPHICLIB_LIBRARY
+  NAMES Geographic GeographicLib
+)
+
+if(NOT GEOGRAPHICLIB_INCLUDE_DIR)
+  message(FATAL_ERROR "Could not find GeographicLib headers")
+endif()
+
+if(NOT GEOGRAPHICLIB_LIBRARY)
+  message(FATAL_ERROR "Could not find GeographicLib library")
+endif()
+
 # include Eigen3
 find_package(Eigen3 REQUIRED)
 set(Eigen_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIRS})
@@ -108,6 +124,7 @@ include_directories(
   ${OpenCV_INCLUDE_DIRS}
   ${pcl_ros_INCLUDE_DIRS}
   ${YAML_CPP_INCLUDE_DIRS}
+  ${GEOGRAPHICLIB_INCLUDE_DIR}
   )
 
 add_library(MrsLib_TimeoutManager src/timeout_manager/timeout_manager.cpp)
@@ -254,6 +271,7 @@ target_link_libraries(MrsLib_Transformer
   MrsLib_Geometry
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
+  ${GEOGRAPHICLIB_LIBRARY}
   )
 target_include_directories(MrsLib_Transformer PRIVATE
   ${pcl_ros_INCLUDE_DIRS}

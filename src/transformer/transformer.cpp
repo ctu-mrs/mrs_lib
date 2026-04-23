@@ -67,8 +67,7 @@ namespace mrs_lib
     lookup_timeout_ = std::move(other.lookup_timeout_);
     retry_lookup_newest_ = std::move(other.retry_lookup_newest_);
 
-    got_utm_zone_ = std::move(other.got_utm_zone_);
-    utm_zone_ = std::move(other.utm_zone_);
+    utm_zone_info_ = std::move(other.utm_zone_info_);
 
     return *this;
   }
@@ -121,8 +120,11 @@ namespace mrs_lib
     std::scoped_lock lck(mutex_);
 
     double utm_x, utm_y;
-    mrs_lib::LLtoUTM(lat, lon, utm_y, utm_x, utm_zone_.data());
-    got_utm_zone_ = true;
+    int utm_zone;
+    bool northp;
+    if (!mrs_lib::GL_LLtoUTM(lat, lon, &utm_y, &utm_x, &utm_zone, &northp))
+      return;
+    utm_zone_info_ = utm_zone_info_t{utm_zone, northp};
   }
 
   //}
@@ -337,7 +339,7 @@ namespace mrs_lib
     if (from_frame == latlon_frame)
     {
       // find the transformation between the UTM frame and the non-latlon frame to fill the returned tf
-      const std::string utm_frame = getFramePrefix(from_frame) + "utm_origin";
+      const std::string utm_frame = getFramePrefix(from_frame) + UTM_ORIGIN;
       auto tf_opt = getTransformImpl(utm_frame, to_frame, time_stamp, latlon_frame);
       if (!tf_opt.has_value())
         return std::nullopt;
@@ -348,7 +350,7 @@ namespace mrs_lib
     else if (to_frame == latlon_frame)
     {
       // find the transformation between the UTM frame and the non-latlon frame to fill the returned tf
-      const std::string utm_frame = getFramePrefix(to_frame) + "utm_origin";
+      const std::string utm_frame = getFramePrefix(to_frame) + UTM_ORIGIN;
       auto tf_opt = getTransformImpl(from_frame, utm_frame, time_stamp, latlon_frame);
       if (!tf_opt.has_value())
         return std::nullopt;
@@ -412,7 +414,7 @@ namespace mrs_lib
     if (from_frame == latlon_frame)
     {
       // find the transformation between the UTM frame and the non-latlon frame to fill the returned tf
-      const std::string utm_frame = getFramePrefix(from_frame) + "utm_origin";
+      const std::string utm_frame = getFramePrefix(from_frame) + UTM_ORIGIN;
       auto tf_opt = getTransformImpl(utm_frame, from_stamp, to_frame, to_stamp, fixed_frame, latlon_frame);
       if (!tf_opt.has_value())
         return std::nullopt;
@@ -423,7 +425,7 @@ namespace mrs_lib
     else if (to_frame == latlon_frame)
     {
       // find the transformation between the UTM frame and the non-latlon frame to fill the returned tf
-      const std::string utm_frame = getFramePrefix(to_frame) + "utm_origin";
+      const std::string utm_frame = getFramePrefix(to_frame) + UTM_ORIGIN;
       auto tf_opt = getTransformImpl(from_frame, from_stamp, utm_frame, to_stamp, fixed_frame, latlon_frame);
       if (!tf_opt.has_value())
         return std::nullopt;
@@ -499,7 +501,9 @@ namespace mrs_lib
   {
     // convert LAT-LON to UTM
     geometry_msgs::Point utm;
-    mrs_lib::UTM(what.x, what.y, &utm.x, &utm.y);
+    [[maybe_unused]] int zone;
+    [[maybe_unused]] bool northp;
+    mrs_lib::GL_LLtoUTM(what.x, what.y, &utm.x, &utm.y, &zone, &northp);
     // copy the height from the input
     utm.z = what.z;
     return utm;
@@ -508,7 +512,7 @@ namespace mrs_lib
   geometry_msgs::PointStamped Transformer::LLtoUTM(const geometry_msgs::PointStamped& what, const std::string& prefix)
   {
     geometry_msgs::PointStamped ret;
-    ret.header.frame_id = prefix + "utm_origin";
+    ret.header.frame_id = prefix + UTM_ORIGIN;
     ret.header.stamp = what.header.stamp;
     ret.point = LLtoUTM(what.point, prefix);
     return ret;
@@ -525,7 +529,7 @@ namespace mrs_lib
   geometry_msgs::PoseStamped Transformer::LLtoUTM(const geometry_msgs::PoseStamped& what, const std::string& prefix)
   {
     geometry_msgs::PoseStamped ret;
-    ret.header.frame_id = prefix + "utm_origin";
+    ret.header.frame_id = prefix + UTM_ORIGIN;
     ret.header.stamp = what.header.stamp;
     ret.pose = LLtoUTM(what.pose, prefix);
     return ret;
@@ -536,15 +540,16 @@ namespace mrs_lib
   std::optional<geometry_msgs::Point> Transformer::UTMtoLL(const geometry_msgs::Point& what, [[maybe_unused]] const std::string& prefix)
   {
     // if no UTM zone was specified by the user, we don't know which one to use...
-    if (!got_utm_zone_)
+    if (!utm_zone_info_.has_value())
     {
       ROS_WARN_THROTTLE(1.0, "[%s]: cannot transform to latlong, missing UTM zone (did you call setLatLon()?)", node_name_.c_str());
       return std::nullopt;
     }
+    const auto& utm_zone_info = utm_zone_info_.value();
   
     // now apply the nonlinear transformation from UTM to LAT-LON
     geometry_msgs::Point latlon;
-    mrs_lib::UTMtoLL(what.y, what.x, utm_zone_.data(), latlon.x, latlon.y);
+    mrs_lib::GL_UTMtoLL(what.y, what.x, utm_zone_info.zone, utm_zone_info.north_hemisphere, &latlon.x, &latlon.y);
     latlon.z = what.z;
     return latlon;
   }
