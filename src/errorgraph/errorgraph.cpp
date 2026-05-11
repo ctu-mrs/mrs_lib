@@ -94,7 +94,7 @@ namespace mrs_lib
       std::vector<element_info_t> roots;
       for (const auto& el_ptr : elements_)
       {
-        if (!el_ptr->is_waiting_for() && !el_ptr->is_no_error())
+        if (!el_ptr->is_waiting_for() && (!el_ptr->is_no_error() || !el_ptr->parents.empty()))
           roots.push_back(el_ptr->to_info());
       }
       return roots;
