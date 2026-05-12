@@ -156,6 +156,40 @@ namespace mrs_lib
 
   //}
 
+  /* publish(std::unique_ptr<TopicType> msg) //{ */
+
+  template <class TopicType>
+  void PublisherHandler_impl<TopicType>::publish(std::unique_ptr<TopicType> msg)
+  {
+    if (!publisher_initialized_)
+    {
+      return;
+    }
+
+    {
+      std::scoped_lock lock(mutex_publisher_);
+
+      rclcpp::Time now = node_->get_clock()->now();
+
+      if (throttle_min_dt_ > 0)
+      {
+
+        double passed = (now - last_time_published_).seconds();
+
+        if (passed < throttle_min_dt_)
+        {
+          return;
+        }
+      }
+
+      publisher_->publish(std::move(msg));
+
+      last_time_published_ = now;
+    }
+  }
+
+  //}
+
   /* getNumSubscribers(void) //{ */
 
   template <class TopicType>
@@ -258,6 +292,7 @@ namespace mrs_lib
 
   //}
 
+
   /* /1* publish(const std::shared_ptr<TopicType const>& msg) //{ *1/ */
 
   /* template <class TopicType> */
@@ -275,6 +310,18 @@ namespace mrs_lib
   {
 
     impl_->publish(msg);
+  }
+
+  //}
+
+
+  /* publish(std::unique_ptr<TopicType> msg) //{ */
+
+  template <class TopicType>
+  void PublisherHandler<TopicType>::publish(std::unique_ptr<TopicType> msg)
+  {
+
+    impl_->publish(std::move(msg));
   }
 
   //}

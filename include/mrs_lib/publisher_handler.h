@@ -95,6 +95,13 @@ namespace mrs_lib
     void publish(typename TopicType::ConstSharedPtr msg);
 
     /**
+     * @brief publish message, unique_ptr overload
+     *
+     * @param msg message
+     */
+    void publish(std::unique_ptr<TopicType> msg);
+
+    /**
      * @brief get number of subscribers
      *
      * @return the number of subscribers
@@ -199,6 +206,13 @@ namespace mrs_lib
      * @param msg
      */
     void publish(typename TopicType::ConstSharedPtr msg);
+
+    /**
+     * @brief publish message, unique_ptr overload
+     *
+     * @param msg message
+     */
+    void publish(std::unique_ptr<TopicType> msg);
 
     /**
      * @brief get number of subscribers
