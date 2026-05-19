@@ -46,9 +46,14 @@ protected:
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
     executor_->add_node(node_);
 
+    finished_promise_ = std::promise<bool>();
     finished_future_ = finished_promise_.get_future();
 
     main_thread_ = std::thread(&Test::spin, this);
+
+    finished_future_.wait();
+
+    node_->get_clock()->sleep_for(1s);
   }
 
   //}
@@ -59,6 +64,8 @@ protected:
   {
 
     RCLCPP_INFO(node_->get_logger(), "starting spinning");
+
+    finished_promise_.set_value(true);
 
     executor_->spin();
 

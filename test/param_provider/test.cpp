@@ -46,9 +46,16 @@ protected:
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
     executor_->add_node(node_);
 
+    finished_promise_ = std::promise<bool>();
     finished_future_ = finished_promise_.get_future();
 
     main_thread_ = std::thread(&Test::spin, this);
+
+    finished_future_.wait();
+
+    node_->get_clock()->sleep_for(1s);
+
+    RCLCPP_INFO(node_->get_logger(), "test initialized");
   }
 
   //}
@@ -59,6 +66,8 @@ protected:
   {
 
     RCLCPP_INFO(node_->get_logger(), "starting spinning");
+
+    finished_promise_.set_value(true);
 
     executor_->spin();
 
@@ -71,7 +80,11 @@ protected:
 
   void despin()
   {
+    RCLCPP_INFO(node_->get_logger(), "canceling executor");
+
     executor_->cancel();
+
+    RCLCPP_INFO(node_->get_logger(), "executor canceled");
 
     main_thread_.join();
   }
@@ -103,13 +116,19 @@ TEST_F(Test, param_provider_declare)
   const auto name = "test_int";
   int test_int = -666;
 
+  RCLCPP_INFO(node_->get_logger(), "test part 1");
+
   EXPECT_FALSE(pp.getParam(name, test_int));
   EXPECT_EQ(test_int, -666);
   EXPECT_FALSE(node_->has_parameter(name));
 
+  RCLCPP_INFO(node_->get_logger(), "test part 2");
+
   int init_value = 1;
   EXPECT_TRUE(pp.declareParam(name, init_value));
   EXPECT_TRUE(node_->has_parameter(name));
+
+  RCLCPP_INFO(node_->get_logger(), "test part 3");
 
   EXPECT_FALSE(pp.setParam(name, 13.4f));
   EXPECT_TRUE(pp.getParam(name, test_int));
