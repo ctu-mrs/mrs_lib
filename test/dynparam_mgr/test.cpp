@@ -38,7 +38,14 @@ protected:
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
     executor_->add_node(node_);
 
+    finished_promise_ = std::promise<bool>();
+    finished_future_ = finished_promise_.get_future();
+
     main_thread_ = std::thread(&Test::spin, this);
+
+    finished_future_.wait();
+
+    node_->get_clock()->sleep_for(1s);
   }
 
   //}
@@ -49,6 +56,8 @@ protected:
   {
 
     RCLCPP_INFO(node_->get_logger(), "starting spinning");
+
+    finished_promise_.set_value(true);
 
     executor_->spin();
 
@@ -74,6 +83,9 @@ protected:
   std::thread main_thread_;
 
   rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
+
+  std::promise<bool> finished_promise_;
+  std::future<bool> finished_future_;
 };
 
 template <typename T>
