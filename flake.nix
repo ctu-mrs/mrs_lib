@@ -58,14 +58,30 @@
             ros.tf2-geometry-msgs
             ros.tf2-eigen
             ros.visualization-msgs
+          ];
 
+          # PUBLIC dependencies. 
+          # These automatically transition to any downstream package.
+          propagatedBuildInputs = [ 
+            ros.sensor-msgs
+            ros.std-srvs
+            ros.std-msgs
+            ros.nav-msgs
+            ros.geometry-msgs
+            ros.python-cmake-module
+            ros.rosidl-default-runtime
+            ros.tf2
+            ros.tf2-geometry-msgs
+            ros.tf2-eigen
+            ros.visualization-msgs
             pkgs.eigen
             pkgs.yaml-cpp
             pkgs.boost
-
             mrs_cmake_pkg
             mrs_msgs_pkg
+            pkgs.eigen
           ];
+
         };
 
         devShells.default = pkgs.mkShell {
