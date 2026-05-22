@@ -2,9 +2,18 @@
   inputs = {
     nix-ros-overlay.url = "github:lopsided98/nix-ros-overlay/master";
     nixpkgs.follows = "nix-ros-overlay/nixpkgs";
+
+    mrs_cmake_repo.url = "github:ctu-mrs/mrs_cmake/nix";
+    mrs_cmake_repo.inputs.nixpkgs.follows = "nix-ros-overlay/nixpkgs";
+    mrs_cmake_repo.inputs.nix-ros-overlay.follows = "nix-ros-overlay";
+
+    mrs_msgs_repo.url = "github:ctu-mrs/mrs_msgs/nix";
+    mrs_msgs_repo.inputs.nixpkgs.follows = "nix-ros-overlay/nixpkgs";
+    mrs_msgs_repo.inputs.nix-ros-overlay.follows = "nix-ros-overlay";
   };
 
-  outputs = { self, nix-ros-overlay, nixpkgs }:
+  outputs = { self, nix-ros-overlay, nixpkgs, mrs_cmake_repo, mrs_msgs_repo }:
+
     # This automatically loops through x86_64-linux, aarch64-linux, etc.
     nix-ros-overlay.inputs.flake-utils.lib.eachDefaultSystem (system:
       let
@@ -14,6 +23,9 @@
         };
 
         ros = pkgs.rosPackages.jazzy;
+
+        mrs_cmake_pkg = mrs_cmake_repo.packages.${system}.default;
+        mrs_msgs_pkg = mrs_msgs_repo.packages.${system}.default;
       in {
 
         # We drop ${system} here because eachDefaultSystem handles it
@@ -38,10 +50,21 @@
             ros.sensor-msgs
             ros.std-srvs
             ros.std-msgs
+            ros.nav-msgs
             ros.geometry-msgs
             ros.python-cmake-module
-            # Added runtime requirement for messages
             ros.rosidl-default-runtime
+            ros.tf2
+            ros.tf2-geometry-msgs
+            ros.tf2-eigen
+            ros.visualization-msgs
+
+            pkgs.eigen
+            pkgs.yaml-cpp
+            pkgs.boost
+
+            mrs_cmake_pkg
+            mrs_msgs_pkg
           ];
         };
 
@@ -52,15 +75,6 @@
             (ros.buildEnv {
               paths = [
                 ros.ros-core
-                ros.ament-cmake 
-                ros.ament-cmake-core
-                ros.builtin-interfaces
-                ros.mrs-msgs
-                ros.geometry-msgs
-                ros.python-cmake-module
-                # Required to run colcon build locally for messages
-                ros.rosidl-default-generators
-                ros.rosidl-default-runtime
               ];
             })
           ];
