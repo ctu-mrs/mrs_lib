@@ -1,8 +1,6 @@
 #include <mrs_lib/transformer.h>
 #include <mrs_lib/gps_conversions.h>
 
-#include <opencv2/core/types.hpp>
-
 #include <mrs_lib/geometry/conversions.h>
 #include <mutex>
 
@@ -18,6 +16,9 @@ template std::optional<test_t::SharedPtr> mrs_lib::Transformer::transformSingle<
 template std::optional<test_t::SharedPtr> mrs_lib::Transformer::transformSingle<test_t>(const test_t::ConstSharedPtr& what, const std::string& to_frame);
 
 #ifdef OPENCV_SPECIALIZATION
+
+#include <opencv2/core/types.hpp>
+
 namespace tf2
 {
   template <>
