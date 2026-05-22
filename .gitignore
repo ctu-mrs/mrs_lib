@@ -21,3 +21,7 @@ act.sh
 log
 
 ci_scripts
+
+flake.lock
+
+result
