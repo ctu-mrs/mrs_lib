@@ -94,7 +94,7 @@ namespace mrs_lib
       std::vector<element_info_t> roots;
       for (const auto& el_ptr : elements_)
       {
-        if (!el_ptr->is_waiting_for() && !el_ptr->is_no_error())
+        if (!el_ptr->is_waiting_for() && (!el_ptr->is_no_error() || !el_ptr->parents.empty()))
           roots.push_back(el_ptr->to_info());
       }
       return roots;
@@ -207,12 +207,20 @@ namespace mrs_lib
         }
 
         // initialize all topics this node is waiting for if they do not exist
-        for (const auto& topic_name_ptr : el_ptr->waited_for_topics())
+        for (const auto& error : el_ptr->errors)
         {
-          const element_t* previous_el = find_element_mutable(*topic_name_ptr);
-          // if the element was not found, it may have not reported yet, initialize it
-          if (previous_el == nullptr)
-            add_new_element(*topic_name_ptr);
+          if (!error.is_waiting_for_topic())
+            continue;
+          const auto& topic_name = error.waited_for_topic.value();
+          const element_t* previous_el = find_element_mutable(topic_name);
+
+          {
+            if (previous_el == nullptr)
+            {
+              const node_id_t expected_node = error.waited_for_node.value_or(node_id_t{});
+              add_new_element(topic_name, expected_node);
+            }
+          }
         }
       }
       graph_up_to_date_ = false;
@@ -274,6 +282,13 @@ namespace mrs_lib
       errorgraph_element_msg_t ret;
       ret.stamp = stamp;
       ret.source_node = source_node.to_msg();
+
+      errorgraph_error_msg_t topic_error;
+      topic_error.stamp = stamp;
+      topic_error.type = mrs_msgs::msg::ErrorgraphError::TYPE_WAITING_FOR_TOPIC;
+      topic_error.waited_for_topic = topic_name;
+      topic_error.waited_for_node = source_node.to_msg();
+      ret.errors.push_back(topic_error);
       return ret;
     }
 

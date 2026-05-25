@@ -89,6 +89,27 @@ namespace mrs_lib
       errors_.push_back({std::nullopt, std::move(msg)});
     }
 
+    void ErrorPublisher::addWaitingForTopicError(const std::string& topic_name, const node_id_t& expected_publisher)
+    {
+      const auto now = clock_->now();
+      std::scoped_lock lck(errors_mtx_);
+      for (auto& error_wrapper : errors_)
+      {
+        if (error_wrapper.msg.type == mrs_msgs::msg::ErrorgraphError::TYPE_WAITING_FOR_TOPIC && error_wrapper.msg.waited_for_topic == topic_name)
+        {
+          error_wrapper.msg.stamp = now;
+          return;
+        }
+      }
+      mrs_msgs::msg::ErrorgraphError msg;
+      msg.type = mrs_msgs::msg::ErrorgraphError::TYPE_WAITING_FOR_TOPIC;
+      msg.stamp = now;
+      msg.waited_for_topic = topic_name;
+      msg.waited_for_node.node = expected_publisher.node;
+      msg.waited_for_node.component = expected_publisher.component;
+      errors_.push_back({std::nullopt, std::move(msg)});
+    }
+
     void ErrorPublisher::addWaitingForNodeError(const node_id_t& node_id)
     {
       const auto now = clock_->now();

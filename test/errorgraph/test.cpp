@@ -204,7 +204,9 @@ TEST_F(ErrorgraphTest, find_error_roots_chain_of_dependencies)
 
 TEST_F(ErrorgraphTest, find_error_roots_waiting_with_no_error_dependency)
 {
-  // node2 is waiting for node1, but node1 has no errors
+  // node2 is waiting for node1, but node1 reports no errors.
+  // Even though node1 thinks it's OK, node2 is depending on it,
+  // so node1 should be identified as a root cause.
   auto msg1 = create_element_msg("node1", "comp1", {{errorgraph_error_msg_t::TYPE_NO_ERROR, ""}});
   auto msg2 = create_element_msg("node2", "comp2", {{errorgraph_error_msg_t::TYPE_WAITING_FOR_NODE, "node1.comp1"}});
 
@@ -213,8 +215,10 @@ TEST_F(ErrorgraphTest, find_error_roots_waiting_with_no_error_dependency)
 
   auto roots = graph_->find_error_roots();
 
-  // node1 has no error so it's not a root, node2 is waiting so it's not a root either
-  EXPECT_TRUE(roots.empty());
+  // node1 should be a root because node2 depends on it
+  ASSERT_EQ(roots.size(), 1);
+  const auto& info = std::get<Errorgraph::node_info_t>(roots[0]);
+  EXPECT_EQ(info.source_node.node, "node1");
 }
 
 //}
@@ -262,8 +266,12 @@ TEST_F(ErrorgraphTest, find_error_roots_waiting_for_topic)
 
   auto roots = graph_->find_error_roots();
 
-  // Node waiting for topic should NOT be an error root
-  EXPECT_TRUE(roots.empty());
+  // The waiting node should NOT be an error root (it's waiting).
+  // The topic element should be a root because someone depends on it.
+  ASSERT_EQ(roots.size(), 1);
+  ASSERT_TRUE(std::holds_alternative<Errorgraph::topic_info_t>(roots[0]));
+  const auto& topic = std::get<Errorgraph::topic_info_t>(roots[0]);
+  EXPECT_EQ(topic.topic_name, "/some/topic");
 }
 
 //}

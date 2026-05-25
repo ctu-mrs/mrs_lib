@@ -111,6 +111,17 @@ namespace mrs_lib
        */
       void addWaitingForTopicError(const std::string& topic_name);
 
+      /*!
+       * \brief Add a special error type `waiting_for_topic`.
+       * If the expected publisher of the topic is known, use this method to provide better information to the Errorgraph. If the expected publisher is unknown
+       * or can change, use the overload without the `expected_publisher` parameter instead.
+       *
+       * \param topic_name       Full name of the topic that is being waited for.
+       * \param expected_publisher  Identifier of the node and component that is expected to publish this topic.
+       */
+      void addWaitingForTopicError(const std::string& topic_name, const node_id_t& expected_publisher);
+
+
     private:
       rclcpp::Node::SharedPtr node_;
       rclcpp::Clock::SharedPtr clock_;
