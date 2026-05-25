@@ -4,12 +4,12 @@
     nixpkgs.follows = "nix-ros-overlay/nixpkgs";
 
     mrs_cmake_repo.url = "github:ctu-mrs/mrs_cmake/nix";
-    mrs_cmake_repo.inputs.nixpkgs.follows = "nix-ros-overlay/nixpkgs";
-    mrs_cmake_repo.inputs.nix-ros-overlay.follows = "nix-ros-overlay";
+    # mrs_cmake_repo.inputs.nixpkgs.follows = "nix-ros-overlay/nixpkgs";
+    # mrs_cmake_repo.inputs.nix-ros-overlay.follows = "nix-ros-overlay";
 
     mrs_msgs_repo.url = "github:ctu-mrs/mrs_msgs/nix";
-    mrs_msgs_repo.inputs.nixpkgs.follows = "nix-ros-overlay/nixpkgs";
-    mrs_msgs_repo.inputs.nix-ros-overlay.follows = "nix-ros-overlay";
+    # mrs_msgs_repo.inputs.nixpkgs.follows = "nix-ros-overlay/nixpkgs";
+    # mrs_msgs_repo.inputs.nix-ros-overlay.follows = "nix-ros-overlay";
   };
 
   outputs = { self, nix-ros-overlay, nixpkgs, mrs_cmake_repo, mrs_msgs_repo }:
