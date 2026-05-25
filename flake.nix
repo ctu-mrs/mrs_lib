@@ -26,43 +26,45 @@
 
         mrs_cmake_pkg = mrs_cmake_repo.packages.${system}.default;
         mrs_msgs_pkg = mrs_msgs_repo.packages.${system}.default;
+
+        deps = [
+          ros.ros-core
+          ros.ament-cmake-core
+          ros.builtin-interfaces
+          ros.sensor-msgs
+          ros.std-srvs
+          ros.std-msgs
+          ros.nav-msgs
+          ros.geometry-msgs
+          ros.python-cmake-module
+          ros.rosidl-default-runtime
+          ros.tf2
+          ros.tf2-geometry-msgs
+          ros.tf2-eigen
+          ros.visualization-msgs
+        ];
       in {
 
         # We drop ${system} here because eachDefaultSystem handles it
         packages.default = ros.buildRosPackage {
           pname = "mrs_lib";
           version = "2.0.0";
-          
+
           # Use path syntax, not string syntax
           src = ./.;
-          
+
           buildType = "ament_cmake";
-          
-          nativeBuildInputs = [ 
-            ros.ament-cmake 
-            ros.rosidl-default-generators 
-          ];
-          
-          buildInputs = [ 
-            ros.ros-core
-            ros.ament-cmake-core
-            ros.builtin-interfaces
-            ros.sensor-msgs
-            ros.std-srvs
-            ros.std-msgs
-            ros.nav-msgs
-            ros.geometry-msgs
-            ros.python-cmake-module
-            ros.rosidl-default-runtime
-            ros.tf2
-            ros.tf2-geometry-msgs
-            ros.tf2-eigen
-            ros.visualization-msgs
+
+          nativeBuildInputs = [
+            ros.ament-cmake
+            ros.rosidl-default-generators
           ];
 
-          # PUBLIC dependencies. 
+          buildInputs = deps;
+
+          # PUBLIC dependencies.
           # These automatically transition to any downstream package.
-          propagatedBuildInputs = [ 
+          propagatedBuildInputs = [
             ros.sensor-msgs
             ros.std-srvs
             ros.std-msgs
@@ -89,9 +91,7 @@
           packages = [
             pkgs.colcon
             (ros.buildEnv {
-              paths = [
-                ros.ros-core
-              ];
+              paths = deps;
             })
           ];
         };
