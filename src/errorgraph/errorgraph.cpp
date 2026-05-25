@@ -217,7 +217,7 @@ namespace mrs_lib
           {
             if (previous_el == nullptr)
             {
-              const node_id_t expected_node = error.waited_for_node.value_or(node_id_t{}); 
+              const node_id_t expected_node = error.waited_for_node.value_or(node_id_t{});
               add_new_element(topic_name, expected_node);
             }
           }

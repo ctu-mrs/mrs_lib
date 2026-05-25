@@ -111,7 +111,8 @@ namespace mrs_lib
         {
           if (msg.type == errorgraph_error_msg_t::TYPE_WAITING_FOR_NODE)
             waited_for_node = node_id_t::from_msg(msg.waited_for_node);
-          else if (msg.type == errorgraph_error_msg_t::TYPE_WAITING_FOR_TOPIC) {
+          else if (msg.type == errorgraph_error_msg_t::TYPE_WAITING_FOR_TOPIC)
+          {
             waited_for_topic = msg.waited_for_topic;
             if (!msg.waited_for_node.node.empty() || !msg.waited_for_node.component.empty())
               waited_for_node = node_id_t::from_msg(msg.waited_for_node);
