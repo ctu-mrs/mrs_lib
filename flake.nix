@@ -1,70 +1,42 @@
 {
   inputs = {
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    devenv.url = "github:cachix/devenv";
+
+    nixpkgs.follows = "devenv/nixpkgs";
+
+    # 2. Define the ROS overlay FIRST
     nix-ros-overlay.url = "github:lopsided98/nix-ros-overlay/master";
-    nixpkgs.follows = "nix-ros-overlay/nixpkgs";
-
-    mrs_cmake_repo.url = "github:ctu-mrs/mrs_cmake/nix";
-    # mrs_cmake_repo.inputs.nixpkgs.follows = "nix-ros-overlay/nixpkgs";
-    # mrs_cmake_repo.inputs.nix-ros-overlay.follows = "nix-ros-overlay";
-
-    mrs_msgs_repo.url = "github:ctu-mrs/mrs_msgs/nix";
-    # mrs_msgs_repo.inputs.nixpkgs.follows = "nix-ros-overlay/nixpkgs";
-    # mrs_msgs_repo.inputs.nix-ros-overlay.follows = "nix-ros-overlay";
+    ros-nixpkgs.follows = "nix-ros-overlay/nixpkgs";
   };
 
-  outputs = { self, nix-ros-overlay, nixpkgs, mrs_cmake_repo, mrs_msgs_repo }:
+  outputs = inputs@{ flake-parts, ... }:
 
-    # This automatically loops through x86_64-linux, aarch64-linux, etc.
-    nix-ros-overlay.inputs.flake-utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = [ nix-ros-overlay.overlays.default ];
-        };
+    flake-parts.lib.mkFlake { inherit inputs; } {
 
-        ros = pkgs.rosPackages.jazzy;
+      # 1. Import the devenv module natively
+      imports = [
+        inputs.devenv.flakeModule
+      ];
 
-        mrs_cmake_pkg = mrs_cmake_repo.packages.${system}.default;
-        mrs_msgs_pkg = mrs_msgs_repo.packages.${system}.default;
+      systems = [ "x86_64-linux" ];
 
-        deps = [
-          ros.ros-core
-          ros.ament-cmake-core
-          ros.builtin-interfaces
-          ros.sensor-msgs
-          ros.std-srvs
-          ros.std-msgs
-          ros.nav-msgs
-          ros.geometry-msgs
-          ros.python-cmake-module
-          ros.rosidl-default-runtime
-          ros.tf2
-          ros.tf2-geometry-msgs
-          ros.tf2-eigen
-          ros.visualization-msgs
-        ];
-      in {
+      # 3. Everything in here is automatically generated for each system above
+      perSystem = { config, self', inputs', pkgs, system, ... }:
 
-        # We drop ${system} here because eachDefaultSystem handles it
-        packages.default = ros.buildRosPackage {
-          pname = "mrs_lib";
-          version = "2.0.0";
+        let
+          # Apply your ROS overlay for this specific system
+          rosPkgs = import inputs.ros-nixpkgs {
+            inherit system;
+            overlays = [ inputs.nix-ros-overlay.overlays.default ];
+          };
 
-          # Use path syntax, not string syntax
-          src = ./.;
+          ros = rosPkgs.rosPackages.jazzy;
 
-          buildType = "ament_cmake";
-
-          nativeBuildInputs = [
-            ros.ament-cmake
-            ros.rosidl-default-generators
-          ];
-
-          buildInputs = deps;
-
-          # PUBLIC dependencies.
-          # These automatically transition to any downstream package.
-          propagatedBuildInputs = [
+          rosDeps = [
+            ros.ros-core
+            ros.ament-cmake-core
+            ros.builtin-interfaces
             ros.sensor-msgs
             ros.std-srvs
             ros.std-msgs
@@ -79,27 +51,51 @@
             pkgs.eigen
             pkgs.yaml-cpp
             pkgs.boost
-            mrs_cmake_pkg
-            mrs_msgs_pkg
-            pkgs.eigen
+            ros.mrs_cmake
+            ros.mrs_msgs
           ];
+        in
+        {
+          # --- The Local Developer Environment ---
+          # devenv.shells handles all the mkShell boilerplate behind the scenes
+          devenv.shells.default = {
 
+            name = "mrs_lib-dev-shell";
+
+            _module.args = {
+              inherit rosPkgs; # This passes the rosPkgs you defined above
+              inherit rosDeps;
+            };
+
+            devenv.root =
+              let
+                folder = builtins.getEnv "PWD";
+                isInsideWorkTree = folder != "";
+              in
+                if isInsideWorkTree
+                then folder
+                else "${./.}";
+
+            imports = [ ./devenv.nix ];
+          };
+
+          # --- The C++ Package Builder ---
+          packages.default = ros.buildRosPackage {
+            pname = "mrs_lib";
+            version = "2.0.0";
+            src = ./.;
+            buildType = "ament_cmake";
+            nativeBuildInputs = [ ros.ament-cmake ros.rosidl-default-generators ];
+            propagatedBuildInputs = rosDeps;
+          };
         };
 
-        devShells.default = pkgs.mkShell {
-          name = "mrs_msgs";
-          packages = [
-            pkgs.colcon
-            (ros.buildEnv {
-              paths = deps;
-            })
-          ];
+      # 4. Global flake configurations live at the bottom
+      flake = {
+        nixConfig = {
+          extra-substituters = [ "https://ctu-mrs.cachix.org" "https://ros.cachix.org" "https://devenv.cachix.org" ];
+          extra-trusted-public-keys = [ "ctu-mrs.cachix.org-1:dnw2ixFgGHfTb4bE1MWQTetAUJe9zqKUOBlrTjDuDMI=" "ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo=" "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw=" ];
         };
-      });
-
-  # This configures Nix to download pre-built ROS binaries instead of compiling C++ from scratch
-  nixConfig = {
-    extra-substituters = [ "https://ros.cachix.org" ];
-    extra-trusted-public-keys = [ "ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo=" ];
-  };
+      };
+    };
 }
