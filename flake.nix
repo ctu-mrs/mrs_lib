@@ -17,7 +17,7 @@
     mrs_msgs_repo.inputs.nix-ros-overlay.follows = "nix-ros-overlay";
   };
 
-  outputs = inputs@{ flake-parts, mrs_cmake_repo, mrs_msgs_repo, ... }:
+  outputs = inputs@{ flake-parts, ... }:
 
     flake-parts.lib.mkFlake { inherit inputs; } {
 
@@ -29,7 +29,7 @@
       systems = [ "x86_64-linux" ];
 
       # 3. Everything in here is automatically generated for each system above
-      perSystem = { config, self', inputs', pkgs, system, mrs_cmake_repo, mrs_msgs_repo, ... }:
+      perSystem = { config, self', inputs', pkgs, system, ... }:
 
         let
           # Apply your ROS overlay for this specific system
@@ -40,8 +40,8 @@
 
           ros = rosPkgs.rosPackages.jazzy;
 
-          mrs_cmake = mrs_cmake_repo.packages.${system}.default;
-          mrs_msgs = mrs_msgs_repo.packages.${system}.default;
+          mrs_cmake = inputs.mrs_cmake_repo.packages.${system}.default;
+          mrs_msgs = inputs.mrs_msgs_repo.packages.${system}.default;
 
           rosDeps = [
             ros.ros-core
