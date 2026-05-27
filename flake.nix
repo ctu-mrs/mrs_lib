@@ -11,10 +11,16 @@
     mrs_cmake_repo.url = "github:ctu-mrs/mrs_cmake/nix";
     mrs_cmake_repo.inputs.nixpkgs.follows = "nix-ros-overlay/nixpkgs";
     mrs_cmake_repo.inputs.nix-ros-overlay.follows = "nix-ros-overlay";
+    mrs_cmake_repo.inputs.ros-nixpkgs.follows = "ros-nixpkgs";
+    mrs_cmake_repo.inputs.devenv.follows = "devenv";
+    mrs_cmake_repo.inputs.flake-parts.follows = "flake-parts";
 
     mrs_msgs_repo.url = "github:ctu-mrs/mrs_msgs/nix";
     mrs_msgs_repo.inputs.nixpkgs.follows = "nix-ros-overlay/nixpkgs";
     mrs_msgs_repo.inputs.nix-ros-overlay.follows = "nix-ros-overlay";
+    mrs_msgs_repo.inputs.ros-nixpkgs.follows = "ros-nixpkgs";
+    mrs_msgs_repo.inputs.devenv.follows = "devenv";
+    mrs_msgs_repo.inputs.flake-parts.follows = "flake-parts";
   };
 
   outputs = inputs@{ flake-parts, ... }:
