@@ -5,12 +5,19 @@
 
     nixpkgs.follows = "devenv/nixpkgs";
 
-    # 2. Define the ROS overlay FIRST
     nix-ros-overlay.url = "github:lopsided98/nix-ros-overlay/master";
     ros-nixpkgs.follows = "nix-ros-overlay/nixpkgs";
+
+    mrs_cmake_repo.url = "github:ctu-mrs/mrs_cmake/nix";
+    mrs_cmake_repo.inputs.nixpkgs.follows = "nix-ros-overlay/nixpkgs";
+    mrs_cmake_repo.inputs.nix-ros-overlay.follows = "nix-ros-overlay";
+
+    mrs_msgs_repo.url = "github:ctu-mrs/mrs_msgs/nix";
+    mrs_msgs_repo.inputs.nixpkgs.follows = "nix-ros-overlay/nixpkgs";
+    mrs_msgs_repo.inputs.nix-ros-overlay.follows = "nix-ros-overlay";
   };
 
-  outputs = inputs@{ flake-parts, ... }:
+  outputs = inputs@{ flake-parts, mrs_cmake_repo, mrs_msgs_repo, ... }:
 
     flake-parts.lib.mkFlake { inherit inputs; } {
 
@@ -22,7 +29,7 @@
       systems = [ "x86_64-linux" ];
 
       # 3. Everything in here is automatically generated for each system above
-      perSystem = { config, self', inputs', pkgs, system, ... }:
+      perSystem = { config, self', inputs', pkgs, system, mrs_cmake_repo, mrs_msgs_repo, ... }:
 
         let
           # Apply your ROS overlay for this specific system
@@ -32,6 +39,9 @@
           };
 
           ros = rosPkgs.rosPackages.jazzy;
+
+          mrs_cmake = mrs_cmake_repo.packages.${system}.default;
+          mrs_msgs = mrs_msgs_repo.packages.${system}.default;
 
           rosDeps = [
             ros.ros-core
@@ -51,8 +61,8 @@
             pkgs.eigen
             pkgs.yaml-cpp
             pkgs.boost
-            ros.mrs_cmake
-            ros.mrs_msgs
+            mrs_cmake
+            mrs_msgs
           ];
         in
         {
