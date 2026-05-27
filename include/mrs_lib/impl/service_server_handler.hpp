@@ -69,7 +69,7 @@ namespace mrs_lib
 
       if (!was_running)
       {
-        internal::start_task(
+        coro::internal::start_task(
             [](std::shared_ptr<typename rclcpp::Service<ServiceType>::SharedPtr> server, // Pass the captured safe pointer
                std::shared_ptr<std::atomic<bool>> is_running,
                mrs_lib::Task<bool> (ClassType::*method)(const std::shared_ptr<typename ServiceType::Request>,

@@ -509,7 +509,7 @@ namespace mrs_lib
 
         if (!was_running)
         {
-          internal::start_task(
+          coro::internal::start_task(
               [](std::shared_ptr<std::atomic<bool>> is_running, Task<> (C::*method)(typename MessageType::ConstSharedPtr msg), C* instance,
                  typename MessageType::ConstSharedPtr msg) -> mrs_lib::Task<void> {
                 // Run the user specified callback. We co_await it, but we do not

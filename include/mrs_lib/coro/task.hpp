@@ -19,7 +19,7 @@
 // either suspend and become continuation of some other task thus transferring
 // ownership or destruct itself once completed.
 
-namespace mrs_lib
+namespace mrs_lib::coro
 {
 
   template <typename T = void>
@@ -322,7 +322,12 @@ namespace mrs_lib
     friend class internal::PromiseType<T>;
   };
 
-} // namespace mrs_lib
+} // namespace mrs_lib::coro
+
+namespace mrs_lib
+{
+  using coro::Task;
+}
 
 #ifndef MRS_LIB_CORO_TASK_IMPL_HPP_
 #include <mrs_lib/coro/task.impl.hpp> // IWYU pragma: export

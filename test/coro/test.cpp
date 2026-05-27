@@ -29,23 +29,24 @@ namespace
     };
   };
 
-  static_assert(noexcept(std::declval<mrs_lib::internal::ResultStorage<int>>().set_value(10)),
+  static_assert(noexcept(std::declval<mrs_lib::coro::internal::ResultStorage<int>>().set_value(10)),
                 "ResultStorage::set_value should be noexcept when stored type is noexcept move constructible");
-  static_assert(noexcept(std::declval<mrs_lib::internal::ResultStorage<std::string>>().set_value(std::declval<std::string>())),
+  static_assert(noexcept(std::declval<mrs_lib::coro::internal::ResultStorage<std::string>>().set_value(std::declval<std::string>())),
                 "ResultStorage::set_value should be noexcept when stored type is noexcept move constructible");
-  static_assert(!noexcept(std::declval<mrs_lib::internal::ResultStorage<PotentiallyThrowingMoveOnly>>().set_value(std::declval<PotentiallyThrowingMoveOnly>())),
-                "ResultStorage::set_value should NOT be noexcept when stored type is NOT noexcept move constructible");
+  static_assert(
+      !noexcept(std::declval<mrs_lib::coro::internal::ResultStorage<PotentiallyThrowingMoveOnly>>().set_value(std::declval<PotentiallyThrowingMoveOnly>())),
+      "ResultStorage::set_value should NOT be noexcept when stored type is NOT noexcept move constructible");
 
-  static_assert(noexcept(std::declval<mrs_lib::internal::ResultStorage<int>>().set_exception(std::declval<std::exception_ptr>())),
+  static_assert(noexcept(std::declval<mrs_lib::coro::internal::ResultStorage<int>>().set_exception(std::declval<std::exception_ptr>())),
                 "ResultStorage::set_exception should be noexcept");
-  static_assert(noexcept(std::declval<mrs_lib::internal::ResultStorage<std::string>>().set_exception(std::declval<std::exception_ptr>())),
+  static_assert(noexcept(std::declval<mrs_lib::coro::internal::ResultStorage<std::string>>().set_exception(std::declval<std::exception_ptr>())),
                 "ResultStorage::set_exception should be noexcept");
-  static_assert(noexcept(std::declval<mrs_lib::internal::ResultStorage<PotentiallyThrowingMoveOnly>>().set_exception(std::declval<std::exception_ptr>())),
+  static_assert(noexcept(std::declval<mrs_lib::coro::internal::ResultStorage<PotentiallyThrowingMoveOnly>>().set_exception(std::declval<std::exception_ptr>())),
                 "ResultStorage::set_exception should be noexcept");
 
   consteval bool result_storage_test_default_ctor_dtor()
   {
-    mrs_lib::internal::ResultStorage<int> storage;
+    mrs_lib::coro::internal::ResultStorage<int> storage;
 
     return true;
   }
@@ -53,7 +54,7 @@ namespace
 
   consteval bool result_storage_test_int()
   {
-    mrs_lib::internal::ResultStorage<int> storage;
+    mrs_lib::coro::internal::ResultStorage<int> storage;
     storage.set_value(10);
     assert(std::move(storage).get_value() == 10);
 
@@ -64,7 +65,7 @@ namespace
   consteval bool result_storage_test_string()
   {
     std::string s = "asdf";
-    mrs_lib::internal::ResultStorage<std::string> storage;
+    mrs_lib::coro::internal::ResultStorage<std::string> storage;
     storage.set_value(std::move(s));
     assert(std::move(storage).get_value() == "asdf");
 
@@ -283,19 +284,19 @@ namespace
     int lval_int = 42;
     std::unique_ptr<int> lval_uptr = std::make_unique<int>(42);
     // function reference
-    mrs_lib::internal::start_task(co_takes_val, 42);
-    mrs_lib::internal::start_task(co_takes_lval_ref, std::ref(lval_int));
-    mrs_lib::internal::start_task(co_takes_rval_ref, 42);
-    mrs_lib::internal::start_task(co_takes_move_only, std::make_unique<int>(42));
-    mrs_lib::internal::start_task(co_takes_move_only_lval_ref, std::ref(lval_uptr));
-    mrs_lib::internal::start_task(co_takes_move_only_rval_ref, std::make_unique<int>(42));
+    mrs_lib::coro::internal::start_task(co_takes_val, 42);
+    mrs_lib::coro::internal::start_task(co_takes_lval_ref, std::ref(lval_int));
+    mrs_lib::coro::internal::start_task(co_takes_rval_ref, 42);
+    mrs_lib::coro::internal::start_task(co_takes_move_only, std::make_unique<int>(42));
+    mrs_lib::coro::internal::start_task(co_takes_move_only_lval_ref, std::ref(lval_uptr));
+    mrs_lib::coro::internal::start_task(co_takes_move_only_rval_ref, std::make_unique<int>(42));
     // function pointer
-    mrs_lib::internal::start_task(&co_takes_val, 42);
-    mrs_lib::internal::start_task(&co_takes_lval_ref, std::ref(lval_int));
-    mrs_lib::internal::start_task(&co_takes_rval_ref, 42);
-    mrs_lib::internal::start_task(&co_takes_move_only, std::make_unique<int>(42));
-    mrs_lib::internal::start_task(&co_takes_move_only_lval_ref, std::ref(lval_uptr));
-    mrs_lib::internal::start_task(&co_takes_move_only_rval_ref, std::make_unique<int>(42));
+    mrs_lib::coro::internal::start_task(&co_takes_val, 42);
+    mrs_lib::coro::internal::start_task(&co_takes_lval_ref, std::ref(lval_int));
+    mrs_lib::coro::internal::start_task(&co_takes_rval_ref, 42);
+    mrs_lib::coro::internal::start_task(&co_takes_move_only, std::make_unique<int>(42));
+    mrs_lib::coro::internal::start_task(&co_takes_move_only_lval_ref, std::ref(lval_uptr));
+    mrs_lib::coro::internal::start_task(&co_takes_move_only_rval_ref, std::make_unique<int>(42));
   }
 
   TEST(MrsLibCoro, StartCopyDecays)
@@ -317,12 +318,12 @@ namespace
     int val = 0;
 
     // This call should copy the value and invoke the `int &&` overload
-    mrs_lib::internal::start_task(Func{}, val);
+    mrs_lib::coro::internal::start_task(Func{}, val);
 
     EXPECT_EQ(val, 0);
 
     // The reference wrapper should be able to keep the reference and call the `int&` overload
-    mrs_lib::internal::start_task(Func{}, std::ref(val));
+    mrs_lib::coro::internal::start_task(Func{}, std::ref(val));
 
     EXPECT_EQ(val, 42);
   }
@@ -331,7 +332,7 @@ namespace
   {
     bool finished = false;
 
-    mrs_lib::internal::start_task(
+    mrs_lib::coro::internal::start_task(
         [](bool& finished) -> mrs_lib::Task<> {
           finished = true;
           co_return;
@@ -346,7 +347,7 @@ namespace
     int result = 0;
 
     // No ampersand in front of function name - passing function reference
-    mrs_lib::internal::start_task(co_set_42, std::ref(result));
+    mrs_lib::coro::internal::start_task(co_set_42, std::ref(result));
 
     EXPECT_EQ(result, 42);
   }
@@ -356,7 +357,7 @@ namespace
     int result = 0;
 
     // Ampersand in front of function name - passing function pointer
-    mrs_lib::internal::start_task(&co_set_42, std::ref(result));
+    mrs_lib::coro::internal::start_task(&co_set_42, std::ref(result));
 
     EXPECT_EQ(result, 42);
   }
@@ -377,7 +378,7 @@ namespace
   {
     bool finished = false;
 
-    mrs_lib::internal::start_task(
+    mrs_lib::coro::internal::start_task(
         [](bool& finished) -> mrs_lib::Task<> {
           int val = co_await co_42();
           EXPECT_EQ(val, 42);
@@ -393,7 +394,7 @@ namespace
   {
     bool finished = false;
 
-    mrs_lib::internal::start_task(
+    mrs_lib::coro::internal::start_task(
         [](bool& finished) -> mrs_lib::Task<> {
           std::unique_ptr<int> val = co_await co_uptr_42();
           EXPECT_EQ(*val, 42);
@@ -409,7 +410,7 @@ namespace
   {
     bool finished = false;
 
-    mrs_lib::internal::start_task(
+    mrs_lib::coro::internal::start_task(
         [](bool& finished) -> mrs_lib::Task<> {
           int val = co_await co_2_times_42();
           EXPECT_EQ(val, 84);
@@ -425,7 +426,7 @@ namespace
   {
     bool finished = false;
 
-    mrs_lib::internal::start_task(
+    mrs_lib::coro::internal::start_task(
         [](bool& finished) -> mrs_lib::Task<> {
           int val = co_await co_42_recursive(deep_recursion_depth);
           EXPECT_EQ(val, 42);
@@ -441,7 +442,7 @@ namespace
   {
     bool finished = false;
 
-    mrs_lib::internal::start_task(
+    mrs_lib::coro::internal::start_task(
         [](bool& finished) -> mrs_lib::Task<> {
           bool val = co_await co_check_throws(co_throws_logic_error);
           EXPECT_TRUE(val);
@@ -459,7 +460,7 @@ namespace
     {
       bool finished = false;
 
-      mrs_lib::internal::start_task(
+      mrs_lib::coro::internal::start_task(
           [](bool& finished, size_t level) -> mrs_lib::Task<> {
             bool val = co_await co_check_throws(co_call_throwning, level);
             EXPECT_TRUE(val);
@@ -476,7 +477,7 @@ namespace
   {
     bool finished = false;
 
-    mrs_lib::internal::start_task(
+    mrs_lib::coro::internal::start_task(
         [](bool& finished) -> mrs_lib::Task<> {
           bool val = co_await co_check_throws(co_throws_logic_error_non_void);
           EXPECT_TRUE(val);
@@ -494,7 +495,7 @@ namespace
     {
       bool finished = false;
 
-      mrs_lib::internal::start_task(
+      mrs_lib::coro::internal::start_task(
           [](bool& finished, size_t level) -> mrs_lib::Task<> {
             bool val = co_await co_check_throws(co_call_throwning_non_void, level);
             EXPECT_TRUE(val);
@@ -511,7 +512,7 @@ namespace
   {
     bool finished = false;
 
-    mrs_lib::internal::start_task(
+    mrs_lib::coro::internal::start_task(
         [](bool& finished) -> mrs_lib::Task<> {
           bool val = co_await co_check_throws(co_get_error_on_move);
           EXPECT_TRUE(val);
@@ -527,7 +528,7 @@ namespace
   {
     bool finished = false;
 
-    mrs_lib::internal::start_task(
+    mrs_lib::coro::internal::start_task(
         [](bool& finished) -> mrs_lib::Task<> {
           bool val = co_await check_get_exception_ptr();
           EXPECT_TRUE(val);
@@ -576,7 +577,7 @@ namespace
 
     bool finished = false;
 
-    mrs_lib::internal::start_task(
+    mrs_lib::coro::internal::start_task(
         [](bool& finished, size_t iterations) -> mrs_lib::Task<> {
           size_t val = co_await co_test_long_loop(iterations);
           EXPECT_EQ(val, iterations);

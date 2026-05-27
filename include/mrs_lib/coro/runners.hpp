@@ -8,7 +8,7 @@
 #include <mrs_lib/coro/task.hpp>
 
 
-namespace mrs_lib
+namespace mrs_lib::coro
 {
 
   namespace internal
@@ -87,6 +87,6 @@ namespace mrs_lib
 
   } // namespace internal
 
-} // namespace mrs_lib
+} // namespace mrs_lib::coro
 
 #endif // MRS_LIB_CORO_RUNNERS_HPP_

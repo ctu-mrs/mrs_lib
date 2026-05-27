@@ -4,7 +4,7 @@
 #include <coroutine>
 #include <cstddef>
 
-namespace mrs_lib::internal
+namespace mrs_lib::coro::internal
 {
 
   namespace
@@ -85,4 +85,4 @@ namespace mrs_lib::internal
   }
 
 
-} // namespace mrs_lib::internal
+} // namespace mrs_lib::coro::internal

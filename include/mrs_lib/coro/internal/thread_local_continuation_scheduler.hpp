@@ -4,7 +4,7 @@
 
 #include <coroutine>
 
-namespace mrs_lib::internal
+namespace mrs_lib::coro::internal
 {
 
   // This is a workaround to GCC generated code overflowing stack when using symmetric transfer
@@ -39,7 +39,7 @@ namespace mrs_lib::internal
     }
   };
 
-} // namespace mrs_lib::internal
+} // namespace mrs_lib::coro::internal
 
 
 #endif // MRS_LIB_CORO_INTERNAL_THREAD_LOCAL_CONTINUATION_SCHEDULER_HPP_
