@@ -54,7 +54,7 @@ foreach(DEP IN LISTS DEPENDENCIES)
   find_package(${DEP} REQUIRED)
 endforeach()
 
-find_package(OpenCV REQUIRED HINTS /usr/local/lib)
+# find_package(OpenCV REQUIRED HINTS /usr/local/lib)
 
 ## --------------------------------------------------------------
 ## |                       compile                              |
@@ -204,7 +204,7 @@ target_link_libraries(mrs_lib_mrs_lib
     yaml-cpp::yaml-cpp
     tf2_eigen::tf2_eigen
     Boost::headers
-    ${OpenCV_LIBRARIES}
+    # ${OpenCV_LIBRARIES}
     # msgs
     ${geometry_msgs_TARGETS}
     ${tf2_ros_TARGETS}
