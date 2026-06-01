@@ -13,7 +13,6 @@
 
   <buildtool_depend>ament_cmake_python</buildtool_depend>
 
-  <depend>mrs_cmake</depend>
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
   <depend>mrs_msgs</depend>
