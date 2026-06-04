@@ -326,6 +326,48 @@ namespace mrs_lib
     }
 
     /*!
+     * \brief Convenience constructor overload for Coroutines (Task<>).
+     *
+     * \param options          The common options struct.
+     * \param message_callback The coroutine callback method to call when a new message is received.
+     * \param obj2             The object on which the coroutine callback method will be called.
+     * \param args             Remaining arguments to be parsed.
+     */
+    template <class ObjectType2, class... Types>
+    SubscriberHandler(const SubscriberHandlerOptions& options, mrs_lib::Task<> (ObjectType2::*const message_callback)(typename MessageType::ConstSharedPtr),
+                      ObjectType2* const obj2, Types... args)
+        : SubscriberHandler(options, message_callback == nullptr ? message_callback_t() : createNonReentrantCallback(message_callback, obj2), args...)
+    {
+      internal::require_callback_group_coro_compatible(options.subscription_options.callback_group);
+    }
+
+    /*!
+     * \brief Convenience constructor overload for Coroutines (Task<>) with a timeout callback.
+     *
+     * \param options          The common options struct.
+     * \param message_callback The coroutine callback method to call when a new message is received.
+     * \param obj2             The object on which the coroutine callback method will be called.
+     * \param timeout_callback The callback method to call when a new message is not received.
+     * \param obj1             The object on which the callback method \p timeout_callback will be called.
+     * \param args             Remaining arguments to be parsed.
+     */
+    template <class ObjectType1, class ObjectType2, class... Types>
+    SubscriberHandler(const SubscriberHandlerOptions& options, mrs_lib::Task<> (ObjectType2::*const message_callback)(typename MessageType::ConstSharedPtr),
+                      ObjectType2* const obj2, void (ObjectType1::*const timeout_callback)(const std::string& topic_name, const rclcpp::Time& last_msg),
+                      ObjectType1* const obj1, Types... args)
+        : SubscriberHandler(
+              [options, timeout_callback, obj1]() {
+                SubscriberHandlerOptions opts = options;
+                opts.timeout_callback =
+                    timeout_callback == nullptr ? timeout_callback_t() : std::bind(timeout_callback, obj1, std::placeholders::_1, std::placeholders::_2);
+                return opts;
+              }(),
+              message_callback == nullptr ? message_callback_t() : createNonReentrantCallback(message_callback, obj2), args...)
+    {
+      internal::require_callback_group_coro_compatible(options.subscription_options.callback_group);
+    }
+
+    /*!
      * \brief Convenience constructor overload.
      *
      * \param options          The common options struct (see documentation of SubscriberHandlerOptions).
@@ -446,6 +488,40 @@ namespace mrs_lib
     class Impl;
     class ImplThreadsafe;
     std::unique_ptr<Impl> m_pimpl;
+
+  protected:
+    /**
+     * @brief Create a callback for coroutine that should only run once at a time.
+     *
+     * Since coroutine callbacks are only allowed for reentrant groups,
+     * the callback could be called while the previous is still in progress.
+     * This helper function creates a callback that is skipped if the previous
+     * one is still running.
+     */
+    template <typename C>
+    static std::function<void(typename MessageType::ConstSharedPtr)> createNonReentrantCallback(Task<> (C::*method)(typename MessageType::ConstSharedPtr msg),
+                                                                                                C* instance)
+    {
+      auto is_running = std::make_shared<std::atomic<bool>>(false);
+
+      return [is_running, method, instance](typename MessageType::ConstSharedPtr msg) -> void {
+        bool was_running = is_running->exchange(true);
+
+        if (!was_running)
+        {
+          internal::start_task(
+              [](std::shared_ptr<std::atomic<bool>> is_running, Task<> (C::*method)(typename MessageType::ConstSharedPtr msg), C* instance,
+                 typename MessageType::ConstSharedPtr msg) -> mrs_lib::Task<void> {
+                // Run the user specified callback. We co_await it, but we do not
+                // co_return the boolean result since start_task expects Task<void>.
+                co_await std::invoke(method, instance, msg);
+
+                is_running->store(false);
+              },
+              is_running, method, instance, msg);
+        }
+      };
+    }
   };
   //}
 
