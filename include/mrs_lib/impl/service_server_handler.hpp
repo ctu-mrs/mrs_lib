@@ -5,6 +5,9 @@
 #pragma once
 
 #include <mrs_lib/service_server_handler.h>
+#include <mrs_lib/coro/runners.hpp>
+#include <mrs_lib/coro/task.hpp>
+#include <mrs_lib/internal/coroutine_callback_helpers.hpp>
 
 namespace mrs_lib
 {
@@ -40,6 +43,19 @@ namespace mrs_lib
                                                           const rclcpp::CallbackGroup::SharedPtr& callback_group)
       : ServiceServerHandler(node, address, cbk, rclcpp::ServicesQoS(), callback_group)
   {
+  }
+
+  template <class ServiceType>
+  template <typename ClassType>
+  ServiceServerHandler<ServiceType>::ServiceServerHandler(
+      rclcpp::Node::SharedPtr& node, const std::string& address,
+      mrs_lib::Task<bool> (ClassType::*method)(const std::shared_ptr<typename ServiceType::Request> request,
+                                               const std::shared_ptr<typename ServiceType::Response> response),
+      ClassType* instance, const rclcpp::QoS& qos, const rclcpp::CallbackGroup::SharedPtr& callback_group)
+      : callback_group_(callback_group),
+        service_server_(node->create_service<ServiceType>(address, createNonReentrantCallback(method, instance), qos, callback_group))
+  {
+    internal::require_callback_group_coro_compatible(callback_group);
   }
 
   //}
