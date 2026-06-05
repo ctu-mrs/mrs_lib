@@ -9,12 +9,12 @@ namespace mrs_lib
   /* printValue function and overloads //{ */
 
   template <typename T>
-  void ParamLoader::printValue(const resolved_name_t& name, const T& value) const
+  void ParamLoader::printValue(const resolved_name_t& name, const T& value, const std::string& suffix) const
   {
     if (m_node_name.empty())
-      std::cout << "\t" << name << ":\t" << value << std::endl;
+      std::cout << "\t" << name << ":\t" << value << suffix << std::endl;
     else
-      RCLCPP_INFO_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << name << "':\t" << value);
+      RCLCPP_INFO_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << name << "':\t" << value << suffix);
   }
 
   template <typename T>
@@ -269,10 +269,13 @@ namespace mrs_lib
 
     bool cur_load_successful = true;
     // try to load the parameter
-    const bool success = m_pp.getParam(resolved_name, loaded);
-    if (!success)
+    ParamProvider::get_options_t<T> opts;
+    if (optional)
+      opts.declare_options.default_value = default_value;
+    const auto result = m_pp.getParamResult(resolved_name, loaded, opts);
+    const bool success = result == ParamProvider::get_result_t::LOADED;
+    if (result == ParamProvider::get_result_t::FAILED)
     {
-      // if it was not loaded, set the default value
       loaded = default_value;
       if (!optional)
       {
@@ -286,7 +289,7 @@ namespace mrs_lib
     {
       // everything is fine and just print the resolved_name and value if required
       if (m_print_values)
-        printValue(resolved_name, loaded);
+        printValue(resolved_name, loaded, result == ParamProvider::get_result_t::DEFAULT ? " (default value)" : "");
       // mark the param resolved_name as successfully loaded
       m_loaded_params.insert(resolved_name);
     } else

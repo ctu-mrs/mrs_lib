@@ -128,6 +128,17 @@ namespace mrs_lib
       declare_options_t<T> declare_options = {};
     };
 
+    /** \brief Explicit result state for parameter loading. */
+    enum class get_result_t
+    {
+      /** \brief Parameter value loaded from YAML/ROS. */
+      LOADED,
+      /** \brief Parameter value resolved using provided default value. */
+      DEFAULT,
+      /** \brief Parameter value could not be resolved. */
+      FAILED,
+    };
+
     /** \brief Struct of options when setting a parameter to ROS.
      *
      * If the optionals are not filled (i.e. equal to std::nullopt), the values set in the ParamProvider class are used.
@@ -181,6 +192,21 @@ namespace mrs_lib
     bool getParam(const std::string& param_name, T& value_out) const;
 
     /*!
+     * \brief Gets the value of a parameter and returns an explicit result state.
+     *
+     * Firstly, the parameter is attempted to be loaded from the YAML files added by the addYamlFile() method
+     * in the same order that they were added. If the parameter is not found in any YAML file, and the use_rosparam
+     * flag of the constructor is true, the ParamProvider will declare it in ROS and attempt to load it from ROS.
+     *
+     * \param param_name      Name of the parameter to be loaded. Namespaces should be separated with a forward slash '/'.
+     * \param value_out       Output argument that will hold the value of the loaded parameter, if successfull. Not modified otherwise.
+     * \param opts            Options regarding getting and declaring the parameter (see the get_options_t<T> documentation).
+     * \return                Explicit loading result state.
+     */
+    template <typename T>
+    get_result_t getParamResult(const std::string& param_name, T& value_out, const get_options_t<T>& opts = {}) const;
+
+    /*!
      * \brief Gets the value of a parameter.
      *
      * Firstly, the parameter is attempted to be loaded from the YAML files added by the addYamlFile() method
@@ -194,6 +220,21 @@ namespace mrs_lib
      */
     template <typename T>
     bool getParam(const resolved_name_t& resolved_name, T& value_out, const get_options_t<T>& opts = {}) const;
+
+    /*!
+     * \brief Gets the value of a parameter and returns an explicit result state.
+     *
+     * Firstly, the parameter is attempted to be loaded from the YAML files added by the addYamlFile() method
+     * in the same order that they were added. If the parameter is not found in any YAML file, and the use_rosparam
+     * flag of the constructor is true, the ParamProvider will declare it in ROS and attempt to load it from ROS.
+     *
+     * \param resolved_name   Resolved parameter name.
+     * \param value_out       Output argument that will hold the value of the loaded parameter, if successfull. Not modified otherwise.
+     * \param opts            Options regarding getting and declaring the parameter (see the get_options_t<T> documentation).
+     * \return                Explicit loading result state.
+     */
+    template <typename T>
+    get_result_t getParamResult(const resolved_name_t& resolved_name, T& value_out, const get_options_t<T>& opts = {}) const;
 
     /*!
      * \brief Sets the value of a parameter to ROS.
