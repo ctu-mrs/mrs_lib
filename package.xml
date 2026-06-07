@@ -13,6 +13,9 @@
 
   <buildtool_depend>ament_cmake_python</buildtool_depend>
 
+  <depend>rosidl_default_runtime</depend>
+  <depend>ament_cmake_core</depend>
+  <depend>rosidl_default_generators</depend>
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
   <depend>mrs_msgs</depend>

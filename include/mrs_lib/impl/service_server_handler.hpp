@@ -52,10 +52,48 @@ namespace mrs_lib
       mrs_lib::Task<bool> (ClassType::*method)(const std::shared_ptr<typename ServiceType::Request> request,
                                                const std::shared_ptr<typename ServiceType::Response> response),
       ClassType* instance, const rclcpp::QoS& qos, const rclcpp::CallbackGroup::SharedPtr& callback_group)
-      : callback_group_(callback_group),
-        service_server_(node->create_service<ServiceType>(address, createNonReentrantCallback(method, instance), qos, callback_group))
+      : callback_group_(callback_group)
   {
     internal::require_callback_group_coro_compatible(callback_group);
+
+    auto is_running = std::make_shared<std::atomic<bool>>(false);
+
+    // 1. Create a shared pointer to hold the service server.
+    // This will survive moves and copies of the ServiceServerHandler.
+    auto safe_server_ptr = std::make_shared<typename rclcpp::Service<ServiceType>::SharedPtr>();
+
+    // 2. Capture 'safe_server_ptr' instead of 'this'
+    auto deferred_cbk = [safe_server_ptr, is_running, method, instance](const std::shared_ptr<rmw_request_id_t> req_id,
+                                                                        const std::shared_ptr<typename ServiceType::Request> req) -> void {
+      bool was_running = is_running->exchange(true);
+
+      if (!was_running)
+      {
+        internal::start_task(
+            [](std::shared_ptr<typename rclcpp::Service<ServiceType>::SharedPtr> server, // Pass the captured safe pointer
+               std::shared_ptr<std::atomic<bool>> is_running,
+               mrs_lib::Task<bool> (ClassType::*method)(const std::shared_ptr<typename ServiceType::Request>,
+                                                        const std::shared_ptr<typename ServiceType::Response>),
+               ClassType* instance, std::shared_ptr<rmw_request_id_t> req_id, std::shared_ptr<typename ServiceType::Request> req) -> mrs_lib::Task<void> {
+              auto res = std::make_shared<typename ServiceType::Response>();
+
+              co_await std::invoke(method, instance, req, res);
+
+              // 3. Dereference the safe pointer to get the actual service object and send the response
+              if (*server)
+              {
+                (*server)->send_response(*req_id, *res);
+              }
+
+              is_running->store(false);
+            },
+            safe_server_ptr, is_running, method, instance, req_id, req); // Pass it into the coroutine
+      }
+    };
+
+    // 4. Create the service and store it in both the class member AND the shared pointer we captured
+    service_server_ = node->create_service<ServiceType>(address, deferred_cbk, qos, callback_group);
+    *safe_server_ptr = service_server_;
   }
 
   //}

@@ -2,7 +2,7 @@
 #ifndef MRS_LIB_LINE_OPERATIONS_H
 #define MRS_LIB_LINE_OPERATIONS_H
 
-#include <eigen3/Eigen/Eigen>
+#include <Eigen/Core>
 
 namespace mrs_lib
 {

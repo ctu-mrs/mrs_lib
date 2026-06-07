@@ -90,7 +90,7 @@ namespace mrs_lib
      *
      * @param vector3
      */
-    Vector3Converter(const tf2::Vector3& vector3) : vector3_(vector3){};
+    Vector3Converter(const tf2::Vector3& vector3) : vector3_(vector3) {};
 
     /**
      * @brief Constructor with Eigen::Vector3

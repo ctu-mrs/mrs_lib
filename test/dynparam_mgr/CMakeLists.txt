@@ -8,6 +8,7 @@ ament_add_gtest(test_${TEST_NAME}
 target_link_libraries(test_${TEST_NAME}
   mrs_lib::mrs_lib
   rclcpp::rclcpp
+  yaml-cpp::yaml-cpp
 )
 
 add_definitions(-DTEST_RESOURCES_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}")

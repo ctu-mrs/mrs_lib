@@ -91,46 +91,6 @@ namespace mrs_lib
     typename rclcpp::Service<ServiceType>::SharedPtr service_server_;
 
     //}
-
-  protected:
-    /**
-     * @brief Create a callback for coroutine that should only run once at a time.
-     *
-     * Since coroutine callbacks are only allowed for reentrant groups,
-     * the callback could be called while the previous is still in progress.
-     * This helper function creates a callback that is skipped if the previous
-     * one is still running.
-     */
-    template <typename C>
-    static std::function<void(const std::shared_ptr<typename ServiceType::Request> request, const std::shared_ptr<typename ServiceType::Response> response)>
-    createNonReentrantCallback(Task<bool> (C::*method)(const std::shared_ptr<typename ServiceType::Request> request,
-                                                       const std::shared_ptr<typename ServiceType::Response> response),
-                               C* instance)
-    {
-      auto is_running = std::make_shared<std::atomic<bool>>(false);
-
-      return [is_running, method, instance](const std::shared_ptr<typename ServiceType::Request> req,
-                                            const std::shared_ptr<typename ServiceType::Response> res) -> void {
-        bool was_running = is_running->exchange(true);
-
-        if (!was_running)
-        {
-          internal::start_task(
-              [](std::shared_ptr<std::atomic<bool>> is_running,
-                 Task<bool> (C::*method)(const std::shared_ptr<typename ServiceType::Request> request,
-                                         const std::shared_ptr<typename ServiceType::Response> response),
-                 C* instance, const std::shared_ptr<typename ServiceType::Request> req,
-                 const std::shared_ptr<typename ServiceType::Response> res) -> mrs_lib::Task<void> {
-                // Run the user specified callback. We co_await it, but we do not
-                // co_return the boolean result since start_task expects Task<void>.
-                co_await std::invoke(method, instance, req, res);
-
-                is_running->store(false);
-              },
-              is_running, method, instance, req, res);
-        }
-      };
-    }
   };
 
 } // namespace mrs_lib

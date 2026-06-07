@@ -3,7 +3,7 @@
 #define MRS_LIB_POLYGON_H
 
 #include <rclcpp/rclcpp.hpp>
-#include <eigen3/Eigen/Eigen>
+#include <Eigen/Core>
 #include <geometry_msgs/msg/point.hpp>
 #include <mrs_lib/safety_zone/line_operations.h>
 
