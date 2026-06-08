@@ -86,7 +86,7 @@ namespace mrs_lib
     /* printValue function and overloads //{ */
 
     template <typename T>
-    void printValue(const resolved_name_t& name, const T& value) const;
+    void printValue(const resolved_name_t& name, const T& value, const std::string& suffix = std::string()) const;
 
     //}
 

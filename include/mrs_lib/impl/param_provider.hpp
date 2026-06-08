@@ -82,11 +82,23 @@ namespace mrs_lib
   template <typename T>
   bool ParamProvider::getParam(const std::string& param_name, T& value_out) const
   {
-    return getParam(resolveName(param_name), value_out, {});
+    return getParamResult(resolveName(param_name), value_out, {}) != get_result_t::FAILED;
+  }
+
+  template <typename T>
+  ParamProvider::get_result_t ParamProvider::getParamResult(const std::string& param_name, T& value_out, const get_options_t<T>& opts) const
+  {
+    return getParamResult(resolveName(param_name), value_out, opts);
   }
 
   template <typename T>
   bool ParamProvider::getParam(const resolved_name_t& resolved_name, T& value_out, const get_options_t<T>& opts) const
+  {
+    return getParamResult(resolved_name, value_out, opts) != get_result_t::FAILED;
+  }
+
+  template <typename T>
+  ParamProvider::get_result_t ParamProvider::getParamResult(const resolved_name_t& resolved_name, T& value_out, const get_options_t<T>& opts) const
   {
     bool use_rosparam = m_use_rosparam;
     // the options structure always has precedence if the parameter is set
@@ -95,11 +107,11 @@ namespace mrs_lib
 
     // first, try to load from YAML, if enabled
     if (opts.use_yaml && loadFromYaml(resolved_name, value_out, opts))
-      return true;
+      return get_result_t::LOADED;
 
     // then, try to load from ROS, if enabled
     if (use_rosparam && loadFromROS(resolved_name, value_out, opts))
-      return true;
+      return get_result_t::LOADED;
 
     // if both fail, check for a default value
     if (opts.declare_options.default_value.has_value())
@@ -109,11 +121,11 @@ namespace mrs_lib
       if (opts.always_declare && !declareParam<T>(resolved_name, opts.declare_options))
       {
         RCLCPP_ERROR_STREAM(m_node->get_logger(), "Failed to declare parameter \"" << resolved_name << "\".");
-        return false;
+        return get_result_t::FAILED;
       }
 
       value_out = default_value;
-      return true;
+      return get_result_t::DEFAULT;
     }
 
     // if all options fail, return false
@@ -125,7 +137,7 @@ namespace mrs_lib
       ss << " in ROS,";
     ss << " no default value provided.";
     RCLCPP_ERROR_STREAM(m_node->get_logger(), ss.str());
-    return false;
+    return get_result_t::FAILED;
   }
   //}
 

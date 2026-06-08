@@ -120,6 +120,17 @@ TEST_F(Test, param_loader_load_from_file)
 
   EXPECT_TRUE(pl.addYamlFile(test_resources_path.string() + "/test_config.yaml"));
 
+  int optional_missing_with_default = -1;
+  EXPECT_FALSE(pl.loadParam("missing_optional_param", optional_missing_with_default, 42));
+  EXPECT_EQ(optional_missing_with_default, 42);
+  EXPECT_TRUE(pl.loadedSuccessfully());
+
+  int compulsory_missing = -1;
+  EXPECT_FALSE(pl.loadParam("missing_compulsory_param", compulsory_missing));
+  EXPECT_EQ(compulsory_missing, 0);
+  EXPECT_FALSE(pl.loadedSuccessfully());
+  pl.resetLoadedSuccessfully();
+
   std::vector<Eigen::MatrixXd> loaded_nd_matrix = pl.loadMatrixArray2("test_param_nd_matrix");
   EXPECT_TRUE(pl.loadedSuccessfully());
 
