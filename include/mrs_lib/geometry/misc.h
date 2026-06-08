@@ -12,6 +12,7 @@
 #include <Eigen/Dense>
 #include <geometry_msgs/msg/point.h>
 #include <geometry_msgs/msg/quaternion.h>
+#include <mrs_lib/geometry/cyclic.h>
 
 namespace mrs_lib
 {
@@ -40,6 +41,53 @@ namespace mrs_lib
     // | ----------------- Angle-related functions ---------------- |
 
     /* angle-related functions //{ */
+
+    /* headingNEDtoENU() //{ */
+
+    /*!
+     * \brief Converts the heading angle from the North-East-Down to the East-North-Up frame.
+     *
+     * In the NED frame, the 0 degrees correspond to the northward direction and the angle increases clockwise.
+     * In the ENU frame, 0 degrees correspond to the eastward direction and the angle increases counter-clockwise.
+     *
+     * \param heading_ned the heading angle in the NED frame (in radians).
+     * \tparam OutRangeT the subclass of mrs_lib::cyclic used to wrap the result.
+     *
+     * \returns the heading angle in the ENU frame (in radians).
+     *
+     * \note By default, the function also wraps the angle to be in the interval [-pi; pi]. To change this, pass a different OutRangeT template parameter from the mrs_lib::cyclic library.
+     */
+    template <typename OutRangeT = sradians>
+    double headingNEDtoENU(const double& heading_ned)
+    {
+      const OutRangeT heading_enu(M_PI_2 - heading_ned);
+      return heading_enu.value();
+    }
+
+    //}
+
+    /* headingENUtoNED() //{ */
+
+    /*!
+     * \brief Converts the heading angle from the East-North-Up to the North-East-Down frame.
+     *
+     * In the ENU frame, 0 degrees correspond to the eastward direction and the angle increases counter-clockwise.
+     * In the NED frame, the 0 degrees correspond to the northward direction and the angle increases clockwise.
+     *
+     * \param heading_enu the heading angle in the ENU frame (in radians).
+     *
+     * \returns the heading angle in the NED frame (in radians).
+     *
+     * \note By default, the function also wraps the angle to be in the interval [0; 2pi]. To change this, pass a different OutRangeT template parameter from the mrs_lib::cyclic library.
+     */
+    template <typename OutRangeT = radians>
+    double headingENUtoNED(const double& heading_enu)
+    {
+      const OutRangeT heading_ned(M_PI_2 - heading_enu);
+      return heading_ned.value();
+    }
+
+    //}
 
     /* headingFromRot() //{ */
 
