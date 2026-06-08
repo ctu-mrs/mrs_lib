@@ -25,6 +25,7 @@
   <depend>eigen</depend>
   <depend>yaml-cpp</depend>
   <depend>nav_msgs</depend>
+  <depend>mrs_cmake</depend>
 
   <test_depend>ament_cmake_ros</test_depend>
   <test_depend>launch</test_depend>
