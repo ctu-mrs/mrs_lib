@@ -236,11 +236,11 @@ namespace mrs_lib
 
   protected:
     /* default_timeout_callback() method //{ */
-    void default_timeout_callback(const std::string& topic_name, const rclcpp::Time& last_msg)
+    void default_timeout_callback([[maybe_unused]] const std::string& topic_name, const rclcpp::Time& last_msg)
     {
       const rclcpp::Duration since_msg = (m_node->get_clock()->now() - last_msg);
       const auto n_pubs = m_sub->get_publisher_count();
-      const std::string txt = "Did not receive any message from topic '" + topic_name + "' for " + std::to_string(since_msg.seconds()) + "s ("
+      const std::string txt = "Did not receive any message from topic '" + topicName() + "' for " + std::to_string(since_msg.seconds()) + "s ("
                               + std::to_string(n_pubs) + " publishers on this topic)";
 
       RCLCPP_WARN_STREAM(m_node->get_logger(), txt);
