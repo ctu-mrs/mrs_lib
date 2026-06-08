@@ -230,3 +230,38 @@ TEST_F(Test, param_provider_set)
 }
 
 //}
+
+/* TEST_F(Test, param_provider_get_param_result) //{ */
+
+TEST_F(Test, param_provider_get_param_result)
+{
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  auto clock = node_->get_clock();
+
+  auto pp = mrs_lib::ParamProvider(node_, false);
+  EXPECT_TRUE(pp.addYamlFile(test_resources_path.string() + "/test_config.yaml"));
+
+  int loaded_value = 0;
+  EXPECT_EQ(pp.getParamResult("param_provider/test_int", loaded_value), mrs_lib::ParamProvider::get_result_t::LOADED);
+  EXPECT_EQ(loaded_value, 666);
+
+  int defaulted_value = 0;
+  const auto default_opts = mrs_lib::ParamProvider::get_options_t<int>{.declare_options = {.default_value = 42}};
+  EXPECT_EQ(pp.getParamResult("param_provider/nonexistent_param", defaulted_value, default_opts), mrs_lib::ParamProvider::get_result_t::DEFAULT);
+  EXPECT_EQ(defaulted_value, 42);
+  EXPECT_TRUE(pp.getParam(pp.resolveName("param_provider/nonexistent_param"), defaulted_value, default_opts));
+  EXPECT_EQ(defaulted_value, 42);
+
+  int missing_value = -1;
+  EXPECT_EQ(pp.getParamResult("param_provider/nonexistent_param_without_default", missing_value), mrs_lib::ParamProvider::get_result_t::FAILED);
+  EXPECT_FALSE(pp.getParam("param_provider/nonexistent_param_without_default", missing_value));
+  EXPECT_EQ(missing_value, -1);
+
+  despin();
+
+  clock->sleep_for(1s);
+}
+
+//}
