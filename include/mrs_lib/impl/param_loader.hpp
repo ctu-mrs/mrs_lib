@@ -12,9 +12,9 @@ namespace mrs_lib
   void ParamLoader::printValue(const resolved_name_t& name, const T& value, const std::string& suffix) const
   {
     if (m_node_name.empty())
-      std::cout << "\t" << name << ":\t" << value << suffix << std::endl;
+      std::cout << "\t" << name << ":\t" << value << "\t" << suffix << std::endl;
     else
-      RCLCPP_INFO_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << name << "':\t" << value << suffix);
+      RCLCPP_INFO_STREAM(m_node->get_logger(), "[" << m_node_name << "]: parameter '" << name << "':\t" << value << "\t" << suffix);
   }
 
   template <typename T>
