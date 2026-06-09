@@ -55,7 +55,8 @@ namespace mrs_lib
      *
      * \returns the heading angle in the ENU frame (in radians).
      *
-     * \note By default, the function also wraps the angle to be in the interval [-pi; pi]. To change this, pass a different OutRangeT template parameter from the mrs_lib::cyclic library.
+     * \note By default, the function also wraps the angle to be in the interval [-pi; pi]. To change this, pass a different OutRangeT template parameter from
+     * the mrs_lib::cyclic library.
      */
     template <typename OutRangeT = sradians>
     double headingNEDtoENU(const double& heading_ned)
@@ -78,7 +79,8 @@ namespace mrs_lib
      *
      * \returns the heading angle in the NED frame (in radians).
      *
-     * \note By default, the function also wraps the angle to be in the interval [0; 2pi]. To change this, pass a different OutRangeT template parameter from the mrs_lib::cyclic library.
+     * \note By default, the function also wraps the angle to be in the interval [0; 2pi]. To change this, pass a different OutRangeT template parameter from
+     * the mrs_lib::cyclic library.
      */
     template <typename OutRangeT = radians>
     double headingENUtoNED(const double& heading_enu)
