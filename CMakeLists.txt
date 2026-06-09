@@ -166,6 +166,7 @@ target_sources(mrs_lib_mrs_lib
     "include/mrs_lib/coro/task.impl.hpp"
     # include/mrs_lib/coro/internal
     "include/mrs_lib/coro/internal/attributes.hpp"
+    "include/mrs_lib/coro/internal/result_storage.hpp"
     "include/mrs_lib/coro/internal/thread_local_continuation_scheduler.hpp"
     # include/mrs_lib/errorgraph
     "include/mrs_lib/errorgraph/node_id.h"
