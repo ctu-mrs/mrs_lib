@@ -9,7 +9,7 @@ namespace mrs_lib::coro::internal
 
   // This is a workaround to GCC generated code overflowing stack when using symmetric transfer
 
-  void resume_coroutine(std::coroutine_handle<> handle);
+  void resume_coroutine_soon(std::coroutine_handle<> handle);
   void schedule_coroutine_continuation(std::coroutine_handle<> handle);
 
   struct MoveToThreadLocalContinuationScheduler
@@ -27,10 +27,10 @@ namespace mrs_lib::coro::internal
       return false;
     }
 
-    // Move the task to the thread local scheduler
+    // Move the task to the thread local scheduler to be scheduled soon
     void await_suspend(std::coroutine_handle<> task_handle) noexcept
     {
-      resume_coroutine(task_handle);
+      resume_coroutine_soon(task_handle);
     }
 
     // The task is moved, return nothing

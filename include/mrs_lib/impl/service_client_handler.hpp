@@ -50,7 +50,7 @@ namespace mrs_lib
                                      data->response = future.get();
                                      (*data).response = future.get();
                                      auto continuation = std::exchange(data->continuation, nullptr);
-                                     coro::internal::resume_coroutine(continuation);
+                                     coro::internal::resume_coroutine_soon(continuation);
                                    }));
         return true;
       }

@@ -60,11 +60,11 @@ namespace mrs_lib::coro
 
     template <typename F, typename... Args>
       requires std::invocable<std::decay_t<F>, std::decay_t<Args>...> && std::same_as<Task<void>, std::invoke_result_t<std::decay_t<F>, std::decay_t<Args>...>>
-    internal::AsyncRun start_task_impl(F&& task, Args&&... args)
+    internal::AsyncRun start_task_impl(F task, Args... args)
     {
       // The `decay-copy` of the arguments ensures that they are copied into
       // the coroutine frame, preventing dangling references like `std::thread`.
-      co_await std::invoke(decay_copy(std::forward<F>(task)), decay_copy(std::forward<Args>(args))...);
+      co_await std::invoke(std::move(task), std::move(args)...);
     }
 
     /**
