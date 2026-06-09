@@ -78,6 +78,7 @@ target_sources(mrs_lib_mrs_lib
     "src/batch_visualizer/visual_object.cpp"
     # src/coro
     "src/coro/cancellation.cpp"
+    "src/coro/event.cpp"
     # src/coro/internal
     "src/coro/internal/thread_local_continuation_scheduler.cpp"
     # src/dynparam_mgr
@@ -165,6 +166,7 @@ target_sources(mrs_lib_mrs_lib
     "include/mrs_lib/visual_object.h"
     # include/mrs_lib/coro
     "include/mrs_lib/coro/cancellation.hpp"
+    "include/mrs_lib/coro/event.hpp"
     "include/mrs_lib/coro/runners.hpp"
     "include/mrs_lib/coro/task.hpp"
     "include/mrs_lib/coro/task.impl.hpp"
