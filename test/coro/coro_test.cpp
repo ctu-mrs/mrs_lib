@@ -1,10 +1,14 @@
-#include <format>
-#include <memory>
+#include "mrs_lib/coro/task.hpp"
 
 #include <gtest/gtest.h>
 
-#include <mrs_lib/coro/runners.hpp>
-#include <mrs_lib/coro/task.hpp>
+#include <format>
+#include <memory>
+
+#include "mrs_lib/coro/runners.hpp"
+#include "mrs_lib/utility/scope_cleanup.hpp"
+#include "utility"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -277,6 +281,77 @@ namespace
     co_return success;
   }
 
+  struct CancelOnAwait
+  {
+    bool await_ready()
+    {
+      return false;
+    }
+    template <typename T>
+    void await_suspend(std::coroutine_handle<T> handle)
+    {
+      // handle.destroy();
+      mrs_lib::coro::internal::CancellableContinuation(handle).cancel_and_destroy();
+    }
+    void await_resume()
+    {
+      assert(false);
+    }
+  };
+
+  mrs_lib::Task<void> cancel_in_depth(size_t depth)
+  {
+    if (depth == 0)
+    {
+      co_await CancelOnAwait();
+    } else
+    {
+      co_await cancel_in_depth(depth - 1);
+    }
+  }
+
+  class TokenPropagationTestAwaiter
+  {
+  public:
+    explicit TokenPropagationTestAwaiter(std::optional<std::stop_token>& stop_token) : stop_token_(&stop_token)
+    {
+    }
+
+    bool await_ready()
+    {
+      return false;
+    }
+    template <typename T>
+    bool await_suspend(std::coroutine_handle<T> handle)
+    {
+      using mrs_lib::coro::internal::CancellableContinuation;
+      EXPECT_FALSE(stop_token_->has_value());
+      auto continuation = CancellableContinuation(handle);
+      stop_token_->emplace(continuation.get_token());
+      // prevent the RAII type from destroying the continuation
+      continuation.release();
+      // Do not suspend
+      return false;
+    }
+    void await_resume()
+    {
+    }
+
+  private:
+    std::optional<std::stop_token>* stop_token_;
+  };
+
+  mrs_lib::Task<void> test_stop_token_propagation(TokenPropagationTestAwaiter awaiter, size_t depth)
+  {
+    if (depth == 0)
+    {
+      co_await awaiter;
+    } else
+    {
+      co_await test_stop_token_propagation(awaiter, depth - 1);
+    }
+  }
+
   TEST(MrsLibCoro, StartTaskArgsValueCategories)
   {
     // This test checks that start task compiles with all of these signatures.
@@ -540,6 +615,117 @@ namespace
     EXPECT_TRUE(finished);
   }
 
+  TEST(MrsLibCoro, DtorsRunWhenCancelled)
+  {
+    bool finished = false;
+
+    mrs_lib::coro::internal::start_task(
+        [](bool& finished) -> mrs_lib::Task<> {
+          mrs_lib::ScopeCleanup cleanup_set_finished([&finished]() { finished = true; });
+          co_await CancelOnAwait();
+          // This should be unreachable
+          EXPECT_TRUE(false);
+          cleanup_set_finished.cancel();
+          co_return;
+        },
+        std::ref(finished));
+
+    EXPECT_TRUE(finished);
+  }
+
+  mrs_lib::Task<> test_dtor_order(size_t& idx, size_t depth)
+  {
+    mrs_lib::ScopeCleanup cleanup_check_order([&idx, depth] {
+      EXPECT_EQ(idx, depth);
+      idx++;
+    });
+    if (depth == 0)
+    {
+      co_await CancelOnAwait();
+    } else
+    {
+      co_await test_dtor_order(idx, depth - 1);
+    }
+  };
+
+  TEST(MrsLibCoro, DtorsOrderWhenCancelled)
+  {
+    bool finished = false;
+    const size_t depth = 5;
+    size_t index = 0;
+
+
+    mrs_lib::coro::internal::start_task(
+        [](bool& finished, size_t& index, size_t depth) -> mrs_lib::Task<> {
+          mrs_lib::ScopeCleanup cleanup_set_finished([&finished]() { finished = true; });
+          co_await test_dtor_order(index, depth);
+          // This should be unreachable
+          EXPECT_TRUE(false);
+          cleanup_set_finished.cancel();
+          co_return;
+        },
+        std::ref(finished), std::ref(index), depth);
+
+    EXPECT_TRUE(finished);
+    EXPECT_EQ(index, depth + 1);
+  }
+
+  TEST(MrsLibCoro, DtorsRunWhenCancelledDeeper)
+  {
+    bool finished = false;
+
+    mrs_lib::coro::internal::start_task(
+        [](bool& finished) -> mrs_lib::Task<> {
+          mrs_lib::ScopeCleanup cleanup_set_finished([&finished]() { finished = true; });
+          co_await cancel_in_depth(5);
+          // This should be unreachable
+          EXPECT_TRUE(false);
+          cleanup_set_finished.cancel();
+          co_return;
+        },
+        std::ref(finished));
+
+    EXPECT_TRUE(finished);
+  }
+
+  TEST(MrsLibCoro, DtorsNoStackOverflow)
+  {
+    bool finished = false;
+
+    mrs_lib::coro::internal::start_task(
+        [](bool& finished) -> mrs_lib::Task<> {
+          mrs_lib::ScopeCleanup cleanup_set_finished([&finished]() { finished = true; });
+          co_await cancel_in_depth(deep_recursion_depth);
+          // This should be unreachable
+          EXPECT_TRUE(false);
+          cleanup_set_finished.cancel();
+          co_return;
+        },
+        std::ref(finished));
+
+    EXPECT_TRUE(finished);
+  }
+
+  TEST(MrsLibCoro, StopTokenPropagates)
+  {
+    bool finished = false;
+
+    std::optional<std::stop_token> collected_stop_token_opt = std::nullopt;
+
+    std::stop_source stop_source{};
+    mrs_lib::coro::internal::start_task(
+        stop_source.get_token(),
+        [](bool& finished, TokenPropagationTestAwaiter awaiter) -> mrs_lib::Task<> {
+          co_await test_stop_token_propagation(awaiter, 10);
+          finished = true;
+          co_return;
+        },
+        std::ref(finished), TokenPropagationTestAwaiter(collected_stop_token_opt));
+
+    ASSERT_TRUE(finished);
+    ASSERT_TRUE(collected_stop_token_opt.has_value());
+    EXPECT_EQ(collected_stop_token_opt.value(), stop_source.get_token());
+  }
 
   //////////////////////////////////////////////////////////////////////////////
   // MrsLibCoroLoops                                                          //

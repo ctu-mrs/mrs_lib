@@ -75,6 +75,8 @@ target_sources(mrs_lib_mrs_lib
     # src/batch_visualizer
     "src/batch_visualizer/batch_visualizer.cpp"
     "src/batch_visualizer/visual_object.cpp"
+    # src/coro
+    "src/coro/cancellation.cpp"
     # src/coro/internal
     "src/coro/internal/thread_local_continuation_scheduler.cpp"
     # src/dynparam_mgr
@@ -161,11 +163,13 @@ target_sources(mrs_lib_mrs_lib
     "include/mrs_lib/utils.h"
     "include/mrs_lib/visual_object.h"
     # include/mrs_lib/coro
+    "include/mrs_lib/coro/cancellation.hpp"
     "include/mrs_lib/coro/runners.hpp"
     "include/mrs_lib/coro/task.hpp"
     "include/mrs_lib/coro/task.impl.hpp"
     # include/mrs_lib/coro/internal
     "include/mrs_lib/coro/internal/attributes.hpp"
+    "include/mrs_lib/coro/internal/continuation.hpp"
     "include/mrs_lib/coro/internal/result_storage.hpp"
     "include/mrs_lib/coro/internal/thread_local_continuation_scheduler.hpp"
     # include/mrs_lib/errorgraph

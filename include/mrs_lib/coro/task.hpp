@@ -10,7 +10,9 @@
 #include <utility>
 
 #include "mrs_lib/coro/internal/attributes.hpp"
+#include "mrs_lib/coro/internal/continuation.hpp"
 #include "mrs_lib/coro/internal/result_storage.hpp"
+#include "mrs_lib/coro/internal/thread_local_continuation_scheduler.hpp"
 
 // Note on ownership semantics:
 // Since we want to support cancellation at any point in the coroutine stacks,
@@ -112,10 +114,20 @@ namespace mrs_lib::coro
       // The coroutine will be suspended and the continuation will be resumed
       FinalAwaitable final_suspend() noexcept;
 
-      void set_continuation(OwningCoroutineHandle<> continuation);
+      void set_continuation(CancellableContinuation continuation);
+
+      CancellableContinuation release_continuation()
+      {
+        return std::exchange(continuation_, {});
+      }
+
+      std::stop_token get_token() const
+      {
+        return continuation_.get_token();
+      }
 
     private:
-      OwningCoroutineHandle<> continuation_{std::noop_coroutine()};
+      CancellableContinuation continuation_;
     };
 
     /**
@@ -169,6 +181,21 @@ namespace mrs_lib::coro
       std::exception_ptr exception_;
     };
 
+    template <typename T>
+    struct CancellableContinuationFor<PromiseType<T>>
+    {
+      static CancellableContinuation release_continuation(std::coroutine_handle<PromiseType<T>> handle)
+      {
+        PromiseType<T>& promise = handle.promise();
+        return promise.release_continuation();
+      };
+
+      static std::stop_token get_token(std::coroutine_handle<PromiseType<T>> handle)
+      {
+        return handle.promise().get_token();
+      }
+    };
+
     /**
      * @brief Awaitable used to co_await other tasks.
      *
@@ -191,9 +218,10 @@ namespace mrs_lib::coro
       // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100897
       // Because of this problem, the `await_suspend` uses the void signature
       // and resumes the continuation on a thread-local scheduler as a workaround.
-      void await_suspend(std::coroutine_handle<> continuation)
+      template <typename CallerPromise>
+      void await_suspend(std::coroutine_handle<CallerPromise> continuation)
       {
-        task_handle_.promise().set_continuation(OwningCoroutineHandle<>(continuation));
+        task_handle_.promise().set_continuation(CancellableContinuation(continuation));
         schedule_coroutine_continuation(task_handle_);
       }
 
@@ -248,7 +276,7 @@ namespace mrs_lib::coro
     }
 
   private:
-    Task(internal::OwningCoroutineHandle<promise_type> coroutine) : coroutine_(std::move(coroutine))
+    explicit Task(internal::OwningCoroutineHandle<promise_type> coroutine) : coroutine_(std::move(coroutine))
     {
     }
 
@@ -261,11 +289,14 @@ namespace mrs_lib::coro
 
 namespace mrs_lib
 {
+  // Export mrs_lib::coro::Task directly into mrs_lib namespace since it is
+  // likely to be used often.
   using coro::Task;
-}
+
+} // namespace mrs_lib
 
 #ifndef MRS_LIB_CORO_TASK_IMPL_HPP_
-#include <mrs_lib/coro/task.impl.hpp> // IWYU pragma: export
+#include "mrs_lib/coro/task.impl.hpp" // IWYU pragma: export
 #endif
 
 #endif // MRS_LIB_CORO_TASK_HPP_
