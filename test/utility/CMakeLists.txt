@@ -1,0 +1,1 @@
+mrs_lib_add_simple_labeled_gtest(utility scope_cleanup "scope_cleanup_test.cpp")
