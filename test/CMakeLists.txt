@@ -10,7 +10,6 @@ endfunction()
 function(mrs_lib_add_simple_labeled_gtest label name file)
   ament_add_gtest("${name}"
     "${file}"
-    TIMEOUT 120
   )
   target_link_libraries("${name}"
     mrs_lib::mrs_lib
