@@ -7,6 +7,7 @@
 #include <stop_token>
 
 #include "mrs_lib/coro/internal/continuation.hpp"
+#include "mrs_lib/coro/internal/immediate_awaitable.hpp"
 
 
 namespace mrs_lib::coro
@@ -40,7 +41,7 @@ namespace mrs_lib::coro
    *
    * @note Return value must be awaited.
    */
-  internal::GetTaskStopTokenAwaiter get_task_stop_token();
+  internal::ImmediateAwaitable<internal::GetTaskStopTokenAwaiter> get_task_stop_token();
 
 } // namespace mrs_lib::coro
 

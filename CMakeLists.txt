@@ -170,6 +170,7 @@ target_sources(mrs_lib_mrs_lib
     # include/mrs_lib/coro/internal
     "include/mrs_lib/coro/internal/attributes.hpp"
     "include/mrs_lib/coro/internal/continuation.hpp"
+    "include/mrs_lib/coro/internal/immediate_awaitable.hpp"
     "include/mrs_lib/coro/internal/result_storage.hpp"
     "include/mrs_lib/coro/internal/thread_local_continuation_scheduler.hpp"
     # include/mrs_lib/errorgraph

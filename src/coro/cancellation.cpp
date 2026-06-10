@@ -26,7 +26,7 @@ namespace mrs_lib::coro
 
   } // namespace internal
 
-  internal::GetTaskStopTokenAwaiter get_task_stop_token()
+  internal::ImmediateAwaitable<internal::GetTaskStopTokenAwaiter> get_task_stop_token()
   {
     return {};
   }
