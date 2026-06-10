@@ -97,6 +97,7 @@ namespace mrs_lib
 
         // SYMMETRIC TRANSFER IS BROKEN IN GCC and can result in stack
         // overflow when many tasks complete synchronously.
+        // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100897
         // Because of this problem, the `await_suspend` uses the void signature
         // and resumes the continuation on a thread-local scheduler as a workaround.
         void await_suspend(std::coroutine_handle<Derived> task_handle) noexcept;
@@ -250,10 +251,15 @@ namespace mrs_lib
         return false;
       }
 
-      std::coroutine_handle<> await_suspend(std::coroutine_handle<> continuation)
+      // SYMMETRIC TRANSFER IS BROKEN IN GCC and can result in stack
+      // overflow when many tasks complete synchronously.
+      // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100897
+      // Because of this problem, the `await_suspend` uses the void signature
+      // and resumes the continuation on a thread-local scheduler as a workaround.
+      void await_suspend(std::coroutine_handle<> continuation)
       {
         task_handle_.promise().set_continuation(OwningCoroutineHandle<>(continuation));
-        return task_handle_;
+        schedule_coroutine_continuation(task_handle_);
       }
 
       T await_resume()

@@ -89,6 +89,8 @@ namespace
   constexpr std::string_view test_exception_message = "Expected test exception";
   constexpr std::string_view test_not_thrown_exception_message = "This should not be thrown";
 
+  constexpr size_t deep_recursion_depth = 10'000'000;
+
   [[noreturn]] void throw_expected_exception()
   {
     throw std::logic_error(std::string(test_exception_message));
@@ -146,6 +148,17 @@ namespace
     auto a = co_await co_42();
     auto b = co_await co_uptr_42();
     co_return a + (*b);
+  }
+
+  mrs_lib::Task<int> co_42_recursive(size_t depth)
+  {
+    if (depth == 0)
+    {
+      co_return co_await co_42();
+    } else
+    {
+      co_return co_await co_42_recursive(depth - 1);
+    }
   }
 
   mrs_lib::Task<> co_throws_logic_error()
@@ -206,6 +219,8 @@ namespace
   struct ErrorOnMove
   {
     ErrorOnMove() = default;
+    ~ErrorOnMove() = default;
+
     ErrorOnMove(const ErrorOnMove&) = delete;
     ErrorOnMove& operator=(const ErrorOnMove&) = delete;
     ErrorOnMove(ErrorOnMove&&) noexcept(false)
@@ -398,6 +413,22 @@ namespace
         [](bool& finished) -> mrs_lib::Task<> {
           int val = co_await co_2_times_42();
           EXPECT_EQ(val, 84);
+          finished = true;
+          co_return;
+        },
+        std::ref(finished));
+
+    EXPECT_TRUE(finished);
+  }
+
+  TEST(MrsLibCoro, DeepRecursion)
+  {
+    bool finished = false;
+
+    mrs_lib::internal::start_task(
+        [](bool& finished) -> mrs_lib::Task<> {
+          int val = co_await co_42_recursive(deep_recursion_depth);
+          EXPECT_EQ(val, 42);
           finished = true;
           co_return;
         },
