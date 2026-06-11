@@ -4,6 +4,7 @@
 
 #include <mrs_lib/coro/runners.hpp>
 #include <mrs_lib/service_client_handler.h>
+#include <mrs_lib/utility/scope_cleanup.hpp>
 
 #include <std_srvs/srv/set_bool.hpp>
 
@@ -298,6 +299,158 @@ TEST_F(Test, CoroCall)
   executor_->spin();
 
   ASSERT_TRUE(completed);
+}
+
+TEST_F(Test, CoroCallStopTokenCancellation)
+{
+  using RequestType = std_srvs::srv::SetBool::Request;
+  using ResponseType = std_srvs::srv::SetBool::Response;
+
+  // Coroutine based callbacks should handle waiting on single threaded executor
+  initialize<rclcpp::executors::SingleThreadedExecutor>(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  auto clock = node_->get_clock();
+
+  // | ----------------- create a service server ---------------- |
+
+  const auto callback_group = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+  const auto service_server = node_->create_service<std_srvs::srv::SetBool>(
+      "/service1", [this](std::shared_ptr<RequestType> req, std::shared_ptr<ResponseType> res) { callbackService(std::move(req), std::move(res)); },
+      rclcpp::ServicesQoS(), callback_group);
+
+  // | ----------------- create a service client ---------------- |
+
+  mrs_lib::ServiceClientHandler<std_srvs::srv::SetBool> client1 = mrs_lib::ServiceClientHandler<std_srvs::srv::SetBool>(node_, "service1");
+
+  RCLCPP_INFO(node_->get_logger(), "initialized");
+
+  std::atomic<bool> started = false;
+  std::atomic<bool> completed = false;
+  std::atomic<bool> destroyed = false;
+  rclcpp::TimerBase::SharedPtr tim;
+
+  const auto test_fun = [&]() -> mrs_lib::Task<> {
+    tim->cancel(); // just a one-shot timer
+    started = true;
+    mrs_lib::ScopeCleanup cleanup_set_destroyed([&] { destroyed = true; });
+    mrs_lib::ScopeCleanup cleanup_despin([&] { despin(); });
+
+    auto request = std::make_shared<RequestType>();
+
+    {
+      request->data = true;
+
+      auto opt_response = co_await client1.callAwaitable(request);
+
+      ADD_FAILURE() << "This callback should be cancelled by now.";
+
+      if (!opt_response.has_value())
+      {
+        co_return;
+      }
+
+      auto response = opt_response.value();
+
+      EXPECT_TRUE(response);
+      EXPECT_TRUE(response->success);
+      EXPECT_EQ(response->message, "set");
+    }
+
+    RCLCPP_INFO(node_->get_logger(), "finished");
+
+    completed = true;
+  };
+
+  tim = node_->create_timer(
+      0s,
+      [test_fun, &client1]() -> void {
+        std::stop_source stop_source{};
+        mrs_lib::coro::internal::start_task(stop_source.get_token(), test_fun);
+        stop_source.request_stop();
+        size_t prunned_requests = client1.prunePendingRequests();
+        EXPECT_EQ(prunned_requests, 0) << "Cancelled request should remove itself.";
+      },
+      callback_group);
+  executor_->spin();
+
+  ASSERT_TRUE(started);
+  ASSERT_TRUE(destroyed);
+  ASSERT_FALSE(completed);
+}
+
+TEST_F(Test, CoroCallPruneCancellation)
+{
+  using RequestType = std_srvs::srv::SetBool::Request;
+  using ResponseType = std_srvs::srv::SetBool::Response;
+
+  // Coroutine based callbacks should handle waiting on single threaded executor
+  initialize<rclcpp::executors::SingleThreadedExecutor>(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  auto clock = node_->get_clock();
+
+  // | ----------------- create a service server ---------------- |
+
+  const auto callback_group = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+  const auto service_server = node_->create_service<std_srvs::srv::SetBool>(
+      "/service1", [this](std::shared_ptr<RequestType> req, std::shared_ptr<ResponseType> res) { callbackService(std::move(req), std::move(res)); },
+      rclcpp::ServicesQoS(), callback_group);
+
+  // | ----------------- create a service client ---------------- |
+
+  mrs_lib::ServiceClientHandler<std_srvs::srv::SetBool> client1 = mrs_lib::ServiceClientHandler<std_srvs::srv::SetBool>(node_, "service1");
+
+  RCLCPP_INFO(node_->get_logger(), "initialized");
+
+  std::atomic<bool> started = false;
+  std::atomic<bool> completed = false;
+  std::atomic<bool> destroyed = false;
+  rclcpp::TimerBase::SharedPtr tim;
+
+  const auto test_fun = [&]() -> mrs_lib::Task<> {
+    tim->cancel(); // just a one-shot timer
+    started = true;
+    mrs_lib::ScopeCleanup cleanup_set_destroyed([&] { destroyed = true; });
+    mrs_lib::ScopeCleanup cleanup_despin([&] { despin(); });
+
+    auto request = std::make_shared<RequestType>();
+
+    {
+      request->data = true;
+
+      auto opt_response = co_await client1.callAwaitable(request);
+
+      ADD_FAILURE() << "This callback should be cancelled by now.";
+
+      if (!opt_response.has_value())
+      {
+        co_return;
+      }
+
+      auto response = opt_response.value();
+
+      EXPECT_TRUE(response);
+      EXPECT_TRUE(response->success);
+      EXPECT_EQ(response->message, "set");
+    }
+
+    RCLCPP_INFO(node_->get_logger(), "finished");
+
+    completed = true;
+  };
+
+  tim = node_->create_timer(
+      0s,
+      [test_fun, &client1]() -> void {
+        mrs_lib::coro::internal::start_task(test_fun);
+        size_t prunned_requests = client1.prunePendingRequests();
+        EXPECT_EQ(prunned_requests, 1) << "The callback should be pruned by this call.";
+      },
+      callback_group);
+  executor_->spin();
+
+  ASSERT_TRUE(started);
+  ASSERT_TRUE(destroyed);
+  ASSERT_FALSE(completed);
 }
 
 /* TEST_F(Test, test_bad_address) //{ */
