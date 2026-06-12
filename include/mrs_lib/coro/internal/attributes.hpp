@@ -1,6 +1,8 @@
 #ifndef MRS_LIB_CORO_INTERNAL_ATTRIBUTES_HPP_
 #define MRS_LIB_CORO_INTERNAL_ATTRIBUTES_HPP_
 
+// These annotations are currently not used, because they do not allow using
+// std::invoke to call coroutines.
 #ifdef __clang__
 #define MRS_LIB_INTERNAL_CORO_RETURN_TYPE [[clang::coro_return_type]]
 #define MRS_LIB_INTERNAL_CORO_WRAPPER [[clang::coro_wrapper]]
