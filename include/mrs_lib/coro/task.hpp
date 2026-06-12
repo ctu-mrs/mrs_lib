@@ -307,7 +307,7 @@ namespace mrs_lib
     Task(Task&&) = delete;
     Task& operator=(Task&&) = delete;
 
-    friend internal::TaskAwaitable<T> operator co_await(Task task)
+    friend internal::TaskAwaitable<T> operator co_await(Task&& task)
     {
       return internal::TaskAwaitable<T>(task.coroutine_.release());
     }
