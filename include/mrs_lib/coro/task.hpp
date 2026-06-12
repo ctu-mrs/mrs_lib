@@ -89,8 +89,8 @@ namespace mrs_lib
         ~FinalAwaitable() = default;
         FinalAwaitable(const FinalAwaitable&) = delete;
         FinalAwaitable& operator=(const FinalAwaitable&) = delete;
-        FinalAwaitable(FinalAwaitable&&) = default;
-        FinalAwaitable& operator=(FinalAwaitable&&) = default;
+        FinalAwaitable(FinalAwaitable&&) = delete;
+        FinalAwaitable& operator=(FinalAwaitable&&) = delete;
 
         // Always suspend the ending task
         bool await_ready() noexcept;
@@ -271,8 +271,8 @@ namespace mrs_lib
       ~TaskAwaitable() = default;
       TaskAwaitable(const TaskAwaitable&) = delete;
       TaskAwaitable& operator=(const TaskAwaitable&) = delete;
-      TaskAwaitable(TaskAwaitable&&) = default;
-      TaskAwaitable& operator=(TaskAwaitable&&) = default;
+      TaskAwaitable(TaskAwaitable&&) = delete;
+      TaskAwaitable& operator=(TaskAwaitable&&) = delete;
 
     private:
       TaskAwaitable(std::coroutine_handle<Promise> task_handle) : task_handle_(task_handle)
@@ -304,8 +304,8 @@ namespace mrs_lib
     ~Task() = default;
     Task(const Task&) = delete;
     Task& operator=(const Task&) = delete;
-    Task(Task&&) = default;
-    Task& operator=(Task&&) = default;
+    Task(Task&&) = delete;
+    Task& operator=(Task&&) = delete;
 
     friend internal::TaskAwaitable<T> operator co_await(Task&& task)
     {
