@@ -83,7 +83,7 @@ namespace mrs_lib
     }
 
   private:
-    const unsigned long id_;
+    unsigned long id_;
     MarkerType type_;
     std::vector<geometry_msgs::msg::Point> points_;
     std::vector<std_msgs::msg::ColorRGBA> colors_;
