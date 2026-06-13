@@ -296,7 +296,7 @@ namespace mrs_lib
    */
   template <typename T>
     requires(std::same_as<T, std::remove_cvref_t<T>>)
-  class [[nodiscard("Task is lazy and does not run until `co_await`ed.")]] MRS_LIB_INTERNAL_CORO_RETURN_TYPE MRS_LIB_INTERNAL_CORO_LIFETIMEBOUND Task
+  class [[nodiscard("Task is lazy and does not run until `co_await`ed.")]] Task
   {
   public:
     using promise_type = internal::PromiseType<T>;
