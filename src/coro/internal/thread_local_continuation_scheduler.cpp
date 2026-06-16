@@ -1,10 +1,11 @@
-#include <mrs_lib/coro/internal/thread_local_continuation_scheduler.hpp>
+#include "mrs_lib/coro/internal/thread_local_continuation_scheduler.hpp"
 
 #include <cassert>
 #include <coroutine>
 #include <cstddef>
+#include <deque>
 
-namespace mrs_lib::internal
+namespace mrs_lib::coro::internal
 {
 
   namespace
@@ -18,6 +19,12 @@ namespace mrs_lib::internal
       {
         auto&& scheduler = get_thread_local_scheduler_();
         scheduler.run_until_suspend_(handle);
+      }
+
+      static void resume_coroutine_soon(std::coroutine_handle<> handle)
+      {
+        auto&& scheduler = get_thread_local_scheduler_();
+        scheduler.run_soon_until_suspend_(handle);
       }
 
       static void schedule_coroutine_continuation(std::coroutine_handle<> handle)
@@ -49,20 +56,46 @@ namespace mrs_lib::internal
         stored_id_++;
       }
 
-      void run_until_suspend_(std::coroutine_handle<> handle)
+      void run_queue_()
       {
         assert(!running);
         running = true;
-        set_continuation_(handle);
-        assert(released_id_ + 1 == stored_id_);
-        while (released_id_ != stored_id_)
+        while (coroutine_queue_.size() > 0)
         {
+          std::coroutine_handle<> handle = coroutine_queue_.front();
+          coroutine_queue_.pop_front();
+
+          set_continuation_(handle);
+
           assert(released_id_ + 1 == stored_id_);
-          released_id_++;
-          continuation_.resume();
+          while (released_id_ != stored_id_)
+          {
+            assert(released_id_ + 1 == stored_id_);
+            released_id_++;
+            continuation_.resume();
+          }
         }
         assert(running);
         running = false;
+      }
+
+      void run_until_suspend_(std::coroutine_handle<> handle)
+      {
+        assert(!running);
+        assert(coroutine_queue_.size() == 0);
+        coroutine_queue_.push_back(handle);
+        run_queue_();
+      }
+
+      void run_soon_until_suspend_(std::coroutine_handle<> handle)
+      {
+        if (!running)
+        {
+          run_until_suspend_(handle);
+        } else
+        {
+          coroutine_queue_.push_back(handle);
+        }
       }
 
       // Using unsigned ids that have defined overflow, removing the need to manually handle.
@@ -70,13 +103,15 @@ namespace mrs_lib::internal
       size_t released_id_ = 0;
       bool running = false;
       std::coroutine_handle<> continuation_;
+
+      std::deque<std::coroutine_handle<>> coroutine_queue_;
     };
 
   } // namespace
 
-  void resume_coroutine(std::coroutine_handle<> handle)
+  void resume_coroutine_soon(std::coroutine_handle<> handle)
   {
-    ThreadLocalContinuationScheduler::resume_coroutine(handle);
+    ThreadLocalContinuationScheduler::resume_coroutine_soon(handle);
   }
 
   void schedule_coroutine_continuation(std::coroutine_handle<> handle)
@@ -85,4 +120,4 @@ namespace mrs_lib::internal
   }
 
 
-} // namespace mrs_lib::internal
+} // namespace mrs_lib::coro::internal

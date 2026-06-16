@@ -75,6 +75,8 @@ target_sources(mrs_lib_mrs_lib
     # src/batch_visualizer
     "src/batch_visualizer/batch_visualizer.cpp"
     "src/batch_visualizer/visual_object.cpp"
+    # src/coro
+    "src/coro/cancellation.cpp"
     # src/coro/internal
     "src/coro/internal/thread_local_continuation_scheduler.cpp"
     # src/dynparam_mgr
@@ -161,11 +163,15 @@ target_sources(mrs_lib_mrs_lib
     "include/mrs_lib/utils.h"
     "include/mrs_lib/visual_object.h"
     # include/mrs_lib/coro
+    "include/mrs_lib/coro/cancellation.hpp"
     "include/mrs_lib/coro/runners.hpp"
     "include/mrs_lib/coro/task.hpp"
     "include/mrs_lib/coro/task.impl.hpp"
     # include/mrs_lib/coro/internal
     "include/mrs_lib/coro/internal/attributes.hpp"
+    "include/mrs_lib/coro/internal/continuation.hpp"
+    "include/mrs_lib/coro/internal/immediate_awaitable.hpp"
+    "include/mrs_lib/coro/internal/result_storage.hpp"
     "include/mrs_lib/coro/internal/thread_local_continuation_scheduler.hpp"
     # include/mrs_lib/errorgraph
     "include/mrs_lib/errorgraph/node_id.h"
@@ -195,6 +201,8 @@ target_sources(mrs_lib_mrs_lib
     "include/mrs_lib/safety_zone/polygon.h"
     "include/mrs_lib/safety_zone/prism.h"
     "include/mrs_lib/safety_zone/static_edges_visualization.h"
+    # include/mrs_lib/utility
+    "include/mrs_lib/utility/scope_cleanup.hpp"
 )
 
 target_link_libraries(mrs_lib_mrs_lib

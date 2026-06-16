@@ -1,10 +1,10 @@
 #ifndef MRS_LIB_CORO_TASK_IMPL_HPP_
 #define MRS_LIB_CORO_TASK_IMPL_HPP_
 
-#include <mrs_lib/coro/internal/thread_local_continuation_scheduler.hpp>
-#include <mrs_lib/coro/task.hpp>
+#include "mrs_lib/coro/internal/thread_local_continuation_scheduler.hpp"
+#include "mrs_lib/coro/task.hpp"
 
-namespace mrs_lib
+namespace mrs_lib::coro
 {
   namespace internal
   {
@@ -41,7 +41,7 @@ namespace mrs_lib
     }
 
     template <typename Derived>
-    inline void BasePromiseType<Derived>::set_continuation(OwningCoroutineHandle<> continuation)
+    inline void BasePromiseType<Derived>::set_continuation(CancellableContinuation continuation)
     {
       continuation_ = std::move(continuation);
     }
@@ -79,7 +79,7 @@ namespace mrs_lib
     }
 
   } // namespace internal
-} // namespace mrs_lib
+} // namespace mrs_lib::coro
 
 
 #endif // MRS_LIB_CORO_TASK_IMPL_HPP_

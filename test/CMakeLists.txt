@@ -7,6 +7,20 @@ function(add_ros_isolated_launch_test path)
   add_launch_test("${path}" RUNNER "${RUNNER}" ${ARGN})
 endfunction()
 
+function(mrs_lib_add_simple_labeled_gtest label name file)
+  ament_add_gtest("${name}"
+    "${file}"
+  )
+  target_link_libraries("${name}"
+    mrs_lib::mrs_lib
+  )
+  set_property(
+    TEST "${name}"
+    APPEND PROPERTY
+    LABELS "${label}"
+  )
+endfunction()
+
 add_subdirectory(attitude_converter)
 add_subdirectory(batch_visualizer)
 add_subdirectory(coro)
@@ -36,4 +50,5 @@ add_subdirectory(timer_handler)
 add_subdirectory(transform_broadcaster)
 add_subdirectory(transformer)
 add_subdirectory(ukf)
+add_subdirectory(utility)
 add_subdirectory(utils)
