@@ -47,12 +47,13 @@ set(DEPENDENCIES
   visualization_msgs
   Eigen3
   yaml-cpp
-  Boost
 )
 
 foreach(DEP IN LISTS DEPENDENCIES)
   find_package(${DEP} REQUIRED)
 endforeach()
+
+find_package(Boost CONFIG REQUIRED)
 
 # find_package(OpenCV REQUIRED HINTS /usr/local/lib)
 
@@ -301,6 +302,7 @@ ament_export_include_directories(
 
 ament_export_dependencies(
   ${DEPENDENCIES}
+  Boost # exported separately, since it is found separately
 )
 
 ament_python_install_package(${PROJECT_NAME})
