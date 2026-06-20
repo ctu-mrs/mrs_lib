@@ -237,6 +237,11 @@ namespace mrs_lib::coro
       TaskAwaitable(TaskAwaitable&&) = delete;
       TaskAwaitable& operator=(TaskAwaitable&&) = delete;
 
+      // This type should only be awaitable when directly returned from the
+      // co_await operator of Task. This prevents it from being awaitable when
+      // not returned from co_await operator.
+      void operator co_await() const = delete;
+
     private:
       TaskAwaitable(std::coroutine_handle<Promise> task_handle) : task_handle_(task_handle)
       {
