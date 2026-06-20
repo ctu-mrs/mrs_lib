@@ -77,6 +77,28 @@ namespace
   }
   static_assert(result_storage_test_string());
 
+  template <typename T>
+  T declval2()
+  {
+    static_assert(false, "Only for unevaluated contexts.");
+  }
+
+  template <typename T>
+  concept CanBeNonMemberCoAwaited = requires() { operator co_await(declval2<T>()); };
+
+  template <typename T>
+  concept CanBeMemberCoAwaited = requires() { declval2<T>().operator co_await(); };
+
+  template <typename T>
+  concept CanBeOperatorCoAwaited = CanBeNonMemberCoAwaited<T> || CanBeMemberCoAwaited<T>;
+
+  // Test that only prvalue of task can be co-awaited. This helps ensure that
+  // references passed to the arguments of the task are valid for the whole
+  // lifetime of the called task, even if they are bound to temporaries.
+  static_assert(CanBeOperatorCoAwaited<mrs_lib::Task<void>>, "prvalue of task can be co-awaited.");
+  static_assert(!CanBeOperatorCoAwaited<mrs_lib::Task<void>&&>, "xvalue of task cannot be co-awaited.");
+  static_assert(!CanBeOperatorCoAwaited<mrs_lib::Task<void>&>, "lvalue of task cannot be co-awaited.");
+
 } // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
