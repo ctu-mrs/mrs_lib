@@ -16,3 +16,4 @@ If you are searching for the Doxygen generated docs, `click here <doxygen/index.
 
    self
    doxygen
+   examples/index

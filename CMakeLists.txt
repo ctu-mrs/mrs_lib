@@ -259,6 +259,7 @@ target_link_libraries(subscribe_handler_example
 if(ENABLE_TESTS)
 
   add_subdirectory(test)
+  add_subdirectory(examples)
 
   if(NOT DEFINED ENV{IN_NIX_SHELL})
     message(WARNING "Compiling lint tests")
