@@ -19,7 +19,7 @@ namespace mrs_lib
   /* ServiceServerHandler() constructors //{ */
 
   template <class ServiceType>
-  ServiceServerHandler<ServiceType>::ServiceServerHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const callback_t& cbk,
+  ServiceServerHandler<ServiceType>::ServiceServerHandler(const rclcpp::Node::SharedPtr& node, const std::string& address, const callback_t& cbk,
                                                           const rclcpp::QoS& qos)
       : ServiceServerHandler(node, address, cbk, qos, node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive))
   {
@@ -31,7 +31,7 @@ namespace mrs_lib
   }
 
   template <class ServiceType>
-  ServiceServerHandler<ServiceType>::ServiceServerHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const callback_t& cbk,
+  ServiceServerHandler<ServiceType>::ServiceServerHandler(const rclcpp::Node::SharedPtr& node, const std::string& address, const callback_t& cbk,
                                                           const rclcpp::QoS& qos, const rclcpp::CallbackGroup::SharedPtr& callback_group)
       : callback_group_(callback_group), service_server_(node->create_service<ServiceType>(address, cbk, qos, callback_group))
   {
@@ -39,7 +39,7 @@ namespace mrs_lib
   }
 
   template <class ServiceType>
-  ServiceServerHandler<ServiceType>::ServiceServerHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const callback_t& cbk,
+  ServiceServerHandler<ServiceType>::ServiceServerHandler(const rclcpp::Node::SharedPtr& node, const std::string& address, const callback_t& cbk,
                                                           const rclcpp::CallbackGroup::SharedPtr& callback_group)
       : ServiceServerHandler(node, address, cbk, rclcpp::ServicesQoS(), callback_group)
   {
@@ -48,7 +48,7 @@ namespace mrs_lib
   template <class ServiceType>
   template <typename ClassType>
   ServiceServerHandler<ServiceType>::ServiceServerHandler(
-      rclcpp::Node::SharedPtr& node, const std::string& address,
+      const rclcpp::Node::SharedPtr& node, const std::string& address,
       mrs_lib::Task<bool> (ClassType::*method)(const std::shared_ptr<typename ServiceType::Request> request,
                                                const std::shared_ptr<typename ServiceType::Response> response),
       ClassType* instance, const rclcpp::QoS& qos, const rclcpp::CallbackGroup::SharedPtr& callback_group)

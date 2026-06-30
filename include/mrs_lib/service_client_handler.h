@@ -46,7 +46,7 @@ namespace mrs_lib
      * @param address         Name of the service.
      * @param qos QOS         Communication quality of service profile.
      */
-    ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos = rclcpp::ServicesQoS());
+    ServiceClientHandler(const rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos = rclcpp::ServicesQoS());
 
     /*!
      * @brief Default constructor to avoid having to use pointers.
@@ -66,7 +66,7 @@ namespace mrs_lib
      * @param qos QOS         Communication quality of service profile.
      * @param callback_group  Callback group used internally by the node for the response callback. Set to nullptr to use the default one.
      */
-    ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos,
+    ServiceClientHandler(const rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos,
                          const rclcpp::CallbackGroup::SharedPtr& callback_group);
 
     /**
@@ -78,7 +78,7 @@ namespace mrs_lib
      * @param address         Name of the service.
      * @param callback_group  Callback group used internally by the node for the response callback. Set to nullptr to use the default one.
      */
-    ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::CallbackGroup::SharedPtr& callback_group);
+    ServiceClientHandler(const rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::CallbackGroup::SharedPtr& callback_group);
 
     /**
      * @brief Synchronous (blocking) call of the service.
