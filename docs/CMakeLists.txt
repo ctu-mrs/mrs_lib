@@ -1,0 +1,47 @@
+cmake_minimum_required(VERSION 3.28)
+
+project(mrs_lib_docs LANGUAGES)
+
+find_package(Doxygen REQUIRED)
+find_program(SPHINX_BUILD_COMMAND sphinx-build REQUIRED)
+
+set(DOXYGEN_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/doxygen-out")
+set(DOXYGEN_HTML_EXTRA_DIR "${DOXYGEN_OUTPUT_DIRECTORY}/html")
+set(DOXYGEN_HTML_OUTPUT "${DOXYGEN_OUTPUT_DIRECTORY}/html/doxygen")
+set(DOXYGEN_XML_OUTPUT "${DOXYGEN_OUTPUT_DIRECTORY}/xml")
+
+set(SPHINX_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/source")
+set(SPHINX_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/sphinx-out")
+
+file(MAKE_DIRECTORY
+  ${DOXYGEN_OUTPUT_DIRECTORY}
+  ${DOXYGEN_HTML_EXTRA_DIR}
+  ${DOXYGEN_HTML_OUTPUT}
+  ${DOXYGEN_XML_OUTPUT}
+)
+
+configure_file(
+  "Doxyfile.in"
+  "Doxyfile"
+  @ONLY
+)
+
+add_custom_target(doxygen
+  COMMAND Doxygen::doxygen "Doxyfile"
+  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+)
+
+add_custom_target(sphinx
+  COMMAND
+    ${CMAKE_COMMAND} -E env
+    MRS_LIB_DOCS_DOXYGEN_XML_OUTPUT="${DOXYGEN_XML_OUTPUT}"
+    MRS_LIB_DOCS_DOXYGEN_HTML_EXTRA_DIR="${DOXYGEN_HTML_EXTRA_DIR}"
+    --
+    ${SPHINX_BUILD_COMMAND} "${SPHINX_SOURCE_DIR}" "${SPHINX_BUILD_DIR}"
+  DEPENDS doxygen
+  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+)
+
+add_custom_target(docs ALL
+  DEPENDS sphinx
+)
