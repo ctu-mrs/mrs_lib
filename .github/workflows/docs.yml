@@ -37,9 +37,7 @@ jobs:
             echo "::group::Configure"
             cmake -S . -B build
             echo "::endgroup::"
-            echo "::group::Build"
             cmake --build build
-            echo "::endgroup::"
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
