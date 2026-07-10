@@ -15,15 +15,6 @@
 
 namespace mrs_lib
 {
-  template <class ServiceType>
-  class ServiceClientHandler;
-
-  namespace internal
-  {
-    template <typename ServiceType>
-      requires(rosidl_generator_traits::is_service<ServiceType>::value)
-    class [[nodiscard("This service call is only performed when `co_await`ed.")]] ServiceAwaitable;
-  }
 
   /* class ServiceClientHandler //{ */
 
@@ -147,6 +138,18 @@ namespace mrs_lib
      * @return true if the service is available, false otherwise
      */
     bool isServiceReady() const;
+
+    /**
+     * @brief Clean all pending requests.
+     *
+     * @return number of pending requests that were removed
+     *
+     * @warning
+     * Calling this will not wake up threads that are waiting on @ref callSync or future.get.
+     * These threads will be deadlocked, unless woken by some other means.
+     * Coroutines waiting on @ref callAwaitable will be cancelled.
+     */
+    size_t prunePendingRequests();
 
   private:
     class Impl;

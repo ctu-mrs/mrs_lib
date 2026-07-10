@@ -76,15 +76,19 @@ int main(int argc, char** argv)
   using message_type = mrs_lib::message_type<decltype(handler)>;
   rclcpp::Publisher<message_type>::SharedPtr publisher_ = node->create_publisher<message_type>(topic_name, 5);
 
+  /* Create an explicit executor outside the loop */
+  rclcpp::executors::SingleThreadedExecutor executor_;
+  executor_.add_node(node);
+
   /* Now let's just spin to process calbacks until the user decides to stop the program. */
   rclcpp::Rate rate(10);
-  while (true)
+  while (rclcpp::ok())
   {
     message_type msg;
     msg.data = "asdf";
     publisher_->publish(msg);
     RCLCPP_INFO(node->get_logger(), "[%s]: Spinning", node->get_name());
-    rclcpp::spin_some(node);
+    executor_.spin_some();
     rate.sleep();
   }
 }
