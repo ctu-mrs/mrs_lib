@@ -1,0 +1,25 @@
+<map id="include/mrs_lib/profiler.h" name="include/mrs_lib/profiler.h">
+<area shape="rect" id="Node000001" title="A scoped function profiler which publishes ROS messages." alt="" coords="245,5,428,31"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,174,137,199"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="319,33,241,81,102,169,99,164,238,76,316,29"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="251,79,422,119"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="339,31,339,65,334,65,334,31"/>
+<area shape="rect" id="Node000004" href="$publisher__handler_8h.html" title="Defines PublisherHandler and related convenience classes for upgrading the ROS publisher." alt="" coords="471,86,672,111"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="372,28,525,79,524,84,370,33"/>
+<area shape="poly" id="edge5_Node000004_Node000002" title=" " alt="" coords="488,114,331,138,151,169,130,174,129,168,149,164,330,132,487,109"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="162,174,239,199"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="502,114,385,137,252,169,243,172,241,167,251,164,383,132,501,109"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="263,174,389,199"/>
+<area shape="poly" id="edge6_Node000004_Node000006" title=" " alt="" coords="539,114,373,172,371,167,537,109"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="413,174,586,199"/>
+<area shape="poly" id="edge7_Node000004_Node000007" title=" " alt="" coords="564,113,520,165,516,161,560,110"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="610,174,677,199"/>
+<area shape="poly" id="edge8_Node000004_Node000008" title=" " alt="" coords="583,110,627,161,622,165,579,113"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="701,174,759,199"/>
+<area shape="poly" id="edge9_Node000004_Node000009" title=" " alt="" coords="594,109,698,165,695,170,591,114"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="783,174,847,199"/>
+<area shape="poly" id="edge10_Node000004_Node000010" title=" " alt="" coords="609,109,772,164,778,166,776,171,770,169,608,114"/>
+<area shape="rect" id="Node000011" href="$publisher__handler_8hpp_source.html" title=" " alt="" coords="872,167,1039,207"/>
+<area shape="poly" id="edge11_Node000004_Node000011" title=" " alt="" coords="617,109,859,163,858,168,616,114"/>
+<area shape="poly" id="edge12_Node000011_Node000004" title=" " alt="" coords="878,169,642,117,643,112,879,164"/>
+</map>

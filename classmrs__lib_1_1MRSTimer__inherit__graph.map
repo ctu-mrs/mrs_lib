@@ -1,0 +1,7 @@
+<map id="mrs_lib::MRSTimer" name="mrs_lib::MRSTimer">
+<area shape="rect" id="Node000001" title="Common wrapper representing the functionality of the rclcpp::Timer." alt="" coords="92,5,237,31"/>
+<area shape="rect" id="Node000002" href="$classmrs__lib_1_1ROSTimer.html" title="rclcpp::Timer wrapper. The interface is the same as with rclcpp::Timer, except for the initialization..." alt="" coords="5,79,148,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="142,41,93,81,89,76,138,37"/>
+<area shape="rect" id="Node000003" href="$classmrs__lib_1_1ThreadTimer.html" title="Custom thread&#45;based Timers with the same interface as mrs_lib::ROSTimer." alt="" coords="172,79,333,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="191,37,240,76,237,81,188,41"/>
+</map>

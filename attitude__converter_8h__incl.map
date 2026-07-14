@@ -1,0 +1,24 @@
+<map id="include/mrs_lib/attitude_converter.h" name="include/mrs_lib/attitude_converter.h">
+<area shape="rect" id="Node000001" title="Conversions between various representations of object attitude in 3D. Supports Quaternions,..." alt="" coords="19,5,195,45"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="139,255,201,280"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="87,47,55,79,25,120,14,141,9,163,10,185,19,205,40,227,67,243,97,253,125,259,124,265,95,258,65,248,37,231,14,208,5,186,4,163,9,140,20,117,51,75,83,44"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="29,181,132,207"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="94,47,80,69,70,94,67,132,75,167,69,168,62,132,65,93,76,67,90,44"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="80,101,135,126"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="110,46,110,87,105,87,105,46"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="159,93,333,133"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="139,43,206,84,203,89,136,48"/>
+<area shape="rect" id="Node000006" href="$misc_8h.html" title="Defines useful geometry utilities and functions." alt="" coords="358,101,542,126"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="183,43,392,95,390,100,182,48"/>
+<area shape="poly" id="edge6_Node000006_Node000002" title=" " alt="" coords="396,129,275,157,224,171,197,183,187,196,181,211,174,241,169,240,176,209,183,193,194,179,222,166,274,152,395,123"/>
+<area shape="poly" id="edge7_Node000006_Node000003" title=" " alt="" coords="397,129,146,182,145,176,396,123"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="207,181,415,207"/>
+<area shape="poly" id="edge8_Node000006_Node000007" title=" " alt="" coords="431,129,345,177,342,172,428,124"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="439,181,685,207"/>
+<area shape="poly" id="edge9_Node000006_Node000008" title=" " alt="" coords="468,124,536,171,533,176,465,128"/>
+<area shape="rect" id="Node000009" href="$cyclic_8h.html" title="Defines the cyclic class for calculations with cyclic quantities." alt="" coords="709,181,900,207"/>
+<area shape="poly" id="edge10_Node000006_Node000009" title=" " alt="" coords="502,123,740,176,739,181,501,129"/>
+<area shape="poly" id="edge11_Node000009_Node000002" title=" " alt="" coords="710,209,216,264,215,258,709,203"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="767,255,843,280"/>
+<area shape="poly" id="edge12_Node000009_Node000010" title=" " alt="" coords="807,207,807,241,802,241,802,207"/>
+</map>

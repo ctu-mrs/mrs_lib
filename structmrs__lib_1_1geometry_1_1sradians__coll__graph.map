@@ -1,0 +1,5 @@
+<map id="mrs_lib::geometry::sradians" name="mrs_lib::geometry::sradians">
+<area shape="rect" id="Node000001" title="Convenience specialization of the cyclic class for signed radians (from $&#45;\pi$ to $\pi$)." alt="" coords="29,93,177,133"/>
+<area shape="rect" id="Node000002" href="$structmrs__lib_1_1geometry_1_1cyclic.html" title=" " alt="" coords="5,5,201,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="106,59,106,93,101,93,101,59"/>
+</map>

@@ -1,0 +1,18 @@
+<map id="include/mrs_lib/geometry/cyclic.h" name="include/mrs_lib/geometry/cyclic.h">
+<area shape="rect" id="Node000001" title="Defines the cyclic class for calculations with cyclic quantities." alt="" coords="117,5,305,45"/>
+<area shape="rect" id="Node000002" href="$cyclic__example_8cpp.html" title="Example file for the cyclical values implementation (see the cyclic class)" alt="" coords="5,93,200,133"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="178,56,128,95,125,91,174,52"/>
+<area shape="rect" id="Node000003" href="$misc_8h.html" title="Defines useful geometry utilities and functions." alt="" coords="225,93,413,133"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="247,52,296,91,293,95,244,56"/>
+<area shape="rect" id="Node000004" href="$attitude__converter_8h.html" title="Conversions between various representations of object attitude in 3D. Supports Quaternions,..." alt="" coords="40,181,216,221"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="265,141,171,184,169,179,263,137"/>
+<area shape="rect" id="Node000006" href="$dkf_8h_source.html" title=" " alt="" coords="240,189,397,214"/>
+<area shape="poly" id="edge5_Node000003_Node000006" title=" " alt="" coords="321,147,321,188,316,188,316,147"/>
+<area shape="rect" id="Node000007" href="$transformer_8h_source.html" title=" " alt="" coords="421,189,635,214"/>
+<area shape="poly" id="edge6_Node000003_Node000007" title=" " alt="" coords="378,136,501,186,499,191,376,141"/>
+<area shape="rect" id="Node000005" href="$msg__extractor_8h.html" title="utility functions for getting stuff from ROS msgs" alt="" coords="51,269,205,309"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="131,235,131,269,125,269,125,235"/>
+<area shape="rect" id="Node000008" href="$transformer_8hpp_source.html" title=" " alt="" coords="451,269,605,309"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="522,227,523,269,518,269,517,228"/>
+<area shape="poly" id="edge8_Node000008_Node000007" title=" " alt="" coords="534,255,532,214,537,214,539,255"/>
+</map>

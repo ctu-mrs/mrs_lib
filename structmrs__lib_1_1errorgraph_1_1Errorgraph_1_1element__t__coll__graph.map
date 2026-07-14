@@ -1,0 +1,5 @@
+<map id="mrs_lib::errorgraph::Errorgraph::element_t" name="mrs_lib::errorgraph::Errorgraph::element_t">
+<area shape="rect" id="Node000001" title="Internal representation of a node or topic in the error dependency graph." alt="" coords="5,108,177,148"/>
+<area shape="rect" id="Node000002" href="$structmrs__lib_1_1errorgraph_1_1node__id__t.html" title="Identifies a specific component within a ROS node for error reporting." alt="" coords="18,5,165,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="94,59,94,108,89,108,89,59"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="mrs_lib::coro::EventError" name="mrs_lib::coro::EventError">
+<area shape="rect" id="Node000001" title="Exception thrown on incorrect use of Event/EventAwaitable." alt="" coords="5,79,188,104"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="37,5,156,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="99,44,99,79,94,79,94,44"/>
+</map>
