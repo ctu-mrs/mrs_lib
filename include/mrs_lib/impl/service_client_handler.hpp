@@ -19,7 +19,7 @@ namespace mrs_lib
   /* ServiceClientHandler() constructors //{ */
 
   template <class ServiceType>
-  ServiceClientHandler<ServiceType>::ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos)
+  ServiceClientHandler<ServiceType>::ServiceClientHandler(const rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos)
       : impl_(std::make_shared<Impl>(node, address, qos, node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive)))
   {
   }
@@ -30,14 +30,14 @@ namespace mrs_lib
   }
 
   template <class ServiceType>
-  ServiceClientHandler<ServiceType>::ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos,
+  ServiceClientHandler<ServiceType>::ServiceClientHandler(const rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos,
                                                           const rclcpp::CallbackGroup::SharedPtr& callback_group)
       : impl_(std::make_shared<Impl>(node, address, qos, callback_group))
   {
   }
 
   template <class ServiceType>
-  ServiceClientHandler<ServiceType>::ServiceClientHandler(rclcpp::Node::SharedPtr& node, const std::string& address,
+  ServiceClientHandler<ServiceType>::ServiceClientHandler(const rclcpp::Node::SharedPtr& node, const std::string& address,
                                                           const rclcpp::CallbackGroup::SharedPtr& callback_group)
       : ServiceClientHandler(node, address, rclcpp::ServicesQoS(), callback_group)
   {
@@ -169,7 +169,7 @@ namespace mrs_lib
      * @param qos QOS
      * @param callback_group callback group
      */
-    Impl(rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos, const rclcpp::CallbackGroup::SharedPtr& callback_group)
+    Impl(const rclcpp::Node::SharedPtr& node, const std::string& address, const rclcpp::QoS& qos, const rclcpp::CallbackGroup::SharedPtr& callback_group)
         : callback_group_(callback_group), service_client_(node->create_client<ServiceType>(address, qos, callback_group))
     {
       RCLCPP_INFO_STREAM(node->get_logger(), "Created client '" << address << "' -> '" << service_client_->get_service_name() << "'");

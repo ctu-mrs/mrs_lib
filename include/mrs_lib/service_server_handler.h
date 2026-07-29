@@ -35,7 +35,8 @@ namespace mrs_lib
      * @param address         Name of the service.
      * @param qos QOS         Communication quality of service profile.
      */
-    ServiceServerHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const callback_t& cbk, const rclcpp::QoS& qos = rclcpp::ServicesQoS());
+    ServiceServerHandler(const rclcpp::Node::SharedPtr& node, const std::string& address, const callback_t& cbk,
+                         const rclcpp::QoS& qos = rclcpp::ServicesQoS());
 
     /*!
      * @brief Default constructor to avoid having to use pointers.
@@ -55,7 +56,7 @@ namespace mrs_lib
      * @param qos QOS         Communication quality of service profile.
      * @param callback_group  Callback group used internally by the node for the response callback. Set to nullptr to use the default one.
      */
-    ServiceServerHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const callback_t& cbk, const rclcpp::QoS& qos,
+    ServiceServerHandler(const rclcpp::Node::SharedPtr& node, const std::string& address, const callback_t& cbk, const rclcpp::QoS& qos,
                          const rclcpp::CallbackGroup::SharedPtr& callback_group);
 
     /**
@@ -69,7 +70,7 @@ namespace mrs_lib
      * @param callback_group  Callback group used internally by the node for the response callback. Set to nullptr to use the default one.
      */
     template <typename ClassType>
-    ServiceServerHandler(rclcpp::Node::SharedPtr& node, const std::string& address,
+    ServiceServerHandler(const rclcpp::Node::SharedPtr& node, const std::string& address,
                          mrs_lib::Task<bool> (ClassType::*method)(const std::shared_ptr<typename ServiceType::Request> request,
                                                                   const std::shared_ptr<typename ServiceType::Response> response),
                          ClassType* instance, const rclcpp::QoS& qos, const rclcpp::CallbackGroup::SharedPtr& callback_group);
@@ -83,7 +84,7 @@ namespace mrs_lib
      * @param address         Name of the service.
      * @param callback_group  Callback group used internally by the node for the response callback. Set to nullptr to use the default one.
      */
-    ServiceServerHandler(rclcpp::Node::SharedPtr& node, const std::string& address, const callback_t& cbk,
+    ServiceServerHandler(const rclcpp::Node::SharedPtr& node, const std::string& address, const callback_t& cbk,
                          const rclcpp::CallbackGroup::SharedPtr& callback_group);
 
   private:
