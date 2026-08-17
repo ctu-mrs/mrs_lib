@@ -51,22 +51,22 @@ namespace mrs_lib
   /*       tf_listener_ptr_(std::make_unique<tf2_ros::TransformListener>(*tf_buffer_)) { */
   /* } */
 
-  Transformer::Transformer(const rclcpp::Node::SharedPtr& node) : initialized_(true)
+  Transformer::Transformer(const rclcpp::Node::SharedPtr& node, const bool spin_thread) : initialized_(true)
   {
 
     node_ = node;
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(node->get_clock());
-    tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, node, true);
+    tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, node, spin_thread);
   }
 
   Transformer::Transformer(const rclcpp::Node::SharedPtr& node, const rclcpp::Clock::SharedPtr& clock, const rclcpp::Duration& cache_time,
-                           const rclcpp::QoS& qos)
+                           const rclcpp::QoS& qos, const bool spin_thread)
       : initialized_(true)
   {
 
     node_ = node;
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(clock, tf2::Duration(cache_time.nanoseconds()), node, qos);
-    tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, node, true);
+    tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, node, spin_thread);
   }
 
   Transformer& Transformer::operator=(Transformer&& other)
