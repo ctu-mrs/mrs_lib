@@ -92,14 +92,16 @@ namespace mrs_lib
      *
      * This constructor initializes the class and the TF2 transform listener.
      *
-     * \param node        the node handle to be used for subscribing to the transformations.
-     * \param spin_thread if true, the TF2 transform listener will spin a dedicated thread for processing \p /tf and \p /tf_static callbacks; if false, they
-     *                    are processed by whatever executor is already spinning \p node.
+     * \param node           the node handle to be used for subscribing to the transformations.
+     * \param spin_thread    if true, the TF2 transform listener will spin a dedicated thread for processing \p /tf and \p /tf_static callbacks; if false,
+     *                       they are processed by whatever executor is already spinning \p node.
+     * \param callback_group if non-null and \p spin_thread is false, the \p /tf and \p /tf_static subscriptions are placed in this callback group instead
+     *                       of \p node's default one. Ignored if \p spin_thread is true (the dedicated thread always uses its own private group).
      *
      * \note If \p spin_thread is false, a nonzero \p setLookupTimeout() will cause lookups to fail with a \p tf2::LookupException instead of blocking, since
      *       blocking on a timeout requires a dedicated thread to keep servicing incoming transforms in the meantime.
      */
-    Transformer(const rclcpp::Node::SharedPtr& node, const bool spin_thread = true);
+    Transformer(const rclcpp::Node::SharedPtr& node, const bool spin_thread = true, const rclcpp::CallbackGroup::SharedPtr& callback_group = nullptr);
 
     /**
      * \brief The main constructor that actually initializes stuff.
@@ -116,17 +118,19 @@ namespace mrs_lib
      *
      * This constructor initializes the class and the TF2 transform listener.
      *
-     * \param node        the node handle to be used for subscribing to the transformations.
-     * \param cache_time  duration of the transformation buffer's cache into the past that will be kept.
-     * \param spin_thread if true, the TF2 transform listener will spin a dedicated thread for processing \p /tf and \p /tf_static callbacks; if false, they
-     *                    are processed by whatever executor is already spinning \p node.
+     * \param node           the node handle to be used for subscribing to the transformations.
+     * \param cache_time     duration of the transformation buffer's cache into the past that will be kept.
+     * \param spin_thread    if true, the TF2 transform listener will spin a dedicated thread for processing \p /tf and \p /tf_static callbacks; if false,
+     *                       they are processed by whatever executor is already spinning \p node.
+     * \param callback_group if non-null and \p spin_thread is false, the \p /tf and \p /tf_static subscriptions are placed in this callback group instead
+     *                       of \p node's default one. Ignored if \p spin_thread is true (the dedicated thread always uses its own private group).
      *
      * \note If \p spin_thread is false, a nonzero \p setLookupTimeout() will cause lookups to fail with a \p tf2::LookupException instead of blocking, since
      *       blocking on a timeout requires a dedicated thread to keep servicing incoming transforms in the meantime.
      */
     Transformer(const rclcpp::Node::SharedPtr& node, const rclcpp::Clock::SharedPtr& clock,
                 const rclcpp::Duration& cache_time = rclcpp::Duration(tf2::BUFFER_CORE_DEFAULT_CACHE_TIME), const rclcpp::QoS& qos = rclcpp::ServicesQoS(),
-                const bool spin_thread = true);
+                const bool spin_thread = true, const rclcpp::CallbackGroup::SharedPtr& callback_group = nullptr);
 
     /**
      * \brief A convenience move assignment operator.

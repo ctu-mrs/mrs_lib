@@ -51,22 +51,47 @@ namespace mrs_lib
   /*       tf_listener_ptr_(std::make_unique<tf2_ros::TransformListener>(*tf_buffer_)) { */
   /* } */
 
-  Transformer::Transformer(const rclcpp::Node::SharedPtr& node, const bool spin_thread) : initialized_(true)
+  Transformer::Transformer(const rclcpp::Node::SharedPtr& node, const bool spin_thread, const rclcpp::CallbackGroup::SharedPtr& callback_group)
+      : initialized_(true)
   {
 
     node_ = node;
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(node->get_clock());
-    tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, node, spin_thread);
+    if (callback_group == nullptr)
+    {
+      tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, node, spin_thread);
+    } else
+    {
+      // start from tf2_ros' defaults (carries qos_overriding_options) instead of a bare SubscriptionOptions
+      auto sub_options = tf2_ros::detail::get_default_transform_listener_sub_options<>();
+      auto static_sub_options = tf2_ros::detail::get_default_transform_listener_static_sub_options<>();
+      sub_options.callback_group = callback_group;
+      static_sub_options.callback_group = callback_group;
+      tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, node, spin_thread, tf2_ros::DynamicListenerQoS(),
+                                                                      tf2_ros::StaticListenerQoS(), sub_options, static_sub_options);
+    }
   }
 
   Transformer::Transformer(const rclcpp::Node::SharedPtr& node, const rclcpp::Clock::SharedPtr& clock, const rclcpp::Duration& cache_time,
-                           const rclcpp::QoS& qos, const bool spin_thread)
+                           const rclcpp::QoS& qos, const bool spin_thread, const rclcpp::CallbackGroup::SharedPtr& callback_group)
       : initialized_(true)
   {
 
     node_ = node;
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(clock, tf2::Duration(cache_time.nanoseconds()), node, qos);
-    tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, node, spin_thread);
+    if (callback_group == nullptr)
+    {
+      tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, node, spin_thread);
+    } else
+    {
+      // start from tf2_ros' defaults (carries qos_overriding_options) instead of a bare SubscriptionOptions
+      auto sub_options = tf2_ros::detail::get_default_transform_listener_sub_options<>();
+      auto static_sub_options = tf2_ros::detail::get_default_transform_listener_static_sub_options<>();
+      sub_options.callback_group = callback_group;
+      static_sub_options.callback_group = callback_group;
+      tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, node, spin_thread, tf2_ros::DynamicListenerQoS(),
+                                                                      tf2_ros::StaticListenerQoS(), sub_options, static_sub_options);
+    }
   }
 
   Transformer& Transformer::operator=(Transformer&& other)
