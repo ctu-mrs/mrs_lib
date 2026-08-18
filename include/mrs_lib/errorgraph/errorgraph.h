@@ -170,7 +170,7 @@ namespace mrs_lib
         std::string topic_name; ///< Topic name.
         node_id_t source_node;  ///< Expected publisher node for this topic.
         rclcpp::Time stamp;     ///< Last time this element was updated.
-        bool not_reporting;     ///< Whether this topic's publisher has stopped reporting.
+        bool not_reporting;     ///< Always false for topic elements; only node elements track staleness (see \ref element_t::is_not_reporting()).
 
         /// \brief Convert to a ROS message.
         errorgraph_element_msg_t to_msg() const;

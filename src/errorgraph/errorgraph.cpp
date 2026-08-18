@@ -318,11 +318,15 @@ namespace mrs_lib
         }
         os << "</U></B><BR/>";
 
-        // add more info about the element
-        if (element->is_not_reporting())
-          os << "not reporting";
-        else
-          os << "age: " << (now - element->stamp).seconds() << "s";
+        // add more info about the element (topics never actively "report", so staleness is only
+        // meaningful for node elements -- see element_t::is_not_reporting())
+        if (element->type == element_t::type_t::node)
+        {
+          if (element->is_not_reporting())
+            os << "not reporting";
+          else
+            os << "age: " << (now - element->stamp).seconds() << "s";
+        }
         for (const auto& error : element->errors)
         {
           if (error.is_waiting_for() || error.is_no_error())
