@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <rclcpp/rclcpp.hpp>
+#include <sstream>
 
 #include <mrs_lib/errorgraph/errorgraph.h>
 
@@ -553,6 +554,38 @@ TEST_F(ErrorgraphTest, find_element_returns_nullopt_for_nonexistent)
 }
 
 //}
+/* TEST: write_dot does not print a bogus age for topic elements //{ */
+
+TEST_F(ErrorgraphTest, write_dot_omits_age_for_topic_elements)
+{
+  // A node waiting for a topic creates a topic element as an intermediate vertex. Topic elements
+  // never go through add_element_from_msg(), so their stamp is never updated -- write_dot() must
+  // not print a meaningless "age:" line for them.
+  auto msg = create_element_msg("waiting_node", "component", {{errorgraph_error_msg_t::TYPE_WAITING_FOR_TOPIC, "/some/topic"}});
+  graph_->add_element_from_msg(msg);
+
+  std::ostringstream oss;
+  graph_->write_dot(oss);
+  const std::string dot = oss.str();
+
+  ASSERT_NE(dot.find("waiting_node"), std::string::npos);
+  ASSERT_NE(dot.find("/some/topic"), std::string::npos);
+  // Exactly one "age:" should appear -- for the reporting node, not for the topic vertex.
+  const size_t age_count = [&dot]() {
+    size_t count = 0;
+    size_t pos = 0;
+    while ((pos = dot.find("age:", pos)) != std::string::npos)
+    {
+      ++count;
+      pos += 4;
+    }
+    return count;
+  }();
+  EXPECT_EQ(age_count, 1);
+}
+
+//}
+
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
