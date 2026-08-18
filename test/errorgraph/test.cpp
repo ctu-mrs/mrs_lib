@@ -246,12 +246,22 @@ TEST_F(ErrorgraphTest, find_error_roots_multiple_errors_same_node)
 
   auto roots = graph_->find_error_roots();
 
-  // "other_node" becomes a root because it doesn't exist (not reporting)
-  // "multi_error_node" is NOT a root because it's waiting
-  ASSERT_EQ(roots.size(), 1);
-  const auto& info = std::get<Errorgraph::node_info_t>(roots[0]);
-  EXPECT_EQ(info.source_node.node, "other_node");
-  EXPECT_EQ(info.source_node.component, "other_comp");
+  // "other_node" becomes a root because it doesn't exist (not reporting).
+  // "multi_error_node" is ALSO a root: it carries a genuine REGULAR_ERROR alongside its
+  // waiting-for entry, so it must not be excluded just because it is also waiting for something.
+  ASSERT_EQ(roots.size(), 2);
+  bool found_other_node = false;
+  bool found_multi_error_node = false;
+  for (const auto& root : roots)
+  {
+    const auto& info = std::get<Errorgraph::node_info_t>(root);
+    if (info.source_node.node == "other_node" && info.source_node.component == "other_comp")
+      found_other_node = true;
+    if (info.source_node.node == "multi_error_node" && info.source_node.component == "component")
+      found_multi_error_node = true;
+  }
+  EXPECT_TRUE(found_other_node);
+  EXPECT_TRUE(found_multi_error_node);
 }
 
 //}
@@ -321,6 +331,55 @@ TEST_F(ErrorgraphTest, find_dependency_roots_detects_loop)
 
 //}
 
+/* TEST: find_dependency_roots surfaces a genuine error mid-chain //{ */
+
+TEST_F(ErrorgraphTest, find_dependency_roots_surfaces_mid_chain_error)
+{
+  // Chain: node3 -> node2 -> node1, but node2 ALSO carries its own genuine error
+  // in addition to waiting for node1.
+  auto msg1 = create_element_msg("node1", "comp1", {{"ERROR", ""}});
+  errorgraph_element_msg_t msg2 = create_element_msg("node2", "comp2");
+  {
+    errorgraph_error_msg_t wait_error;
+    wait_error.stamp = clock_->now();
+    wait_error.type = errorgraph_error_msg_t::TYPE_WAITING_FOR_NODE;
+    wait_error.waited_for_node.node = "node1";
+    wait_error.waited_for_node.component = "comp1";
+    msg2.errors.push_back(wait_error);
+
+    errorgraph_error_msg_t regular_error;
+    regular_error.stamp = clock_->now();
+    regular_error.type = "REGULAR_ERROR";
+    msg2.errors.push_back(regular_error);
+  }
+  auto msg3 = create_element_msg("node3", "comp3", {{errorgraph_error_msg_t::TYPE_WAITING_FOR_NODE, "node2.comp2"}});
+
+  graph_->add_element_from_msg(msg1);
+  graph_->add_element_from_msg(msg2);
+  graph_->add_element_from_msg(msg3);
+
+  node_id_t node3_id{"node3", "comp3"};
+  auto roots = graph_->find_dependency_roots(node3_id);
+
+  // Both node1 (terminal, real error) and node2 (mid-chain, real error) must be reported --
+  // node2's own error must not be silently skipped just because it's also waiting for node1.
+  ASSERT_EQ(roots.size(), 2);
+  bool found_node1 = false;
+  bool found_node2 = false;
+  for (const auto& root : roots)
+  {
+    const auto& info = std::get<Errorgraph::node_info_t>(root);
+    if (info.source_node.node == "node1" && info.source_node.component == "comp1")
+      found_node1 = true;
+    if (info.source_node.node == "node2" && info.source_node.component == "comp2")
+      found_node2 = true;
+  }
+  EXPECT_TRUE(found_node1);
+  EXPECT_TRUE(found_node2);
+}
+
+//}
+
 /* TEST: find_roots returns all non-waiting nodes //{ */
 
 TEST_F(ErrorgraphTest, find_roots_returns_all_non_waiting_nodes)
@@ -338,6 +397,49 @@ TEST_F(ErrorgraphTest, find_roots_returns_all_non_waiting_nodes)
 
   // Should return both root1 and root2 (both not waiting)
   EXPECT_EQ(roots.size(), 2);
+}
+
+//}
+
+/* TEST: find_roots with multiple errors on same node //{ */
+
+TEST_F(ErrorgraphTest, find_roots_multiple_errors_same_node)
+{
+  // Node with both a waiting-for error and a regular error
+  errorgraph_element_msg_t msg = create_element_msg("multi_error_node", "component");
+
+  errorgraph_error_msg_t wait_error;
+  wait_error.stamp = clock_->now();
+  wait_error.type = errorgraph_error_msg_t::TYPE_WAITING_FOR_NODE;
+  wait_error.waited_for_node.node = "other_node";
+  wait_error.waited_for_node.component = "other_comp";
+  msg.errors.push_back(wait_error);
+
+  errorgraph_error_msg_t regular_error;
+  regular_error.stamp = clock_->now();
+  regular_error.type = "REGULAR_ERROR";
+  msg.errors.push_back(regular_error);
+
+  graph_->add_element_from_msg(msg);
+
+  auto roots = graph_->find_roots();
+
+  // "other_node" is a root because it doesn't exist (not reporting).
+  // "multi_error_node" is ALSO a root: it carries a genuine REGULAR_ERROR alongside its
+  // waiting-for entry, so it must not be excluded just because it is also waiting for something.
+  ASSERT_EQ(roots.size(), 2);
+  bool found_other_node = false;
+  bool found_multi_error_node = false;
+  for (const auto& root : roots)
+  {
+    const auto& info = std::get<Errorgraph::node_info_t>(root);
+    if (info.source_node.node == "other_node" && info.source_node.component == "other_comp")
+      found_other_node = true;
+    if (info.source_node.node == "multi_error_node" && info.source_node.component == "component")
+      found_multi_error_node = true;
+  }
+  EXPECT_TRUE(found_other_node);
+  EXPECT_TRUE(found_multi_error_node);
 }
 
 //}
@@ -451,7 +553,6 @@ TEST_F(ErrorgraphTest, find_element_returns_nullopt_for_nonexistent)
 }
 
 //}
-
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);

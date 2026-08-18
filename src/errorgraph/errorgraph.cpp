@@ -40,8 +40,10 @@ namespace mrs_lib
         open_elements.pop_back();
         const auto prevs = find_elements_waited_for(*cur_elem);
 
-        // if this element doesn't have any nodes it's waiting for, it is a root
-        if (prevs.empty())
+        // an element is a root if it doesn't depend on anything else, or if it carries a genuine
+        // error of its own even while also waiting for something else (that error would otherwise
+        // be silently skipped as the DFS walks past it toward its dependency)
+        if (!cur_elem->is_only_waiting_for())
           roots.push_back(cur_elem);
 
         // if there are any nodes it's waiting for, process them
@@ -94,7 +96,7 @@ namespace mrs_lib
       std::vector<element_info_t> roots;
       for (const auto& el_ptr : elements_)
       {
-        if (!el_ptr->is_waiting_for() && (!el_ptr->is_no_error() || !el_ptr->parents.empty()))
+        if (!el_ptr->is_only_waiting_for() && (!el_ptr->is_no_error() || !el_ptr->parents.empty()))
           roots.push_back(el_ptr->to_info());
       }
       return roots;
@@ -106,7 +108,7 @@ namespace mrs_lib
       std::vector<element_info_t> roots;
       for (const auto& el_ptr : elements_)
       {
-        if (!el_ptr->is_waiting_for())
+        if (!el_ptr->is_only_waiting_for())
           roots.push_back(el_ptr->to_info());
       }
       return roots;
@@ -118,7 +120,7 @@ namespace mrs_lib
       std::vector<element_info_t> leaves;
       for (const auto& el_ptr : elements_)
       {
-        // A leaf has no children (no one waits for it)
+        // A leaf has no parents, i.e. no one else in the graph waits for it
         if (el_ptr->parents.empty())
           leaves.push_back(el_ptr->to_info());
       }
