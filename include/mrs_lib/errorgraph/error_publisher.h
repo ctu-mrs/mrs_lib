@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+#include <set>
 #include <type_traits>
 
 #include <rclcpp/rclcpp.hpp>
@@ -18,6 +20,11 @@ namespace mrs_lib
      * Report errors preventing your node from functioning properly using the respective methods.
      * These are aggregated and periodically published by this class. After publishing, the list
      * of errors is cleared, so take care when setting the `publish_period`.
+     *
+     * Every add*Error() method also accepts an optional trailing `component_override`, letting several
+     * logical components that share one instance (e.g. a manager and its plugins) be told apart in the
+     * published Errorgraph without needing one ErrorPublisher per component. See addGeneralError()'s
+     * `component_override` docs for the constraints on its value.
      */
     class ErrorPublisher
     {
@@ -31,6 +38,7 @@ namespace mrs_lib
       struct error_wrapper_t
       {
         std::optional<error_id_t> id;
+        std::string component; ///< component_override.value_or(component_name_), resolved once at add-time.
         mrs_msgs::msg::ErrorgraphError msg;
       };
 
@@ -50,21 +58,34 @@ namespace mrs_lib
       /*!
        * \brief Publishes all aggregated errors and calls rclcpp::shutdown().
        *
+       * Heartbeat-only elements (components with nothing currently pending) are suppressed on this
+       * path, so only components with something urgent to say are published.
+       *
        * \note To make sure that the published messages are propagated through ROS to any subscribers,
        * the method waits 1s after publishing before calling rclcpp::shutdown().
+       * \warning Calls `exit(1)`, terminating the whole process, not just this ErrorPublisher. If this
+       * instance is shared across multiple components (see class docs), any one of them calling this
+       * over its own fatal error takes the entire node down, including the other components.
        */
       void flushAndShutdown();
 
       /*!
        * \brief Add a custom error to the list of aggregated errors to be published in the next period.
-       * This method uses the `id` to distinguish between different error types and avoid error duplication.
-       * If an element with the same `id` is found in the list of currently aggregated errors, it will be replaced
-       * by the new one provided. Otherwise, a new error will be added to the list.
+       * This method uses the `id`, scoped to the resolved component (`component_override` if given,
+       * otherwise `component_name`), to distinguish between different error types and avoid error
+       * duplication. If an element with the same `id` under the same resolved component is found in
+       * the list of currently aggregated errors, it will be replaced by the new one provided. Otherwise,
+       * a new error will be added to the list. The same `id` may be reused across different components
+       * (default or overridden) without colliding — they are tracked independently.
        *
-       * \param id               The unique identification number of this error type for this ErrorPublisher.
+       * \param id               The unique identification number of this error type, scoped to the resolved component.
        * \param description      A short and succinct description of the error.
+       * \param component_override  Reports this error under a different component than `component_name`.
+       *                             Must be a small, static, per-instance value (e.g. a fixed plugin name), never a
+       *                             dynamically generated string (topic name, loop counter, ...): every distinct value
+       *                             is remembered for the instance's lifetime and gets its own published element per period.
        */
-      void addGeneralError(const error_id_t id, const std::string& description);
+      void addGeneralError(const error_id_t id, const std::string& description, const std::optional<std::string>& component_override = std::nullopt);
 
       /*!
        * \brief A convenience overload for custom enumeration types.
@@ -73,12 +94,13 @@ namespace mrs_lib
        *
        * \param id               The unique identification number of this error type for this ErrorPublisher.
        * \param description      A short and succinct description of the error.
+       * \param component_override  See addGeneralError()'s docs.
        */
       template <typename enum_T>
         requires(std::is_enum_v<enum_T> && sizeof(std::underlying_type_t<enum_T>) <= sizeof(error_id_t))
-      void addGeneralError(const enum_T id, const std::string& description)
+      void addGeneralError(const enum_T id, const std::string& description, const std::optional<std::string>& component_override = std::nullopt)
       {
-        addGeneralError(static_cast<error_id_t>(id), description);
+        addGeneralError(static_cast<error_id_t>(id), description, component_override);
       }
 
       /*!
@@ -87,8 +109,9 @@ namespace mrs_lib
        * Useful for errors during initialization that lead to termination of the node anyways.
        *
        * \param description      A short and succinct description of the error.
+       * \param component_override  See addGeneralError()'s docs.
        */
-      void addOneshotError(const std::string& description);
+      void addOneshotError(const std::string& description, const std::optional<std::string>& component_override = std::nullopt);
 
       /*!
        * \brief Add a special error type `waiting_for_node`.
@@ -98,8 +121,9 @@ namespace mrs_lib
        * use `main`.
        *
        * \param node_id          Identifier of the node and component that is being waited for. If the component is unknown, use `main`.
+       * \param component_override  See addGeneralError()'s docs.
        */
-      void addWaitingForNodeError(const node_id_t& node_id);
+      void addWaitingForNodeError(const node_id_t& node_id, const std::optional<std::string>& component_override = std::nullopt);
 
       /*!
        * \brief Add a special error type `waiting_for_topic`.
@@ -108,8 +132,9 @@ namespace mrs_lib
        * the topic is unknown or can change.
        *
        * \param topic_name       Full name of the topic that is being waited for.
+       * \param component_override  See addGeneralError()'s docs.
        */
-      void addWaitingForTopicError(const std::string& topic_name);
+      void addWaitingForTopicError(const std::string& topic_name, const std::optional<std::string>& component_override = std::nullopt);
 
       /*!
        * \brief Add a special error type `waiting_for_topic`.
@@ -118,8 +143,10 @@ namespace mrs_lib
        *
        * \param topic_name       Full name of the topic that is being waited for.
        * \param expected_publisher  Identifier of the node and component that is expected to publish this topic.
+       * \param component_override  See addGeneralError()'s docs.
        */
-      void addWaitingForTopicError(const std::string& topic_name, const node_id_t& expected_publisher);
+      void addWaitingForTopicError(const std::string& topic_name, const node_id_t& expected_publisher,
+                                   const std::optional<std::string>& component_override = std::nullopt);
 
 
     private:
@@ -130,6 +157,9 @@ namespace mrs_lib
 
       std::mutex errors_mtx_;
       std::vector<error_wrapper_t> errors_;
+      /// All components ever seen; pre-seeds publishErrors() so a quiet component still gets a heartbeat.
+      /// Guarded by errors_mtx_, same as errors_.
+      std::set<std::string> known_components_;
 
       rclcpp::CallbackGroup::SharedPtr cbkgrp_timers_;
 
@@ -137,7 +167,13 @@ namespace mrs_lib
 
       std::unique_ptr<mrs_lib::MRSTimer> timer_publisher_;
 
-      void publishErrors();
+      /*!
+       * \brief Groups the aggregated errors by component and publishes one ErrorgraphElement per component.
+       *
+       * \param skip_empty_heartbeats  If true, skip components with no pending errors (no heartbeat).
+       *                                Used on the shutdown path, where heartbeats are pointless.
+       */
+      void publishErrors(bool skip_empty_heartbeats = false);
     };
 
   } // namespace errorgraph
