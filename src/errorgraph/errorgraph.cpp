@@ -19,7 +19,7 @@ namespace mrs_lib
       std::vector<element_info_t> roots;
       roots.reserve(raw_roots.size());
       for (const auto* el : raw_roots)
-        roots.push_back(el->to_info());
+        append_info(*el, roots);
       return roots;
     }
 
@@ -88,14 +88,29 @@ namespace mrs_lib
       graph_up_to_date_ = true;
     }
 
+    void Errorgraph::append_info(const element_t& el, std::vector<element_info_t>& out)
+    {
+      // A topic placeholder never reports itself; attribute it to whoever's waiting, not the
+      // expected publisher.
+      if (el.type == element_t::type_t::topic)
+      {
+        for (const auto* parent : el.parents)
+          out.push_back(topic_info_t{el.topic_name, parent->source_node, el.source_node, parent->stamp, parent->is_not_reporting()});
+      } else
+      {
+        out.push_back(el.to_info());
+      }
+    }
+
     std::vector<Errorgraph::element_info_t> Errorgraph::find_error_roots()
     {
       build_graph();
       std::vector<element_info_t> roots;
       for (const auto& el_ptr : elements_)
       {
-        if (!el_ptr->is_waiting_for() && (!el_ptr->is_no_error() || !el_ptr->parents.empty()))
-          roots.push_back(el_ptr->to_info());
+        if (el_ptr->is_waiting_for() || (el_ptr->is_no_error() && el_ptr->parents.empty()))
+          continue;
+        append_info(*el_ptr, roots);
       }
       return roots;
     }
@@ -107,7 +122,7 @@ namespace mrs_lib
       for (const auto& el_ptr : elements_)
       {
         if (!el_ptr->is_waiting_for())
-          roots.push_back(el_ptr->to_info());
+          append_info(*el_ptr, roots);
       }
       return roots;
     }
@@ -161,7 +176,10 @@ namespace mrs_lib
 
     Errorgraph::element_t* Errorgraph::find_element_mutable(const node_id_t& node_id)
     {
-      const auto elem_it = std::ranges::find(elements_, node_id, [](const auto& el_ptr) { return el_ptr->source_node; });
+      // Only match real node elements -- a topic placeholder's source_node is the expected
+      // publisher and must not alias with that publisher's own element.
+      const auto elem_it =
+          std::ranges::find_if(elements_, [&node_id](const auto& el_ptr) { return el_ptr->type == element_t::type_t::node && el_ptr->source_node == node_id; });
       if (elem_it == std::end(elements_))
         return nullptr;
       else
@@ -262,7 +280,7 @@ namespace mrs_lib
     Errorgraph::element_info_t Errorgraph::element_t::to_info() const
     {
       if (type == type_t::topic)
-        return topic_info_t{topic_name, source_node, stamp, is_not_reporting()};
+        return topic_info_t{topic_name, source_node, source_node, stamp, is_not_reporting()};
       else
         return node_info_t{source_node, errors, stamp, is_not_reporting()};
     }
@@ -287,7 +305,7 @@ namespace mrs_lib
       topic_error.stamp = stamp;
       topic_error.type = mrs_msgs::msg::ErrorgraphError::TYPE_WAITING_FOR_TOPIC;
       topic_error.waited_for_topic = topic_name;
-      topic_error.waited_for_node = source_node.to_msg();
+      topic_error.waited_for_node = expected_publisher.to_msg();
       ret.errors.push_back(topic_error);
       return ret;
     }

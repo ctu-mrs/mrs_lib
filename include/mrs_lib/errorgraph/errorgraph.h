@@ -167,10 +167,16 @@ namespace mrs_lib
        */
       struct topic_info_t
       {
-        std::string topic_name; ///< Topic name.
-        node_id_t source_node;  ///< Expected publisher node for this topic.
-        rclcpp::Time stamp;     ///< Last time this element was updated.
-        bool not_reporting;     ///< Whether this topic's publisher has stopped reporting.
+        std::string topic_name;       ///< Topic name.
+        node_id_t source_node;        ///< Who this entry is attributed to: the waiter, from
+                                      ///< find_error_roots(); the expected publisher elsewhere
+                                      ///< (find_element(), find_leaves(), find_roots(), ...).
+        node_id_t expected_publisher; ///< The topic's expected publisher.
+        rclcpp::Time stamp;           ///< The waiter's last report time, from find_error_roots();
+                                      ///< otherwise when this element was last updated.
+        bool not_reporting;           ///< Whether the waiter has stopped reporting, from
+                                      ///< find_error_roots(); always false elsewhere, since a
+                                      ///< topic placeholder never reports on its own.
 
         /// \brief Convert to a ROS message.
         errorgraph_element_msg_t to_msg() const;
@@ -242,13 +248,16 @@ namespace mrs_lib
         }
 
         /// \brief Returns pointers to node IDs this element is waiting for.
+        ///
+        /// Only TYPE_WAITING_FOR_NODE errors count -- a topic-wait's expected_publisher is just
+        /// context, not a dependency claim on that node.
         inline std::vector<const node_id_t*> waited_for_nodes() const
         {
           std::vector<const node_id_t*> ret;
           ret.reserve(errors.size());
           for (const auto& el : errors)
           {
-            if (el.waited_for_node.has_value())
+            if (el.is_waiting_for_node() && el.waited_for_node.has_value())
               ret.push_back(&el.waited_for_node.value());
           }
           return ret;
@@ -316,6 +325,10 @@ namespace mrs_lib
 
       element_t* add_new_element(const node_id_t& node_id);
 
+      /// \brief Appends an element's info entries -- one per dependent for a topic placeholder,
+      /// one otherwise.
+      static void append_info(const element_t& el, std::vector<element_info_t>& out);
+
       size_t last_element_id = 0;
 
     public:
@@ -329,7 +342,8 @@ namespace mrs_lib
        * \brief Find the root-cause elements blocking the given node.
        *
        * Traverses the dependency graph from the specified node to find leaf elements
-       * (elements with errors that don't depend on anything else).
+       * (elements with errors that don't depend on anything else). Like find_error_roots(), a
+       * topic element is attributed to the dependent waiting on it, not its expected publisher.
        *
        * \param node_id             The node to trace dependencies for.
        * \param loop_detected_out   If non-null, set to true when a cycle is detected.
@@ -345,6 +359,10 @@ namespace mrs_lib
 
       /**
        * \brief Find all root elements (elements with no parents in the dependency graph).
+       *
+       * Like find_error_roots(), a topic element is attributed to whoever's actually waiting on
+       * it, one entry per distinct dependent.
+       *
        * \return  Copies of root element info as type-safe variants.
        */
       std::vector<element_info_t> find_roots();
