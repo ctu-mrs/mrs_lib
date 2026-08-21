@@ -278,6 +278,120 @@ TEST_F(Test, main_test)
 
 //}
 
+/* TEST_F(Test, spin_thread_false_test) //{ */
+
+TEST_F(Test, spin_thread_false_test)
+{
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  // node_ is already spun by executor_ in main_thread_ (see initialize()/spin()), so the TF listener
+  // must rely on that instead of a dedicated thread for this to succeed
+  auto tfr = mrs_lib::Transformer(node_, false);
+
+  tfr.setDefaultPrefix("uav66");
+
+  const std::string from = "fcu";
+  const std::string to = "local_origin";
+
+  const auto tf_opt = wait_for_tf(from, to, tfr);
+
+  EXPECT_TRUE(tf_opt.has_value());
+
+  despin();
+}
+
+//}
+
+/* TEST_F(Test, no_dedicated_thread_test) //{ */
+
+TEST_F(Test, no_dedicated_thread_test)
+{
+
+  // deliberately not calling initialize(): node_ is never added to any spinning executor, so with
+  // spin_thread == false the TF listener has nothing servicing its /tf subscription. If spin_thread
+  // is silently ignored (a dedicated thread gets created anyway), this transform would still arrive.
+  node_ = std::make_shared<rclcpp::Node>("test_publisher_handler_no_spin", rclcpp::NodeOptions().use_intra_process_comms(false));
+  tf_broadcaster_ = mrs_lib::TransformBroadcaster(node_);
+
+  auto tfr = mrs_lib::Transformer(node_, false);
+
+  publish_transforms(node_->get_clock()->now());
+
+  node_->get_clock()->sleep_for(std::chrono::duration<double>(0.2));
+
+  const auto tf_opt = tfr.getTransform("uav66/fcu", "uav66/local_origin", rclcpp::Time(0));
+
+  EXPECT_FALSE(tf_opt.has_value());
+}
+
+//}
+
+/* TEST_F(Test, callback_group_test) //{ */
+
+TEST_F(Test, callback_group_test)
+{
+
+  // only the callback group is spun (not the node), so a transform arriving proves it's routed there
+  node_ = std::make_shared<rclcpp::Node>("test_publisher_handler_callback_group", rclcpp::NodeOptions().use_intra_process_comms(false));
+  tf_broadcaster_ = mrs_lib::TransformBroadcaster(node_);
+
+  auto cbkgrp = node_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+
+  auto tfr = mrs_lib::Transformer(node_, false, cbkgrp);
+
+  tfr.setDefaultPrefix("uav66");
+
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_callback_group(cbkgrp, node_->get_node_base_interface());
+
+  std::thread spin_thread([&executor]() { executor.spin(); });
+
+  const std::string from = "fcu";
+  const std::string to = "local_origin";
+
+  const auto tf_opt = wait_for_tf(from, to, tfr);
+
+  EXPECT_TRUE(tf_opt.has_value());
+
+  executor.cancel();
+  spin_thread.join();
+}
+
+//}
+
+/* TEST_F(Test, callback_group_not_spun_test) //{ */
+
+TEST_F(Test, callback_group_not_spun_test)
+{
+
+  // group not auto-added, only the node is spun -- a silently-ignored callback_group would still arrive
+  node_ = std::make_shared<rclcpp::Node>("test_publisher_handler_callback_group_not_spun", rclcpp::NodeOptions().use_intra_process_comms(false));
+  tf_broadcaster_ = mrs_lib::TransformBroadcaster(node_);
+
+  auto cbkgrp = node_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive, false);
+
+  auto tfr = mrs_lib::Transformer(node_, false, cbkgrp);
+
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node_);
+
+  std::thread spin_thread([&executor]() { executor.spin(); });
+
+  publish_transforms(node_->get_clock()->now());
+
+  node_->get_clock()->sleep_for(std::chrono::duration<double>(0.2));
+
+  const auto tf_opt = tfr.getTransform("uav66/fcu", "uav66/local_origin", rclcpp::Time(0));
+
+  EXPECT_FALSE(tf_opt.has_value());
+
+  executor.cancel();
+  spin_thread.join();
+}
+
+//}
+
 /* TEST_F(Test, tf_times_test) //{ */
 
 TEST_F(Test, tf_times_test)
