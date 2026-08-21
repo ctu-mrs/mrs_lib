@@ -30,9 +30,18 @@ namespace mrs_lib
   public:
     /* constructor //{ */
     Impl(const SubscriberHandlerOptions& options, const message_callback_t& message_callback = message_callback_t())
-        : m_node(options.node), m_qos(options.qos), m_sub_opts(options.subscription_options), m_topic_name(options.topic_name), m_node_name(options.node_name),
-          m_got_data(false), m_new_data(false), m_used_data(false), m_timeout_manager(options.timeout_manager), m_latest_message_time(0),
-          m_latest_message(nullptr), m_message_callback(message_callback)
+        : m_node(options.node),
+          m_qos(options.qos),
+          m_sub_opts(options.subscription_options),
+          m_topic_name(options.topic_name),
+          m_node_name(options.node_name),
+          m_got_data(false),
+          m_new_data(false),
+          m_used_data(false),
+          m_timeout_manager(options.timeout_manager),
+          m_latest_message_time(0),
+          m_latest_message(nullptr),
+          m_message_callback(message_callback)
     {
 
       // initialize the callback for the TimeoutManager

@@ -16,7 +16,8 @@ namespace mrs_lib_examples
   public:
     // BEGIN CTOR
     CoroServiceExample(const rclcpp::NodeOptions& opts)
-        : Node("coro_service_example", opts), logger(this_node().get_logger()),
+        : Node("coro_service_example", opts),
+          logger(this_node().get_logger()),
           reentrant_callback_group_(this_node().create_callback_group(rclcpp::CallbackGroupType::Reentrant)),
           service_client_(this_node_ptr(), "my_service", nullptr),
           service_timer_(std::make_unique<mrs_lib::ROSTimer>(std::invoke([this] {
@@ -80,7 +81,8 @@ namespace mrs_lib_examples
   {
   public:
     CoroServiceExampleServer(const rclcpp::NodeOptions& opts)
-        : Node("coro_service_example_server", opts), logger(this_node().get_logger()),
+        : Node("coro_service_example_server", opts),
+          logger(this_node().get_logger()),
           service_server_(this_node_ptr(), "my_service", std::bind_front(&CoroServiceExampleServer::service_callback, this))
     {
     }

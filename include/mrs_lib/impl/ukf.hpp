@@ -27,7 +27,12 @@ namespace mrs_lib
   template <int n_states, int n_inputs, int n_measurements>
   UKF<n_states, n_inputs, n_measurements>::UKF(const transition_model_t& transition_model, const observation_model_t& observation_model, const double alpha,
                                                const double kappa, const double beta)
-      : m_alpha(alpha), m_kappa(kappa), m_beta(beta), m_Wm(W_t::Zero()), m_Wc(W_t::Zero()), m_transition_model(transition_model),
+      : m_alpha(alpha),
+        m_kappa(kappa),
+        m_beta(beta),
+        m_Wm(W_t::Zero()),
+        m_Wc(W_t::Zero()),
+        m_transition_model(transition_model),
         m_observation_model(observation_model)
   {
     assert(alpha > 0.0);
