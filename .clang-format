@@ -39,4 +39,6 @@ KeepEmptyLinesAtTheStartOfBlocks: true
 NamespaceIndentation: All
 SortIncludes: false
 SpaceBeforeParens: ControlStatements
+
+PackConstructorInitializers: NextLine
 ...
