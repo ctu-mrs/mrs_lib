@@ -2,6 +2,8 @@ find_package(ament_cmake_gtest REQUIRED)
 find_package(launch_testing_ament_cmake REQUIRED)
 find_package(ament_cmake_ros REQUIRED)
 
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
 add_subdirectory(mrs_lib_testing_utils)
 
 function(add_ros_isolated_launch_test path)
@@ -35,6 +37,7 @@ add_subdirectory(geometry)
 add_subdirectory(internal)
 add_subdirectory(lkf)
 add_subdirectory(lockable)
+add_subdirectory(logger)
 add_subdirectory(math)
 add_subdirectory(median_filter)
 add_subdirectory(msg_extractor)

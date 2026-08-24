@@ -1,6 +1,4 @@
 function(mrs_lib_add_compilation_test label target file)
-  find_package(Python3 COMPONENTS Interpreter REQUIRED)
-
   if(TARGET "${target}")
     message(FATAL_ERROR "Target: '${target}' already exists.")
   endif()

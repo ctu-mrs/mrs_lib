@@ -138,6 +138,7 @@ target_sources(mrs_lib_mrs_lib
     "include/mrs_lib/kalman_filter.h"
     "include/mrs_lib/lkf.h"
     "include/mrs_lib/lockable.h"
+    "include/mrs_lib/logger.hpp"
     "include/mrs_lib/math.h"
     "include/mrs_lib/median_filter.h"
     "include/mrs_lib/mrs_lib.h"
