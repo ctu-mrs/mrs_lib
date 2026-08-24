@@ -2,6 +2,12 @@
 
 #include <mutex>
 
+#if MRS_LIB_IGNORE_DEPRECATED_LOCKABLE
+#define MRS_LIB_DEPRECATED_LOCKABLE
+#else
+#define MRS_LIB_DEPRECATED_LOCKABLE [[deprecated("Use mrs_lib::OwningMutex instead.")]]
+#endif
+
 namespace mrs_lib
 {
   template <typename LockedVarT, typename MutexT>
@@ -17,9 +23,10 @@ namespace mrs_lib
    * Unlocker (see below in this file) - similar to how you'd use an std::scoped_lock.
    * Or you can use the familiar set_mutexed() and get_mutexed() methods.
    *
+   * @deprecated Use mrs_lib::OwningMutex instead.
    */
   template <typename LockedVarT, typename MutexT = std::mutex>
-  class Lockable
+  class MRS_LIB_DEPRECATED_LOCKABLE Lockable
   {
     MutexT mtx;
     LockedVarT locked_var;
@@ -69,7 +76,7 @@ namespace mrs_lib
    *
    */
   template <typename LockedVarT, typename MutexT>
-  class Unlocker
+  class MRS_LIB_DEPRECATED_LOCKABLE Unlocker
   {
   public:
     Unlocker(Lockable<LockedVarT, MutexT>& lockable) : lock(lockable.mtx), lockable(lockable)
@@ -92,3 +99,5 @@ namespace mrs_lib
   };
 
 } // namespace mrs_lib
+
+#undef MRS_LIB_DEPRECATED_LOCKABLE
