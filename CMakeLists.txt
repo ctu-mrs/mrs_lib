@@ -205,6 +205,8 @@ target_sources(mrs_lib_mrs_lib
     "include/mrs_lib/safety_zone/prism.h"
     "include/mrs_lib/safety_zone/static_edges_visualization.h"
     # include/mrs_lib/utility
+    "include/mrs_lib/utility/callback.hpp"
+    "include/mrs_lib/utility/meta.hpp"
     "include/mrs_lib/utility/owning_mutex.hpp"
     "include/mrs_lib/utility/pimpl.hpp"
     "include/mrs_lib/utility/scope_cleanup.hpp"
