@@ -3,12 +3,11 @@
 
 #include <concepts>
 #include <coroutine>
-
-#include <mrs_lib/coro/internal/thread_local_continuation_scheduler.hpp>
-#include <mrs_lib/coro/task.hpp>
 #include <stop_token>
 #include <utility>
 
+#include "mrs_lib/coro/internal/thread_local_continuation_scheduler.hpp"
+#include "mrs_lib/coro/task.hpp"
 
 namespace mrs_lib::coro
 {
@@ -51,10 +50,7 @@ namespace mrs_lib::coro
         void return_void()
         {
         }
-        void unhandled_exception()
-        {
-          throw;
-        }
+        void unhandled_exception();
 
         std::stop_token stop_token_;
       };
@@ -112,6 +108,13 @@ namespace mrs_lib::coro
      * Using this function from user code is not usually necessary. It can be
      * avoided by `co_await`ing the tasks and using callbacks that support passing
      * coroutine callbacks.
+     *
+     * @warning
+     * Since any potential exceptions propagated from the started coroutine
+     * would be thrown in unpredictable contexts, based on where it was last
+     * resumed, any exceptions thrown out of the coroutine will cause the
+     * program to terminate (similarly to throwing exceptions from noexcept
+     * function).
      */
     template <typename F, typename... Args>
       requires std::invocable<std::decay_t<F>, std::decay_t<Args>...> && std::same_as<Task<void>, std::invoke_result_t<std::decay_t<F>, std::decay_t<Args>...>>
@@ -134,6 +137,13 @@ namespace mrs_lib::coro
      * Using this function from user code is not usually necessary. It can be
      * avoided by `co_await`ing the tasks and using callbacks that support passing
      * coroutine callbacks.
+     *
+     * @warning
+     * Since any potential exceptions propagated from the started coroutine
+     * would be thrown in unpredictable contexts, based on where it was last
+     * resumed, any exceptions thrown out of the coroutine will cause the
+     * program to terminate (similarly to throwing exceptions from noexcept
+     * function).
      */
     template <typename F, typename... Args>
       requires std::invocable<std::decay_t<F>, std::decay_t<Args>...> && std::same_as<Task<void>, std::invoke_result_t<std::decay_t<F>, std::decay_t<Args>...>>

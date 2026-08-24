@@ -79,6 +79,7 @@ target_sources(mrs_lib_mrs_lib
     # src/coro
     "src/coro/cancellation.cpp"
     "src/coro/event.cpp"
+    "src/coro/runners.cpp"
     # src/coro/internal
     "src/coro/internal/thread_local_continuation_scheduler.cpp"
     # src/dynparam_mgr
