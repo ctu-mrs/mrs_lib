@@ -101,8 +101,16 @@ namespace mrs_lib::coro
         assert(continuation_ == nullptr);
         continuation_ = std::move(continuation);
         std::stop_token token = continuation_.get_token();
+        // The callbacks may immediately trigger so we need to unlock the lock before it is called.
         lock.unlock();
-        // The callbacks may immediately trigger so we need to unlock the lock before it is created.
+        // The callback may cause all current handles to the EventState to be destroyed
+        // This can happen when the callback registers a waker that can be woken by a different thread.
+        // The waker can resume/cancel the event and thus destroy both the Event and
+        // EventAwaitable instances that point to this state.
+        // This can in turn cause undefined behavior when registering the stop callback.
+        // To prevent this, we create a temporary owner of the event state, that
+        // will allow us to safely set the stop callback.
+        auto self_owner = shared_from_this();
         callback();
         if (token_cancelable)
         {

@@ -2,6 +2,10 @@
 
 #include <gtest/gtest.h>
 
+#include <atomic>
+#include <latch>
+#include <thread>
+
 #include "mrs_lib/coro/runners.hpp"
 #include "mrs_lib/coro/task.hpp"
 #include "mrs_lib/utility/scope_cleanup.hpp"
@@ -10,8 +14,8 @@ namespace
 {
   struct DataOut
   {
-    bool finished = false;
-    bool destroyed = false;
+    std::atomic<bool> finished = false;
+    std::atomic<bool> destroyed = false;
   };
 
   mrs_lib::Task<> wait_for_event(mrs_lib::coro::EventAwaitable event_awaitable, DataOut& out)
@@ -224,6 +228,59 @@ namespace
     EXPECT_TRUE(static_cast<bool>(waker));
     waker = {};
     EXPECT_FALSE(static_cast<bool>(waker));
+
+    EXPECT_FALSE(data_out.finished);
+    EXPECT_TRUE(data_out.destroyed);
+  }
+
+  TEST(MrsLibCoroEvent, CancelDuringEventAwaitableCallback)
+  {
+    std::latch callback_entered(2);
+    std::latch allow_callback_to_return(2);
+
+    std::atomic<bool> started = false;
+    DataOut data_out{};
+
+    std::atomic<bool> entered_callback = false;
+
+
+    auto task = [&](mrs_lib::coro::EventAwaitable awaitable) -> mrs_lib::coro::Task<void> {
+      started = true;
+      mrs_lib::ScopeCleanup set_destroyed_clenup([&] { data_out.destroyed = true; });
+
+      auto low_level_awaitable = mrs_lib::coro::internal::get_low_level_event_awaitable(std::move(awaitable));
+
+      co_await std::move(low_level_awaitable).get_awaitable(mrs_lib::coro::internal::LowLevelEventAwaitable::StopTokenBehavior::respect, [&] {
+        entered_callback = true;
+        callback_entered.arrive_and_wait();
+        // Other thread requests cancellation in this time...
+        allow_callback_to_return.arrive_and_wait();
+      });
+
+      data_out.finished = true;
+    };
+
+    auto [event, awaitable] = mrs_lib::coro::make_event();
+
+    // Run the task on a separate thread.
+    std::jthread runner([](auto task, auto awaitable) { mrs_lib::coro::internal::start_task(std::move(task), std::move(awaitable)); }, std::move(task),
+                        std::move(awaitable));
+
+    // Wait for the task to enter the callback
+    callback_entered.arrive_and_wait();
+
+    ASSERT_TRUE(entered_callback);
+
+    {
+      // Move event here to destroy it before resuming the callback.
+      mrs_lib::coro::Event inner_event = std::move(event);
+      bool cancel_result = inner_event.try_cancel();
+      ASSERT_TRUE(cancel_result);
+    }
+
+    allow_callback_to_return.arrive_and_wait();
+
+    runner.join();
 
     EXPECT_FALSE(data_out.finished);
     EXPECT_TRUE(data_out.destroyed);
