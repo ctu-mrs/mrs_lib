@@ -1,0 +1,1 @@
+mrs_lib_add_simple_labeled_gtest(ros_wrappers test_publisher "publisher_test.cpp")
