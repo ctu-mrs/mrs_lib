@@ -9,5 +9,6 @@ ROS Wrappers
    
    logger
    timer
+   subscriber
 
 
