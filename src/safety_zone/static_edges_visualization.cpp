@@ -185,8 +185,8 @@ namespace mrs_lib
 
       if (frame_id_ == "latlon_origin")
       {
-        ss << std::fixed << std::setprecision(6) << "lat: " << std::to_string(upper_start.y).substr(0, 9)
-           << "\n lon: " << std::to_string(upper_start.x).substr(0, 9) << "\n alt: " << std::to_string(upper_start.z).substr(0, 4);
+        ss << std::fixed << std::setprecision(6) << "lat: " << std::to_string(upper_start.x).substr(0, 9)
+           << "\n lon: " << std::to_string(upper_start.y).substr(0, 9) << "\n alt: " << std::to_string(upper_start.z).substr(0, 4);
       } else
       {
         ss << std::fixed << std::setprecision(2) << "x: " << std::to_string(upper_start.x).substr(0, 6)
@@ -215,8 +215,8 @@ namespace mrs_lib
       if (frame_id_ == "latlon_origin")
       {
         ss.str("");
-        ss << std::fixed << std::setprecision(6) << "lat: " << std::to_string(lower_start.y).substr(0, 9)
-           << "\n lon: " << std::to_string(lower_start.x).substr(0, 9) << "\n alt: " << std::to_string(lower_start.z).substr(0, 4);
+        ss << std::fixed << std::setprecision(6) << "lat: " << std::to_string(lower_start.x).substr(0, 9)
+           << "\n lon: " << std::to_string(lower_start.y).substr(0, 9) << "\n alt: " << std::to_string(lower_start.z).substr(0, 4);
         safety_area_coordinates_marker.text = ss.str();
       } else
       {
