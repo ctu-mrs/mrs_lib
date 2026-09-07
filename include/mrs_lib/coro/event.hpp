@@ -55,7 +55,7 @@ namespace mrs_lib::coro
     /**
      * @brief Internal class for handling events.
      */
-    class EventState
+    class EventState : public std::enable_shared_from_this<EventState>
     {
     private:
       enum class Status
