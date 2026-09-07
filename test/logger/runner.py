@@ -33,10 +33,18 @@ def run_binary(path: Path, base_level: Level) -> list[str]:
     res = subprocess.run(
         [path, base_level.ros_name()],
         capture_output=True,
-        check=True,
+        check=False,
         text=True,
     )
-    return res.stderr.strip().split("\n")
+    if res.returncode != 0:
+        msg = f"Subprocess exited with nonzero exit code: '{res.returncode}'"
+        print(msg)
+        print("Stderr: ")
+        print(res.stderr)
+        raise RuntimeError(msg)
+    lines = res.stderr.strip().split("\n")
+    start_text_idx = lines.index("TEST START HERE")
+    return lines[start_text_idx + 1 :]
 
 
 def get_ros_prefix(level: Level) -> str:

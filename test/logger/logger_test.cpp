@@ -1,14 +1,15 @@
 #include "mrs_lib/logger.hpp"
 
 #include <cstddef>
-
 #include <iostream>
 #include <memory>
+#include <ostream>
+#include <string_view>
+#include <thread>
+
 #include <rclcpp/logger.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/utilities.hpp>
-#include <string_view>
-#include <thread>
 
 int main(int argc, char** argv)
 {
@@ -45,6 +46,7 @@ int main(int argc, char** argv)
 
 
   rclcpp::init(argc, argv);
+  std::cerr << "TEST START HERE\n" << std::flush;
 
   // DOCS: BEGIN EXAMPLE
   using namespace std::chrono_literals;
