@@ -1,1 +1,5 @@
-mrs_lib_add_simple_labeled_gtest(utility scope_cleanup "scope_cleanup_test.cpp")
+mrs_lib_add_simple_labeled_gtest(utility test_callback "callback_test.cpp")
+mrs_lib_add_simple_labeled_gtest(utility test_meta "meta_test.cpp")
+mrs_lib_add_simple_labeled_gtest(utility test_owning_mutex "owning_mutex_test.cpp")
+mrs_lib_add_simple_labeled_gtest(utility test_pimpl "pimpl_test.cpp")
+mrs_lib_add_simple_labeled_gtest(utility test_scope_cleanup "scope_cleanup_test.cpp")

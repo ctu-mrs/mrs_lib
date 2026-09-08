@@ -138,6 +138,7 @@ target_sources(mrs_lib_mrs_lib
     "include/mrs_lib/kalman_filter.h"
     "include/mrs_lib/lkf.h"
     "include/mrs_lib/lockable.h"
+    "include/mrs_lib/logger.hpp"
     "include/mrs_lib/math.h"
     "include/mrs_lib/median_filter.h"
     "include/mrs_lib/mrs_lib.h"
@@ -205,6 +206,10 @@ target_sources(mrs_lib_mrs_lib
     "include/mrs_lib/safety_zone/prism.h"
     "include/mrs_lib/safety_zone/static_edges_visualization.h"
     # include/mrs_lib/utility
+    "include/mrs_lib/utility/callback.hpp"
+    "include/mrs_lib/utility/meta.hpp"
+    "include/mrs_lib/utility/owning_mutex.hpp"
+    "include/mrs_lib/utility/pimpl.hpp"
     "include/mrs_lib/utility/scope_cleanup.hpp"
 )
 

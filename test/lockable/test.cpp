@@ -1,3 +1,5 @@
+#define MRS_LIB_IGNORE_DEPRECATED_LOCKABLE 1
+
 #include <gtest/gtest.h>
 
 #include <mrs_lib/lockable.h>

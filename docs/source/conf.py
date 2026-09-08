@@ -46,3 +46,5 @@ html_extra_path = [doxygen_html_extra_dir]
 
 breathe_projects = {"mrs_lib": doxygen_xml_dir}
 breathe_default_project = "mrs_lib"
+
+breathe_default_members = ("members", "undoc-members")

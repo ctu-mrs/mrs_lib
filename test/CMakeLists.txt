@@ -2,6 +2,10 @@ find_package(ament_cmake_gtest REQUIRED)
 find_package(launch_testing_ament_cmake REQUIRED)
 find_package(ament_cmake_ros REQUIRED)
 
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
+add_subdirectory(mrs_lib_testing_utils)
+
 function(add_ros_isolated_launch_test path)
   set(RUNNER "${ament_cmake_ros_DIR}/run_test_isolated.py")
   add_launch_test("${path}" RUNNER "${RUNNER}" ${ARGN})
@@ -13,6 +17,8 @@ function(mrs_lib_add_simple_labeled_gtest label name file)
   )
   target_link_libraries("${name}"
     mrs_lib::mrs_lib
+    mrs_lib::testing_utils
+    rclcpp::rclcpp
   )
   set_property(
     TEST "${name}"
@@ -28,8 +34,10 @@ add_subdirectory(dynparam_mgr)
 add_subdirectory(error_publisher)
 add_subdirectory(errorgraph)
 add_subdirectory(geometry)
+add_subdirectory(internal)
 add_subdirectory(lkf)
 add_subdirectory(lockable)
+add_subdirectory(logger)
 add_subdirectory(math)
 add_subdirectory(median_filter)
 add_subdirectory(msg_extractor)
