@@ -154,6 +154,8 @@ target_sources(mrs_lib_mrs_lib
     "include/mrs_lib/param_provider.h"
     "include/mrs_lib/profiler.h"
     "include/mrs_lib/publisher_handler.h"
+    "include/mrs_lib/publisher.hpp"
+    "include/mrs_lib/publisher.impl.hpp"
     "include/mrs_lib/quadratic_throttle_model.h"
     "include/mrs_lib/repredictor.h"
     "include/mrs_lib/safety_zone.h"

@@ -10,5 +10,5 @@ ROS Wrappers
    logger
    timer
    subscriber
-
+   publisher
 
