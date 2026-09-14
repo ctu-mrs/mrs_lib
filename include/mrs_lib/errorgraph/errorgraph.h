@@ -170,7 +170,7 @@ namespace mrs_lib
         std::string topic_name; ///< Topic name.
         node_id_t source_node;  ///< Expected publisher node for this topic.
         rclcpp::Time stamp;     ///< Last time this element was updated.
-        bool not_reporting;     ///< Whether this topic's publisher has stopped reporting.
+        bool not_reporting;     ///< Always false for topic elements; only node elements track staleness (see \ref element_t::is_not_reporting()).
 
         /// \brief Convert to a ROS message.
         errorgraph_element_msg_t to_msg() const;
@@ -213,8 +213,8 @@ namespace mrs_lib
         static constexpr double DEFAULT_NOT_REPORTING_DELAY_SECONDS = 3.0;
         rclcpp::Duration not_reporting_delay = rclcpp::Duration::from_seconds(DEFAULT_NOT_REPORTING_DELAY_SECONDS);
 
-        std::vector<element_t*> parents;  ///< Parent elements in the dependency graph.
-        std::vector<element_t*> children; ///< Child elements in the dependency graph.
+        std::vector<element_t*> parents;  ///< Elements that depend on (are waiting for) this element.
+        std::vector<element_t*> children; ///< Elements that this element depends on (is waiting for).
         bool visited = false;             ///< Visited flag used during graph traversal.
 
         rclcpp::Clock::SharedPtr clock_;
@@ -262,6 +262,14 @@ namespace mrs_lib
         inline bool is_waiting_for() const
         {
           return std::any_of(std::begin(errors), std::end(errors), [](const auto& error) { return error.is_waiting_for(); });
+        }
+
+        /// \brief Returns true if every non-"no error" entry on this element is a "waiting for" dependency,
+        /// i.e. the element has no genuine error mixed in among its "waiting for" entries.
+        inline bool is_only_waiting_for() const
+        {
+          return std::all_of(std::begin(errors), std::end(errors), [](const auto& error) { return error.is_waiting_for() || error.is_no_error(); })
+                 && std::any_of(std::begin(errors), std::end(errors), [](const auto& error) { return error.is_waiting_for(); });
         }
 
         /// \brief Returns true if this element is waiting for the given node.
@@ -332,8 +340,10 @@ namespace mrs_lib
       /**
        * \brief Find the root-cause elements blocking the given node.
        *
-       * Traverses the dependency graph from the specified node to find leaf elements
-       * (elements with errors that don't depend on anything else).
+       * Traverses the dependency graph from the specified node, following "waiting for" edges.
+       * An element is returned as a root cause if it doesn't depend on anything else, or if it
+       * carries a genuine error of its own -- even while it also depends on something else, in
+       * which case traversal continues past it to find further root causes down the chain too.
        *
        * \param node_id             The node to trace dependencies for.
        * \param loop_detected_out   If non-null, set to true when a cycle is detected.
@@ -348,13 +358,22 @@ namespace mrs_lib
       std::vector<element_info_t> find_error_roots();
 
       /**
-       * \brief Find all root elements (elements with no parents in the dependency graph).
+       * \brief Find all root elements (elements that are not exclusively waiting for something else).
+       *
+       * An element is excluded only if every one of its non-"no error" entries is a "waiting for"
+       * dependency (see \ref element_t::is_only_waiting_for()); an element with at least one genuine
+       * error, or with no dependency at all, is always included.
+       *
        * \return  Copies of root element info as type-safe variants.
        */
       std::vector<element_info_t> find_roots();
 
       /**
-       * \brief Find all leaf elements (elements with no children in the dependency graph).
+       * \brief Find all leaf elements (elements that nothing else in the graph depends on).
+       *
+       * An element is a leaf if no other element is waiting for it, i.e. its \c parents list is
+       * empty.
+       *
        * \return  Copies of leaf element info as type-safe variants.
        */
       std::vector<element_info_t> find_leaves();
