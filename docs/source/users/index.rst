@@ -7,5 +7,5 @@ For Users
    
    ros_wrappers/index
    utility/index
-
+   misc/index
 

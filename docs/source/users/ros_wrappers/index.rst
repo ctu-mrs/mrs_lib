@@ -8,5 +8,7 @@ ROS Wrappers
    :caption: Table of Contents
    
    logger
-
+   timer
+   subscriber
+   publisher
 

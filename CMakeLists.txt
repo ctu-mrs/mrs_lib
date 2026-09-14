@@ -117,6 +117,9 @@ target_sources(mrs_lib_mrs_lib
     "src/scope_timer/scope_timer.cpp"
     # src/timeout_manager
     "src/timeout_manager/timeout_manager.cpp"
+    "src/timeout_manager/timeout_manager2.cpp"
+    # src/timer
+    "src/timer/timer.cpp"
     # src/timer_handler
     "src/timer_handler/timer_handler.cpp"
     # src/transform_broadcaster
@@ -151,6 +154,8 @@ target_sources(mrs_lib_mrs_lib
     "include/mrs_lib/param_provider.h"
     "include/mrs_lib/profiler.h"
     "include/mrs_lib/publisher_handler.h"
+    "include/mrs_lib/publisher.hpp"
+    "include/mrs_lib/publisher.impl.hpp"
     "include/mrs_lib/quadratic_throttle_model.h"
     "include/mrs_lib/repredictor.h"
     "include/mrs_lib/safety_zone.h"
@@ -158,8 +163,12 @@ target_sources(mrs_lib_mrs_lib
     "include/mrs_lib/service_client_handler.h"
     "include/mrs_lib/service_server_handler.h"
     "include/mrs_lib/subscriber_handler.h"
+    "include/mrs_lib/subscriber.hpp"
+    "include/mrs_lib/subscriber.impl.hpp"
     "include/mrs_lib/timeout_manager.h"
+    "include/mrs_lib/timeout_manager.hpp"
     "include/mrs_lib/timer_handler.h"
+    "include/mrs_lib/timer.hpp"
     "include/mrs_lib/transform_broadcaster.h"
     "include/mrs_lib/transformer.h"
     "include/mrs_lib/ukf.h"
