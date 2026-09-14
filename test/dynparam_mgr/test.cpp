@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <filesystem>
+
 #include <mrs_lib/dynparam_mgr.h>
 
 using namespace std::chrono_literals;
@@ -82,7 +84,7 @@ protected:
 
   std::thread main_thread_;
 
-  rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
+  std::filesystem::path test_resources_path{TEST_RESOURCES_DIRECTORY};
 
   std::promise<bool> finished_promise_;
   std::future<bool> finished_future_;
