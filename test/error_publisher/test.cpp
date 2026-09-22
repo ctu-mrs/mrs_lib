@@ -504,6 +504,219 @@ TEST_F(ErrorPublisherTest, mixed_error_types_single_publish)
 
 //}
 
+/* TEST: different components get separate ErrorgraphElements //{ */
+
+TEST_F(ErrorPublisherTest, multiple_components_get_separate_elements)
+{
+  createPublisher(rclcpp::Rate(2.0));
+  publisher_->addGeneralError(1, "err_a", std::string("compA"));
+  publisher_->addGeneralError(2, "err_b", std::string("compB"));
+  publisher_->addOneshotError("err_default");
+
+  ASSERT_TRUE(waitForMessages(3));
+
+  auto msgs = getReceivedMessages();
+  bool found_compA = false, found_compB = false, found_default = false;
+  for (const auto& msg : msgs)
+  {
+    if (msg.source_node.component == "compA")
+    {
+      // compA's element must contain only its own error
+      for (const auto& error : msg.errors)
+        EXPECT_EQ(error.type, "err_a");
+      if (!msg.errors.empty())
+        found_compA = true;
+    } else if (msg.source_node.component == "compB")
+    {
+      for (const auto& error : msg.errors)
+        EXPECT_EQ(error.type, "err_b");
+      if (!msg.errors.empty())
+        found_compB = true;
+    } else if (msg.source_node.component == "test_component")
+    {
+      for (const auto& error : msg.errors)
+        EXPECT_EQ(error.type, "err_default");
+      if (!msg.errors.empty())
+        found_default = true;
+    }
+  }
+  EXPECT_TRUE(found_compA);
+  EXPECT_TRUE(found_compB);
+  EXPECT_TRUE(found_default);
+}
+
+//}
+
+/* TEST: same id, different components are kept separate (dedup is scoped per component) //{ */
+
+TEST_F(ErrorPublisherTest, same_id_different_components_kept_separate)
+{
+  createPublisher(rclcpp::Rate(2.0));
+  publisher_->addGeneralError(0, "desc_a", std::string("compA"));
+  publisher_->addGeneralError(0, "desc_b", std::string("compB"));
+
+  // Each component's element is a separate message, so wait for several before checking.
+  ASSERT_TRUE(waitForMessages(6));
+
+  auto msgs = getReceivedMessages();
+  bool found_a = false, found_b = false;
+  for (const auto& msg : msgs)
+  {
+    for (const auto& error : msg.errors)
+    {
+      if (error.type == "desc_a" && msg.source_node.component == "compA")
+        found_a = true;
+      if (error.type == "desc_b" && msg.source_node.component == "compB")
+        found_b = true;
+    }
+  }
+  EXPECT_TRUE(found_a);
+  EXPECT_TRUE(found_b);
+}
+
+//}
+
+/* TEST: same id, same explicit override component deduplicates //{ */
+
+TEST_F(ErrorPublisherTest, same_id_same_override_component_dedups)
+{
+  createPublisher(rclcpp::Rate(2.0));
+  publisher_->addGeneralError(0, "first_desc", std::string("compA"));
+  publisher_->addGeneralError(0, "second_desc", std::string("compA"));
+
+  // Each component's element is a separate message, so wait for several before checking.
+  ASSERT_TRUE(waitForMessages(6));
+
+  auto msgs = getReceivedMessages();
+  bool found = false;
+  for (const auto& msg : msgs)
+  {
+    if (msg.source_node.component != "compA" || msg.errors.empty())
+      continue;
+    int count = 0;
+    bool has_updated = false;
+    for (const auto& error : msg.errors)
+    {
+      if (error.type == "first_desc" || error.type == "second_desc")
+        count++;
+      if (error.type == "second_desc")
+        has_updated = true;
+    }
+    EXPECT_EQ(count, 1);
+    EXPECT_TRUE(has_updated);
+    found = true;
+    break;
+  }
+  EXPECT_TRUE(found);
+}
+
+//}
+
+/* TEST: no-override call and an explicit override equal to component_name_ dedup together //{ */
+
+TEST_F(ErrorPublisherTest, default_and_explicit_default_override_dedup_together)
+{
+  createPublisher(rclcpp::Rate(2.0));
+  publisher_->addGeneralError(0, "no_override_desc");
+  publisher_->addGeneralError(0, "explicit_default_desc", std::string("test_component"));
+
+  ASSERT_TRUE(waitForMessages(1));
+
+  auto msgs = getReceivedMessages();
+  bool found = false;
+  for (const auto& msg : msgs)
+  {
+    if (msg.source_node.component != "test_component" || msg.errors.empty())
+      continue;
+    int count = 0;
+    bool has_second = false;
+    for (const auto& error : msg.errors)
+    {
+      if (error.type == "no_override_desc" || error.type == "explicit_default_desc")
+        count++;
+      if (error.type == "explicit_default_desc")
+        has_second = true;
+    }
+    EXPECT_EQ(count, 1);
+    EXPECT_TRUE(has_second);
+    found = true;
+    break;
+  }
+  EXPECT_TRUE(found);
+}
+
+//}
+
+/* TEST: waiting-for-topic dedup is scoped per component //{ */
+
+TEST_F(ErrorPublisherTest, waiting_for_topic_dedup_scoped_per_component)
+{
+  createPublisher(rclcpp::Rate(2.0));
+  publisher_->addWaitingForTopicError("/shared/topic", std::string("compA"));
+  publisher_->addWaitingForTopicError("/shared/topic", std::string("compB"));
+
+  // Each component's element is a separate message, so wait for several before checking.
+  ASSERT_TRUE(waitForMessages(6));
+
+  auto msgs = getReceivedMessages();
+  int compA_count = 0, compB_count = 0;
+  for (const auto& msg : msgs)
+  {
+    if (msg.source_node.component == "compA")
+    {
+      for (const auto& error : msg.errors)
+        if (error.type == mrs_msgs::msg::ErrorgraphError::TYPE_WAITING_FOR_TOPIC && error.waited_for_topic == "/shared/topic")
+          compA_count++;
+    }
+    if (msg.source_node.component == "compB")
+    {
+      for (const auto& error : msg.errors)
+        if (error.type == mrs_msgs::msg::ErrorgraphError::TYPE_WAITING_FOR_TOPIC && error.waited_for_topic == "/shared/topic")
+          compB_count++;
+    }
+  }
+  // Both components should get exactly one entry each — not merged into one, not doubled.
+  EXPECT_EQ(compA_count, 1);
+  EXPECT_EQ(compB_count, 1);
+}
+
+//}
+
+/* TEST: a quiet component keeps emitting an empty-errors heartbeat element //{ */
+
+TEST_F(ErrorPublisherTest, quiet_component_still_gets_empty_heartbeat_element)
+{
+  createPublisher(rclcpp::Rate(20.0));
+  publisher_->addOneshotError("transient_error", std::string("compA"));
+
+  // Wait for the message containing the transient error to be published.
+  ASSERT_TRUE(waitForMessages(1));
+  bool found_transient = false;
+  {
+    auto msgs = getReceivedMessages();
+    for (const auto& msg : msgs)
+      for (const auto& error : msg.errors)
+        if (error.type == "transient_error")
+          found_transient = true;
+  }
+  ASSERT_TRUE(found_transient);
+
+  // compA has nothing left to report, but should still emit an empty-errors heartbeat.
+  clearReceivedMessages();
+  ASSERT_TRUE(waitForMessages(2));
+
+  auto msgs = getReceivedMessages();
+  bool found_heartbeat = false;
+  for (const auto& msg : msgs)
+  {
+    if (msg.source_node.component == "compA" && msg.errors.empty())
+      found_heartbeat = true;
+  }
+  EXPECT_TRUE(found_heartbeat);
+}
+
+//}
+
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
