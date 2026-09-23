@@ -46,9 +46,10 @@ namespace mrs_lib
 
         // an element is a root if it doesn't depend on anything else, or if it carries a genuine
         // error of its own even while also waiting for something else (that error would otherwise
-        // be silently skipped as the DFS walks past it toward its dependency); an element that
-        // closes a genuine dependency loop is also added as a root below, so that a pure
-        // wait-cycle with no genuine error anywhere in it doesn't vanish from the output either
+        // be silently skipped as the DFS walks past it toward its dependency); every member of a
+        // genuine dependency loop is also added as a root below (and marked via \ref
+        // element_t::loop_root), so that a pure wait-cycle with no genuine error anywhere in it
+        // doesn't vanish from the output either
         if (!elem->is_only_waiting_for())
           roots.push_back(elem);
 
@@ -70,8 +71,18 @@ namespace mrs_lib
 
           if (el->on_stack)
           {
-            // el is an ancestor on the current path -- a genuine back-edge, i.e. a real loop
-            roots.push_back(el);
+            // el is an ancestor on the current path -- a genuine back-edge, i.e. a real loop.
+            // everything from el's frame to the top of the stack is exactly the cycle's
+            // membership (el -> ... -> frame.elem -> el), so mark all of it, not just el
+            const auto cycle_start = std::find_if(stack.begin(), stack.end(), [el](const frame_t& f) { return f.elem == el; });
+            for (auto it = cycle_start; it != stack.end(); ++it)
+            {
+              if (!it->elem->loop_root)
+              {
+                it->elem->loop_root = true;
+                roots.push_back(it->elem);
+              }
+            }
             loop_detected = true;
           } else if (!el->visited)
           {
@@ -113,7 +124,7 @@ namespace mrs_lib
       std::vector<element_info_t> roots;
       for (const auto& el_ptr : elements_)
       {
-        if (!el_ptr->is_only_waiting_for() && (!el_ptr->is_no_error() || !el_ptr->parents.empty()))
+        if ((!el_ptr->is_only_waiting_for() || el_ptr->loop_root) && (!el_ptr->is_no_error() || !el_ptr->parents.empty()))
           roots.push_back(el_ptr->to_info());
       }
       return roots;
@@ -125,7 +136,7 @@ namespace mrs_lib
       std::vector<element_info_t> roots;
       for (const auto& el_ptr : elements_)
       {
-        if (!el_ptr->is_only_waiting_for())
+        if (!el_ptr->is_only_waiting_for() || el_ptr->loop_root)
           roots.push_back(el_ptr->to_info());
       }
       return roots;
@@ -216,6 +227,7 @@ namespace mrs_lib
         el_ptr->parents.clear();
         el_ptr->visited = false;
         el_ptr->on_stack = false;
+        el_ptr->loop_root = false;
 
         // initialize all nodes this node is waiting for if they do not exist
         for (const auto& node_id_ptr : el_ptr->waited_for_nodes())

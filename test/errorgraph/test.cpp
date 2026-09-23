@@ -287,6 +287,60 @@ TEST_F(ErrorgraphTest, find_error_roots_waiting_for_topic)
 
 //}
 
+/* TEST: find_error_roots on a pure dependency loop with no genuine error //{ */
+
+TEST_F(ErrorgraphTest, find_error_roots_pure_loop)
+{
+  // Circular dependency: node1 -> node2 -> node1, neither has a genuine error.
+  // Every member of the loop must be reported, consistent with find_dependency_roots().
+  auto msg1 = create_element_msg("node1", "comp1", {{errorgraph_error_msg_t::TYPE_WAITING_FOR_NODE, "node2.comp2"}});
+  auto msg2 = create_element_msg("node2", "comp2", {{errorgraph_error_msg_t::TYPE_WAITING_FOR_NODE, "node1.comp1"}});
+
+  graph_->add_element_from_msg(msg1);
+  graph_->add_element_from_msg(msg2);
+
+  auto roots = graph_->find_error_roots();
+
+  ASSERT_EQ(roots.size(), 2);
+  bool found_node1 = false;
+  bool found_node2 = false;
+  for (const auto& root : roots)
+  {
+    const auto& info = std::get<Errorgraph::node_info_t>(root);
+    if (info.source_node.node == "node1")
+      found_node1 = true;
+    if (info.source_node.node == "node2")
+      found_node2 = true;
+  }
+  EXPECT_TRUE(found_node1);
+  EXPECT_TRUE(found_node2);
+}
+
+//}
+
+/* TEST: find_error_roots on a pure dependency loop where a loop member also carries a NO_ERROR entry //{ */
+
+TEST_F(ErrorgraphTest, find_error_roots_pure_loop_with_no_error_entry)
+{
+  // node1 both waits for node2 AND reports NO_ERROR; node2 just waits for node1.
+  // Regression check for find_error_roots()'s "healthy leaf" filter (!is_no_error() || !parents.empty())
+  // potentially disagreeing with find_roots() about whether a loop member should be included.
+  auto msg1 =
+      create_element_msg("node1", "comp1", {{errorgraph_error_msg_t::TYPE_WAITING_FOR_NODE, "node2.comp2"}, {errorgraph_error_msg_t::TYPE_NO_ERROR, ""}});
+  auto msg2 = create_element_msg("node2", "comp2", {{errorgraph_error_msg_t::TYPE_WAITING_FOR_NODE, "node1.comp1"}});
+
+  graph_->add_element_from_msg(msg1);
+  graph_->add_element_from_msg(msg2);
+
+  auto error_roots = graph_->find_error_roots();
+  auto roots = graph_->find_roots();
+
+  EXPECT_EQ(error_roots.size(), 2);
+  EXPECT_EQ(roots.size(), 2);
+}
+
+//}
+
 /* TEST: find_dependency_roots //{ */
 
 TEST_F(ErrorgraphTest, find_dependency_roots_simple_chain)
@@ -480,6 +534,37 @@ TEST_F(ErrorgraphTest, find_roots_multiple_errors_same_node)
   }
   EXPECT_TRUE(found_other_node);
   EXPECT_TRUE(found_multi_error_node);
+}
+
+//}
+
+/* TEST: find_roots on a pure dependency loop with no genuine error //{ */
+
+TEST_F(ErrorgraphTest, find_roots_pure_loop)
+{
+  // Circular dependency: node1 -> node2 -> node1, neither has a genuine error.
+  // Every member of the loop must be reported, consistent with find_dependency_roots().
+  auto msg1 = create_element_msg("node1", "comp1", {{errorgraph_error_msg_t::TYPE_WAITING_FOR_NODE, "node2.comp2"}});
+  auto msg2 = create_element_msg("node2", "comp2", {{errorgraph_error_msg_t::TYPE_WAITING_FOR_NODE, "node1.comp1"}});
+
+  graph_->add_element_from_msg(msg1);
+  graph_->add_element_from_msg(msg2);
+
+  auto roots = graph_->find_roots();
+
+  ASSERT_EQ(roots.size(), 2);
+  bool found_node1 = false;
+  bool found_node2 = false;
+  for (const auto& root : roots)
+  {
+    const auto& info = std::get<Errorgraph::node_info_t>(root);
+    if (info.source_node.node == "node1")
+      found_node1 = true;
+    if (info.source_node.node == "node2")
+      found_node2 = true;
+  }
+  EXPECT_TRUE(found_node1);
+  EXPECT_TRUE(found_node2);
 }
 
 //}

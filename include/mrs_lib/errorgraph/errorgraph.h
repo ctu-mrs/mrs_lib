@@ -217,6 +217,7 @@ namespace mrs_lib
         std::vector<element_t*> children; ///< Elements that this element depends on (is waiting for).
         bool visited = false;             ///< Set once this element has been fully processed by \ref Errorgraph::DFS().
         bool on_stack = false;            ///< Set while this element is an ancestor on the current \ref Errorgraph::DFS() path.
+        bool loop_root = false;           ///< Set by \ref Errorgraph::DFS() when this element is a member of a genuine dependency loop.
 
         rclcpp::Clock::SharedPtr clock_;
 
@@ -332,11 +333,12 @@ namespace mrs_lib
       /// \ref build_graph() links the whole graph, one component at a time).
       ///
       /// The returned vector is this walk's own notion of "roots", used directly by
-      /// \ref find_dependency_roots(): it contains every visited element that carries a
+      /// \ref find_dependency_roots() (and, via \ref element_t::loop_root, by \ref find_roots()
+      /// and \ref find_error_roots() too): it contains every visited element that carries a
       /// genuine error alongside (or instead of) its "waiting for" entries, plus, for each
-      /// genuine dependency loop, the element where the loop closes -- so that a pure
-      /// wait-cycle with no error anywhere in it still surfaces as a root instead of
-      /// silently disappearing.
+      /// genuine dependency loop, every element that is a member of that loop (marked via \ref
+      /// element_t::loop_root) -- so that a pure wait-cycle with no error anywhere in it still
+      /// surfaces in the output instead of silently disappearing.
       ///
       /// \note A loop is only reported for a true back-edge, i.e. reaching an element that is
       /// still an ancestor on the current DFS path (\ref element_t::on_stack). Reaching an
@@ -374,6 +376,15 @@ namespace mrs_lib
 
       /**
        * \brief Find all root-cause elements across the entire graph.
+       *
+       * An element is excluded only if every one of its non-"no error" entries is a "waiting for"
+       * dependency (see \ref element_t::is_only_waiting_for()); an element with at least one genuine
+       * error, or with no dependency at all, is always included. Unlike \ref find_roots(), a healthy
+       * (no-error, actively-reporting) element with no other element waiting on it is also excluded,
+       * to avoid reporting uninteresting leaves as "root causes". As with \ref find_roots(), every
+       * element that is a member of a genuine dependency loop (no genuine error anywhere in the
+       * loop) is included too, consistent with \ref find_dependency_roots() -- see \ref DFS().
+       *
        * \return  Copies of elements that have errors and are not blocked by other elements.
        */
       std::vector<element_info_t> find_error_roots();
@@ -383,7 +394,11 @@ namespace mrs_lib
        *
        * An element is excluded only if every one of its non-"no error" entries is a "waiting for"
        * dependency (see \ref element_t::is_only_waiting_for()); an element with at least one genuine
-       * error, or with no dependency at all, is always included.
+       * error, or with no dependency at all, is always included. Every element that is a member of
+       * a genuine dependency loop (no genuine error anywhere in the loop) is included too,
+       * consistent with \ref find_dependency_roots() -- otherwise such a loop would vanish from the
+       * result entirely; see \ref DFS() for how a genuine loop is distinguished from mere
+       * reconvergence.
        *
        * \return  Copies of root element info as type-safe variants.
        */
