@@ -380,8 +380,62 @@ TEST_F(ErrorgraphTest, find_dependency_roots_detects_loop)
   bool loop_detected = false;
   auto roots = graph_->find_dependency_roots(node1_id, &loop_detected);
 
+  // every member of the loop is returned, not just one representative
   EXPECT_TRUE(loop_detected);
-  EXPECT_FALSE(roots.empty());
+  ASSERT_EQ(roots.size(), 2);
+  bool found_node1 = false;
+  bool found_node2 = false;
+  for (const auto& root : roots)
+  {
+    const auto& info = std::get<Errorgraph::node_info_t>(root);
+    if (info.source_node.node == "node1")
+      found_node1 = true;
+    if (info.source_node.node == "node2")
+      found_node2 = true;
+  }
+  EXPECT_TRUE(found_node1);
+  EXPECT_TRUE(found_node2);
+}
+
+//}
+
+/* TEST: find_dependency_roots detects a loop longer than 2 elements //{ */
+
+TEST_F(ErrorgraphTest, find_dependency_roots_detects_three_element_loop)
+{
+  // Create circular dependency: node1 -> node2 -> node3 -> node1, none has a genuine error.
+  // Regression check that the cycle-membership marking (from the back-edge's ancestor to the
+  // top of the DFS stack) generalizes past the trivial 2-element case.
+  auto msg1 = create_element_msg("node1", "comp1", {{errorgraph_error_msg_t::TYPE_WAITING_FOR_NODE, "node2.comp2"}});
+  auto msg2 = create_element_msg("node2", "comp2", {{errorgraph_error_msg_t::TYPE_WAITING_FOR_NODE, "node3.comp3"}});
+  auto msg3 = create_element_msg("node3", "comp3", {{errorgraph_error_msg_t::TYPE_WAITING_FOR_NODE, "node1.comp1"}});
+
+  graph_->add_element_from_msg(msg1);
+  graph_->add_element_from_msg(msg2);
+  graph_->add_element_from_msg(msg3);
+
+  node_id_t node1_id{"node1", "comp1"};
+  bool loop_detected = false;
+  auto roots = graph_->find_dependency_roots(node1_id, &loop_detected);
+
+  EXPECT_TRUE(loop_detected);
+  ASSERT_EQ(roots.size(), 3);
+  bool found_node1 = false;
+  bool found_node2 = false;
+  bool found_node3 = false;
+  for (const auto& root : roots)
+  {
+    const auto& info = std::get<Errorgraph::node_info_t>(root);
+    if (info.source_node.node == "node1")
+      found_node1 = true;
+    if (info.source_node.node == "node2")
+      found_node2 = true;
+    if (info.source_node.node == "node3")
+      found_node3 = true;
+  }
+  EXPECT_TRUE(found_node1);
+  EXPECT_TRUE(found_node2);
+  EXPECT_TRUE(found_node3);
 }
 
 //}

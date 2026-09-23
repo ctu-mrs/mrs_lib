@@ -367,6 +367,9 @@ namespace mrs_lib
        * An element is returned as a root cause if it doesn't depend on anything else, or if it
        * carries a genuine error of its own -- even while it also depends on something else, in
        * which case traversal continues past it to find further root causes down the chain too.
+       * If a genuine dependency loop is encountered (see \ref DFS()), every element that is a
+       * member of that loop is returned as well, not just one representative -- so a 3-element
+       * cycle with no genuine error anywhere in it yields 3 root-cause entries, one per member.
        *
        * \param node_id             The node to trace dependencies for.
        * \param loop_detected_out   If non-null, set to true when a cycle is detected.
