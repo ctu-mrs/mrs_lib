@@ -26,46 +26,63 @@ namespace mrs_lib
     std::vector<const Errorgraph::element_t*> Errorgraph::DFS(element_t* from, bool* loop_detected_out)
     {
       std::vector<const element_t*> roots;
-      std::vector<element_t*> open_elements;
       bool loop_detected = false;
 
-      // prepare the first element into the open elements stack
-      open_elements.push_back(from);
-
-      // run the DFS
-      while (!open_elements.empty())
+      // one stack frame per element currently on the DFS path, together with the elements it
+      // waits for and how far through that list we've gotten; this lets us tell "on the current
+      // path" (on_stack) apart from "fully processed via some other path" (visited && !on_stack),
+      // which a plain visited/unvisited flag cannot distinguish
+      struct frame_t
       {
-        auto cur_elem = open_elements.back();
-        cur_elem->visited = true;
-        open_elements.pop_back();
-        const auto prevs = find_elements_waited_for(*cur_elem);
+        element_t* elem;
+        std::vector<element_t*> prevs;
+        size_t next_idx = 0;
+      };
+      std::vector<frame_t> stack;
+
+      const auto push_frame = [&](element_t* elem) {
+        elem->visited = true;
+        elem->on_stack = true;
 
         // an element is a root if it doesn't depend on anything else, or if it carries a genuine
         // error of its own even while also waiting for something else (that error would otherwise
-        // be silently skipped as the DFS walks past it toward its dependency)
-        if (!cur_elem->is_only_waiting_for())
-          roots.push_back(cur_elem);
+        // be silently skipped as the DFS walks past it toward its dependency); an element that
+        // closes a genuine dependency loop is also added as a root below, so that a pure
+        // wait-cycle with no genuine error anywhere in it doesn't vanish from the output either
+        if (!elem->is_only_waiting_for())
+          roots.push_back(elem);
 
-        // if there are any nodes it's waiting for, process them
-        for (auto& el : prevs)
+        stack.push_back(frame_t{elem, find_elements_waited_for(*elem), 0});
+      };
+
+      push_frame(from);
+
+      while (!stack.empty())
+      {
+        auto& frame = stack.back();
+        if (frame.next_idx < frame.prevs.size())
         {
-          // if the element was not visited, add it to the open list
-          if (!el->visited)
-          {
-            open_elements.push_back(el);
-          }
-          // if this element was already visited, we have a loop
-          else
-          {
-            // add the element as a root although it's within a loop
-            // so that the dependency doesn't get lost in the output
-            roots.push_back(el);
-            loop_detected = true;
-          }
+          element_t* const el = frame.prevs[frame.next_idx++];
 
           // create the both-sided connection
-          el->parents.push_back(cur_elem);
-          cur_elem->children.push_back(el);
+          el->parents.push_back(frame.elem);
+          frame.elem->children.push_back(el);
+
+          if (el->on_stack)
+          {
+            // el is an ancestor on the current path -- a genuine back-edge, i.e. a real loop
+            roots.push_back(el);
+            loop_detected = true;
+          } else if (!el->visited)
+          {
+            push_frame(el);
+          }
+          // else: el was already fully processed via some other, unrelated path (e.g. a diamond-
+          // shaped dependency graph) -- that's reconvergence, not a cycle, so skip it
+        } else
+        {
+          frame.elem->on_stack = false;
+          stack.pop_back();
         }
       }
 
@@ -198,6 +215,7 @@ namespace mrs_lib
         el_ptr->children.clear();
         el_ptr->parents.clear();
         el_ptr->visited = false;
+        el_ptr->on_stack = false;
 
         // initialize all nodes this node is waiting for if they do not exist
         for (const auto& node_id_ptr : el_ptr->waited_for_nodes())

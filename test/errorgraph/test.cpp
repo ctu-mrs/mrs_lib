@@ -332,6 +332,45 @@ TEST_F(ErrorgraphTest, find_dependency_roots_detects_loop)
 
 //}
 
+/* TEST: find_dependency_roots does not mistake a diamond (reconverging, acyclic) graph for a loop //{ */
+
+TEST_F(ErrorgraphTest, find_dependency_roots_diamond_is_not_a_loop)
+{
+  // node4 waits for node2 and node3; node2 and node3 both wait for node1; node1 has a genuine
+  // error. This is a DAG (diamond shape), not a cycle: node1 is reached twice via two different
+  // paths, which must not be mistaken for a back-edge to an ancestor on the current path.
+  auto msg1 = create_element_msg("node1", "comp1", {{"ROOT_ERROR", ""}});
+  auto msg2 = create_element_msg("node2", "comp2", {{errorgraph_error_msg_t::TYPE_WAITING_FOR_NODE, "node1.comp1"}});
+  auto msg3 = create_element_msg("node3", "comp3", {{errorgraph_error_msg_t::TYPE_WAITING_FOR_NODE, "node1.comp1"}});
+  errorgraph_element_msg_t msg4 = create_element_msg("node4", "comp4");
+  errorgraph_error_msg_t w2;
+  w2.type = errorgraph_error_msg_t::TYPE_WAITING_FOR_NODE;
+  w2.waited_for_node.node = "node2";
+  w2.waited_for_node.component = "comp2";
+  errorgraph_error_msg_t w3;
+  w3.type = errorgraph_error_msg_t::TYPE_WAITING_FOR_NODE;
+  w3.waited_for_node.node = "node3";
+  w3.waited_for_node.component = "comp3";
+  msg4.errors.push_back(w2);
+  msg4.errors.push_back(w3);
+
+  graph_->add_element_from_msg(msg1);
+  graph_->add_element_from_msg(msg2);
+  graph_->add_element_from_msg(msg3);
+  graph_->add_element_from_msg(msg4);
+
+  node_id_t node4_id{"node4", "comp4"};
+  bool loop_detected = false;
+  auto roots = graph_->find_dependency_roots(node4_id, &loop_detected);
+
+  EXPECT_FALSE(loop_detected);
+  ASSERT_EQ(roots.size(), 1);
+  const auto& info = std::get<Errorgraph::node_info_t>(roots[0]);
+  EXPECT_EQ(info.source_node.node, "node1");
+}
+
+//}
+
 /* TEST: find_dependency_roots surfaces a genuine error mid-chain //{ */
 
 TEST_F(ErrorgraphTest, find_dependency_roots_surfaces_mid_chain_error)

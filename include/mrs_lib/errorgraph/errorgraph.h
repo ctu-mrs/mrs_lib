@@ -215,7 +215,8 @@ namespace mrs_lib
 
         std::vector<element_t*> parents;  ///< Elements that depend on (are waiting for) this element.
         std::vector<element_t*> children; ///< Elements that this element depends on (is waiting for).
-        bool visited = false;             ///< Visited flag used during graph traversal.
+        bool visited = false;             ///< Set once this element has been fully processed by \ref Errorgraph::DFS().
+        bool on_stack = false;            ///< Set while this element is an ancestor on the current \ref Errorgraph::DFS() path.
 
         rclcpp::Clock::SharedPtr clock_;
 
@@ -326,6 +327,22 @@ namespace mrs_lib
 
       void build_graph();
 
+      /// \brief Depth-first walk of the "waiting for" edges starting at \p from, wiring up
+      /// \ref element_t::parents / \ref element_t::children as it goes (this is also how
+      /// \ref build_graph() links the whole graph, one component at a time).
+      ///
+      /// The returned vector is this walk's own notion of "roots", used directly by
+      /// \ref find_dependency_roots(): it contains every visited element that carries a
+      /// genuine error alongside (or instead of) its "waiting for" entries, plus, for each
+      /// genuine dependency loop, the element where the loop closes -- so that a pure
+      /// wait-cycle with no error anywhere in it still surfaces as a root instead of
+      /// silently disappearing.
+      ///
+      /// \note A loop is only reported for a true back-edge, i.e. reaching an element that is
+      /// still an ancestor on the current DFS path (\ref element_t::on_stack). Reaching an
+      /// element that was already fully processed via some other, unrelated path -- e.g. a
+      /// diamond-shaped (reconverging, acyclic) dependency graph -- is not a loop and is not
+      /// reported as one.
       std::vector<const element_t*> DFS(element_t* from, bool* loop_detected_out = nullptr);
 
       element_t* add_new_element(const std::string& topic_name, const node_id_t& node_id = {});
