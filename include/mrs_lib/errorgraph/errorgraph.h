@@ -268,8 +268,12 @@ namespace mrs_lib
         /// i.e. the element has no genuine error mixed in among its "waiting for" entries.
         inline bool is_only_waiting_for() const
         {
-          return std::all_of(std::begin(errors), std::end(errors), [](const auto& error) { return error.is_waiting_for() || error.is_no_error(); })
-                 && std::any_of(std::begin(errors), std::end(errors), [](const auto& error) { return error.is_waiting_for(); });
+          // true iff there are no genuine errors reported directly by this element
+          const bool no_raw_errors =
+              std::all_of(std::begin(errors), std::end(errors), [](const auto& error) { return error.is_waiting_for() || error.is_no_error(); });
+          // true iff there is at least one waiting-for entry (rules out an element with only no_error entries)
+          const bool at_least_one_waiting_for = std::any_of(std::begin(errors), std::end(errors), [](const auto& error) { return error.is_waiting_for(); });
+          return no_raw_errors && at_least_one_waiting_for;
         }
 
         /// \brief Returns true if this element is waiting for the given node.
