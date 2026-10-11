@@ -99,7 +99,7 @@ namespace mrs_lib
       }
 
       auto guard = throttle_->acquire();
-      return guard->accept(node_interfaces_.get_node_clock_interface()->get_clock()->now().nanoseconds());
+      return guard->accept(node_interfaces_.get_node_clock_interface()->get_clock()->now());
     }
 
     PublisherNodeInterfaces node_interfaces_;

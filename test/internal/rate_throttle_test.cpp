@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include <rclcpp/time.hpp>
+
 #include <chrono>
 #include <cstdint>
 #include <random>
@@ -36,7 +38,7 @@ namespace
 
     for (const auto t : stamps)
     {
-      if (throttle.accept(t))
+      if (throttle.accept(rclcpp::Time(t)))
       {
         out.push_back(t);
       }
@@ -71,9 +73,9 @@ TEST(RateThrottle, first_message)
 
   mrs_lib::internal::RateThrottle throttle(1.0);
 
-  EXPECT_TRUE(throttle.accept(123 * NS));
-  EXPECT_FALSE(throttle.accept(123 * NS + NS / 2));
-  EXPECT_TRUE(throttle.accept(124 * NS));
+  EXPECT_TRUE(throttle.accept(rclcpp::Time(123 * NS)));
+  EXPECT_FALSE(throttle.accept(rclcpp::Time(123 * NS + NS / 2)));
+  EXPECT_TRUE(throttle.accept(rclcpp::Time(124 * NS)));
 }
 
 //}
@@ -124,8 +126,8 @@ TEST(RateThrottle, huge_period)
 
   for (auto* throttle : {&by_period, &by_rate})
   {
-    EXPECT_TRUE(throttle->accept(start_ns));
-    EXPECT_FALSE(throttle->accept(start_ns + hour_ns));
+    EXPECT_TRUE(throttle->accept(rclcpp::Time(start_ns)));
+    EXPECT_FALSE(throttle->accept(rclcpp::Time(start_ns + hour_ns)));
   }
 }
 

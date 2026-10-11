@@ -156,7 +156,7 @@ namespace mrs_lib
       return true;
     }
 
-    return throttle_->accept(node_->get_clock()->now().nanoseconds());
+    return throttle_->accept(node_->get_clock()->now());
   }
 
   //}
