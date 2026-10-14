@@ -6,8 +6,7 @@
 
 #include <mrs_lib/param_provider.h>
 
-#include <rcpputils/filesystem_helper.hpp>
-
+#include <filesystem>
 #include <thread>
 #include <vector>
 
@@ -99,7 +98,7 @@ protected:
   std::promise<bool> finished_promise_;
   std::future<bool> finished_future_;
 
-  rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
+  std::filesystem::path test_resources_path{TEST_RESOURCES_DIRECTORY};
 };
 
 /* TEST_F(Test, param_provider_declare) //{ */
