@@ -347,3 +347,43 @@ TEST_F(Test, timeout)
 }
 
 //}
+
+/* TEST_F(Test, default_timeout_callback_before_start) //{ */
+
+TEST_F(Test, default_timeout_callback_before_start)
+{
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  auto clock = node_->get_clock();
+
+  // | ------------------- create a subscriber ------------------ |
+
+  mrs_lib::SubscriberHandlerOptions sh_opts(node_);
+
+  sh_opts.autostart = false;
+  sh_opts.no_message_timeout = rclcpp::Duration(std::chrono::duration<double>(0.1));
+
+  mrs_lib::SubscriberHandler<std_msgs::msg::Int64> sh_int_(sh_opts, "/topic1");
+
+  // | ---------------------- start testing --------------------- |
+
+  // the timeout must not touch the missing subscription before start() and after stop()
+  clock->sleep_for(500ms);
+
+  sh_int_.start();
+
+  clock->sleep_for(300ms);
+
+  sh_int_.stop();
+
+  sh_int_.setNoMessageTimeout(rclcpp::Duration(std::chrono::duration<double>(0.1)));
+
+  clock->sleep_for(300ms);
+
+  SUCCEED();
+
+  despin();
+}
+
+//}
