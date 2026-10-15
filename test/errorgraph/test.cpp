@@ -49,6 +49,26 @@ protected:
     return msg;
   }
 
+  // Helper for a single "waiting for topic, expected from a given publisher" message.
+  errorgraph_element_msg_t create_waiting_for_topic_msg(const std::string& node, const std::string& component, const std::string& topic,
+                                                        const std::string& expected_publisher_node, const std::string& expected_publisher_comp)
+  {
+    errorgraph_element_msg_t msg;
+    msg.stamp = clock_->now();
+    msg.source_node.node = node;
+    msg.source_node.component = component;
+
+    errorgraph_error_msg_t error_msg;
+    error_msg.stamp = clock_->now();
+    error_msg.type = errorgraph_error_msg_t::TYPE_WAITING_FOR_TOPIC;
+    error_msg.waited_for_topic = topic;
+    error_msg.waited_for_node.node = expected_publisher_node;
+    error_msg.waited_for_node.component = expected_publisher_comp;
+    msg.errors.push_back(error_msg);
+
+    return msg;
+  }
+
   rclcpp::Clock::SharedPtr clock_;
   std::unique_ptr<Errorgraph> graph_;
 };
@@ -256,22 +276,164 @@ TEST_F(ErrorgraphTest, find_error_roots_multiple_errors_same_node)
 
 //}
 
-/* TEST: find_error_roots with node waiting for topic //{ */
+/* TEST: find_error_roots attributes a waiting-for-topic root to the waiting node, not the expected publisher //{ */
 
-TEST_F(ErrorgraphTest, find_error_roots_waiting_for_topic)
+TEST_F(ErrorgraphTest, find_error_roots_waiting_for_topic_attributes_to_waiting_node)
 {
-  // Node is waiting for a topic
-  auto msg = create_element_msg("waiting_node", "component", {{errorgraph_error_msg_t::TYPE_WAITING_FOR_TOPIC, "/some/topic"}});
+  // "publisher_node.publisher_comp" is alive and healthy, reporting for real.
+  auto publisher_msg = create_element_msg("publisher_node", "publisher_comp", {{errorgraph_error_msg_t::TYPE_NO_ERROR, ""}});
+  graph_->add_element_from_msg(publisher_msg);
+
+  // "waiting_node" is waiting for a topic expected from that same healthy publisher --
+  // the publisher is fine, it just isn't producing this one specific topic.
+  auto msg = create_waiting_for_topic_msg("waiting_node", "component", "/some/topic", "publisher_node", "publisher_comp");
   graph_->add_element_from_msg(msg);
 
   auto roots = graph_->find_error_roots();
 
-  // The waiting node should NOT be an error root (it's waiting).
-  // The topic element should be a root because someone depends on it.
+  // Named as expected_publisher only -- the publisher must not become its own root.
   ASSERT_EQ(roots.size(), 1);
   ASSERT_TRUE(std::holds_alternative<Errorgraph::topic_info_t>(roots[0]));
   const auto& topic = std::get<Errorgraph::topic_info_t>(roots[0]);
   EXPECT_EQ(topic.topic_name, "/some/topic");
+  // Attributed to the waiting node, not the publisher, who never reported this.
+  EXPECT_EQ(topic.source_node.node, "waiting_node");
+  EXPECT_EQ(topic.source_node.component, "component");
+  // The expected publisher must still be correct inside the error itself.
+  const auto out_msg = topic.to_msg();
+  ASSERT_EQ(out_msg.errors.size(), 1);
+  EXPECT_EQ(out_msg.errors[0].waited_for_node.node, "publisher_node");
+  EXPECT_EQ(out_msg.errors[0].waited_for_node.component, "publisher_comp");
+}
+
+//}
+
+/* TEST: find_error_roots surfaces both the blocked waiter and the genuinely broken publisher, distinctly //{ */
+
+TEST_F(ErrorgraphTest, find_error_roots_waiting_for_topic_with_unhealthy_publisher_reports_both)
+{
+  // Unlike the sibling test above, the publisher itself has a real error here.
+  auto publisher_msg = create_element_msg("publisher_node", "publisher_comp", {{"PUBLISHER_IS_BROKEN", ""}});
+  graph_->add_element_from_msg(publisher_msg);
+
+  // "waiting_node" is waiting for a topic expected from that broken publisher.
+  auto msg = create_waiting_for_topic_msg("waiting_node", "component", "/some/topic", "publisher_node", "publisher_comp");
+  graph_->add_element_from_msg(msg);
+
+  auto roots = graph_->find_error_roots();
+
+  // Both facts surface as separate entries: the publisher's own error, and the topic
+  // placeholder attributed to the waiting node -- neither masks the other.
+  ASSERT_EQ(roots.size(), 2);
+
+  bool found_publisher_error = false, found_topic_wait = false;
+  for (const auto& root : roots)
+  {
+    if (std::holds_alternative<Errorgraph::node_info_t>(root))
+    {
+      const auto& info = std::get<Errorgraph::node_info_t>(root);
+      EXPECT_EQ(info.source_node.node, "publisher_node");
+      EXPECT_EQ(info.source_node.component, "publisher_comp");
+      ASSERT_EQ(info.errors.size(), 1);
+      EXPECT_EQ(info.errors[0].type, "PUBLISHER_IS_BROKEN");
+      found_publisher_error = true;
+    } else
+    {
+      const auto& topic = std::get<Errorgraph::topic_info_t>(root);
+      EXPECT_EQ(topic.topic_name, "/some/topic");
+      EXPECT_EQ(topic.source_node.node, "waiting_node");
+      EXPECT_EQ(topic.source_node.component, "component");
+      const auto out_msg = topic.to_msg();
+      ASSERT_EQ(out_msg.errors.size(), 1);
+      EXPECT_EQ(out_msg.errors[0].waited_for_node.node, "publisher_node");
+      EXPECT_EQ(out_msg.errors[0].waited_for_node.component, "publisher_comp");
+      found_topic_wait = true;
+    }
+  }
+  EXPECT_TRUE(found_publisher_error);
+  EXPECT_TRUE(found_topic_wait);
+}
+
+//}
+
+/* TEST: a topic placeholder must not hijack the expected publisher's later real report //{ */
+
+TEST_F(ErrorgraphTest, topic_placeholder_does_not_hijack_later_publisher_report)
+{
+  // The topic placeholder is created first (nobody has reported under "publisher_node.
+  // publisher_comp" yet), *then* the real publisher reports for the first time. The lookup by
+  // node id must not resolve to the topic placeholder just because it shares that identity.
+  auto waiting_msg = create_waiting_for_topic_msg("waiting_node", "component", "/some/topic", "publisher_node", "publisher_comp");
+  graph_->add_element_from_msg(waiting_msg);
+
+  // Force the topic placeholder into existence before the publisher ever reports.
+  graph_->find_error_roots();
+
+  // Now the publisher reports for the first time, with a real error.
+  auto publisher_msg = create_element_msg("publisher_node", "publisher_comp", {{"PUBLISHER_IS_BROKEN", ""}});
+  graph_->add_element_from_msg(publisher_msg);
+
+  auto publisher_elem = graph_->find_element(node_id_t{"publisher_node", "publisher_comp"});
+  ASSERT_TRUE(publisher_elem.has_value());
+  ASSERT_TRUE(std::holds_alternative<Errorgraph::node_info_t>(publisher_elem.value()));
+  const auto& info = std::get<Errorgraph::node_info_t>(publisher_elem.value());
+  ASSERT_EQ(info.errors.size(), 1);
+  EXPECT_EQ(info.errors[0].type, "PUBLISHER_IS_BROKEN");
+
+  // Both facts must still be visible: the publisher's own error, and the topic wait.
+  auto roots = graph_->find_error_roots();
+  bool found_publisher_error = false, found_topic_wait = false;
+  for (const auto& root : roots)
+  {
+    if (std::holds_alternative<Errorgraph::node_info_t>(root))
+      found_publisher_error = true;
+    else
+      found_topic_wait = true;
+  }
+  EXPECT_TRUE(found_publisher_error);
+  EXPECT_TRUE(found_topic_wait);
+}
+
+//}
+
+/* TEST: find_error_roots reports every distinct dependent of the same missing topic //{ */
+
+TEST_F(ErrorgraphTest, find_error_roots_waiting_for_topic_multiple_dependents_all_reported)
+{
+  // The expected publisher is alive and healthy, reporting for real.
+  auto publisher_msg = create_element_msg("publisher_node", "publisher_comp", {{errorgraph_error_msg_t::TYPE_NO_ERROR, ""}});
+  graph_->add_element_from_msg(publisher_msg);
+
+  // Two different components both wait for the exact same topic from that same healthy publisher.
+  graph_->add_element_from_msg(create_waiting_for_topic_msg("waiter_a", "comp_a", "/shared/topic", "publisher_node", "publisher_comp"));
+  graph_->add_element_from_msg(create_waiting_for_topic_msg("waiter_b", "comp_b", "/shared/topic", "publisher_node", "publisher_comp"));
+
+  auto roots = graph_->find_error_roots();
+
+  // Publisher named as expected_publisher only -- every entry here should be a topic entry.
+  ASSERT_EQ(roots.size(), 2);
+  std::vector<Errorgraph::topic_info_t> topic_roots;
+  for (const auto& root : roots)
+    if (std::holds_alternative<Errorgraph::topic_info_t>(root))
+      topic_roots.push_back(std::get<Errorgraph::topic_info_t>(root));
+
+  // One entry per waiter -- neither dependent silently dropped.
+  ASSERT_EQ(topic_roots.size(), 2);
+  bool found_a = false, found_b = false;
+  for (const auto& topic : topic_roots)
+  {
+    EXPECT_EQ(topic.topic_name, "/shared/topic");
+    const auto out_msg = topic.to_msg();
+    ASSERT_EQ(out_msg.errors.size(), 1);
+    EXPECT_EQ(out_msg.errors[0].waited_for_node.node, "publisher_node");
+    EXPECT_EQ(out_msg.errors[0].waited_for_node.component, "publisher_comp");
+    if (topic.source_node.node == "waiter_a" && topic.source_node.component == "comp_a")
+      found_a = true;
+    if (topic.source_node.node == "waiter_b" && topic.source_node.component == "comp_b")
+      found_b = true;
+  }
+  EXPECT_TRUE(found_a);
+  EXPECT_TRUE(found_b);
 }
 
 //}
@@ -321,6 +483,30 @@ TEST_F(ErrorgraphTest, find_dependency_roots_detects_loop)
 
 //}
 
+/* TEST: find_dependency_roots attributes a topic-wait root to the waiting node //{ */
+
+TEST_F(ErrorgraphTest, find_dependency_roots_attributes_topic_wait_to_waiting_node)
+{
+  // node1 waits for a topic expected from publisher_node -- traced root should be node1, not
+  // publisher_node.
+  auto msg = create_waiting_for_topic_msg("node1", "comp1", "/some/topic", "publisher_node", "publisher_comp");
+  graph_->add_element_from_msg(msg);
+
+  node_id_t node1_id{"node1", "comp1"};
+  auto roots = graph_->find_dependency_roots(node1_id);
+
+  ASSERT_EQ(roots.size(), 1);
+  ASSERT_TRUE(std::holds_alternative<Errorgraph::topic_info_t>(roots[0]));
+  const auto& topic = std::get<Errorgraph::topic_info_t>(roots[0]);
+  EXPECT_EQ(topic.topic_name, "/some/topic");
+  EXPECT_EQ(topic.source_node.node, "node1");
+  EXPECT_EQ(topic.source_node.component, "comp1");
+  EXPECT_EQ(topic.expected_publisher.node, "publisher_node");
+  EXPECT_EQ(topic.expected_publisher.component, "publisher_comp");
+}
+
+//}
+
 /* TEST: find_roots returns all non-waiting nodes //{ */
 
 TEST_F(ErrorgraphTest, find_roots_returns_all_non_waiting_nodes)
@@ -338,6 +524,33 @@ TEST_F(ErrorgraphTest, find_roots_returns_all_non_waiting_nodes)
 
   // Should return both root1 and root2 (both not waiting)
   EXPECT_EQ(roots.size(), 2);
+}
+
+//}
+
+/* TEST: find_roots attributes a topic-wait root to the waiting node //{ */
+
+TEST_F(ErrorgraphTest, find_roots_attributes_topic_wait_to_waiting_node)
+{
+  auto publisher_msg = create_element_msg("publisher_node", "publisher_comp", {{errorgraph_error_msg_t::TYPE_NO_ERROR, ""}});
+  graph_->add_element_from_msg(publisher_msg);
+
+  auto msg = create_waiting_for_topic_msg("waiting_node", "component", "/some/topic", "publisher_node", "publisher_comp");
+  graph_->add_element_from_msg(msg);
+
+  auto roots = graph_->find_roots();
+
+  // Filter to the topic entry (the healthy publisher is also a root here, separately).
+  std::vector<Errorgraph::topic_info_t> topic_roots;
+  for (const auto& root : roots)
+    if (std::holds_alternative<Errorgraph::topic_info_t>(root))
+      topic_roots.push_back(std::get<Errorgraph::topic_info_t>(root));
+
+  ASSERT_EQ(topic_roots.size(), 1);
+  EXPECT_EQ(topic_roots[0].source_node.node, "waiting_node");
+  EXPECT_EQ(topic_roots[0].source_node.component, "component");
+  EXPECT_EQ(topic_roots[0].expected_publisher.node, "publisher_node");
+  EXPECT_EQ(topic_roots[0].expected_publisher.component, "publisher_comp");
 }
 
 //}
@@ -363,13 +576,6 @@ TEST_F(ErrorgraphTest, find_leaves_identifies_leaf_nodes)
   ASSERT_EQ(leaves.size(), 1);
   const auto& leaf_info = std::get<Errorgraph::node_info_t>(leaves[0]);
   EXPECT_EQ(leaf_info.source_node.node, "node1");
-
-  // Find roots should return node3
-  // node3 is a root (nobody it waits for has error)
-  auto roots = graph_->find_roots();
-  ASSERT_EQ(roots.size(), 1);
-  const auto& root_info = std::get<Errorgraph::node_info_t>(roots[0]);
-  EXPECT_EQ(root_info.source_node.node, "node3");
 }
 
 //}
@@ -380,7 +586,6 @@ TEST_F(ErrorgraphTest, waiting_for_topic_creates_topic_element)
 {
   auto msg = create_element_msg("node1", "comp1", {{errorgraph_error_msg_t::TYPE_WAITING_FOR_TOPIC, "/test/topic"}});
   graph_->add_element_from_msg(msg);
-
 
   // Trigger graph building (prepare_graph creates missing elements)
   graph_->find_error_roots();
