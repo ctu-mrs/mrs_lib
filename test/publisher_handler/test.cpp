@@ -357,9 +357,9 @@ TEST_F(Test, throttling)
 
   rclcpp::sleep_for(1s);
 
-  if (num_received < 9 || num_received > 11)
+  if (num_received < 10 || num_received > 12)
   {
-    RCLCPP_ERROR(node_->get_logger(), "did not received the correct number of messages, want 9 >= %d <= 11", num_received);
+    RCLCPP_ERROR(node_->get_logger(), "did not received the correct number of messages, want 10 >= %d <= 12", num_received);
     result &= false;
   }
 
@@ -370,6 +370,59 @@ TEST_F(Test, throttling)
   rclcpp::sleep_for(1s);
 
   EXPECT_TRUE(result);
+}
+
+//}
+
+/* TEST_F(Test, throttling_first_message) //{ */
+
+TEST_F(Test, throttling_first_message)
+{
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  // | ---------------- create publisher handler ---------------- |
+
+  mrs_lib::PublisherHandlerOptions opts;
+
+  opts.node = node_;
+  opts.throttle_rate = 0.1;
+
+  mrs_lib::PublisherHandler<std_msgs::msg::Int64> ph_int = mrs_lib::PublisherHandler<std_msgs::msg::Int64>(opts, "/topic1");
+
+  // | ------------------- create a subscriber ------------------ |
+
+  const std::function<void(const std_msgs::msg::Int64::SharedPtr)> callback1_ptr = std::bind(&Test::callback1, this, std::placeholders::_1);
+
+  auto sub1 = node_->create_subscription<std_msgs::msg::Int64>("/topic1", 100, callback1_ptr);
+
+  for (int i = 0; i < 50 && (sub1->get_publisher_count() == 0 || ph_int.getNumSubscribers() == 0); i++)
+  {
+    rclcpp::sleep_for(100ms);
+  }
+
+  if (sub1->get_publisher_count() == 0 || ph_int.getNumSubscribers() == 0)
+  {
+    despin();
+    FAIL() << "failed to connect publisher and subscriber";
+  }
+
+  // | ---------------------- start testing --------------------- |
+
+  std_msgs::msg::Int64 data;
+  data.data = num_to_send;
+
+  // the first message should pass right away, the rest is within the throttle period
+  for (int i = 0; i < 3; i++)
+  {
+    ph_int.publish(data);
+  }
+
+  rclcpp::sleep_for(1s);
+
+  despin();
+
+  EXPECT_EQ(num_received, 1);
 }
 
 //}

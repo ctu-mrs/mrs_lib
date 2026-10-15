@@ -15,6 +15,9 @@
 #include <atomic>
 #include <string>
 #include <mutex>
+#include <optional>
+
+#include <mrs_lib/internal/rate_throttle.hpp>
 
 namespace mrs_lib
 {
@@ -119,10 +122,12 @@ namespace mrs_lib
 
     std::string address_;
 
-    bool throttle_ = false;
-    double throttle_min_dt_ = 0;
+    std::optional<internal::RateThrottle> throttle_;
 
-    rclcpp::Time last_time_published_;
+    /**
+     * @brief decide whether to publish a message now with respect to the throttle rate, call with mutex_publisher_ locked
+     */
+    bool throttleAccept(void);
   };
 
   //}
