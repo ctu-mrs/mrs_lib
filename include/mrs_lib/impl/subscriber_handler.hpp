@@ -196,27 +196,16 @@ namespace mrs_lib
     virtual void start()
     {
       // the timeout callback reads m_sub, so it must not run while m_sub is being replaced
-      if (m_timeout_manager && m_timeout_id.has_value())
-        m_timeout_manager->pause(m_timeout_id.value());
-
-      const std::function<void(const typename MessageType::SharedPtr)> cbk = std::bind(&Impl::data_callback, this, std::placeholders::_1);
-
-      m_sub = m_node->create_subscription<MessageType>(m_topic_name, m_qos, cbk, m_sub_opts);
-      RCLCPP_INFO_STREAM(m_node->get_logger(), "Subscribed to topic '" << m_topic_name << "' -> '" << m_sub->get_topic_name() << "'");
-
-      if (m_timeout_manager && m_timeout_id.has_value())
-        m_timeout_manager->start(m_timeout_id.value(), m_node->get_clock()->now());
+      pauseTimeout();
+      subscribe();
+      startTimeout();
     }
     //}
 
     /* stop() method //{ */
     virtual void stop()
     {
-      if (m_timeout_manager && m_timeout_id.has_value())
-      {
-        m_timeout_manager->pause(m_timeout_id.value());
-      }
-
+      pauseTimeout();
       m_sub.reset();
     }
     //}
@@ -251,6 +240,30 @@ namespace mrs_lib
     message_callback_t m_message_callback;
 
   protected:
+    /* subscribe() method //{ */
+    void subscribe()
+    {
+      const std::function<void(const typename MessageType::SharedPtr)> cbk = std::bind(&Impl::data_callback, this, std::placeholders::_1);
+
+      m_sub = m_node->create_subscription<MessageType>(m_topic_name, m_qos, cbk, m_sub_opts);
+      RCLCPP_INFO_STREAM(m_node->get_logger(), "Subscribed to topic '" << m_topic_name << "' -> '" << m_sub->get_topic_name() << "'");
+    }
+    //}
+
+    /* pauseTimeout() and startTimeout() methods //{ */
+    void pauseTimeout()
+    {
+      if (m_timeout_manager && m_timeout_id.has_value())
+        m_timeout_manager->pause(m_timeout_id.value());
+    }
+
+    void startTimeout()
+    {
+      if (m_timeout_manager && m_timeout_id.has_value())
+        m_timeout_manager->start(m_timeout_id.value(), m_node->get_clock()->now());
+    }
+    //}
+
     /* default_timeout_callback() method //{ */
     void default_timeout_callback([[maybe_unused]] const std::string& topic_name, const rclcpp::Time& last_msg)
     {
@@ -283,10 +296,11 @@ namespace mrs_lib
     /* data_callback() method //{ */
     virtual void data_callback(const typename MessageType::ConstSharedPtr& msg)
     {
+      if (m_timeout_manager && m_timeout_id.has_value())
+        m_timeout_manager->reset(m_timeout_id.value(), m_node->get_clock()->now());
+
       {
         std::lock_guard lck(m_new_data_mtx);
-        if (m_timeout_manager && m_timeout_id.has_value())
-          m_timeout_manager->reset(m_timeout_id.value(), m_node->get_clock()->now());
         process_new_message(msg);
       }
 
@@ -353,15 +367,21 @@ namespace mrs_lib
       std::lock_guard lck(m_mtx);
       return impl_class_t::topicName();
     };
+    // the TimeoutManager is called without m_mtx: timeout callbacks run under its lock and may call the methods above
     virtual void start() override
     {
-      std::lock_guard lck(m_mtx);
-      return impl_class_t::start();
+      this->pauseTimeout();
+      {
+        std::lock_guard lck(m_mtx);
+        impl_class_t::subscribe();
+      }
+      this->startTimeout();
     }
     virtual void stop() override
     {
+      this->pauseTimeout();
       std::lock_guard lck(m_mtx);
-      return impl_class_t::stop();
+      this->m_sub.reset();
     }
 
     virtual ~ImplThreadsafe() override = default;
@@ -369,14 +389,12 @@ namespace mrs_lib
   protected:
     virtual void data_callback(const typename MessageType::ConstSharedPtr& msg) override
     {
+      // reset before locking m_mtx, see start()
+      if (this->m_timeout_manager && this->m_timeout_id.has_value())
+        this->m_timeout_manager->reset(this->m_timeout_id.value(), this->m_node->get_clock()->now());
+
       {
         std::scoped_lock lck(m_mtx, this->m_new_data_mtx);
-
-        if (this->m_timeout_manager && this->m_timeout_id.has_value())
-        {
-          this->m_timeout_manager->reset(this->m_timeout_id.value(), this->m_node->get_clock()->now());
-        }
-
         impl_class_t::process_new_message(msg);
       }
 
