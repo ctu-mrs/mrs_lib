@@ -63,8 +63,8 @@ namespace mrs_lib
               std::make_shared<mrs_lib::TimeoutManager>(m_node, rclcpp::Rate(1.0 / (options.no_message_timeout.seconds() * 0.5), m_node->get_clock()));
         }
 
-        // register the timeout callback with the TimeoutManager
-        m_timeout_id = m_timeout_manager->registerNew(options.no_message_timeout, m_timeout_mgr_callback, m_node->get_clock()->now());
+        // register the timeout callback with the TimeoutManager, paused until start() creates the subscription
+        m_timeout_id = m_timeout_manager->registerNew(options.no_message_timeout, m_timeout_mgr_callback, m_node->get_clock()->now(), false, false);
       }
     }
     //}
@@ -178,13 +178,16 @@ namespace mrs_lib
         if (m_timeout_manager == nullptr)
           m_timeout_manager = std::make_shared<mrs_lib::TimeoutManager>(m_node, rclcpp::Rate(1.0 / (timeout.seconds() * 0.5), m_node->get_clock()));
 
+        // only arm the timeout while subscribed, otherwise start() arms it
+        const bool running = m_sub != nullptr;
+
         // if there is an existing timeout callback registered, change its timeout
         if (m_timeout_id.has_value())
-          m_timeout_manager->change(m_timeout_id.value(), timeout, m_timeout_mgr_callback, m_node->get_clock()->now());
+          m_timeout_manager->change(m_timeout_id.value(), timeout, m_timeout_mgr_callback, m_node->get_clock()->now(), false, running);
 
         // otherwise, register it
         else
-          m_timeout_id = m_timeout_manager->registerNew(timeout, m_timeout_mgr_callback, m_node->get_clock()->now());
+          m_timeout_id = m_timeout_manager->registerNew(timeout, m_timeout_mgr_callback, m_node->get_clock()->now(), false, running);
       }
     }
     //}
@@ -192,13 +195,17 @@ namespace mrs_lib
     /* start() method //{ */
     virtual void start()
     {
+      // the timeout callback reads m_sub, so it must not run while m_sub is being replaced
       if (m_timeout_manager && m_timeout_id.has_value())
-        m_timeout_manager->start(m_timeout_id.value(), m_node->get_clock()->now());
+        m_timeout_manager->pause(m_timeout_id.value());
 
       const std::function<void(const typename MessageType::SharedPtr)> cbk = std::bind(&Impl::data_callback, this, std::placeholders::_1);
 
       m_sub = m_node->create_subscription<MessageType>(m_topic_name, m_qos, cbk, m_sub_opts);
       RCLCPP_INFO_STREAM(m_node->get_logger(), "Subscribed to topic '" << m_topic_name << "' -> '" << m_sub->get_topic_name() << "'");
+
+      if (m_timeout_manager && m_timeout_id.has_value())
+        m_timeout_manager->start(m_timeout_id.value(), m_node->get_clock()->now());
     }
     //}
 
@@ -247,10 +254,14 @@ namespace mrs_lib
     /* default_timeout_callback() method //{ */
     void default_timeout_callback([[maybe_unused]] const std::string& topic_name, const rclcpp::Time& last_msg)
     {
+      // runs under the TimeoutManager lock: no topicName(), it takes the handler lock (lock-order deadlock with data_callback())
+      if (!m_sub)
+        return;
+
       const rclcpp::Duration since_msg = (m_node->get_clock()->now() - last_msg);
       const auto n_pubs = m_sub->get_publisher_count();
-      const std::string txt = "Did not receive any message from topic '" + topicName() + "' for " + std::to_string(since_msg.seconds()) + "s ("
-                              + std::to_string(n_pubs) + " publishers on this topic)";
+      const std::string txt = "Did not receive any message from topic '" + std::string(m_sub->get_topic_name()) + "' for " + std::to_string(since_msg.seconds())
+                              + "s (" + std::to_string(n_pubs) + " QoS-compatible publishers on this topic)";
 
       RCLCPP_WARN_STREAM(m_node->get_logger(), txt);
     }
