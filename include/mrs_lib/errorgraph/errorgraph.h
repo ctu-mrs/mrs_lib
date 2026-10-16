@@ -170,7 +170,7 @@ namespace mrs_lib
         std::string topic_name; ///< Topic name.
         node_id_t source_node;  ///< Expected publisher node for this topic.
         rclcpp::Time stamp;     ///< Last time this element was updated.
-        bool not_reporting;     ///< Whether this topic's publisher has stopped reporting.
+        bool not_reporting;     ///< Always false for topic elements; only node elements track staleness (see \ref element_t::is_not_reporting()).
 
         /// \brief Convert to a ROS message.
         errorgraph_element_msg_t to_msg() const;
@@ -213,9 +213,11 @@ namespace mrs_lib
         static constexpr double DEFAULT_NOT_REPORTING_DELAY_SECONDS = 3.0;
         rclcpp::Duration not_reporting_delay = rclcpp::Duration::from_seconds(DEFAULT_NOT_REPORTING_DELAY_SECONDS);
 
-        std::vector<element_t*> parents;  ///< Parent elements in the dependency graph.
-        std::vector<element_t*> children; ///< Child elements in the dependency graph.
-        bool visited = false;             ///< Visited flag used during graph traversal.
+        std::vector<element_t*> parents;  ///< Elements that depend on (are waiting for) this element.
+        std::vector<element_t*> children; ///< Elements that this element depends on (is waiting for).
+        bool visited = false;             ///< Set once this element has been fully processed by \ref Errorgraph::DFS().
+        bool on_stack = false;            ///< Set while this element is an ancestor on the current \ref Errorgraph::DFS() path.
+        bool loop_root = false;           ///< Set by \ref Errorgraph::DFS() when this element is a member of a genuine dependency loop.
 
         rclcpp::Clock::SharedPtr clock_;
 
@@ -262,6 +264,18 @@ namespace mrs_lib
         inline bool is_waiting_for() const
         {
           return std::any_of(std::begin(errors), std::end(errors), [](const auto& error) { return error.is_waiting_for(); });
+        }
+
+        /// \brief Returns true if every non-"no error" entry on this element is a "waiting for" dependency,
+        /// i.e. the element has no genuine error mixed in among its "waiting for" entries.
+        inline bool is_only_waiting_for() const
+        {
+          // true iff there are no genuine errors reported directly by this element
+          const bool no_raw_errors =
+              std::all_of(std::begin(errors), std::end(errors), [](const auto& error) { return error.is_waiting_for() || error.is_no_error(); });
+          // true iff there is at least one waiting-for entry (rules out an element with only no_error entries)
+          const bool at_least_one_waiting_for = std::any_of(std::begin(errors), std::end(errors), [](const auto& error) { return error.is_waiting_for(); });
+          return no_raw_errors && at_least_one_waiting_for;
         }
 
         /// \brief Returns true if this element is waiting for the given node.
@@ -314,6 +328,23 @@ namespace mrs_lib
 
       void build_graph();
 
+      /// \brief Depth-first walk of the "waiting for" edges starting at \p from, wiring up
+      /// \ref element_t::parents / \ref element_t::children as it goes (this is also how
+      /// \ref build_graph() links the whole graph, one component at a time).
+      ///
+      /// The returned vector is this walk's own notion of "roots", used directly by
+      /// \ref find_dependency_roots() (and, via \ref element_t::loop_root, by \ref find_roots()
+      /// and \ref find_error_roots() too): it contains every visited element that carries a
+      /// genuine error alongside (or instead of) its "waiting for" entries, plus, for each
+      /// genuine dependency loop, every element that is a member of that loop (marked via \ref
+      /// element_t::loop_root) -- so that a pure wait-cycle with no error anywhere in it still
+      /// surfaces in the output instead of silently disappearing.
+      ///
+      /// \note A loop is only reported for a true back-edge, i.e. reaching an element that is
+      /// still an ancestor on the current DFS path (\ref element_t::on_stack). Reaching an
+      /// element that was already fully processed via some other, unrelated path -- e.g. a
+      /// diamond-shaped (reconverging, acyclic) dependency graph -- is not a loop and is not
+      /// reported as one.
       std::vector<const element_t*> DFS(element_t* from, bool* loop_detected_out = nullptr);
 
       element_t* add_new_element(const std::string& topic_name, const node_id_t& node_id = {});
@@ -332,8 +363,13 @@ namespace mrs_lib
       /**
        * \brief Find the root-cause elements blocking the given node.
        *
-       * Traverses the dependency graph from the specified node to find leaf elements
-       * (elements with errors that don't depend on anything else).
+       * Traverses the dependency graph from the specified node, following "waiting for" edges.
+       * An element is returned as a root cause if it doesn't depend on anything else, or if it
+       * carries a genuine error of its own -- even while it also depends on something else, in
+       * which case traversal continues past it to find further root causes down the chain too.
+       * If a genuine dependency loop is encountered (see \ref DFS()), every element that is a
+       * member of that loop is returned as well, not just one representative -- so a 3-element
+       * cycle with no genuine error anywhere in it yields 3 root-cause entries, one per member.
        *
        * \param node_id             The node to trace dependencies for.
        * \param loop_detected_out   If non-null, set to true when a cycle is detected.
@@ -343,18 +379,40 @@ namespace mrs_lib
 
       /**
        * \brief Find all root-cause elements across the entire graph.
+       *
+       * An element is excluded only if every one of its non-"no error" entries is a "waiting for"
+       * dependency (see \ref element_t::is_only_waiting_for()); an element with at least one genuine
+       * error, or with no dependency at all, is always included. Unlike \ref find_roots(), a healthy
+       * (no-error, actively-reporting) element with no other element waiting on it is also excluded,
+       * to avoid reporting uninteresting leaves as "root causes". As with \ref find_roots(), every
+       * element that is a member of a genuine dependency loop (no genuine error anywhere in the
+       * loop) is included too, consistent with \ref find_dependency_roots() -- see \ref DFS().
+       *
        * \return  Copies of elements that have errors and are not blocked by other elements.
        */
       std::vector<element_info_t> find_error_roots();
 
       /**
-       * \brief Find all root elements (elements with no parents in the dependency graph).
+       * \brief Find all root elements (elements that are not exclusively waiting for something else).
+       *
+       * An element is excluded only if every one of its non-"no error" entries is a "waiting for"
+       * dependency (see \ref element_t::is_only_waiting_for()); an element with at least one genuine
+       * error, or with no dependency at all, is always included. Every element that is a member of
+       * a genuine dependency loop (no genuine error anywhere in the loop) is included too,
+       * consistent with \ref find_dependency_roots() -- otherwise such a loop would vanish from the
+       * result entirely; see \ref DFS() for how a genuine loop is distinguished from mere
+       * reconvergence.
+       *
        * \return  Copies of root element info as type-safe variants.
        */
       std::vector<element_info_t> find_roots();
 
       /**
-       * \brief Find all leaf elements (elements with no children in the dependency graph).
+       * \brief Find all leaf elements (elements that nothing else in the graph depends on).
+       *
+       * An element is a leaf if no other element is waiting for it, i.e. its \c parents list is
+       * empty.
+       *
        * \return  Copies of leaf element info as type-safe variants.
        */
       std::vector<element_info_t> find_leaves();
