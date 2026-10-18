@@ -167,6 +167,8 @@ target_sources(mrs_lib_mrs_lib
     "include/mrs_lib/safety_zone.h"
     "include/mrs_lib/scope_timer.h"
     "include/mrs_lib/service_client_handler.h"
+    "include/mrs_lib/service_client.hpp"
+    "include/mrs_lib/service_client.impl.hpp"
     "include/mrs_lib/service_server_handler.h"
     "include/mrs_lib/subscriber_handler.h"
     "include/mrs_lib/subscriber.hpp"
