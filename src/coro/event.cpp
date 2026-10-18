@@ -1,9 +1,9 @@
 #include "mrs_lib/coro/event.hpp"
 
-#include <memory>
-#include <coroutine>
-#include <mutex>
 #include <cassert>
+#include <coroutine>
+#include <memory>
+#include <mutex>
 #include <optional>
 #include <utility>
 
@@ -98,7 +98,7 @@ namespace mrs_lib::coro
       {
       case Status::unset: {
         // Event not yet triggered. Store the continuation and suspend.
-        assert(continuation_ == nullptr);
+        assert(!continuation_);
         continuation_ = std::move(continuation);
         std::stop_token token = continuation_.get_token();
         // The callbacks may immediately trigger so we need to unlock the lock before it is called.

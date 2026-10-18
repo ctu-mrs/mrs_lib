@@ -128,7 +128,7 @@ namespace mrs_lib::coro::internal
     {
       ContinuationData local_data = release_data();
 
-      while (local_data.handle != nullptr)
+      while (local_data.handle)
       {
         CancellableContinuation continuation = std::invoke(local_data.func, local_data.handle);
         local_data.handle.destroy();
@@ -139,17 +139,19 @@ namespace mrs_lib::coro::internal
     /**
      * @brief Get stop token associated with the continuation.
      */
-    std::stop_token get_token() const
+    [[nodiscard]] std::stop_token get_token() const
     {
       return data_.stop_token;
     }
 
     /**
-     * @brief Check if the current continuation is empty.
+     * @brief Check if the continuation is NOT empty.
+     *
+     * @returns `true` if the continuation has a coroutine handle, `false` otherwise
      */
-    friend bool operator==(const CancellableContinuation& continuation, std::nullptr_t)
+    explicit operator bool() const noexcept
     {
-      return continuation.data_.handle == nullptr;
+      return static_cast<bool>(data_.handle);
     }
 
   private:
