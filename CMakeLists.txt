@@ -170,6 +170,8 @@ target_sources(mrs_lib_mrs_lib
     "include/mrs_lib/service_client.hpp"
     "include/mrs_lib/service_client.impl.hpp"
     "include/mrs_lib/service_server_handler.h"
+    "include/mrs_lib/service_server.hpp"
+    "include/mrs_lib/service_server.impl.hpp"
     "include/mrs_lib/subscriber_handler.h"
     "include/mrs_lib/subscriber.hpp"
     "include/mrs_lib/subscriber.impl.hpp"
