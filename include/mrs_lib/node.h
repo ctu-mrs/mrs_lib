@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -70,6 +71,27 @@ namespace mrs_lib
     [[nodiscard]] rclcpp::Node::SharedPtr this_node_ptr() const noexcept
     {
       return node_;
+    }
+
+    /**
+     * \brief Get all timers of the underlying rclcpp::Node. Returns the rclcpp timers from all callback groups of the node (also the ones used by
+     * mrs_lib::ROSTimer and by mrs_lib::Timer). The thread-based timers are not included, since they are not registered with the node.
+     *
+     * \warning The returned pointers keep the timers alive. Use them right away (e.g. to cancel all the timers) and do not store them, otherwise a timer keeps
+     * running even after its owner has released it.
+     */
+    [[nodiscard]] std::vector<rclcpp::TimerBase::SharedPtr> get_timers() const
+    {
+      std::vector<rclcpp::TimerBase::SharedPtr> timers;
+
+      node_->get_node_base_interface()->for_each_callback_group([&timers](const rclcpp::CallbackGroup::SharedPtr& group) {
+        group->find_timer_ptrs_if([&timers](const rclcpp::TimerBase::SharedPtr& timer) {
+          timers.push_back(timer);
+          return false; // Prevent find_timer_ptrs_if() from stopping after the first timer is found
+        });
+      });
+
+      return timers;
     }
 
   public:
