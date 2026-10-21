@@ -18,10 +18,32 @@ namespace mrs_lib
 
   //}
 
+  /* operator=() //{ */
+
+  TransformBroadcaster& TransformBroadcaster::operator=(TransformBroadcaster&& other)
+  {
+    if (this == &other)
+    {
+      return *this;
+    }
+
+    std::scoped_lock lck(other.mutex_, mutex_);
+
+    node_ = std::move(other.node_);
+    broadcaster_ = std::move(other.broadcaster_);
+    last_messages_ = std::move(other.last_messages_);
+
+    return *this;
+  }
+
+  //}
+
   /* sendTransform (const geometry_msgs::TransformStamped &transform) //{ */
 
   void TransformBroadcaster::sendTransform(const geometry_msgs::msg::TransformStamped& transform)
   {
+
+    std::scoped_lock lck(mutex_);
 
     if (node_ == nullptr)
     {
@@ -63,6 +85,8 @@ namespace mrs_lib
 
   void TransformBroadcaster::sendTransform(const std::vector<geometry_msgs::msg::TransformStamped>& transforms)
   {
+
+    std::scoped_lock lck(mutex_);
 
     if (node_ == nullptr)
     {
