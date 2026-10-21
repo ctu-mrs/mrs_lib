@@ -100,6 +100,8 @@ namespace mrs_lib
 
     node_ = std::move(other.node_);
     initialized_ = std::move(other.initialized_);
+    // destroy the old listener before the buffer it writes into
+    tf_listener_ptr_.reset();
     tf_buffer_ = std::move(other.tf_buffer_);
     tf_listener_ptr_ = std::move(other.tf_listener_ptr_);
 

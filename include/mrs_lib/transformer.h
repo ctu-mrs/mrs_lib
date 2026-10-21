@@ -545,6 +545,7 @@ namespace mrs_lib
     rclcpp::Node::SharedPtr node_;
 
     std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
+    // destroyed before tf_buffer_
     std::unique_ptr<tf2_ros::TransformListener> tf_listener_ptr_;
 
     // user-configurable options
