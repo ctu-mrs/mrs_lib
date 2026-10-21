@@ -133,6 +133,37 @@ namespace mrs_lib
                 const bool spin_thread = true, const rclcpp::CallbackGroup::SharedPtr& callback_group = nullptr);
 
     /**
+     * \brief Selects where a Transformer keeps its transformations.
+     */
+    enum class buffer_mode_t
+    {
+      own,          ///< the Transformer has its own TF2 buffer and transform listener, same as with the other constructors
+      shared_owner, ///< like own, but the buffer is also offered to all Transformers in the shared mode within this process
+      shared,       ///< the Transformer uses the buffer of the shared_owner Transformer in this process
+    };
+
+    /**
+     * \brief The main constructor that actually initializes stuff, with a choice of the buffer mode.
+     *
+     * Within one process (e.g., a component container), one Transformer in the shared_owner mode creates a TF2 buffer and transform listener on its
+     * \p node, and every Transformer in the shared mode uses them instead of creating its own. This saves one \p /tf and \p /tf_static subscription, and
+     * one thread, per Transformer in the shared mode.
+     *
+     * A Transformer in the shared mode can be created before the owner: its lookups fail with a warning until a shared_owner Transformer exists, and then
+     * it starts using its buffer. In a process without an owner, the lookups never succeed, so use the shared mode only where an owner is guaranteed to
+     * exist. The shared buffer is destroyed together with the last Transformer using it.
+     *
+     * \param node        the node handle to be used for subscribing to the transformations (own and shared_owner modes), or for logging and checking
+     *                    \p use_sim_time against the owner (shared mode).
+     * \param buffer_mode whether this Transformer has its own buffer, offers its buffer to others, or uses the offered one.
+     *
+     * \note The buffer keeps the default cache time of 10 s. If a second Transformer in the shared_owner mode is created in the same process, an error is
+     *       printed and it gets its own buffer. If a Transformer in the shared mode has a different \p use_sim_time than the owner, an error is printed and
+     *       the shared buffer is used anyway.
+     */
+    Transformer(const rclcpp::Node::SharedPtr& node, const buffer_mode_t buffer_mode);
+
+    /**
      * \brief A convenience move assignment operator.
      *
      * This operator moves all data from the object that is being assigned from, invalidating it.
@@ -544,9 +575,11 @@ namespace mrs_lib
     bool initialized_ = false;
     rclcpp::Node::SharedPtr node_;
 
+    // own or shared buffer, empty until bound in the shared mode
     std::shared_ptr<tf2_ros::BufferInterface> tf_buffer_;
-    // destroyed before tf_buffer_
+    // only with an own buffer, destroyed before tf_buffer_
     std::unique_ptr<tf2_ros::TransformListener> tf_listener_ptr_;
+    buffer_mode_t buffer_mode_ = buffer_mode_t::own;
 
     // user-configurable options
     std::string default_frame_id_ = "";
@@ -574,6 +607,9 @@ namespace mrs_lib
                                                                                        const std::string& fixed_frame, const std::string& latlon_frame);
 
     std::string resolveFrameImpl(const std::string& frame_id);
+
+    // binds to the shared buffer, returns false if it has no owner yet
+    bool bindSharedBufferImpl();
 
     template <class T>
     std::optional<T> doTransform(const T& what, const geometry_msgs::msg::TransformStamped& tf);
