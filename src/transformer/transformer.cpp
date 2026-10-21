@@ -56,10 +56,11 @@ namespace mrs_lib
   {
 
     node_ = node;
-    tf_buffer_ = std::make_unique<tf2_ros::Buffer>(node->get_clock());
+    auto tf_buffer = std::make_shared<tf2_ros::Buffer>(node->get_clock());
+    tf_buffer_ = tf_buffer;
     if (callback_group == nullptr)
     {
-      tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, node, spin_thread);
+      tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer, node, spin_thread);
     } else
     {
       // start from tf2_ros' defaults (carries qos_overriding_options) instead of a bare SubscriptionOptions
@@ -67,7 +68,7 @@ namespace mrs_lib
       auto static_sub_options = tf2_ros::detail::get_default_transform_listener_static_sub_options<>();
       sub_options.callback_group = callback_group;
       static_sub_options.callback_group = callback_group;
-      tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, node, spin_thread, tf2_ros::DynamicListenerQoS(),
+      tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer, node, spin_thread, tf2_ros::DynamicListenerQoS(),
                                                                       tf2_ros::StaticListenerQoS(), sub_options, static_sub_options);
     }
   }
@@ -78,10 +79,11 @@ namespace mrs_lib
   {
 
     node_ = node;
-    tf_buffer_ = std::make_unique<tf2_ros::Buffer>(clock, tf2::Duration(cache_time.nanoseconds()), node, qos);
+    auto tf_buffer = std::make_shared<tf2_ros::Buffer>(clock, tf2::Duration(cache_time.nanoseconds()), node, qos);
+    tf_buffer_ = tf_buffer;
     if (callback_group == nullptr)
     {
-      tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, node, spin_thread);
+      tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer, node, spin_thread);
     } else
     {
       // start from tf2_ros' defaults (carries qos_overriding_options) instead of a bare SubscriptionOptions
@@ -89,7 +91,7 @@ namespace mrs_lib
       auto static_sub_options = tf2_ros::detail::get_default_transform_listener_static_sub_options<>();
       sub_options.callback_group = callback_group;
       static_sub_options.callback_group = callback_group;
-      tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, node, spin_thread, tf2_ros::DynamicListenerQoS(),
+      tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer, node, spin_thread, tf2_ros::DynamicListenerQoS(),
                                                                       tf2_ros::StaticListenerQoS(), sub_options, static_sub_options);
     }
   }
@@ -403,7 +405,7 @@ namespace mrs_lib
     try
     {
       // try looking up and returning the transform
-      return tf_buffer_->lookupTransform(to_frame, from_frame, time_stamp, lookup_timeout_);
+      return tf_buffer_->lookupTransform(to_frame, from_frame, tf2_ros::fromRclcpp(time_stamp), tf2_ros::fromRclcpp(lookup_timeout_));
     }
     catch (tf2::TransformException& e)
     {
@@ -415,7 +417,7 @@ namespace mrs_lib
     {
       try
       {
-        return tf_buffer_->lookupTransform(to_frame, from_frame, rclcpp::Time(0, 0), lookup_timeout_);
+        return tf_buffer_->lookupTransform(to_frame, from_frame, tf2::TimePointZero, tf2_ros::fromRclcpp(lookup_timeout_));
       }
       catch (tf2::TransformException& e)
       {
@@ -479,7 +481,8 @@ namespace mrs_lib
     try
     {
       // try looking up and returning the transform
-      return tf_buffer_->lookupTransform(to_frame, to_stamp, from_frame, from_stamp, fixed_frame, lookup_timeout_);
+      return tf_buffer_->lookupTransform(to_frame, tf2_ros::fromRclcpp(to_stamp), from_frame, tf2_ros::fromRclcpp(from_stamp), fixed_frame,
+                                         tf2_ros::fromRclcpp(lookup_timeout_));
     }
     catch (tf2::TransformException& e)
     {
@@ -491,7 +494,7 @@ namespace mrs_lib
     {
       try
       {
-        return tf_buffer_->lookupTransform(to_frame, from_frame, rclcpp::Time(0, 0), lookup_timeout_);
+        return tf_buffer_->lookupTransform(to_frame, from_frame, tf2::TimePointZero, tf2_ros::fromRclcpp(lookup_timeout_));
       }
       catch (tf2::TransformException& e)
       {
