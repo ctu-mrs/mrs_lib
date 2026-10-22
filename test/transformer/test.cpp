@@ -14,6 +14,8 @@
 
 #include <iostream>
 
+#include <algorithm>
+#include <functional>
 #include <thread>
 
 #include <mrs_lib/gps_conversions.h>
@@ -180,6 +182,32 @@ protected:
     std::cout << "... got the transform" << std::endl;
 
     return tf_opt;
+  }
+
+  //}
+
+  /* wait_for_count() //{ */
+
+  // the ROS graph updates asynchronously, wait for the count and check that it stays
+  bool wait_for_count(const std::function<size_t()>& count, const size_t expected, const std::chrono::duration<double> timeout = 5s)
+  {
+    const auto start = std::chrono::steady_clock::now();
+
+    while (rclcpp::ok() && std::chrono::steady_clock::now() - start < timeout)
+    {
+
+      if (count() == expected)
+      {
+        std::this_thread::sleep_for(500ms);
+        return count() == expected;
+      }
+
+      std::this_thread::sleep_for(50ms);
+    }
+
+    std::cout << "count is " << count() << ", expected " << expected << std::endl;
+
+    return false;
   }
 
   //}
@@ -1352,6 +1380,130 @@ TEST_F(Test, default_frame_test)
   }
 
   EXPECT_TRUE(result);
+
+  despin();
+}
+
+//}
+
+/* TEST_F(Test, shared_buffer_test) //{ */
+
+TEST_F(Test, shared_buffer_test)
+{
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  const size_t tf_subs_before = node_->count_subscribers("/tf");
+  const size_t tf_static_subs_before = node_->count_subscribers("/tf_static");
+
+  // the owner and the shared Transformers have one /tf and /tf_static subscription in total
+  auto tfr_owner = mrs_lib::Transformer(node_, mrs_lib::Transformer::buffer_mode_t::shared_owner);
+  tfr_owner.setDefaultPrefix("uav66");
+
+  std::vector<std::shared_ptr<mrs_lib::Transformer>> transformers;
+
+  for (int i = 0; i < 3; i++)
+  {
+    transformers.push_back(std::make_shared<mrs_lib::Transformer>(node_, mrs_lib::Transformer::buffer_mode_t::shared));
+    transformers.back()->setDefaultPrefix("uav66");
+  }
+
+  EXPECT_TRUE(wait_for_count([this]() { return node_->count_subscribers("/tf"); }, tf_subs_before + 1));
+  EXPECT_TRUE(wait_for_count([this]() { return node_->count_subscribers("/tf_static"); }, tf_static_subs_before + 1));
+
+  EXPECT_TRUE(wait_for_tf("fcu", "local_origin", tfr_owner).has_value());
+
+  for (auto& tfr : transformers)
+  {
+    EXPECT_TRUE(wait_for_tf("fcu", "local_origin", *tfr).has_value());
+  }
+
+  // a Transformer in the own mode keeps its own subscription
+  auto tfr_own = mrs_lib::Transformer(node_, mrs_lib::Transformer::buffer_mode_t::own);
+
+  EXPECT_TRUE(wait_for_count([this]() { return node_->count_subscribers("/tf"); }, tf_subs_before + 2));
+
+  despin();
+}
+
+//}
+
+/* TEST_F(Test, shared_buffer_late_owner_test) //{ */
+
+TEST_F(Test, shared_buffer_late_owner_test)
+{
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  const size_t tf_subs_before = node_->count_subscribers("/tf");
+
+  // no owner yet, so the lookups fail
+  auto tfr = mrs_lib::Transformer(node_, mrs_lib::Transformer::buffer_mode_t::shared);
+  tfr.setDefaultPrefix("uav66");
+
+  EXPECT_FALSE(wait_for_tf("fcu", "local_origin", tfr).has_value());
+  EXPECT_TRUE(wait_for_count([this]() { return node_->count_subscribers("/tf"); }, tf_subs_before));
+
+  // once the owner exists, the lookups succeed
+  auto tfr_owner = mrs_lib::Transformer(node_, mrs_lib::Transformer::buffer_mode_t::shared_owner);
+
+  EXPECT_TRUE(wait_for_tf("fcu", "local_origin", tfr).has_value());
+  EXPECT_TRUE(wait_for_count([this]() { return node_->count_subscribers("/tf"); }, tf_subs_before + 1));
+
+  despin();
+}
+
+//}
+
+/* TEST_F(Test, shared_buffer_second_owner_test) //{ */
+
+TEST_F(Test, shared_buffer_second_owner_test)
+{
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  const size_t tf_subs_before = node_->count_subscribers("/tf");
+
+  auto tfr_owner_1 = mrs_lib::Transformer(node_, mrs_lib::Transformer::buffer_mode_t::shared_owner);
+
+  // a second owner gets its own buffer
+  auto tfr_owner_2 = mrs_lib::Transformer(node_, mrs_lib::Transformer::buffer_mode_t::shared_owner);
+  tfr_owner_2.setDefaultPrefix("uav66");
+
+  EXPECT_TRUE(wait_for_count([this]() { return node_->count_subscribers("/tf"); }, tf_subs_before + 2));
+  EXPECT_TRUE(wait_for_tf("fcu", "local_origin", tfr_owner_2).has_value());
+
+  despin();
+}
+
+//}
+
+/* TEST_F(Test, shared_buffer_teardown_test) //{ */
+
+TEST_F(Test, shared_buffer_teardown_test)
+{
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  const size_t tf_subs_before = node_->count_subscribers("/tf");
+
+  {
+    auto tfr_owner = mrs_lib::Transformer(node_, mrs_lib::Transformer::buffer_mode_t::shared_owner);
+    auto tfr = mrs_lib::Transformer(node_, mrs_lib::Transformer::buffer_mode_t::shared);
+
+    EXPECT_TRUE(wait_for_count([this]() { return node_->count_subscribers("/tf"); }, tf_subs_before + 1));
+  }
+
+  // the last user is gone, so is the listener
+  EXPECT_TRUE(wait_for_count([this]() { return node_->count_subscribers("/tf"); }, tf_subs_before));
+
+  // a new owner creates a fresh shared buffer
+  auto tfr_owner = mrs_lib::Transformer(node_, mrs_lib::Transformer::buffer_mode_t::shared_owner);
+  auto tfr = mrs_lib::Transformer(node_, mrs_lib::Transformer::buffer_mode_t::shared);
+  tfr.setDefaultPrefix("uav66");
+
+  EXPECT_TRUE(wait_for_count([this]() { return node_->count_subscribers("/tf"); }, tf_subs_before + 1));
+  EXPECT_TRUE(wait_for_tf("fcu", "local_origin", tfr).has_value());
 
   despin();
 }

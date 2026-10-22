@@ -2,6 +2,7 @@
 #include <mrs_lib/gps_conversions.h>
 
 #include <mrs_lib/geometry/conversions.h>
+#include <mrs_lib/utility/owning_mutex.hpp>
 #include <mutex>
 
 using test_t = mrs_msgs::msg::ReferenceStamped;
@@ -35,6 +36,29 @@ namespace tf2
 namespace mrs_lib
 {
 
+  // | ------------------- shared TF2 buffer -------------------- |
+
+  namespace
+  {
+
+    /* SharedTf //{ */
+
+    // the buffer and listener created by the shared_owner Transformer of this process
+    struct SharedTf
+    {
+      // the listener is declared last, so it is destroyed before the buffer it writes into
+      std::shared_ptr<tf2_ros::Buffer> buffer;
+      std::unique_ptr<tf2_ros::TransformListener> listener;
+      bool use_sim_time;
+    };
+
+    // weak, so the last user destroys the shared buffer
+    OwningMutex<std::weak_ptr<SharedTf>> shared_tf_registry;
+
+    //}
+
+  } // namespace
+
   // | ----------------------- Transformer ---------------------- |
 
   // | ------------------ user-callable methods ----------------- |
@@ -56,10 +80,11 @@ namespace mrs_lib
   {
 
     node_ = node;
-    tf_buffer_ = std::make_unique<tf2_ros::Buffer>(node->get_clock());
+    auto tf_buffer = std::make_shared<tf2_ros::Buffer>(node->get_clock());
+    tf_buffer_ = tf_buffer;
     if (callback_group == nullptr)
     {
-      tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, node, spin_thread);
+      tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer, node, spin_thread);
     } else
     {
       // start from tf2_ros' defaults (carries qos_overriding_options) instead of a bare SubscriptionOptions
@@ -67,7 +92,7 @@ namespace mrs_lib
       auto static_sub_options = tf2_ros::detail::get_default_transform_listener_static_sub_options<>();
       sub_options.callback_group = callback_group;
       static_sub_options.callback_group = callback_group;
-      tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, node, spin_thread, tf2_ros::DynamicListenerQoS(),
+      tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer, node, spin_thread, tf2_ros::DynamicListenerQoS(),
                                                                       tf2_ros::StaticListenerQoS(), sub_options, static_sub_options);
     }
   }
@@ -78,10 +103,11 @@ namespace mrs_lib
   {
 
     node_ = node;
-    tf_buffer_ = std::make_unique<tf2_ros::Buffer>(clock, tf2::Duration(cache_time.nanoseconds()), node, qos);
+    auto tf_buffer = std::make_shared<tf2_ros::Buffer>(clock, tf2::Duration(cache_time.nanoseconds()), node, qos);
+    tf_buffer_ = tf_buffer;
     if (callback_group == nullptr)
     {
-      tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, node, spin_thread);
+      tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer, node, spin_thread);
     } else
     {
       // start from tf2_ros' defaults (carries qos_overriding_options) instead of a bare SubscriptionOptions
@@ -89,10 +115,82 @@ namespace mrs_lib
       auto static_sub_options = tf2_ros::detail::get_default_transform_listener_static_sub_options<>();
       sub_options.callback_group = callback_group;
       static_sub_options.callback_group = callback_group;
-      tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, node, spin_thread, tf2_ros::DynamicListenerQoS(),
+      tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer, node, spin_thread, tf2_ros::DynamicListenerQoS(),
                                                                       tf2_ros::StaticListenerQoS(), sub_options, static_sub_options);
     }
   }
+
+  Transformer::Transformer(const rclcpp::Node::SharedPtr& node, const buffer_mode_t buffer_mode) : initialized_(true), buffer_mode_(buffer_mode)
+  {
+
+    node_ = node;
+
+    if (buffer_mode_ == buffer_mode_t::shared)
+    {
+      // the owner may not exist yet, the lookups bind later
+      bindSharedBufferImpl();
+      return;
+    }
+
+    auto tf_buffer = std::make_shared<tf2_ros::Buffer>(node->get_clock());
+    auto tf_listener = std::make_unique<tf2_ros::TransformListener>(*tf_buffer, node, true);
+
+    if (buffer_mode_ == buffer_mode_t::shared_owner)
+    {
+
+      auto registry = shared_tf_registry.acquire();
+
+      if (registry->expired())
+      {
+        auto shared_tf = std::make_shared<SharedTf>();
+        shared_tf->buffer = tf_buffer;
+        shared_tf->listener = std::move(tf_listener);
+        shared_tf->use_sim_time = node->get_parameter("use_sim_time").as_bool();
+
+        *registry = shared_tf;
+
+        // aliases the buffer, keeps the listener alive too
+        tf_buffer_ = std::shared_ptr<tf2_ros::BufferInterface>(shared_tf, shared_tf->buffer.get());
+        return;
+      }
+
+      RCLCPP_ERROR(node->get_logger(), "Transformer: the shared TF buffer of this process already has an owner, using an own buffer instead");
+      buffer_mode_ = buffer_mode_t::own;
+    }
+
+    tf_buffer_ = tf_buffer;
+    tf_listener_ptr_ = std::move(tf_listener);
+  }
+
+  /* bindSharedBufferImpl() //{ */
+
+  bool Transformer::bindSharedBufferImpl()
+  {
+
+    if (buffer_mode_ != buffer_mode_t::shared)
+      return false;
+
+    const auto registry = shared_tf_registry.acquire();
+    const std::shared_ptr<SharedTf> shared_tf = registry->lock();
+
+    if (!shared_tf)
+      return false;
+
+    const bool use_sim_time = node_->get_parameter("use_sim_time").as_bool();
+
+    if (shared_tf->use_sim_time != use_sim_time)
+    {
+      RCLCPP_ERROR(node_->get_logger(), "Transformer: use_sim_time of this node (%s) differs from the owner of the shared TF buffer (%s), using it anyway",
+                   use_sim_time ? "true" : "false", shared_tf->use_sim_time ? "true" : "false");
+    }
+
+    // aliases the buffer, keeps the listener alive too
+    tf_buffer_ = std::shared_ptr<tf2_ros::BufferInterface>(shared_tf, shared_tf->buffer.get());
+
+    return true;
+  }
+
+  //}
 
   Transformer& Transformer::operator=(Transformer&& other)
   {
@@ -100,8 +198,11 @@ namespace mrs_lib
 
     node_ = std::move(other.node_);
     initialized_ = std::move(other.initialized_);
+    // destroy the old listener before the buffer it writes into
+    tf_listener_ptr_.reset();
     tf_buffer_ = std::move(other.tf_buffer_);
     tf_listener_ptr_ = std::move(other.tf_listener_ptr_);
+    buffer_mode_ = std::move(other.buffer_mode_);
 
     default_frame_id_ = std::move(other.default_frame_id_);
     prefix_ = std::move(other.prefix_);
@@ -396,12 +497,20 @@ namespace mrs_lib
       return tf_opt;
     }
 
+    // bind now if the owner was created after this Transformer
+    if (!tf_buffer_ && !bindSharedBufferImpl())
+    {
+      RCLCPP_WARN_THROTTLE(node_->get_logger(), *node_->get_clock(), 1e9,
+                           "Transformer: cannot transform, the shared TF buffer does not exist yet (no Transformer in the shared_owner mode)");
+      return std::nullopt;
+    }
+
     tf2::TransformException ex("");
     // first try to get transform at the requested time
     try
     {
       // try looking up and returning the transform
-      return tf_buffer_->lookupTransform(to_frame, from_frame, time_stamp, lookup_timeout_);
+      return tf_buffer_->lookupTransform(to_frame, from_frame, tf2_ros::fromRclcpp(time_stamp), tf2_ros::fromRclcpp(lookup_timeout_));
     }
     catch (tf2::TransformException& e)
     {
@@ -413,7 +522,7 @@ namespace mrs_lib
     {
       try
       {
-        return tf_buffer_->lookupTransform(to_frame, from_frame, rclcpp::Time(0, 0), lookup_timeout_);
+        return tf_buffer_->lookupTransform(to_frame, from_frame, tf2::TimePointZero, tf2_ros::fromRclcpp(lookup_timeout_));
       }
       catch (tf2::TransformException& e)
       {
@@ -472,12 +581,21 @@ namespace mrs_lib
       return tf_opt;
     }
 
+    // bind now if the owner was created after this Transformer
+    if (!tf_buffer_ && !bindSharedBufferImpl())
+    {
+      RCLCPP_WARN_THROTTLE(node_->get_logger(), *node_->get_clock(), 1e9,
+                           "Transformer: cannot transform, the shared TF buffer does not exist yet (no Transformer in the shared_owner mode)");
+      return std::nullopt;
+    }
+
     tf2::TransformException ex("");
     // first try to get transform at the requested time
     try
     {
       // try looking up and returning the transform
-      return tf_buffer_->lookupTransform(to_frame, to_stamp, from_frame, from_stamp, fixed_frame, lookup_timeout_);
+      return tf_buffer_->lookupTransform(to_frame, tf2_ros::fromRclcpp(to_stamp), from_frame, tf2_ros::fromRclcpp(from_stamp), fixed_frame,
+                                         tf2_ros::fromRclcpp(lookup_timeout_));
     }
     catch (tf2::TransformException& e)
     {
@@ -489,7 +607,7 @@ namespace mrs_lib
     {
       try
       {
-        return tf_buffer_->lookupTransform(to_frame, from_frame, rclcpp::Time(0, 0), lookup_timeout_);
+        return tf_buffer_->lookupTransform(to_frame, from_frame, tf2::TimePointZero, tf2_ros::fromRclcpp(lookup_timeout_));
       }
       catch (tf2::TransformException& e)
       {
