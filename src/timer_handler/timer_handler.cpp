@@ -303,7 +303,7 @@ namespace mrs_lib
         wakeup_cond_.wait_until(lck, until_stl);
       }
 
-      // check the flags while mutex_state_ is locked
+      // check the flags while mutex_wakeup_ is locked
       if (ending_ || !running_)
       {
         return false;

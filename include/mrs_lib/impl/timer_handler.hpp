@@ -49,9 +49,9 @@ namespace mrs_lib
     std::mutex mutex_wakeup_;
     std::condition_variable wakeup_cond_;
     std::recursive_mutex mutex_state_;
-    bool running_;
+    std::atomic<bool> running_;
     std::atomic<std::chrono::nanoseconds> delay_dur_;
-    bool ending_;
+    std::atomic<bool> ending_;
     rclcpp::Time next_expected_;
   };
 
