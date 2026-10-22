@@ -297,7 +297,9 @@ namespace mrs_lib
     /**
      * @brief set the timer period/duration
      *
-     * The new period will be applied after the next callback.
+     * Does not wait for a running callback and does not change the deadline the timer is currently
+     * sleeping until. The new period is used for the next deadline, i.e. after the currently running
+     * or the next callback, or from start() if the timer is stopped.
      *
      * @param duration the new desired callback period.
      */

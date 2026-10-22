@@ -251,7 +251,7 @@ namespace mrs_lib
 
     if (!running_)
     {
-      next_expected_ = node_->get_clock()->now() + rclcpp::Duration(delay_dur_);
+      next_expected_ = node_->get_clock()->now() + rclcpp::Duration(delay_dur_.load());
       running_ = true;
       wakeup_cond_.notify_all();
     }
@@ -268,8 +268,7 @@ namespace mrs_lib
   void ThreadTimer::Impl::setPeriod(const rclcpp::Duration& duration)
   {
 
-    std::scoped_lock lock(mutex_wakeup_, mutex_state_);
-
+    // no lock, mutex_state_ is held during the callback
     delay_dur_ = std::chrono::nanoseconds(duration.nanoseconds());
 
     // gracefully handle the special case
@@ -386,7 +385,7 @@ namespace mrs_lib
         callback_();
         {
           auto now = node_->get_clock()->now();
-          next_expected_ = std::max(next_expected_ + rclcpp::Duration(std::chrono::duration<double>(delay_dur_)), now);
+          next_expected_ = std::max(next_expected_ + rclcpp::Duration(std::chrono::duration<double>(delay_dur_.load())), now);
         }
       }
     }

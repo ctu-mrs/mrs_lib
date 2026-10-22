@@ -5,6 +5,7 @@
 #include <mrs_lib/timer_handler.h>
 #endif
 
+#include <atomic>
 #include <mutex>
 
 namespace mrs_lib
@@ -40,7 +41,7 @@ namespace mrs_lib
 
     rclcpp::Node::SharedPtr node_;
 
-    bool oneshot_;
+    std::atomic<bool> oneshot_;
 
     bool breakableSleep(const rclcpp::Time& until);
     void threadFcn();
@@ -49,7 +50,7 @@ namespace mrs_lib
     std::condition_variable wakeup_cond_;
     std::recursive_mutex mutex_state_;
     bool running_;
-    std::chrono::nanoseconds delay_dur_;
+    std::atomic<std::chrono::nanoseconds> delay_dur_;
     bool ending_;
     rclcpp::Time next_expected_;
   };
