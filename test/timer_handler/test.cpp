@@ -6,6 +6,7 @@
 
 #include <mrs_lib/timer_handler.h>
 
+#include <atomic>
 #include <thread>
 
 using namespace std::chrono_literals;
@@ -527,3 +528,71 @@ INSTANTIATE_TEST_SUITE_P(I, NoAutostart, ::testing::Values(TestTimerType::ros, T
                              throw std::format("unknown_at_idx_{}", info.index);
                            }
                          });
+
+class ThreadTimerSetPeriod : public ::testing::Test
+{
+public:
+  static void SetUpTestSuite()
+  {
+    std::cout << "Ros initialized.\n" << std::flush;
+    rclcpp::init(0, nullptr);
+  }
+
+  static void TearDownTestSuite()
+  {
+    rclcpp::shutdown();
+    std::cout << "Ros shut down.\n" << std::flush;
+  }
+};
+
+TEST_F(ThreadTimerSetPeriod, DoesNotWaitForRunningCallback)
+{
+  auto node = std::make_shared<rclcpp::Node>("test_timer_handler", rclcpp::NodeOptions{});
+
+  mrs_lib::TimerHandlerOptions opts;
+  opts.node = node;
+  opts.oneshot = false;
+  opts.autostart = true;
+
+  const auto callback_sleep_time = 500ms;
+
+  std::atomic<bool> in_first_callback = false;
+  std::atomic<int> callbacks_count = 0;
+
+  auto callback = [&]() {
+    if (callbacks_count == 0)
+    {
+      in_first_callback = true;
+      std::this_thread::sleep_for(callback_sleep_time);
+      in_first_callback = false;
+    }
+    callbacks_count++;
+  };
+
+  mrs_lib::ThreadTimer timer(opts, rclcpp::Rate(2.0, node->get_clock()), callback);
+
+  const auto wait_start = std::chrono::steady_clock::now();
+  while (!in_first_callback)
+  {
+    ASSERT_LT(std::chrono::steady_clock::now() - wait_start, 3s) << "the first callback did not start";
+    std::this_thread::sleep_for(1ms);
+  }
+
+  const auto set_period_start = std::chrono::steady_clock::now();
+  timer.setPeriod(rclcpp::Duration(20ms));
+  const auto set_period_duration = std::chrono::steady_clock::now() - set_period_start;
+
+  EXPECT_LT(set_period_duration, 50ms) << "setPeriod() waited " << std::chrono::duration_cast<std::chrono::milliseconds>(set_period_duration).count()
+                                       << " ms for the running callback";
+  EXPECT_TRUE(in_first_callback) << "the callback finished before setPeriod() returned";
+
+  // the new period applies after the running callback
+  while (in_first_callback)
+  {
+    ASSERT_LT(std::chrono::steady_clock::now() - set_period_start, 3s) << "the first callback did not finish";
+    std::this_thread::sleep_for(1ms);
+  }
+  const int count_after_first = callbacks_count;
+  std::this_thread::sleep_for(300ms);
+  EXPECT_GE(callbacks_count - count_after_first, 8) << "the new 20 ms period was not applied";
+}
