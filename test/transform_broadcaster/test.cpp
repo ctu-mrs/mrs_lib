@@ -7,6 +7,9 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 
+#include <tf2_msgs/msg/tf_message.hpp>
+
+#include <atomic>
 #include <thread>
 
 using namespace std::chrono_literals;
@@ -171,6 +174,80 @@ TEST_F(Test, test_broadcast)
 
     EXPECT_FALSE(true);
   }
+
+  despin();
+
+  clock->sleep_for(1s);
+}
+
+//}
+
+/* TEST_F(Test, test_broadcast_vector) //{ */
+
+TEST_F(Test, test_broadcast_vector)
+{
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false));
+
+  auto clock = node_->get_clock();
+
+  tf_broadcaster_ = mrs_lib::TransformBroadcaster(node_);
+
+  std::atomic<int> n_messages = 0;
+  std::atomic<int> n_transforms = 0;
+
+  // other tests or a running system may publish on /tf too
+  auto sub = node_->create_subscription<tf2_msgs::msg::TFMessage>("/tf", tf2_ros::DynamicListenerQoS(), [&](const tf2_msgs::msg::TFMessage::SharedPtr msg) {
+    if (msg->transforms.empty() || msg->transforms.front().header.frame_id != "test_broadcast_vector")
+    {
+      return;
+    }
+    n_messages++;
+    n_transforms += msg->transforms.size();
+  });
+
+  clock->sleep_for(1s);
+
+  // | ------------------------- publish ------------------------ |
+
+  std::vector<geometry_msgs::msg::TransformStamped> tfs;
+
+  for (const auto& child : {"a", "b", "c"})
+  {
+    geometry_msgs::msg::TransformStamped tf;
+    tf.header.frame_id = "test_broadcast_vector";
+    tf.header.stamp = rclcpp::Time(10, 0, RCL_ROS_TIME);
+    tf.child_frame_id = child;
+    tf.transform.rotation.w = 1.0;
+    tfs.push_back(tf);
+  }
+
+  // all three transforms go out in a single message
+  tf_broadcaster_.sendTransform(tfs);
+
+  clock->sleep_for(1s);
+
+  EXPECT_EQ(n_messages, 1);
+  EXPECT_EQ(n_transforms, 3);
+
+  // a repeated timestamp is skipped, the rest still goes out in one message
+  tfs.at(1).header.stamp = rclcpp::Time(11, 0, RCL_ROS_TIME);
+  tfs.at(2).header.stamp = rclcpp::Time(11, 0, RCL_ROS_TIME);
+
+  tf_broadcaster_.sendTransform(tfs);
+
+  clock->sleep_for(1s);
+
+  EXPECT_EQ(n_messages, 2);
+  EXPECT_EQ(n_transforms, 5);
+
+  // nothing passes the check, so nothing is published
+  tf_broadcaster_.sendTransform(tfs);
+
+  clock->sleep_for(1s);
+
+  EXPECT_EQ(n_messages, 2);
+  EXPECT_EQ(n_transforms, 5);
 
   despin();
 

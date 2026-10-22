@@ -93,6 +93,9 @@ namespace mrs_lib
       throw NotInitializedException();
     }
 
+    std::vector<geometry_msgs::msg::TransformStamped> to_send;
+    to_send.reserve(transforms.size());
+
     for (auto transform : transforms)
     {
 
@@ -104,7 +107,7 @@ namespace mrs_lib
         if (rclcpp::Time(transform.header.stamp) > last_messages_[frames_from_to])
         {
 
-          broadcaster_->sendTransform(transform);
+          to_send.push_back(transform);
           last_messages_[frames_from_to] = transform.header.stamp;
 
         } else
@@ -119,9 +122,14 @@ namespace mrs_lib
         std::pair<std::string, rclcpp::Time> new_pair;
         new_pair.first = frames_from_to;
         new_pair.second = transform.header.stamp;
-        broadcaster_->sendTransform(transform);
+        to_send.push_back(transform);
         last_messages_.insert(new_pair);
       }
+    }
+
+    if (!to_send.empty())
+    {
+      broadcaster_->sendTransform(to_send);
     }
   }
 

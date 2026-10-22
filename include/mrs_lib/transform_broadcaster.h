@@ -61,6 +61,8 @@ namespace mrs_lib
     /**
      * @brief check if the transforms are newer than the last published ones and publish them. A transform is skipped if a duplicit timestamp is found
      *
+     * The transforms that pass the check are published together in a single tf message.
+     *
      * @param transforms vector of transforms to be published
      */
     void sendTransform(const std::vector<geometry_msgs::msg::TransformStamped>& transforms);
