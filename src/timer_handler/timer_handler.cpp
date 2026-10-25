@@ -268,14 +268,8 @@ namespace mrs_lib
   void ThreadTimer::Impl::setPeriod(const rclcpp::Duration& duration)
   {
 
-    // no lock, mutex_state_ is held during the callback
+    // no lock, mutex_state_ is held during the callback; a zero period is handled in threadFcn()
     delay_dur_ = std::chrono::nanoseconds(duration.nanoseconds());
-
-    // gracefully handle the special case
-    if (duration.nanoseconds() == 0)
-    {
-      this->oneshot_ = true;
-    }
   }
 
   void ThreadTimer::Impl::setCallback(const std::function<void()>& callback)
@@ -376,7 +370,8 @@ namespace mrs_lib
           continue;
         }
 
-        if (oneshot_)
+        // a zero (or negative) period means "fire once more and stop", so the timer never spins with no delay
+        if (oneshot_ || delay_dur_.load() <= std::chrono::nanoseconds::zero())
         {
           running_ = false;
         }

@@ -596,3 +596,34 @@ TEST_F(ThreadTimerSetPeriod, DoesNotWaitForRunningCallback)
   std::this_thread::sleep_for(300ms);
   EXPECT_GE(callbacks_count - count_after_first, 8) << "the new 20 ms period was not applied";
 }
+
+TEST_F(ThreadTimerSetPeriod, NonPositivePeriodFiresOnceAndStops)
+{
+  auto node = std::make_shared<rclcpp::Node>("test_timer_handler", rclcpp::NodeOptions{});
+
+  mrs_lib::TimerHandlerOptions opts;
+  opts.node = node;
+  opts.oneshot = false;
+  opts.autostart = true;
+
+  for (const auto period : {0ms, -10ms})
+  {
+    std::atomic<int> callbacks_count = 0;
+    auto callback = [&]() { callbacks_count++; };
+
+    mrs_lib::ThreadTimer timer(opts, rclcpp::Rate(10.0, node->get_clock()), callback);
+
+    // set the period while the timer sleeps until its first deadline
+    timer.setPeriod(rclcpp::Duration(period));
+    std::this_thread::sleep_for(300ms);
+    EXPECT_EQ(callbacks_count, 1) << "a " << period << " period did not fire exactly once";
+    EXPECT_FALSE(timer.running()) << "a " << period << " period did not stop the timer";
+
+    // a positive period makes the timer periodic again
+    timer.setPeriod(rclcpp::Duration(20ms));
+    timer.start();
+    std::this_thread::sleep_for(300ms);
+    EXPECT_TRUE(timer.running()) << "the timer did not keep running after a " << period << " period";
+    EXPECT_GE(callbacks_count, 8) << "the timer was not periodic again after a " << period << " period";
+  }
+}

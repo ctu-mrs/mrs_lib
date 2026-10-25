@@ -41,7 +41,7 @@ namespace mrs_lib
 
     rclcpp::Node::SharedPtr node_;
 
-    std::atomic<bool> oneshot_;
+    bool oneshot_;
 
     bool breakableSleep(const rclcpp::Time& until);
     void threadFcn();
