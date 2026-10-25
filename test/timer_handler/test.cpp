@@ -582,8 +582,8 @@ TEST_F(ThreadTimerSetPeriod, DoesNotWaitForRunningCallback)
   timer.setPeriod(rclcpp::Duration(20ms));
   const auto set_period_duration = std::chrono::steady_clock::now() - set_period_start;
 
-  EXPECT_LT(set_period_duration, 50ms) << "setPeriod() waited " << std::chrono::duration_cast<std::chrono::milliseconds>(set_period_duration).count()
-                                       << " ms for the running callback";
+  EXPECT_LT(set_period_duration, 50ms) << "setPeriod() waited " << std::chrono::duration_cast<std::chrono::milliseconds>(set_period_duration)
+                                       << " for the running callback";
   EXPECT_TRUE(in_first_callback) << "the callback finished before setPeriod() returned";
 
   // the new period applies after the running callback
