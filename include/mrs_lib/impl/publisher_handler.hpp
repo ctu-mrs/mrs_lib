@@ -164,7 +164,7 @@ namespace mrs_lib
   /* getNumSubscribers(void) //{ */
 
   template <class TopicType>
-  unsigned int PublisherHandler_impl<TopicType>::getNumSubscribers(void)
+  unsigned int PublisherHandler_impl<TopicType>::getNumSubscribers(void) const
   {
 
     {
@@ -172,6 +172,19 @@ namespace mrs_lib
 
       return publisher_->get_subscription_count();
     }
+  }
+
+  //}
+
+  /* topicName(void) //{ */
+
+  template <class TopicType>
+  std::string PublisherHandler_impl<TopicType>::topicName(void) const
+  {
+
+    std::scoped_lock lock(mutex_publisher_);
+
+    return publisher_->get_topic_name();
   }
 
   //}
@@ -300,10 +313,23 @@ namespace mrs_lib
   /* getNumSubscribers(void) //{ */
 
   template <class TopicType>
-  unsigned int PublisherHandler<TopicType>::getNumSubscribers(void)
+  unsigned int PublisherHandler<TopicType>::getNumSubscribers(void) const
   {
 
     return impl_->getNumSubscribers();
+  }
+
+  //}
+
+  /* topicName(void) //{ */
+
+  template <class TopicType>
+  std::string PublisherHandler<TopicType>::topicName(void) const
+  {
+
+    assert(impl_);
+
+    return impl_->topicName();
   }
 
   //}

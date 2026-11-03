@@ -426,3 +426,27 @@ TEST_F(Test, throttling_first_message)
 }
 
 //}
+
+/* TEST_F(Test, topic_name) //{ */
+
+TEST_F(Test, topic_name)
+{
+
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(false).arguments({"--ros-args", "-r", "topic3:=remapped"}));
+
+  mrs_lib::PublisherHandler<std_msgs::msg::Int64> ph_absolute = mrs_lib::PublisherHandler<std_msgs::msg::Int64>(node_, "/topic1");
+  mrs_lib::PublisherHandler<std_msgs::msg::Int64> ph_private = mrs_lib::PublisherHandler<std_msgs::msg::Int64>(node_, "~/topic2");
+  mrs_lib::PublisherHandler<std_msgs::msg::Int64> ph_remapped = mrs_lib::PublisherHandler<std_msgs::msg::Int64>(node_, "topic3");
+
+  despin();
+
+  EXPECT_EQ(ph_absolute.topicName(), "/topic1");
+  EXPECT_EQ(ph_private.topicName(), "/test_publisher_handler/topic2");
+  EXPECT_EQ(ph_remapped.topicName(), "/remapped");
+
+  // usable through a const reference
+  const auto& ph_const = ph_absolute;
+  EXPECT_EQ(ph_const.topicName(), "/topic1");
+}
+
+//}
