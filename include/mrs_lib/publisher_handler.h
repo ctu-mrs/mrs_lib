@@ -13,6 +13,7 @@
 #include <rclcpp/time_source.hpp>
 
 #include <atomic>
+#include <cassert>
 #include <string>
 #include <mutex>
 #include <optional>
@@ -109,14 +110,21 @@ namespace mrs_lib
      *
      * @return the number of subscribers
      */
-    unsigned int getNumSubscribers(void);
+    unsigned int getNumSubscribers(void) const;
+
+    /**
+     * @brief get the resolved name of the topic
+     *
+     * @return the topic name
+     */
+    std::string topicName(void) const;
 
   private:
     rclcpp::Node::SharedPtr node_;
 
     std::shared_ptr<rclcpp::Publisher<TopicType>> publisher_;
 
-    std::mutex mutex_publisher_;
+    mutable std::mutex mutex_publisher_;
 
     std::atomic<bool> publisher_initialized_;
 
@@ -224,7 +232,14 @@ namespace mrs_lib
      *
      * @return the number of subscribers
      */
-    unsigned int getNumSubscribers(void);
+    unsigned int getNumSubscribers(void) const;
+
+    /**
+     * @brief get the resolved name of the topic
+     *
+     * @return the topic name
+     */
+    std::string topicName(void) const;
 
   private:
     std::shared_ptr<PublisherHandler_impl<TopicType>> impl_;
