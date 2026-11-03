@@ -260,6 +260,8 @@ namespace mrs_lib
   void PublisherHandler<TopicType>::publish(const TopicType& msg)
   {
 
+    assert(impl_);
+
     impl_->publish(msg);
   }
 
@@ -270,6 +272,8 @@ namespace mrs_lib
   template <class TopicType>
   void PublisherHandler<TopicType>::publish(const std::shared_ptr<TopicType>& msg)
   {
+
+    assert(impl_);
 
     impl_->publish(msg);
   }
@@ -293,6 +297,8 @@ namespace mrs_lib
   void PublisherHandler<TopicType>::publish(typename TopicType::ConstSharedPtr msg)
   {
 
+    assert(impl_);
+
     impl_->publish(msg);
   }
 
@@ -305,6 +311,8 @@ namespace mrs_lib
   void PublisherHandler<TopicType>::publish(std::unique_ptr<TopicType> msg)
   {
 
+    assert(impl_);
+
     impl_->publish(std::move(msg));
   }
 
@@ -315,6 +323,8 @@ namespace mrs_lib
   template <class TopicType>
   unsigned int PublisherHandler<TopicType>::getNumSubscribers(void) const
   {
+
+    assert(impl_);
 
     return impl_->getNumSubscribers();
   }
