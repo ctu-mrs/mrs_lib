@@ -301,7 +301,7 @@ namespace mrs_lib
      * sleeping until. The new period is used for the next deadline, i.e. after the currently running
      * or the next callback, or from start() if the timer is stopped.
      *
-     * A zero or negative period makes the timer fire once more and stop.
+     * A zero or negative period is ignored (with a warning) and the current period is kept.
      *
      * @param duration the new desired callback period.
      */
