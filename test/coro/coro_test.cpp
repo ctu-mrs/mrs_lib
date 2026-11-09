@@ -1,13 +1,13 @@
-#include "mrs_lib/coro/task.hpp"
-
 #include <gtest/gtest.h>
 
+#include <expected>
 #include <format>
 #include <memory>
+#include <utility>
 
 #include "mrs_lib/coro/runners.hpp"
+#include "mrs_lib/coro/task.hpp"
 #include "mrs_lib/utility/scope_cleanup.hpp"
-#include "utility"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -168,6 +168,11 @@ namespace
   {
     auto val = std::make_unique<int>(42);
     co_return val;
+  }
+
+  mrs_lib::Task<std::expected<std::shared_ptr<int>, std::string>> co_expected_shared_ptr_42()
+  {
+    co_return std::make_shared<int>(42);
   }
 
   mrs_lib::Task<int> co_2_times_42()
@@ -495,6 +500,25 @@ namespace
         [](bool& finished) -> mrs_lib::Task<> {
           std::unique_ptr<int> val = co_await co_uptr_42();
           EXPECT_EQ(*val, 42);
+          finished = true;
+          co_return;
+        },
+        std::ref(finished));
+
+    EXPECT_TRUE(finished);
+  }
+
+  TEST(MrsLibCoro, ReturnExpectedPtr)
+  {
+    bool finished = false;
+
+    mrs_lib::coro::internal::start_task(
+        [](bool& finished) -> mrs_lib::Task<> {
+          auto val = co_await co_expected_shared_ptr_42();
+          std::invoke([&] {
+            ASSERT_TRUE(val.has_value());
+            EXPECT_EQ(*val.value(), 42);
+          });
           finished = true;
           co_return;
         },
