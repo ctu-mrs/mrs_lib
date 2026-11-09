@@ -1,4 +1,6 @@
 #include <gtest/gtest.h>
+#include <rclcpp/executor.hpp>
+#include <rclcpp/executors/single_threaded_executor.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <mrs_lib/errorgraph/error_publisher.h>
@@ -6,6 +8,7 @@
 #include <mrs_msgs/msg/errorgraph_error.hpp>
 
 #include <chrono>
+#include <memory>
 #include <mutex>
 #include <vector>
 
@@ -18,6 +21,8 @@ protected:
   void SetUp() override
   {
     node_ = std::make_shared<rclcpp::Node>("error_publisher_test_node");
+    executor_ = std::make_unique<rclcpp::executors::SingleThreadedExecutor>();
+    executor_->add_node(node_);
     clock_ = node_->get_clock();
 
     // Subscribe to the errors topic published by ErrorPublisher
@@ -31,6 +36,8 @@ protected:
   {
     publisher_.reset();
     sub_.reset();
+    executor_->remove_node(node_);
+    executor_.reset();
     node_.reset();
   }
 
@@ -46,7 +53,7 @@ protected:
     const auto start = std::chrono::steady_clock::now();
     while (std::chrono::steady_clock::now() - start < std::chrono::duration<double>(timeout_s))
     {
-      rclcpp::spin_some(node_);
+      executor_->spin_some();
       {
         std::scoped_lock lck(mtx_);
         if (received_msgs_.size() >= count)
@@ -72,6 +79,7 @@ protected:
   }
 
   rclcpp::Node::SharedPtr node_;
+  std::unique_ptr<rclcpp::Executor> executor_;
   rclcpp::Clock::SharedPtr clock_;
   std::unique_ptr<ErrorPublisher> publisher_;
   rclcpp::Subscription<mrs_msgs::msg::ErrorgraphElement>::SharedPtr sub_;
