@@ -1,8 +1,9 @@
 #ifndef MRS_LIB_CORO_TASK_IMPL_HPP_
 #define MRS_LIB_CORO_TASK_IMPL_HPP_
 
-#include "mrs_lib/coro/internal/thread_local_continuation_scheduler.hpp"
 #include "mrs_lib/coro/task.hpp"
+
+#include "mrs_lib/coro/internal/thread_local_continuation_scheduler.hpp"
 
 namespace mrs_lib::coro
 {
@@ -49,7 +50,7 @@ namespace mrs_lib::coro
     template <typename T>
     Task<T> PromiseType<T>::get_return_object()
     {
-      return Task<T>(OwningCoroutineHandle<PromiseType>(std::coroutine_handle<PromiseType>::from_promise(*this)));
+      return Task<T>(std::coroutine_handle<PromiseType>::from_promise(*this));
     }
 
     template <typename T>
@@ -66,7 +67,7 @@ namespace mrs_lib::coro
 
     inline Task<void> PromiseType<void>::get_return_object()
     {
-      return Task<void>(OwningCoroutineHandle<PromiseType>(std::coroutine_handle<PromiseType>::from_promise(*this)));
+      return Task<void>(std::coroutine_handle<PromiseType>::from_promise(*this));
     }
 
     inline void PromiseType<void>::return_void()

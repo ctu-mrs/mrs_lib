@@ -11,4 +11,5 @@ ROS Wrappers
    timer
    subscriber
    publisher
-
+   service_client
+   service_server

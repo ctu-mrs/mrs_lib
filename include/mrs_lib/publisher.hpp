@@ -34,7 +34,7 @@ namespace mrs_lib
     /** @brief QOS settings for the publisher. */
     rclcpp::QoS qos = rclcpp::SystemDefaultsQoS();
 
-    /** @brief If set, the publisher will drop messages published within this time of a previous message. */
+    /** @brief If set, the publisher drops messages so that the average output rate does not exceed 1/throttle_duration (see internal::RateThrottle). */
     std::optional<std::chrono::nanoseconds> throttle_duration = std::nullopt;
   };
 

@@ -13,6 +13,7 @@
 #include "mrs_lib/coro/internal/continuation.hpp"
 #include "mrs_lib/coro/internal/result_storage.hpp"
 #include "mrs_lib/coro/internal/thread_local_continuation_scheduler.hpp"
+#include "mrs_lib/utility/scope_cleanup.hpp"
 
 // Note on ownership semantics:
 // Since we want to support cancellation at any point in the coroutine stacks,
@@ -30,45 +31,6 @@ namespace mrs_lib::coro
 
   namespace internal
   {
-
-    /**
-     * @brief Deleter for std::unique_ptr that stores a coroutine handle.
-     */
-    template <typename T>
-    struct CoroutineDestroyer
-    {
-      void operator()(std::coroutine_handle<T> handle)
-      {
-        handle.destroy();
-      }
-      using pointer = std::coroutine_handle<T>;
-    };
-
-    template <typename T = void>
-    using OwningCoroutineHandle = std::unique_ptr<std::coroutine_handle<T>, CoroutineDestroyer<T>>;
-
-    /**
-     * @brief RAII class to destroy a coroutine at the end of a scope.
-     */
-    template <typename T>
-    class DeferredCoroutineDestroyer
-    {
-    public:
-      DeferredCoroutineDestroyer(std::coroutine_handle<T> handle) : handle_(handle)
-      {
-      }
-      ~DeferredCoroutineDestroyer()
-      {
-        std::invoke(CoroutineDestroyer<T>{}, handle_);
-      }
-      DeferredCoroutineDestroyer(const DeferredCoroutineDestroyer&) = delete;
-      DeferredCoroutineDestroyer& operator=(const DeferredCoroutineDestroyer&) = delete;
-      DeferredCoroutineDestroyer(DeferredCoroutineDestroyer&&) = delete;
-      DeferredCoroutineDestroyer& operator=(DeferredCoroutineDestroyer&&) = delete;
-
-    private:
-      std::coroutine_handle<T> handle_;
-    };
 
     /**
      * @brief Base class for the task's promise type.
@@ -121,7 +83,7 @@ namespace mrs_lib::coro
         return std::exchange(continuation_, {});
       }
 
-      std::stop_token get_token() const
+      [[nodiscard]] std::stop_token get_token() const
       {
         return continuation_.get_token();
       }
@@ -227,7 +189,7 @@ namespace mrs_lib::coro
 
       T await_resume()
       {
-        DeferredCoroutineDestroyer destroyer{this->task_handle_};
+        ScopeCleanup destroyer_cleanup([this] { this->task_handle_.destroy(); });
         return this->task_handle_.promise().get_value();
       }
 
@@ -269,7 +231,14 @@ namespace mrs_lib::coro
   public:
     using promise_type = internal::PromiseType<T>;
 
-    ~Task() = default;
+    ~Task()
+    {
+      if (coroutine_)
+      {
+        coroutine_.destroy();
+      }
+    }
+
     Task(const Task&) = delete;
     Task& operator=(const Task&) = delete;
     Task(Task&&) = delete;
@@ -277,15 +246,15 @@ namespace mrs_lib::coro
 
     friend internal::TaskAwaitable<T> operator co_await(Task task)
     {
-      return internal::TaskAwaitable<T>(task.coroutine_.release());
+      return internal::TaskAwaitable<T>(std::exchange(task.coroutine_, {}));
     }
 
   private:
-    explicit Task(internal::OwningCoroutineHandle<promise_type> coroutine) : coroutine_(std::move(coroutine))
+    explicit Task(std::coroutine_handle<promise_type> coroutine) : coroutine_(std::move(coroutine))
     {
     }
 
-    internal::OwningCoroutineHandle<promise_type> coroutine_;
+    std::coroutine_handle<promise_type> coroutine_;
 
     friend class internal::PromiseType<T>;
   };

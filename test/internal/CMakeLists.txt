@@ -1,1 +1,2 @@
 mrs_lib_add_simple_labeled_gtest(internal test_coroutine_callback_helpers "coroutine_callback_helpers_test.cpp")
+mrs_lib_add_simple_labeled_gtest(internal test_rate_throttle "rate_throttle_test.cpp")

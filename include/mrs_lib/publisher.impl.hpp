@@ -11,9 +11,9 @@
 #include <utility>
 
 #include <rclcpp/create_publisher.hpp>
-#include <rclcpp/duration.hpp>
 #include <rclcpp/publisher.hpp>
 
+#include "mrs_lib/internal/rate_throttle.hpp"
 #include "mrs_lib/logger.hpp"
 #include "mrs_lib/utility/owning_mutex.hpp"
 #include "mrs_lib/utility/pimpl.hpp"
@@ -30,23 +30,18 @@ namespace mrs_lib
   private:
     using RosPublisherPimpl = Pimpl<rclcpp::Publisher<MessageType>, std::shared_ptr<rclcpp::Publisher<MessageType>>>;
 
-    struct ThrottleState
-    {
-      rclcpp::Time last_time_published;
-    };
-
   public:
     Impl(const PublisherOptions& options, std::string_view topic_name)
         : node_interfaces_(options.node_interfaces),
           logger_(node_interfaces_),
           unresolved_topic_name_(topic_name),
-          throttle_duration_(options.throttle_duration),
-          throttle_state_(ThrottleState{
-              .last_time_published = node_interfaces_.get_node_clock_interface()->get_clock()->now(),
-              // .publisher = RosPublisherPimpl(rclcpp::create_publisher<MessageType>(node_interfaces_, topic_name, options.qos)),
-          }),
           publisher_(rclcpp::create_publisher<MessageType>(node_interfaces_, std::string(topic_name), options.qos))
     {
+      if (options.throttle_duration.has_value())
+      {
+        throttle_.emplace(internal::RateThrottle(options.throttle_duration.value()));
+      }
+
       logger_.info("Created publisher on topic '{}' -> '{}'", unresolved_topic_name_, publisher_->get_topic_name());
     }
 
@@ -93,30 +88,18 @@ namespace mrs_lib
      * If publisher throttling is disabled, does nothing and returns true.
      *
      * If publisher throttling is enabled, checks whether the message should be
-     * published.
-     * If it should, it also updates the last published time.
+     * published (see internal::RateThrottle).
      */
     bool handle_publish_rate()
     {
-      auto guard = throttle_state_.acquire();
-      rclcpp::Time now = node_interfaces_.get_node_clock_interface()->get_clock()->now();
-
-      if (!throttle_duration_.has_value())
+      if (!throttle_.has_value())
       {
         // Always publish if no throttle is set.
         return true;
       }
 
-      rclcpp::Duration passed = now - guard->last_time_published;
-
-      if (passed < throttle_duration_.value())
-      {
-        return false;
-      }
-
-      // Throttle is enabled and message will be published.
-      guard->last_time_published = now;
-      return true;
+      auto guard = throttle_->acquire();
+      return guard->accept(node_interfaces_.get_node_clock_interface()->get_clock()->now());
     }
 
     PublisherNodeInterfaces node_interfaces_;
@@ -124,9 +107,8 @@ namespace mrs_lib
 
     std::string unresolved_topic_name_;
 
-    std::optional<std::chrono::nanoseconds> throttle_duration_;
-
-    OwningMutex<ThrottleState> throttle_state_;
+    // empty if throttling is disabled, so unthrottled publishing skips the mutex and the clock read
+    std::optional<OwningMutex<internal::RateThrottle>> throttle_;
 
     RosPublisherPimpl publisher_;
   };

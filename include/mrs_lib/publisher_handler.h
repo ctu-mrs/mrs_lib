@@ -13,8 +13,12 @@
 #include <rclcpp/time_source.hpp>
 
 #include <atomic>
+#include <cassert>
 #include <string>
 #include <mutex>
+#include <optional>
+
+#include <mrs_lib/internal/rate_throttle.hpp>
 
 namespace mrs_lib
 {
@@ -106,23 +110,32 @@ namespace mrs_lib
      *
      * @return the number of subscribers
      */
-    unsigned int getNumSubscribers(void);
+    unsigned int getNumSubscribers(void) const;
+
+    /**
+     * @brief get the resolved name of the topic
+     *
+     * @return the topic name
+     */
+    std::string topicName(void) const;
 
   private:
     rclcpp::Node::SharedPtr node_;
 
     std::shared_ptr<rclcpp::Publisher<TopicType>> publisher_;
 
-    std::mutex mutex_publisher_;
+    mutable std::mutex mutex_publisher_;
 
     std::atomic<bool> publisher_initialized_;
 
     std::string address_;
 
-    bool throttle_ = false;
-    double throttle_min_dt_ = 0;
+    std::optional<internal::RateThrottle> throttle_;
 
-    rclcpp::Time last_time_published_;
+    /**
+     * @brief decide whether to publish a message now with respect to the throttle rate, call with mutex_publisher_ locked
+     */
+    bool throttleAccept(void);
   };
 
   //}
@@ -219,7 +232,14 @@ namespace mrs_lib
      *
      * @return the number of subscribers
      */
-    unsigned int getNumSubscribers(void);
+    unsigned int getNumSubscribers(void) const;
+
+    /**
+     * @brief get the resolved name of the topic
+     *
+     * @return the topic name
+     */
+    std::string topicName(void) const;
 
   private:
     std::shared_ptr<PublisherHandler_impl<TopicType>> impl_;

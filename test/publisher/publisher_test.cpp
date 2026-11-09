@@ -256,12 +256,59 @@ namespace
 
     clock->sleep_for(100ms);
 
-    if (received_count_ < 9 || received_count_ > 11)
+    if (received_count_ < 10 || received_count_ > 12)
     {
-      RCLCPP_ERROR(node_->get_logger(), "did not received the correct number of messages, want 9 >= %d <= 11", received_count_);
+      RCLCPP_ERROR(node_->get_logger(), "did not received the correct number of messages, want 10 >= %d <= 12", received_count_);
       FAIL();
     }
 
     RCLCPP_INFO(node_->get_logger(), "finished");
+  }
+
+  TEST_F(PublisherTest, ThrottlingFirstMessage)
+  {
+    auto clock = node_->get_clock();
+
+    // | ---------------- create publisher handler ---------------- |
+
+    auto publisher = mrs_lib::Publisher<std_msgs::msg::Int64>(
+        mrs_lib::PublisherOptions{
+            .node_interfaces = *node_,
+            .throttle_duration = 10s,
+        },
+        "/topic1");
+
+    // | ------------------- create a subscriber ------------------ |
+
+    std::function<void(std::shared_ptr<const std_msgs::msg::Int64>)> bound_callback = std::bind_front(&PublisherTest::message_callback, this);
+
+    auto subscriber = node_->create_subscription<std_msgs::msg::Int64>("/topic1", 100, bound_callback);
+
+    // | ---------------------- start testing --------------------- |
+
+    // the first message is the one under test, so both sides have to be matched before publishing
+    for (int i = 0; i < 50 && publisher.get_subscriber_count() == 0; i++)
+    {
+      clock->sleep_for(100ms);
+    }
+
+    if (!wait_for_publisher(*subscriber, clock) || publisher.get_subscriber_count() == 0)
+    {
+      RCLCPP_ERROR(node_->get_logger(), "failed to connect publisher and subscriber");
+      FAIL();
+    }
+
+    std_msgs::msg::Int64 data;
+    data.data = val_to_send_;
+
+    // the first message passes right away, the rest falls within the throttle period
+    for (int i = 0; i < 3; i++)
+    {
+      publisher.publish(data);
+    }
+
+    clock->sleep_for(100ms);
+
+    EXPECT_EQ(received_count_, 1);
   }
 } // namespace

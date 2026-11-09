@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 project(mrs_lib)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -69,6 +69,12 @@ set_target_properties(mrs_lib_mrs_lib
     OUTPUT_NAME mrs_lib
 )
 
+# Force mrs_lib and all targets that depend on it to compile with C++ std >= 23.
+target_compile_features(mrs_lib_mrs_lib
+  PUBLIC
+    cxx_std_23
+)
+
 target_sources(mrs_lib_mrs_lib
   PRIVATE
     # src/attitude_converter
@@ -79,6 +85,7 @@ target_sources(mrs_lib_mrs_lib
     # src/coro
     "src/coro/cancellation.cpp"
     "src/coro/event.cpp"
+    "src/coro/runners.cpp"
     # src/coro/internal
     "src/coro/internal/thread_local_continuation_scheduler.cpp"
     # src/dynparam_mgr
@@ -161,7 +168,11 @@ target_sources(mrs_lib_mrs_lib
     "include/mrs_lib/safety_zone.h"
     "include/mrs_lib/scope_timer.h"
     "include/mrs_lib/service_client_handler.h"
+    "include/mrs_lib/service_client.hpp"
+    "include/mrs_lib/service_client.impl.hpp"
     "include/mrs_lib/service_server_handler.h"
+    "include/mrs_lib/service_server.hpp"
+    "include/mrs_lib/service_server.impl.hpp"
     "include/mrs_lib/subscriber_handler.h"
     "include/mrs_lib/subscriber.hpp"
     "include/mrs_lib/subscriber.impl.hpp"
@@ -209,6 +220,7 @@ target_sources(mrs_lib_mrs_lib
     "include/mrs_lib/impl/ukf.hpp"
     # include/mrs_lib/internal
     "include/mrs_lib/internal/coroutine_callback_helpers.hpp"
+    "include/mrs_lib/internal/rate_throttle.hpp"
     # include/mrs_lib/safety_zone
     "include/mrs_lib/safety_zone/line_operations.h"
     "include/mrs_lib/safety_zone/polygon.h"

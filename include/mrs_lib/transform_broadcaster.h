@@ -1,6 +1,8 @@
 #ifndef TRANSFORM_BROADCASTER_H
 #define TRANSFORM_BROADCASTER_H
 
+#include <mutex>
+
 #include <rclcpp/rclcpp.hpp>
 #include <tf2_ros/transform_broadcaster.hpp>
 
@@ -14,6 +16,7 @@ namespace mrs_lib
    * With each sendTransform() command, the message is checked against the last message with the same frame IDs.
    * If the transform was already published in this ros::Time step, then the transform is skipped.
    * Prevents endless stream of warnings from spamming the console output.
+   * The sendTransform() methods can be called from multiple threads at the same time.
    */
   class TransformBroadcaster
   {
@@ -39,6 +42,16 @@ namespace mrs_lib
     TransformBroadcaster(const rclcpp::Node::SharedPtr& node);
 
     /**
+     * @brief A convenience move assignment operator.
+     *
+     * This operator moves all data from the object that is being assigned from, invalidating it.
+     *
+     * @param other the object to assign from. It will be invalid after this method returns.
+     * @return a reference to the object being assigned to.
+     */
+    TransformBroadcaster& operator=(TransformBroadcaster&& other);
+
+    /**
      * @brief check if the transform is newer than the last published one and publish it. Transform is skipped if a duplicit timestamp is found
      *
      * @param transform to be published
@@ -48,11 +61,16 @@ namespace mrs_lib
     /**
      * @brief check if the transforms are newer than the last published ones and publish them. A transform is skipped if a duplicit timestamp is found
      *
+     * The transforms that pass the check are published together in a single tf message.
+     *
      * @param transforms vector of transforms to be published
      */
     void sendTransform(const std::vector<geometry_msgs::msg::TransformStamped>& transforms);
 
   private:
+    // guards last_messages_
+    std::mutex mutex_;
+
     rclcpp::Node::SharedPtr node_;
 
     /**
