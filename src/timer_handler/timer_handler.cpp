@@ -251,7 +251,7 @@ namespace mrs_lib
 
     if (!running_)
     {
-      next_expected_ = node_->get_clock()->now() + rclcpp::Duration(delay_dur_);
+      next_expected_ = node_->get_clock()->now() + rclcpp::Duration(delay_dur_.load());
       running_ = true;
       wakeup_cond_.notify_all();
     }
@@ -268,15 +268,16 @@ namespace mrs_lib
   void ThreadTimer::Impl::setPeriod(const rclcpp::Duration& duration)
   {
 
-    std::scoped_lock lock(mutex_wakeup_, mutex_state_);
-
-    delay_dur_ = std::chrono::nanoseconds(duration.nanoseconds());
-
-    // gracefully handle the special case
-    if (duration.nanoseconds() == 0)
+    // a zero or negative period would make the timer spin with no delay, keep the current one instead
+    if (duration.nanoseconds() <= 0)
     {
-      this->oneshot_ = true;
+      RCLCPP_WARN_THROTTLE(node_->get_logger(), *node_->get_clock(), 1000,
+                           "[mrs_lib::ThreadTimer]: ignoring a non-positive period (%.3f s), keeping the current one.", duration.seconds());
+      return;
     }
+
+    // no lock, mutex_state_ is held during the callback
+    delay_dur_ = std::chrono::nanoseconds(duration.nanoseconds());
   }
 
   void ThreadTimer::Impl::setCallback(const std::function<void()>& callback)
@@ -304,7 +305,7 @@ namespace mrs_lib
         wakeup_cond_.wait_until(lck, until_stl);
       }
 
-      // check the flags while mutex_state_ is locked
+      // check the flags while mutex_wakeup_ is locked
       if (ending_ || !running_)
       {
         return false;
@@ -386,7 +387,7 @@ namespace mrs_lib
         callback_();
         {
           auto now = node_->get_clock()->now();
-          next_expected_ = std::max(next_expected_ + rclcpp::Duration(std::chrono::duration<double>(delay_dur_)), now);
+          next_expected_ = std::max(next_expected_ + rclcpp::Duration(std::chrono::duration<double>(delay_dur_.load())), now);
         }
       }
     }
