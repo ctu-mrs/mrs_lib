@@ -1,6 +1,6 @@
 #include <mrs_lib/iir_filter.h>
 
-#include <iostream>
+#include <algorithm>
 
 namespace mrs_lib
 {
@@ -22,14 +22,6 @@ namespace mrs_lib
     b_.resize(order_ + 1, 0.0);
 
     buffer_.resize(order_ + 1, 0.0);
-
-    for (size_t i = 0; i < order_ + 1; i++)
-    {
-      std::cout << "a: " << a_[i] << " b: " << b_[i] << std::endl;
-    }
-
-    printf("filter order : %d", int(order_));
-    printf("IIR filter initialized!");
   }
 
   //}
